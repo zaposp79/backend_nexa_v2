@@ -1,0 +1,113 @@
+{
+  "_metadata": {
+    "description": "Valores dorados extraídos célula a célula del Excel V2-5",
+    "excel_file": "Nexa - Pricing - Simulador - V2-5.xlsx",
+    "case": "bancamia_sac_v25",
+    "extraction_date": "2026-05-25",
+    "extraction_method": "openpyxl data_only=True",
+    "tolerancias": {
+      "monetaria_cop": 1.0,
+      "porcentual_abs": 0.0001,
+      "ratio_abs": 0.001
+    }
+  },
+  "rampup": {
+    "source": "Visión P&G R15",
+    "valores": [0.9, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  },
+  "pyg_por_mes": {
+    "source": "Visión P&G R18/R27/R30/R74/R76",
+    "campos": ["ingreso_bruto", "ingreso_neto", "costo_total_a", "contribucion", "pct_contribucion"],
+    "valores": [
+      [45109172.05282901, 46011355.49388559, 42475679.8990857,  3535675.594799891,  0.07684354344374279],
+      [47386805.80282325, 48334541.91887972, 42271905.26567641, 6062636.653203309,  0.12543072536775635],
+      [49880848.21349816, 50878465.177768126,42271905.26567641, 8606559.912091717,  0.16915918909936856],
+      [49880848.21349816, 50878465.177768126,42271905.26567641, 8606559.912091717,  0.16915918909936856],
+      [49880848.21349816, 50878465.177768126,42271905.26567641, 8606559.912091717,  0.16915918909936856],
+      [51859081.301785685,52896262.9278214,  43948373.98456414, 8947888.943257257,  0.16915918909936853],
+      [51859081.301785685,52896262.9278214,  43948373.98456414, 8947888.943257257,  0.16915918909936853],
+      [51859081.301785685,52896262.9278214,  43948373.98456414, 8947888.943257257,  0.16915918909936853],
+      [51859081.301785685,52896262.9278214,  43948373.98456414, 8947888.943257257,  0.16915918909936853],
+      [51859081.301785685,52896262.9278214,  43948373.98456414, 8947888.943257257,  0.16915918909936853],
+      [51859081.301785685,52896262.9278214,  43948373.98456414, 8947888.943257257,  0.16915918909936853],
+      [52333418.44546369, 53380086.814372964,44350354.61479974, 9029732.199573226,  0.16915918909936856]
+    ]
+  },
+  "pyg_financieros_mes1": {
+    "source": "Visión P&G R66-R70 col C",
+    "ica": 531310.7102757834,
+    "gmf": 171000.0256126507,
+    "comision_administracion": 885667.6112357888,
+    "polizas": 1862304.851201195,
+    "financiacion": 0.0,
+    "componente_financiero_total": 3450283.198325418
+  },
+  "pyg_financieros_mes2": {
+    "source": "Visión P&G R66-R70 col D",
+    "ica": 535302.5286552098,
+    "gmf": 172795.96320833158,
+    "comision_administracion": 894969.3862185499,
+    "polizas": 1880275.512032573,
+    "financiacion": 649877.9024560112,
+    "componente_financiero_total": 4133221.2925706757
+  },
+  "pyg_costos_mes1": {
+    "source": "Visión P&G R32-R44 col C",
+    "payroll": 33529374.377754506,
+    "no_payroll": 8946305.521331191,
+    "opex_fijo": 3111458.65,
+    "inversiones": 906692.9166192857,
+    "costos_fijos": 4928153.954711907,
+    "nomina_loaded": 32980471.520611648,
+    "cap_inicial": 166666.66666666666,
+    "cap_rotacion": 170000.0,
+    "examenes": 128020.19047619046,
+    "crucero": 84216.0
+  },
+  "pyg_costos_mes2": {
+    "source": "Visión P&G R32-R44 col D",
+    "payroll": 33529374.377754506,
+    "no_payroll": 8742530.887921907,
+    "inversiones": 702918.28321,
+    "costos_fijos": 4928153.954711907
+  },
+  "vision_tarifas_escenario1": {
+    "source": "Vision Tarifas_Modelo_Cobro + Hoja Maestra Escenarios",
+    "escenario": 1,
+    "modalidad": "Inbound",
+    "canal": "Voz",
+    "modelo_cobro": "Fijo",
+    "componente_fijo": "Tiempo",
+    "pct_fijo": 1.0,
+    "fte": 10,
+    "cadena_a_total": 46155219.80234621,
+    "payroll": 34507314.46377235,
+    "no_payroll": 8793010.493225645,
+    "ica": 558289.1338152585,
+    "gmf": 180985.2213630651,
+    "polizas": 290345.23760009016,
+    "financiacion": 1825275.2525698019,
+    "facturacion": 57435564.711729966,
+    "tarifa_hora_pagada": 31582.29666321894,
+    "_nota_tarifa_hora_loggeada": "38867.67 en Excel — divergencia conocida: ausentismo aplicado a horas_loggeadas en Excel. Ver audit/04_fidelidad_funcional_v25.md",
+    "tarifa_hora_loggeada_excel": 38867.67152165248
+  },
+  "vision_cts": {
+    "source": "Vision Cost To Serve R34-R49",
+    "ingreso_mensual_promedio": 57435564.711729966,
+    "costo_cadena_a_mensual_promedio": 46155219.80234621,
+    "cts_cadena_a_por_fte": 4330032.495699801,
+    "cts_ponderado": 4330032.495699801,
+    "cts_payroll_por_fte": 3450731.4463772355,
+    "cts_no_payroll_por_fte": 879301.0493225646
+  },
+  "divergencias_conocidas": [
+    {
+      "campo": "tarifa_hora_loggeada",
+      "valor_excel": 38867.67,
+      "causa": "Excel aplica ausentismo (6.5%) a horas_presentes antes de restar breaks, luego a horas_loggeadas. Nuestro cálculo aplica breaks sin ajuste de ausentismo en horas_loggeadas_semanales.",
+      "impacto": "~6% de diferencia en tarifa_hora_loggeada. NO afecta P&G, facturación, CTS ni márgenes.",
+      "accion": "Documentado para corrección futura con fórmula exacta de HM R26."
+    }
+  ]
+}

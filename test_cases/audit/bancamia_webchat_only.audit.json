@@ -1,0 +1,25 @@
+{
+  "original_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/bancamia_webchat_only.json",
+  "migration_date": "2026-05-21T18:08:57.492826+00:00",
+  "pollution_fields_removed": [
+    "_comment",
+    "_excel_payroll_a",
+    "_excel_no_payroll_a",
+    "_excel_cadena_b_total",
+    "_excel_comp_fijo_b",
+    "_excel_comp_var_b",
+    "_excel_facturacion"
+  ],
+  "pollution_fields_count": 7,
+  "clean_fields": [
+    "panel_de_control",
+    "condiciones_cadena_a",
+    "condiciones_cadena_b",
+    "condiciones_cadena_c"
+  ],
+  "clean_fields_count": 4,
+  "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_webchat_only.json",
+  "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_webchat_only.expected.json",
+  "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_webchat_only.audit.json",
+  "status": "MIGRATED_PHASE_55"
+}

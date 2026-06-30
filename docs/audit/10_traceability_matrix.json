@@ -1,0 +1,395 @@
+{
+  "_document": "Fase 10 — Matriz de Trazabilidad Oficial NEXA Simulator",
+  "_version": "2026-01",
+  "_date": "2026-05-21",
+  "_scope": "entry_data → domain → calculadoras → visiones → serializer → endpoints",
+
+  "pipeline_capas": [
+    {
+      "capa": 0,
+      "nombre": "entry_data",
+      "tipo": "INPUT",
+      "archivo": "adapters/json_loader.py",
+      "modelo": "domain/user_inputs.py",
+      "inputs": ["JSON file / HTTP request body"],
+      "outputs": ["UserInput"],
+      "secciones": ["panel_de_control", "condiciones_cadena_a", "condiciones_cadena_b", "condiciones_cadena_c"]
+    },
+    {
+      "capa": 1,
+      "nombre": "Context Builder",
+      "tipo": "ADAPTER",
+      "archivo": "adapters/context_builder.py",
+      "clase": "SimulationContextBuilder",
+      "inputs": ["UserInput", "IParametrizationProvider"],
+      "outputs": ["PricingRequest"],
+      "transformaciones": [
+        {"campo_entrada": "panel.ciudad", "campo_salida": "PanelDeControl.tasa_ica", "via": "provider.get_ica(ciudad)"},
+        {"campo_entrada": "storage/OP-Poliza", "campo_salida": "PanelDeControl.tasa_gmf", "via": "provider.get_gmf()"},
+        {"campo_entrada": "storage/OP-Config", "campo_salida": "PanelDeControl.tasa_mensual_financ", "via": "provider.tasa_mensual_financiacion"},
+        {"campo_entrada": "perfil.salario_base", "campo_salida": "PerfilCadenaA.salario_cargado", "via": "NominaCargadaService.calcular()"},
+        {"campo_entrada": "panel.linea_negocio + storage/HR", "campo_salida": "ParametrosCalculo.pct_rotacion", "via": "provider.get_pct_rotacion(linea)"},
+        {"campo_entrada": "panel.sede + storage/HR", "campo_salida": "ParametrosNoPayroll.*", "via": "provider.get_costo_no_payroll(sede)"},
+        {"campo_entrada": "storage/OP-ComponenteAcumulado", "campo_salida": "ParametrosNomina.factor_indexacion_base", "via": "provider.get_factor_indexacion()"}
+      ]
+    },
+    {
+      "capa": 2,
+      "nombre": "NominaCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/nomina.py",
+      "clase": "NominaCalculator",
+      "inputs": ["ParametrosNomina", "ParametrosCalculo", "PerfilCadenaA[]"],
+      "outputs": ["ResultadoNomina"],
+      "metodo": "calcular_para_mes(perfiles, mes)",
+      "formulas": [
+        {"campo": "salario_fijo", "formula": "FTE × salario_cargado × factor_indexacion × factor_rampup × (1 - pct_ausente)"},
+        {"campo": "comisiones", "formula": "FTE × salario_base × comision_pct × pct_cumplimiento_variable × factor_rampup"},
+        {"campo": "cap_inicial", "formula": "FTE_nuevos × dias_cap_inicial × tarifa_dia_cap / meses_contrato"},
+        {"campo": "cap_rotacion", "formula": "FTE × pct_rotacion × dias_cap_rotacion × tarifa_dia_cap"},
+        {"campo": "examenes", "formula": "FTE × (pct_examen_anual × costo_examen + costo_inicial / meses)"},
+        {"campo": "seguridad", "formula": "FTE × incluye_seguridad × costo_estudio_seg × factor_rampup"},
+        {"campo": "crucero", "formula": "FTE × incluye_crucero × costo_crucero / meses_contrato"},
+        {"campo": "total @property", "formula": "salario_fijo + comisiones + cap_inicial + cap_rotacion + examenes + seguridad + crucero"}
+      ]
+    },
+    {
+      "capa": 3,
+      "nombre": "NoPayrollCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/no_payroll.py",
+      "clase": "NoPayrollCalculator",
+      "inputs": ["ParametrosNoPayroll", "PerfilCadenaA[]"],
+      "outputs": ["ResultadoNoPayroll"],
+      "formulas": [
+        {"campo": "opex_ti", "formula": "Σ(FTE × opex_ti_por_estacion) por perfil activo"},
+        {"campo": "capex", "formula": "Σ(FTE × capex_por_estacion)"},
+        {"campo": "costos_fijos", "formula": "Σ(FTE × (arriendo + energia + vigilancia + aseo + otros))"},
+        {"campo": "total @property", "formula": "opex_ti + capex + costos_fijos"}
+      ]
+    },
+    {
+      "capa": 4,
+      "nombre": "CadenaBCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/cadena_b.py",
+      "inputs": ["ParametrosCadenaB"],
+      "outputs": ["ResultadoCadenaB"],
+      "formulas": [
+        {"campo": "opex_fijo", "formula": "Σ(canal.opex_fijo) por canal activo"},
+        {"campo": "inversiones", "formula": "Σ(dispositivo.costo_mensual) para equipo S&M"},
+        {"campo": "sm", "formula": "costo_personal_sm + opex_herramientas_sm"},
+        {"campo": "costo_variable", "formula": "Σ(canal.tarifa_unitaria × volumen) + Σ(item.total_mensual)"},
+        {"campo": "escalamiento", "formula": "Σ(canal.costo_escalamiento)"},
+        {"campo": "hitl", "formula": "costo_personal_hitl + opex_herramientas_hitl"},
+        {"campo": "total @property", "formula": "opex_fijo + inversiones + sm + costo_variable + escalamiento + hitl"}
+      ]
+    },
+    {
+      "capa": 5,
+      "nombre": "CadenaCCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/cadena_c.py",
+      "inputs": ["ParametrosCadenaC", "IParametrizationProvider"],
+      "outputs": ["ResultadoCadenaC"],
+      "formulas": [
+        {"campo": "tarifa_proveedor", "formula": "Σ(canal.tarifa_proveedor × volumen_mensual)"},
+        {"campo": "opex_fijo_integ", "formula": "Σ(canal.opex_fijo_integ)"},
+        {"campo": "opex_var_integ", "formula": "Σ(canal.opex_var_integ × volumen)"},
+        {"campo": "inversiones", "formula": "inversion_anual × factor_aumento_tecnologico / 12"},
+        {"campo": "equipo_integ", "formula": "costo_equipo_integ × factor_rampup"},
+        {"campo": "escalamiento", "formula": "Σ(canal.costo_escalamiento)"},
+        {"campo": "hitl", "formula": "costo_personal_hitl + opex_herramientas_hitl"},
+        {"campo": "total @property", "formula": "tarifa_proveedor + opex_fijo + opex_var + inversiones + equipo + escalamiento + hitl"}
+      ]
+    },
+    {
+      "capa": 6,
+      "nombre": "CostosTotalesCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/costos_totales.py",
+      "inputs": ["ResultadoNomina", "ResultadoNoPayroll", "ResultadoCadenaB", "ResultadoCadenaC"],
+      "outputs": ["CostosTotalesMes"],
+      "formulas": [
+        {"campo": "payroll_a", "formula": "ResultadoNomina.total"},
+        {"campo": "no_payroll_a", "formula": "ResultadoNoPayroll.total"},
+        {"campo": "costo_b", "formula": "ResultadoCadenaB.total"},
+        {"campo": "costo_c", "formula": "ResultadoCadenaC.total"},
+        {"campo": "costo_a @property", "formula": "payroll_a + no_payroll_a"},
+        {"campo": "total @property", "formula": "costo_a + costo_b + costo_c"}
+      ]
+    },
+    {
+      "capa": 7,
+      "nombre": "CostosFinancierosCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/costos_financieros.py",
+      "dependencia_intermensual": true,
+      "inputs": ["CostosTotalesMes.total", "mes", "costo_operativo_mes_anterior", "PanelDeControl", "IParametrizationProvider"],
+      "outputs": ["CostosFinancierosMes"],
+      "orden_aplicacion": "financiacion → polizas → ica → gmf (gross-up chain)",
+      "formulas": [
+        {"campo": "financiacion", "formula": "costo_mes_anterior × tasa_mensual_financ × factor_periodo", "nota": "base = mes anterior"},
+        {"campo": "polizas", "formula": "(costo / factor_margenes + financiacion) × tasa_polizas", "nota": "gross-up sobre base neta"},
+        {"campo": "ica", "formula": "(costo / factor_margenes + polizas + financiacion) × tasa_ica", "nota": "gross-up acumulado"},
+        {"campo": "gmf", "formula": "(costo + polizas + financiacion) × tasa_gmf", "nota": "flat sobre costo bruto"},
+        {"campo": "total @property", "formula": "financiacion + polizas + ica + gmf"}
+      ]
+    },
+    {
+      "capa": 8,
+      "nombre": "PyGCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/pyg.py",
+      "dependencia_intermensual": true,
+      "inputs": ["PanelDeControl", "CostosTotalesCalculator", "CostosFinancierosCalculator", "IParametrizationProvider"],
+      "outputs": ["List[PyGMensual]"],
+      "metodo_principal": "calcular_contrato(perfiles_cadena_a)",
+      "stored_fields": [
+        {"campo": "ingreso_bruto_a", "formula": "costo_a × (1 + margen) × rampup"},
+        {"campo": "ingreso_bruto_b", "formula": "costo_b × (1 + margen) × rampup"},
+        {"campo": "ingreso_bruto_c", "formula": "costo_c × (1 + margen) × rampup"},
+        {"campo": "contingencia_op", "formula": "ingreso_bruto × panel.op_cont"},
+        {"campo": "contingencia_com", "formula": "ingreso_bruto × panel.com_cont"},
+        {"campo": "markup_ingreso", "formula": "ingreso_bruto × panel.markup"},
+        {"campo": "descuento_ingreso", "formula": "ingreso_bruto × panel.descuento"},
+        {"campo": "payroll_a", "formula": "CostosTotalesMes.payroll_a"},
+        {"campo": "no_payroll_a", "formula": "CostosTotalesMes.no_payroll_a"},
+        {"campo": "costo_b", "formula": "CostosTotalesMes.costo_b"},
+        {"campo": "costo_c", "formula": "CostosTotalesMes.costo_c"},
+        {"campo": "ica", "formula": "CostosFinancierosMes.ica"},
+        {"campo": "gmf", "formula": "CostosFinancierosMes.gmf"},
+        {"campo": "polizas", "formula": "CostosFinancierosMes.polizas"},
+        {"campo": "financiacion", "formula": "CostosFinancierosMes.financiacion"},
+        {"campo": "acum_ingreso_bruto", "formula": "running sum via calcular_contrato"},
+        {"campo": "acum_ingreso_neto", "formula": "running sum"},
+        {"campo": "acum_costo_total", "formula": "running sum"},
+        {"campo": "acum_costos_financieros", "formula": "running sum"},
+        {"campo": "acum_contribucion", "formula": "running sum"}
+      ],
+      "property_fields": [
+        {"campo": "ingreso_bruto", "formula": "ingreso_bruto_a + ingreso_bruto_b + ingreso_bruto_c"},
+        {"campo": "ingreso_neto", "formula": "ingreso_bruto + contingencia_op + contingencia_com + markup_ingreso - descuento_ingreso"},
+        {"campo": "costo_a", "formula": "payroll_a + no_payroll_a"},
+        {"campo": "costos_financieros", "formula": "ica + gmf + polizas + financiacion"},
+        {"campo": "costo_total", "formula": "costo_a + costo_b + costo_c"},
+        {"campo": "contribucion", "formula": "ingreso_neto - costo_total"},
+        {"campo": "pct_contribucion", "formula": "contribucion / ingreso_neto if ingreso_neto else 0.0"},
+        {"campo": "utilidad_neta", "formula": "contribucion (alias)"},
+        {"campo": "pct_utilidad_neta", "formula": "utilidad_neta / ingreso_neto if ingreso_neto else 0.0"}
+      ]
+    },
+    {
+      "capa": 9,
+      "nombre": "KPIsCalculator",
+      "tipo": "CALCULATOR",
+      "archivo": "calculators/kpis.py",
+      "inputs": ["List[PyGMensual]", "PanelDeControl", "IParametrizationProvider"],
+      "outputs": ["KPIsDeal"],
+      "formulas": [
+        {"campo": "costo_mensual_promedio", "formula": "Σ(costo_total) / meses_contrato"},
+        {"campo": "costo_cadena_a_promedio", "formula": "Σ(costo_a) / meses_contrato"},
+        {"campo": "ingreso_mensual", "formula": "(costo_promedio_a + costos_fin_promedio) / factor_margenes"},
+        {"campo": "facturacion_mensual_proyectada", "formula": "ingreso_mensual / factor_periodo"},
+        {"campo": "ingreso_bruto_total", "formula": "Σ(ingreso_bruto) para todos los meses"},
+        {"campo": "ingreso_neto_total", "formula": "Σ(ingreso_neto)"},
+        {"campo": "costo_total_contrato", "formula": "Σ(costo_total)"},
+        {"campo": "contribucion_total", "formula": "ingreso_neto_total - costo_total_contrato"},
+        {"campo": "utilidad_neta_total", "formula": "Σ(utilidad_neta) = contribucion_total"},
+        {"campo": "pct_utilidad_neta_total", "formula": "utilidad_neta_total / ingreso_neto_total"},
+        {"campo": "valor_total_deal", "formula": "ingreso_neto_total"},
+        {"campo": "margen_minimo_requerido", "formula": "provider.get_margen_minimo(linea)"},
+        {"campo": "cumple_margen_minimo", "formula": "panel.margen >= margen_minimo_requerido"}
+      ],
+      "formula_factor_margenes": "(1 - margen) × (1 - op_cont) × (1 - com_cont) × (1 + markup) × (1 - descuento)"
+    }
+  ],
+
+  "visiones": {
+    "CostToServeCalculator": {
+      "archivo": "calculators/cost_to_serve.py",
+      "inputs": ["PerfilCadenaA[]", "ParametrosCadenaB", "NominaCalculator", "NoPayrollCalculator", "List[PyGMensual]"],
+      "outputs": ["ResultadoCostToServe"],
+      "denominadores": {
+        "K50": "Σ(FTE outbound) + Σ(vol_cadena_a_mensual inbound) — denominador CTS Cadena A",
+        "L50": "Σ(volumen_mensual canales Cadena B activos) — denominador CTS Cadena B"
+      },
+      "formulas": [
+        {"campo": "cts_cadena_a", "formula": "(avg_payroll_a + avg_no_payroll_a) / K50"},
+        {"campo": "cts_cadena_b", "formula": "avg_costo_b / L50"},
+        {"campo": "cts_ponderado", "formula": "(cts_a × K50 + cts_b × L50) / (K50 + L50)"},
+        {"campo": "participacion_a", "formula": "K50 / (K50 + L50)"},
+        {"campo": "participacion_b", "formula": "L50 / (K50 + L50)"},
+        {"campo": "desglose_a.total @property", "formula": "nomina + no_payroll"},
+        {"campo": "desglose_b.total @property", "formula": "componente_fijo + componente_variable"}
+      ]
+    },
+
+    "VisionTarifasCalculator": {
+      "archivo": "calculators/vision_tarifas.py",
+      "inputs": ["PerfilCadenaA[] (es_soporte=False)", "ParametrosCadenaB", "PanelDeControl", "NominaCalculator", "NoPayrollCalculator"],
+      "outputs": ["ResultadoVisionTarifas"],
+      "seleccion_canal_principal": "max(canales, key=lambda c: c.facturacion) — FIX F8.1",
+      "formulas_por_canal": [
+        {"campo": "payroll_ch", "formula": "Σ(nomina_mes) / n_meses por canal"},
+        {"campo": "no_payroll_ch", "formula": "Σ(no_payroll_mes) / n_meses"},
+        {"campo": "costo_cadena_a_ch", "formula": "payroll_ch + no_payroll_ch"},
+        {"campo": "cadena_b_atribuible", "formula": "(vol_canal_b / vol_total_b) × avg_costo_b"},
+        {"campo": "financieros_atribuible", "formula": "(costo_ch / costo_a_total) × avg_costos_financieros"},
+        {"campo": "costo_atribuible", "formula": "costo_cadena_a_ch + cadena_b_atribuible + financieros_atribuible"},
+        {"campo": "ingreso_bruto", "formula": "costo_atribuible / factor_billing"},
+        {"campo": "facturacion", "formula": "ingreso_bruto × pct_fijo"},
+        {"campo": "tarifa_fijo_fte", "formula": "facturacion / fte"},
+        {"campo": "tarifa_variable", "formula": "(ingreso_bruto × pct_variable) / vol_mensual"}
+      ]
+    },
+
+    "VisionPyGBuilder": {
+      "archivo": "calculators/vision_pyg.py",
+      "tipo": "TRANSFORMACION_PURA",
+      "nota": "No recalcula — solo transforma List[PyGMensual] en estructura para tabla frontend",
+      "inputs": ["List[PyGMensual]", "KPIsDeal"],
+      "outputs": ["VisionPyG"]
+    },
+
+    "WaterfallPromedio": {
+      "archivo": "engine.py:_calcular_waterfall",
+      "tipo": "AGREGACION",
+      "nota": "Promedios de meses activos (ingreso_neto > 0)",
+      "formula": "avg(field) = Σ(field para meses activos) / n_activos"
+    },
+
+    "ReglaNegocios": {
+      "archivo": "engine.py:_calcular_reglas_negocio",
+      "inputs": ["PanelDeControl", "List[PyGMensual]", "IParametrizationProvider"],
+      "politicas_desde": "storage/parametrization/business_rules/{version}.json",
+      "campos_evaluados": ["margen_objetivo", "contingencia_operativa", "contingencia_comercial", "markup", "descuento"]
+    },
+
+    "RiesgoCalculator": {
+      "archivo": "calculators/riesgo.py",
+      "inputs": ["PanelDeControl", "KPIsDeal", "List[PyGMensual]", "PerfilCadenaA[]", "CadenaB", "CadenaC"],
+      "config_desde": "IParametrizationProvider.get_riesgo_config()",
+      "config_storage": "storage/parametrization/business_rules/{version}.json",
+      "formula_score": "score_total = score_cliente × 0.4 + score_operativo × 0.6",
+      "formula_categoria": "score_categoria = SUMPRODUCT(puntaje_i × peso_i)"
+    }
+  },
+
+  "serializacion": {
+    "archivo": "adapters/pricing_serializer.py",
+    "funcion": "pricing_result_to_dict(resultado, result_id)",
+    "secciones_json": {
+      "kpis": "asdict(resultado.kpis)",
+      "pyg_por_mes": "_pyg_to_dict(p) — captura explícita de 9 @property fields",
+      "cost_to_serve": "_cost_to_serve_to_dict(cts) — captura DesgloseCTS.total @property",
+      "vision_tarifas": "_vision_tarifas_to_dict(vt) — asdict() suficiente (stored fields)",
+      "configuracion_comercial": "_configuracion_comercial(resultado) — derivado de vision_tarifas + kpis",
+      "waterfall_promedio": "_waterfall_to_dict(wf)",
+      "reglas_negocio": "[asdict(r) for r in ...]",
+      "evaluacion_riesgo": "_evaluacion_riesgo_to_dict(ev)",
+      "vision_pyg": "_vision_pyg_to_dict(vp)"
+    },
+    "property_fields_capturados_en_pyg": [
+      "ingreso_bruto", "ingreso_neto", "costo_a", "costos_financieros",
+      "costo_total", "contribucion", "pct_contribucion", "utilidad_neta", "pct_utilidad_neta"
+    ]
+  },
+
+  "endpoints": {
+    "GET /simulation/{id}/results": {
+      "fuente": "storage/{result_id}.json — raíz completa",
+      "modelo_dominio": "PricingResult completo",
+      "breaking_changes": []
+    },
+    "GET /simulation/{id}/results/kpis": {
+      "fuente": ".kpis",
+      "modelo_dominio": "KPIsDeal",
+      "breaking_changes": []
+    },
+    "GET /simulation/{id}/results/pyg": {
+      "fuente": ".pyg_por_mes",
+      "modelo_dominio": "List[PyGMensual] serializado (incluye @property fields)",
+      "breaking_changes": []
+    },
+    "GET /simulation/{id}/results/cost-to-serve": {
+      "fuente": ".cost_to_serve",
+      "modelo_dominio": "ResultadoCostToServe (incluye DesgloseCTS.total)",
+      "breaking_changes": []
+    },
+    "GET /simulation/{id}/results/vision-tarifas": {
+      "fuente": ".vision_tarifas",
+      "modelo_dominio": "ResultadoVisionTarifas COMPLETO (F8.3: no más extra wrapping)",
+      "breaking_changes": ["F8.3: Antes devolvía solo {canales:[...]}, ahora devuelve estructura completa"]
+    }
+  },
+
+  "parametrizacion_versionado": {
+    "directorios": {
+      "hr": "storage/parametrization/hr/ — salarios, ARL, prestaciones, rotación, staff",
+      "gn": "storage/parametrization/gn/ — rampup, márgenes mínimos",
+      "op": "storage/parametrization/op/ — ICA, GMF, pólizas, tasas, indexación",
+      "business_rules": "storage/parametrization/business_rules/ — riesgo_config, reglas_negocio"
+    },
+    "patron_versionado": {
+      "versions_json": "active_version: string (e.g. '2026-01')",
+      "version_file": "{version_id}.json — datos completos del dominio"
+    },
+    "flujo_cambio_version": [
+      "1. Crear nuevo archivo de versión (cp 2026-01.json 2026-02.json)",
+      "2. Editar datos en nuevo archivo",
+      "3. Actualizar active_version en versions.json"
+    ]
+  },
+
+  "dependencias_intermensuales": [
+    {
+      "calculadora": "CostosFinancierosCalculator",
+      "campo": "financiacion",
+      "dependencia": "costo_total del mes anterior",
+      "impacto": "CRÍTICO — simulación debe ser secuencial mes a mes"
+    },
+    {
+      "calculadora": "PyGCalculator",
+      "campo": "acum_*",
+      "dependencia": "suma acumulada de todos los meses anteriores",
+      "impacto": "Running totals — normal para P&G"
+    }
+  ],
+
+  "valores_derivados_fuera_de_calculadoras": [
+    {
+      "campo": "configuracion_comercial.*",
+      "ubicacion": "adapters/pricing_serializer._configuracion_comercial",
+      "fuente": "vision_tarifas.canales[] + kpis",
+      "tipo": "DERIVACION_PURA",
+      "riesgo": "BAJO",
+      "status": "DOCUMENTADO — F8.1-F8.4"
+    },
+    {
+      "campo": "waterfall_promedio.*",
+      "ubicacion": "engine._calcular_waterfall",
+      "fuente": "List[PyGMensual]",
+      "tipo": "AGREGACION_PURA",
+      "riesgo": "BAJO",
+      "status": "DOCUMENTADO"
+    },
+    {
+      "campo": "reglas_negocio[].status",
+      "ubicacion": "engine._calcular_reglas_negocio",
+      "fuente": "Panel + storage/business_rules",
+      "tipo": "LOOKUP_PURO",
+      "riesgo": "BAJO",
+      "status": "DOCUMENTADO"
+    }
+  ],
+
+  "estado_trazabilidad": {
+    "cobertura_total": "100%",
+    "capas_completadas": 13,
+    "property_fields_documentados": 16,
+    "riesgo_residual": "BAJO — 3 derivaciones fuera de calculadoras, todas documentadas y pure arithmetic",
+    "listo_para_fase_11": true,
+    "fecha_validacion": "2026-05-21"
+  }
+}

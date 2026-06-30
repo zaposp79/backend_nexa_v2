@@ -1,0 +1,3140 @@
+{
+  "components": {
+    "schemas": {
+      "AjustePrecioV1": {
+        "additionalProperties": false,
+        "properties": {
+          "componente_humano": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Componente Humano"
+          },
+          "componente_tecnologico": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Componente Tecnologico"
+          },
+          "frecuencia": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frecuencia"
+          }
+        },
+        "title": "AjustePrecioV1",
+        "type": "object"
+      },
+      "AnalisisGraficoV1": {
+        "additionalProperties": false,
+        "properties": {
+          "evolucion_ingreso_neto": {
+            "items": {
+              "$ref": "#/components/schemas/EvolucionIngresoNetoItemV1"
+            },
+            "title": "Evolucion Ingreso Neto",
+            "type": "array"
+          },
+          "waterfall": {
+            "items": {
+              "$ref": "#/components/schemas/WaterfallItemV1"
+            },
+            "title": "Waterfall",
+            "type": "array"
+          }
+        },
+        "required": [
+          "waterfall",
+          "evolucion_ingreso_neto"
+        ],
+        "title": "AnalisisGraficoV1",
+        "type": "object"
+      },
+      "AprobacionV1": {
+        "additionalProperties": false,
+        "properties": {
+          "base": {
+            "title": "Base",
+            "type": "string"
+          },
+          "codigo": {
+            "title": "Codigo",
+            "type": "string"
+          },
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "requerida": {
+            "title": "Requerida",
+            "type": "boolean"
+          },
+          "umbral_cop": {
+            "title": "Umbral Cop",
+            "type": "number"
+          },
+          "valor_base": {
+            "title": "Valor Base",
+            "type": "number"
+          }
+        },
+        "required": [
+          "codigo",
+          "nombre",
+          "requerida",
+          "umbral_cop",
+          "base",
+          "valor_base"
+        ],
+        "title": "AprobacionV1",
+        "type": "object"
+      },
+      "AuditBaselineComparisonV1": {
+        "additionalProperties": false,
+        "description": "Comparison vs a certified baseline (optional).",
+        "properties": {
+          "baseline_id": {
+            "title": "Baseline Id",
+            "type": "string"
+          },
+          "diff": {
+            "additionalProperties": true,
+            "title": "Diff",
+            "type": "object"
+          },
+          "matches_baseline": {
+            "title": "Matches Baseline",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "baseline_id",
+          "matches_baseline"
+        ],
+        "title": "AuditBaselineComparisonV1",
+        "type": "object"
+      },
+      "AuditFormulaV1": {
+        "additionalProperties": false,
+        "description": "One unique formula recorded by a calculator during the simulation.",
+        "properties": {
+          "calculator": {
+            "title": "Calculator",
+            "type": "string"
+          },
+          "formula": {
+            "title": "Formula",
+            "type": "string"
+          },
+          "stage": {
+            "title": "Stage",
+            "type": "string"
+          },
+          "used_count": {
+            "default": 1,
+            "minimum": 1.0,
+            "title": "Used Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "calculator",
+          "formula",
+          "stage"
+        ],
+        "title": "AuditFormulaV1",
+        "type": "object"
+      },
+      "AuditLineageSummaryV1": {
+        "additionalProperties": false,
+        "description": "Compact summary of the lineage graph.",
+        "properties": {
+          "nodes_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Nodes Count",
+            "type": "integer"
+          },
+          "roots": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Roots",
+            "type": "array"
+          },
+          "stages_summary": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Stages Summary",
+            "type": "object"
+          }
+        },
+        "title": "AuditLineageSummaryV1",
+        "type": "object"
+      },
+      "AuditParametersUsedV1": {
+        "additionalProperties": false,
+        "description": "Split of inputs consumed by the simulation: request vs parametrization.",
+        "properties": {
+          "excel_refs": {
+            "items": {
+              "$ref": "#/components/schemas/LineageRefV1"
+            },
+            "title": "Excel Refs",
+            "type": "array"
+          },
+          "parametrization": {
+            "additionalProperties": true,
+            "title": "Parametrization",
+            "type": "object"
+          },
+          "request": {
+            "additionalProperties": true,
+            "title": "Request",
+            "type": "object"
+          }
+        },
+        "title": "AuditParametersUsedV1",
+        "type": "object"
+      },
+      "AuditResponseV1": {
+        "additionalProperties": false,
+        "description": "Audit envelope for one simulation.\n\nF9 placeholders:\n    engine_version:        literal until WAVE 14 wires the real SemVer.\n    formula_set:           literal until WAVE 14 wires the manifest hash.\n    parametrization_hashes: empty dict today; WAVE 14 will populate.",
+        "properties": {
+          "api_version": {
+            "const": "api-v1",
+            "default": "api-v1",
+            "title": "Api Version",
+            "type": "string"
+          },
+          "baseline_comparison": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AuditBaselineComparisonV1"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "engine_version": {
+            "default": "engine-v2",
+            "title": "Engine Version",
+            "type": "string"
+          },
+          "formula_set": {
+            "default": "formula-set-v2-7",
+            "title": "Formula Set",
+            "type": "string"
+          },
+          "formulas": {
+            "items": {
+              "$ref": "#/components/schemas/AuditFormulaV1"
+            },
+            "title": "Formulas",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "lineage": {
+            "$ref": "#/components/schemas/AuditLineageSummaryV1"
+          },
+          "parameters_used": {
+            "$ref": "#/components/schemas/AuditParametersUsedV1"
+          },
+          "parametrization_hashes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Parametrization Hashes",
+            "type": "object"
+          },
+          "simulation_id": {
+            "title": "Simulation Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "simulation_id",
+          "lineage"
+        ],
+        "title": "AuditResponseV1",
+        "type": "object"
+      },
+      "AuditSimulationSummaryV1": {
+        "additionalProperties": false,
+        "description": "Compact summary for the listing endpoint.",
+        "properties": {
+          "generated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generated At"
+          },
+          "nodes_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Nodes Count",
+            "type": "integer"
+          },
+          "roots_count": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Roots Count",
+            "type": "integer"
+          },
+          "simulation_id": {
+            "title": "Simulation Id",
+            "type": "string"
+          },
+          "stages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "simulation_id"
+        ],
+        "title": "AuditSimulationSummaryV1",
+        "type": "object"
+      },
+      "AuditValueExplanationV1": {
+        "additionalProperties": false,
+        "description": "Cadena de lineage humanamente legible para un valor concreto.",
+        "properties": {
+          "calculator": {
+            "default": "",
+            "title": "Calculator",
+            "type": "string"
+          },
+          "explanation": {
+            "default": "",
+            "title": "Explanation",
+            "type": "string"
+          },
+          "formula": {
+            "default": "",
+            "title": "Formula",
+            "type": "string"
+          },
+          "refs_chain": {
+            "items": {
+              "$ref": "#/components/schemas/LineageRefV1"
+            },
+            "title": "Refs Chain",
+            "type": "array"
+          },
+          "simulation_id": {
+            "title": "Simulation Id",
+            "type": "string"
+          },
+          "stage": {
+            "default": "",
+            "title": "Stage",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          },
+          "value_name": {
+            "title": "Value Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "simulation_id",
+          "value_name"
+        ],
+        "title": "AuditValueExplanationV1",
+        "type": "object"
+      },
+      "Body_upload_gn_api_v1_parametrization_gn_upload_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_gn_api_v1_parametrization_gn_upload_post",
+        "type": "object"
+      },
+      "Body_upload_hr_api_v1_parametrization_hr_upload_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_hr_api_v1_parametrization_hr_upload_post",
+        "type": "object"
+      },
+      "Body_upload_op_api_v1_parametrization_op_upload_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_op_api_v1_parametrization_op_upload_post",
+        "type": "object"
+      },
+      "CalculationRequest": {
+        "description": "Cuerpo de la solicitud de cálculo.\n\n`user_input` soporta dos formatos:\n\n**Formato legacy (test_cases):**\n  - panel_de_control, condiciones_cadena_a/b/c\n\n**Formato entry_data:**\n  - datos_operativos, polizas, reglas_negocio, volumetria,\n    condiciones_cadena_a/b/c (se normaliza automáticamente)\n\n**Auto-envuelto (flat body):**\nSi el body llega SIN la clave ``user_input`` (e.g. el cliente envía el\npayload directamente como raíz del JSON), el validador lo detecta y lo\nenvuelve automáticamente en ``{\"user_input\": <body>}``.  Esto evita el\n422 cuando el cliente envía un body plano.",
+        "properties": {
+          "user_input": {
+            "additionalProperties": true,
+            "title": "User Input",
+            "type": "object"
+          }
+        },
+        "required": [
+          "user_input"
+        ],
+        "title": "CalculationRequest",
+        "type": "object"
+      },
+      "CertificateVerificationResultV1": {
+        "additionalProperties": false,
+        "description": "Result returned by ``POST /certification/verify/{certificate_id}``.",
+        "properties": {
+          "certificate_id": {
+            "title": "Certificate Id",
+            "type": "string"
+          },
+          "checked_modules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Checked Modules",
+            "type": "array"
+          },
+          "drift": {
+            "additionalProperties": {
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "object"
+            },
+            "title": "Drift",
+            "type": "object"
+          },
+          "simulation_id": {
+            "title": "Simulation Id",
+            "type": "string"
+          },
+          "valid": {
+            "title": "Valid",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "certificate_id",
+          "simulation_id",
+          "valid"
+        ],
+        "title": "CertificateVerificationResultV1",
+        "type": "object"
+      },
+      "ComparativoEscenariosV1": {
+        "additionalProperties": false,
+        "properties": {
+          "escenarios": {
+            "items": {
+              "$ref": "#/components/schemas/EscenarioImprimibleV1"
+            },
+            "title": "Escenarios",
+            "type": "array"
+          },
+          "total": {
+            "$ref": "#/components/schemas/TotalEscenariosV1"
+          }
+        },
+        "required": [
+          "escenarios",
+          "total"
+        ],
+        "title": "ComparativoEscenariosV1",
+        "type": "object"
+      },
+      "ComponenteEscenarioV1": {
+        "additionalProperties": false,
+        "properties": {
+          "porcentaje": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Porcentaje"
+          },
+          "tipo": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tipo"
+          }
+        },
+        "title": "ComponenteEscenarioV1",
+        "type": "object"
+      },
+      "ContingenciaAjusteV1": {
+        "additionalProperties": false,
+        "properties": {
+          "aplicado": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aplicado"
+          },
+          "concepto": {
+            "enum": [
+              "margen_objetivo",
+              "contingencia_operativa",
+              "contingencia_comercial",
+              "markup",
+              "descuento"
+            ],
+            "title": "Concepto",
+            "type": "string"
+          },
+          "estado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Estado"
+          },
+          "maximo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maximo"
+          },
+          "minimo": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minimo"
+          }
+        },
+        "required": [
+          "concepto"
+        ],
+        "title": "ContingenciaAjusteV1",
+        "type": "object"
+      },
+      "ControlAprobacionV1": {
+        "additionalProperties": false,
+        "properties": {
+          "aprobaciones": {
+            "items": {
+              "$ref": "#/components/schemas/AprobacionV1"
+            },
+            "title": "Aprobaciones",
+            "type": "array"
+          },
+          "criterios_riesgo": {
+            "items": {
+              "$ref": "#/components/schemas/CriterioRiesgoV1"
+            },
+            "maxItems": 10,
+            "minItems": 10,
+            "title": "Criterios Riesgo",
+            "type": "array"
+          },
+          "facturacion_mensual_proyectada": {
+            "title": "Facturacion Mensual Proyectada",
+            "type": "number"
+          },
+          "nivel_riesgo": {
+            "$ref": "#/components/schemas/NivelRiesgoV1"
+          },
+          "requiere_aprobacion": {
+            "title": "Requiere Aprobacion",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "nivel_riesgo",
+          "facturacion_mensual_proyectada",
+          "requiere_aprobacion",
+          "aprobaciones",
+          "criterios_riesgo"
+        ],
+        "title": "ControlAprobacionV1",
+        "type": "object"
+      },
+      "CriterioRiesgoV1": {
+        "additionalProperties": false,
+        "properties": {
+          "categoria": {
+            "title": "Categoria",
+            "type": "string"
+          },
+          "criterio": {
+            "title": "Criterio",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "nivel": {
+            "title": "Nivel",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "criterio",
+          "categoria",
+          "nivel"
+        ],
+        "title": "CriterioRiesgoV1",
+        "type": "object"
+      },
+      "DatosOperativos": {
+        "properties": {
+          "crucero": {
+            "title": "Crucero",
+            "type": "number"
+          },
+          "horas_formacion_mes": {
+            "title": "Horas Formacion Mes",
+            "type": "number"
+          },
+          "pct_ausentismo": {
+            "title": "Pct Ausentismo",
+            "type": "number"
+          },
+          "pct_rotacion": {
+            "title": "Pct Rotacion",
+            "type": "number"
+          },
+          "tarifa_diaria_capacitacion": {
+            "title": "Tarifa Diaria Capacitacion",
+            "type": "number"
+          },
+          "tasa_gmf": {
+            "title": "Tasa Gmf",
+            "type": "number"
+          },
+          "tasa_ica": {
+            "title": "Tasa Ica",
+            "type": "number"
+          }
+        },
+        "required": [
+          "tarifa_diaria_capacitacion",
+          "crucero",
+          "horas_formacion_mes",
+          "pct_ausentismo",
+          "pct_rotacion",
+          "tasa_ica",
+          "tasa_gmf"
+        ],
+        "title": "DatosOperativos",
+        "type": "object"
+      },
+      "DispositivoRequerido": {
+        "properties": {
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          }
+        },
+        "required": [
+          "nombre"
+        ],
+        "title": "DispositivoRequerido",
+        "type": "object"
+      },
+      "EconomicsImprimibleV1": {
+        "additionalProperties": false,
+        "properties": {
+          "costo_mensual": {
+            "title": "Costo Mensual",
+            "type": "number"
+          },
+          "escenario_seleccionado": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Escenario Seleccionado"
+          },
+          "estado_margen": {
+            "enum": [
+              "cumple_minimo",
+              "bajo_minimo"
+            ],
+            "title": "Estado Margen",
+            "type": "string"
+          },
+          "ingreso_mensual": {
+            "title": "Ingreso Mensual",
+            "type": "number"
+          },
+          "margen_deal": {
+            "title": "Margen Deal",
+            "type": "number"
+          },
+          "moneda": {
+            "default": "COP",
+            "title": "Moneda",
+            "type": "string"
+          },
+          "valor_total_contrato": {
+            "title": "Valor Total Contrato",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ingreso_mensual",
+          "costo_mensual",
+          "margen_deal",
+          "estado_margen",
+          "valor_total_contrato"
+        ],
+        "title": "EconomicsImprimibleV1",
+        "type": "object"
+      },
+      "EquipoHITL": {
+        "properties": {
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "ratio": {
+            "title": "Ratio",
+            "type": "number"
+          }
+        },
+        "required": [
+          "nombre",
+          "ratio"
+        ],
+        "title": "EquipoHITL",
+        "type": "object"
+      },
+      "ErrorDetail": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "details": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Details"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorDetail",
+        "type": "object"
+      },
+      "EscenarioImprimibleV1": {
+        "additionalProperties": false,
+        "properties": {
+          "componente_fijo": {
+            "$ref": "#/components/schemas/ComponenteEscenarioV1"
+          },
+          "componente_variable": {
+            "$ref": "#/components/schemas/ComponenteEscenarioV1"
+          },
+          "escenario": {
+            "title": "Escenario",
+            "type": "string"
+          },
+          "modalidad_canal": {
+            "title": "Modalidad Canal",
+            "type": "string"
+          },
+          "modelo_cobro": {
+            "title": "Modelo Cobro",
+            "type": "string"
+          },
+          "tarifa_fija": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tarifa Fija"
+          },
+          "tarifa_variable": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tarifa Variable"
+          }
+        },
+        "required": [
+          "escenario",
+          "modalidad_canal",
+          "modelo_cobro",
+          "componente_fijo",
+          "componente_variable"
+        ],
+        "title": "EscenarioImprimibleV1",
+        "type": "object"
+      },
+      "EvolucionIngresoNetoItemV1": {
+        "additionalProperties": false,
+        "properties": {
+          "ingreso_neto": {
+            "title": "Ingreso Neto",
+            "type": "number"
+          },
+          "mes": {
+            "title": "Mes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mes",
+          "ingreso_neto"
+        ],
+        "title": "EvolucionIngresoNetoItemV1",
+        "type": "object"
+      },
+      "ExecutionCertificateV1": {
+        "additionalProperties": false,
+        "description": "Public DTO for an ``ExecutionCertificate``.",
+        "properties": {
+          "baseline_matched": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Baseline Matched"
+          },
+          "certificate_id": {
+            "title": "Certificate Id",
+            "type": "string"
+          },
+          "issued_at": {
+            "title": "Issued At",
+            "type": "string"
+          },
+          "lineage_hash": {
+            "title": "Lineage Hash",
+            "type": "string"
+          },
+          "request_hash": {
+            "title": "Request Hash",
+            "type": "string"
+          },
+          "result_hash": {
+            "title": "Result Hash",
+            "type": "string"
+          },
+          "simulation_id": {
+            "title": "Simulation Id",
+            "type": "string"
+          },
+          "validation_results": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Validation Results",
+            "type": "object"
+          },
+          "version_metadata": {
+            "additionalProperties": true,
+            "title": "Version Metadata",
+            "type": "object"
+          }
+        },
+        "required": [
+          "certificate_id",
+          "simulation_id",
+          "issued_at",
+          "request_hash",
+          "result_hash",
+          "lineage_hash"
+        ],
+        "title": "ExecutionCertificateV1",
+        "type": "object"
+      },
+      "FichaDealImprimibleV1": {
+        "additionalProperties": false,
+        "properties": {
+          "ajuste_precio": {
+            "$ref": "#/components/schemas/AjustePrecioV1"
+          },
+          "antiguedad_cliente": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Antiguedad Cliente"
+          },
+          "ciudad": {
+            "title": "Ciudad",
+            "type": "string"
+          },
+          "cliente": {
+            "title": "Cliente",
+            "type": "string"
+          },
+          "descuento_aplicado": {
+            "title": "Descuento Aplicado",
+            "type": "number"
+          },
+          "fecha_inicio": {
+            "title": "Fecha Inicio",
+            "type": "string"
+          },
+          "meses_contrato": {
+            "title": "Meses Contrato",
+            "type": "integer"
+          },
+          "periodo_pago_dias": {
+            "title": "Periodo Pago Dias",
+            "type": "integer"
+          },
+          "porcentaje_imprevisto": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Porcentaje Imprevisto"
+          },
+          "sede": {
+            "title": "Sede",
+            "type": "string"
+          },
+          "servicio": {
+            "title": "Servicio",
+            "type": "string"
+          },
+          "tipo_cliente": {
+            "title": "Tipo Cliente",
+            "type": "string"
+          },
+          "volumen_base_mensual": {
+            "title": "Volumen Base Mensual",
+            "type": "number"
+          }
+        },
+        "required": [
+          "cliente",
+          "servicio",
+          "ciudad",
+          "sede",
+          "tipo_cliente",
+          "fecha_inicio",
+          "meses_contrato",
+          "periodo_pago_dias",
+          "ajuste_precio",
+          "volumen_base_mensual",
+          "descuento_aplicado"
+        ],
+        "title": "FichaDealImprimibleV1",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HardSoftItem": {
+        "properties": {
+          "cantidad_meses": {
+            "title": "Cantidad Meses",
+            "type": "number"
+          },
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item",
+          "valor",
+          "cantidad_meses",
+          "tipo"
+        ],
+        "title": "HardSoftItem",
+        "type": "object"
+      },
+      "Indexacion": {
+        "properties": {
+          "tasa_interes_mensual": {
+            "title": "Tasa Interes Mensual",
+            "type": "number"
+          }
+        },
+        "required": [
+          "tasa_interes_mensual"
+        ],
+        "title": "Indexacion",
+        "type": "object"
+      },
+      "LineageRefV1": {
+        "additionalProperties": false,
+        "description": "One reference inside a lineage chain (audit-facing view).",
+        "properties": {
+          "cell": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cell"
+          },
+          "formula": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Formula"
+          },
+          "sheet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sheet"
+          },
+          "source_id": {
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "required": [
+          "source_type",
+          "source_id"
+        ],
+        "title": "LineageRefV1",
+        "type": "object"
+      },
+      "MargenObjetivo": {
+        "properties": {
+          "cadena_a": {
+            "title": "Cadena A",
+            "type": "number"
+          },
+          "cadena_b": {
+            "title": "Cadena B",
+            "type": "number"
+          },
+          "cadena_c": {
+            "title": "Cadena C",
+            "type": "number"
+          }
+        },
+        "required": [
+          "cadena_a",
+          "cadena_b",
+          "cadena_c"
+        ],
+        "title": "MargenObjetivo",
+        "type": "object"
+      },
+      "NivelRiesgoV1": {
+        "additionalProperties": false,
+        "properties": {
+          "clasificacion": {
+            "title": "Clasificacion",
+            "type": "string"
+          },
+          "score_cliente": {
+            "title": "Score Cliente",
+            "type": "number"
+          },
+          "score_deal": {
+            "title": "Score Deal",
+            "type": "number"
+          },
+          "score_operativo": {
+            "title": "Score Operativo",
+            "type": "number"
+          }
+        },
+        "required": [
+          "score_cliente",
+          "score_operativo",
+          "score_deal",
+          "clasificacion"
+        ],
+        "title": "NivelRiesgoV1",
+        "type": "object"
+      },
+      "OpexFijoItem": {
+        "properties": {
+          "item": {
+            "title": "Item",
+            "type": "string"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "number"
+          }
+        },
+        "required": [
+          "item",
+          "valor"
+        ],
+        "title": "OpexFijoItem",
+        "type": "object"
+      },
+      "ParametrosCadenaA": {
+        "properties": {
+          "canales": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Canales",
+            "type": "array"
+          },
+          "hardware_software": {
+            "items": {
+              "$ref": "#/components/schemas/HardSoftItem"
+            },
+            "title": "Hardware Software",
+            "type": "array"
+          },
+          "modalidades": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Modalidades",
+            "type": "array"
+          },
+          "opex_fijo": {
+            "items": {
+              "$ref": "#/components/schemas/OpexFijoItem"
+            },
+            "title": "Opex Fijo",
+            "type": "array"
+          },
+          "ratios": {
+            "items": {
+              "$ref": "#/components/schemas/Ratio"
+            },
+            "title": "Ratios",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ratios",
+          "opex_fijo",
+          "hardware_software",
+          "modalidades",
+          "canales"
+        ],
+        "title": "ParametrosCadenaA",
+        "type": "object"
+      },
+      "ParametrosCadenaB": {
+        "properties": {
+          "dispositivos_requeridos": {
+            "items": {
+              "$ref": "#/components/schemas/DispositivoRequerido"
+            },
+            "title": "Dispositivos Requeridos",
+            "type": "array"
+          },
+          "equipo_hitl": {
+            "items": {
+              "$ref": "#/components/schemas/EquipoHITL"
+            },
+            "title": "Equipo Hitl",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dispositivos_requeridos",
+          "equipo_hitl"
+        ],
+        "title": "ParametrosCadenaB",
+        "type": "object"
+      },
+      "ParametrosCadenaC": {
+        "properties": {
+          "dispositivos_requeridos": {
+            "items": {
+              "$ref": "#/components/schemas/DispositivoRequerido"
+            },
+            "title": "Dispositivos Requeridos",
+            "type": "array"
+          },
+          "equipo_hitl": {
+            "items": {
+              "$ref": "#/components/schemas/EquipoHITL"
+            },
+            "title": "Equipo Hitl",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dispositivos_requeridos",
+          "equipo_hitl"
+        ],
+        "title": "ParametrosCadenaC",
+        "type": "object"
+      },
+      "ParametrosPanel": {
+        "properties": {
+          "ciudades": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Ciudades",
+            "type": "array"
+          },
+          "clientes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Clientes",
+            "type": "array"
+          },
+          "datos_operativos": {
+            "$ref": "#/components/schemas/DatosOperativos"
+          },
+          "localidades": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Localidades",
+            "type": "array"
+          },
+          "periodos_pago": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Periodos Pago",
+            "type": "array"
+          },
+          "polizas": {
+            "items": {
+              "$ref": "#/components/schemas/Poliza"
+            },
+            "title": "Polizas",
+            "type": "array"
+          },
+          "reglas_negocio": {
+            "$ref": "#/components/schemas/ReglasNegocio"
+          },
+          "servicios": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Servicios",
+            "type": "array"
+          },
+          "tipos_cliente": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tipos Cliente",
+            "type": "array"
+          },
+          "volumetria": {
+            "$ref": "#/components/schemas/Volumetria"
+          }
+        },
+        "required": [
+          "datos_operativos",
+          "polizas",
+          "reglas_negocio",
+          "volumetria",
+          "ciudades",
+          "localidades",
+          "servicios",
+          "clientes",
+          "tipos_cliente",
+          "periodos_pago"
+        ],
+        "title": "ParametrosPanel",
+        "type": "object"
+      },
+      "Poliza": {
+        "properties": {
+          "nombre": {
+            "title": "Nombre",
+            "type": "string"
+          },
+          "pct_atribuible": {
+            "title": "Pct Atribuible",
+            "type": "number"
+          }
+        },
+        "required": [
+          "nombre",
+          "pct_atribuible"
+        ],
+        "title": "Poliza",
+        "type": "object"
+      },
+      "Rango": {
+        "properties": {
+          "maximo": {
+            "title": "Maximo",
+            "type": "number"
+          },
+          "minimo": {
+            "title": "Minimo",
+            "type": "number"
+          }
+        },
+        "required": [
+          "minimo",
+          "maximo"
+        ],
+        "title": "Rango",
+        "type": "object"
+      },
+      "Ratio": {
+        "properties": {
+          "agentes": {
+            "title": "Agentes",
+            "type": "number"
+          },
+          "cargo": {
+            "title": "Cargo",
+            "type": "string"
+          },
+          "servicio": {
+            "title": "Servicio",
+            "type": "string"
+          },
+          "tipo": {
+            "title": "Tipo",
+            "type": "string"
+          }
+        },
+        "required": [
+          "cargo",
+          "servicio",
+          "agentes",
+          "tipo"
+        ],
+        "title": "Ratio",
+        "type": "object"
+      },
+      "ReglasNegocio": {
+        "description": "Políticas comerciales activas con rangos min/max del deal.\n\nBUSINESS_RULES_FIX_3:\n    descuento_volumen renombrado a descuento (alineado con politicas_comerciales\n    en v2-7.json y con PanelDeControl.descuento). Ver FIX_1 para historial.\n    porcentaje_acumulado eliminado: era DEAD_FIELD_LEGACY sin fuente Panel.",
+        "properties": {
+          "contingencia_comercial": {
+            "$ref": "#/components/schemas/Rango"
+          },
+          "contingencia_operativa": {
+            "$ref": "#/components/schemas/Rango"
+          },
+          "descuento": {
+            "$ref": "#/components/schemas/Rango"
+          },
+          "margen_objetivo": {
+            "$ref": "#/components/schemas/MargenObjetivo"
+          },
+          "markup": {
+            "$ref": "#/components/schemas/Rango"
+          }
+        },
+        "required": [
+          "margen_objetivo",
+          "contingencia_operativa",
+          "contingencia_comercial",
+          "markup",
+          "descuento"
+        ],
+        "title": "ReglasNegocio",
+        "type": "object"
+      },
+      "TotalEscenariosV1": {
+        "additionalProperties": false,
+        "properties": {
+          "componente_fijo_porcentaje": {
+            "title": "Componente Fijo Porcentaje",
+            "type": "number"
+          },
+          "componente_variable_porcentaje": {
+            "title": "Componente Variable Porcentaje",
+            "type": "number"
+          },
+          "modelo_cobro": {
+            "title": "Modelo Cobro",
+            "type": "string"
+          },
+          "tarifa_fija": {
+            "title": "Tarifa Fija",
+            "type": "number"
+          },
+          "tarifa_variable": {
+            "title": "Tarifa Variable",
+            "type": "number"
+          }
+        },
+        "required": [
+          "modelo_cobro",
+          "componente_fijo_porcentaje",
+          "componente_variable_porcentaje",
+          "tarifa_fija",
+          "tarifa_variable"
+        ],
+        "title": "TotalEscenariosV1",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VisionImprimibleApiResponseV1": {
+        "description": "Success envelope: ``data`` contains only ``vision_imprimible``.",
+        "examples": [
+          {
+            "data": {
+              "vision_imprimible": {
+                "analisis_grafico": {
+                  "evolucion_ingreso_neto": [
+                    {
+                      "ingreso_neto": 100000000,
+                      "mes": 1
+                    }
+                  ],
+                  "waterfall": [
+                    {
+                      "concepto": "ingreso_neto",
+                      "valor": 100000000
+                    }
+                  ]
+                },
+                "comparativo_escenarios": {
+                  "escenarios": [],
+                  "total": {
+                    "componente_fijo_porcentaje": 0,
+                    "componente_variable_porcentaje": 1,
+                    "modelo_cobro": "Variable",
+                    "tarifa_fija": 0,
+                    "tarifa_variable": 10000
+                  }
+                },
+                "contingencias_ajustes": [
+                  {
+                    "aplicado": 0.21,
+                    "concepto": "margen_objetivo",
+                    "estado": "dentro_rango",
+                    "minimo": 0.17
+                  },
+                  {
+                    "aplicado": 0.05,
+                    "concepto": "contingencia_operativa",
+                    "estado": "dentro_rango",
+                    "maximo": 0.08,
+                    "minimo": 0.05
+                  },
+                  {
+                    "aplicado": 0.01,
+                    "concepto": "contingencia_comercial",
+                    "estado": "dentro_rango",
+                    "maximo": 0.03,
+                    "minimo": 0.01
+                  },
+                  {
+                    "aplicado": 0.02,
+                    "concepto": "markup",
+                    "estado": "dentro_rango",
+                    "maximo": 0.08,
+                    "minimo": 0.02
+                  },
+                  {
+                    "aplicado": 0,
+                    "concepto": "descuento",
+                    "estado": "dentro_rango",
+                    "maximo": 0.08,
+                    "minimo": 0
+                  }
+                ],
+                "control_aprobacion": {
+                  "aprobaciones": [],
+                  "criterios_riesgo": [
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 1",
+                      "id": 1,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 2",
+                      "id": 2,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 3",
+                      "id": 3,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 4",
+                      "id": 4,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 5",
+                      "id": 5,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 6",
+                      "id": 6,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 7",
+                      "id": 7,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 8",
+                      "id": 8,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 9",
+                      "id": 9,
+                      "nivel": 1
+                    },
+                    {
+                      "categoria": "Cliente",
+                      "criterio": "Criterio 10",
+                      "id": 10,
+                      "nivel": 1
+                    }
+                  ],
+                  "facturacion_mensual_proyectada": 100000000,
+                  "nivel_riesgo": {
+                    "clasificacion": "Medio",
+                    "score_cliente": 1.6,
+                    "score_deal": 1.9,
+                    "score_operativo": 2.1
+                  },
+                  "requiere_aprobacion": true
+                },
+                "economics": {
+                  "costo_mensual": 79000000,
+                  "escenario_seleccionado": "Escenario 1",
+                  "estado_margen": "cumple_minimo",
+                  "ingreso_mensual": 100000000,
+                  "margen_deal": 0.21,
+                  "moneda": "COP",
+                  "valor_total_contrato": 1200000000
+                },
+                "ficha_deal": {
+                  "ajuste_precio": {
+                    "componente_humano": "IPC",
+                    "componente_tecnologico": "20% SMMLV 80% IPC",
+                    "frecuencia": "Anual"
+                  },
+                  "antiguedad_cliente": "Cliente Antiguo",
+                  "ciudad": "Bogota",
+                  "cliente": "Cliente A",
+                  "descuento_aplicado": 0,
+                  "fecha_inicio": "2026-07-01",
+                  "meses_contrato": 12,
+                  "periodo_pago_dias": 30,
+                  "porcentaje_imprevisto": 0,
+                  "sede": "Toberin",
+                  "servicio": "SAC",
+                  "tipo_cliente": "Grupo Aval",
+                  "volumen_base_mensual": 100000
+                }
+              }
+            },
+            "success": true
+          }
+        ],
+        "properties": {
+          "data": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/VisionImprimibleDataV1"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ErrorDetail"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "meta": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Meta"
+          },
+          "success": {
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ],
+        "title": "VisionImprimibleApiResponseV1",
+        "type": "object"
+      },
+      "VisionImprimibleDataV1": {
+        "additionalProperties": false,
+        "properties": {
+          "vision_imprimible": {
+            "$ref": "#/components/schemas/VisionImprimibleResponseV1"
+          }
+        },
+        "required": [
+          "vision_imprimible"
+        ],
+        "title": "VisionImprimibleDataV1",
+        "type": "object"
+      },
+      "VisionImprimibleResponseV1": {
+        "additionalProperties": false,
+        "properties": {
+          "analisis_grafico": {
+            "$ref": "#/components/schemas/AnalisisGraficoV1"
+          },
+          "comparativo_escenarios": {
+            "$ref": "#/components/schemas/ComparativoEscenariosV1"
+          },
+          "contingencias_ajustes": {
+            "items": {
+              "$ref": "#/components/schemas/ContingenciaAjusteV1"
+            },
+            "maxItems": 5,
+            "minItems": 5,
+            "title": "Contingencias Ajustes",
+            "type": "array"
+          },
+          "control_aprobacion": {
+            "$ref": "#/components/schemas/ControlAprobacionV1"
+          },
+          "economics": {
+            "$ref": "#/components/schemas/EconomicsImprimibleV1"
+          },
+          "ficha_deal": {
+            "$ref": "#/components/schemas/FichaDealImprimibleV1"
+          }
+        },
+        "required": [
+          "ficha_deal",
+          "economics",
+          "analisis_grafico",
+          "comparativo_escenarios",
+          "control_aprobacion",
+          "contingencias_ajustes"
+        ],
+        "title": "VisionImprimibleResponseV1",
+        "type": "object"
+      },
+      "Volumetria": {
+        "properties": {
+          "indexacion": {
+            "$ref": "#/components/schemas/Indexacion"
+          }
+        },
+        "required": [
+          "indexacion"
+        ],
+        "title": "Volumetria",
+        "type": "object"
+      },
+      "WaterfallItemV1": {
+        "additionalProperties": false,
+        "properties": {
+          "concepto": {
+            "title": "Concepto",
+            "type": "string"
+          },
+          "valor": {
+            "title": "Valor",
+            "type": "number"
+          }
+        },
+        "required": [
+          "concepto",
+          "valor"
+        ],
+        "title": "WaterfallItemV1",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "description": "Motor de pricing + API de parametrización y simulación",
+    "title": "NEXA Simulator API",
+    "version": "1.0.0",
+    "x-contract-version": "api-v1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/audit/simulation/{simulation_id}": {
+      "get": {
+        "description": "Return the audit envelope for `simulation_id`.\n\nReturns 404 if the simulation was not run with `with_lineage=True`.",
+        "operationId": "get_simulation_audit_api_v1_audit_simulation__simulation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditResponseV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Full audit envelope for a simulation.",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/audit/simulation/{simulation_id}/baseline-diff": {
+      "get": {
+        "description": "Compare KPIs from the persisted lineage vs the baseline's kpis.json.",
+        "operationId": "diff_vs_baseline_api_v1_audit_simulation__simulation_id__baseline_diff_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Certified baseline id.",
+            "in": "query",
+            "name": "baseline_id",
+            "required": true,
+            "schema": {
+              "description": "Certified baseline id.",
+              "title": "Baseline Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Baseline collection version under storage/baselines/.",
+            "in": "query",
+            "name": "baseline_version",
+            "required": false,
+            "schema": {
+              "default": "v2-7-certified",
+              "description": "Baseline collection version under storage/baselines/.",
+              "title": "Baseline Version",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditBaselineComparisonV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Compare a simulation's kpis vs a certified baseline.",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/audit/simulation/{simulation_id}/explain": {
+      "get": {
+        "description": "Return the trace_back chain + human explanation for `value_name`.",
+        "operationId": "explain_value_api_v1_audit_simulation__simulation_id__explain_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Canonical value name in the lineage graph.",
+            "in": "query",
+            "name": "value_name",
+            "required": true,
+            "schema": {
+              "description": "Canonical value name in the lineage graph.",
+              "title": "Value Name",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditValueExplanationV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lineage chain for a specific value in a simulation.",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/audit/simulations": {
+      "get": {
+        "description": "Return summaries of simulations that have a stored lineage graph.",
+        "operationId": "list_audit_simulations_api_v1_audit_simulations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/AuditSimulationSummaryV1"
+                  },
+                  "title": "Response List Audit Simulations Api V1 Audit Simulations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List simulations with persisted lineage.",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/api/v1/certification/certificate/{certificate_id}": {
+      "get": {
+        "operationId": "get_certificate_api_v1_certification_certificate__certificate_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "certificate_id",
+            "required": true,
+            "schema": {
+              "title": "Certificate Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExecutionCertificateV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Certificate",
+        "tags": [
+          "certification"
+        ]
+      }
+    },
+    "/api/v1/certification/certificates": {
+      "get": {
+        "description": "List most recent certificates (descending by mtime).",
+        "operationId": "list_certificates_api_v1_certification_certificates_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExecutionCertificateV1"
+                  },
+                  "title": "Response List Certificates Api V1 Certification Certificates Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Certificates",
+        "tags": [
+          "certification"
+        ]
+      }
+    },
+    "/api/v1/certification/verify/{certificate_id}": {
+      "post": {
+        "description": "Re-validate ``certificate_id`` against the live parametrization hashes.",
+        "operationId": "verify_certificate_api_v1_certification_verify__certificate_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "certificate_id",
+            "required": true,
+            "schema": {
+              "title": "Certificate Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CertificateVerificationResultV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Certificate not found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verify Certificate",
+        "tags": [
+          "certification"
+        ]
+      }
+    },
+    "/api/v1/parametrization/gn/active": {
+      "get": {
+        "operationId": "get_gn_active_api_v1_parametrization_gn_active_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Gn Active",
+        "tags": [
+          "parametrization-gn"
+        ]
+      }
+    },
+    "/api/v1/parametrization/gn/upload": {
+      "post": {
+        "operationId": "upload_gn_api_v1_parametrization_gn_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_gn_api_v1_parametrization_gn_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Gn",
+        "tags": [
+          "parametrization-gn"
+        ]
+      }
+    },
+    "/api/v1/parametrization/gn/versions": {
+      "get": {
+        "operationId": "list_gn_versions_api_v1_parametrization_gn_versions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Gn Versions",
+        "tags": [
+          "parametrization-gn"
+        ]
+      }
+    },
+    "/api/v1/parametrization/gn/{version_id}": {
+      "delete": {
+        "operationId": "delete_gn_api_v1_parametrization_gn__version_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Gn",
+        "tags": [
+          "parametrization-gn"
+        ]
+      }
+    },
+    "/api/v1/parametrization/gn/{version_id}/activate": {
+      "get": {
+        "operationId": "activate_gn_api_v1_parametrization_gn__version_id__activate_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Gn",
+        "tags": [
+          "parametrization-gn"
+        ]
+      }
+    },
+    "/api/v1/parametrization/hr/active": {
+      "get": {
+        "operationId": "get_hr_active_api_v1_parametrization_hr_active_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Hr Active",
+        "tags": [
+          "parametrization-hr"
+        ]
+      }
+    },
+    "/api/v1/parametrization/hr/upload": {
+      "post": {
+        "description": "Carga y procesa un archivo Excel HR.",
+        "operationId": "upload_hr_api_v1_parametrization_hr_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_hr_api_v1_parametrization_hr_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Hr",
+        "tags": [
+          "parametrization-hr"
+        ]
+      }
+    },
+    "/api/v1/parametrization/hr/versions": {
+      "get": {
+        "operationId": "list_hr_versions_api_v1_parametrization_hr_versions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Hr Versions",
+        "tags": [
+          "parametrization-hr"
+        ]
+      }
+    },
+    "/api/v1/parametrization/hr/{version_id}": {
+      "delete": {
+        "operationId": "delete_hr_api_v1_parametrization_hr__version_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Hr",
+        "tags": [
+          "parametrization-hr"
+        ]
+      }
+    },
+    "/api/v1/parametrization/hr/{version_id}/activate": {
+      "get": {
+        "operationId": "activate_hr_api_v1_parametrization_hr__version_id__activate_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Hr",
+        "tags": [
+          "parametrization-hr"
+        ]
+      }
+    },
+    "/api/v1/parametrization/op/active": {
+      "get": {
+        "operationId": "get_op_active_api_v1_parametrization_op_active_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Op Active",
+        "tags": [
+          "parametrization-op"
+        ]
+      }
+    },
+    "/api/v1/parametrization/op/upload": {
+      "post": {
+        "operationId": "upload_op_api_v1_parametrization_op_upload_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_op_api_v1_parametrization_op_upload_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Op",
+        "tags": [
+          "parametrization-op"
+        ]
+      }
+    },
+    "/api/v1/parametrization/op/versions": {
+      "get": {
+        "operationId": "list_op_versions_api_v1_parametrization_op_versions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List Op Versions",
+        "tags": [
+          "parametrization-op"
+        ]
+      }
+    },
+    "/api/v1/parametrization/op/{version_id}": {
+      "delete": {
+        "operationId": "delete_op_api_v1_parametrization_op__version_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Op",
+        "tags": [
+          "parametrization-op"
+        ]
+      }
+    },
+    "/api/v1/parametrization/op/{version_id}/activate": {
+      "get": {
+        "operationId": "activate_op_api_v1_parametrization_op__version_id__activate_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "version_id",
+            "required": true,
+            "schema": {
+              "title": "Version Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate Op",
+        "tags": [
+          "parametrization-op"
+        ]
+      }
+    },
+    "/api/v1/simulation/calculate": {
+      "post": {
+        "operationId": "calculate_api_v1_simulation_calculate_post",
+        "parameters": [
+          {
+            "description": "Execution mode. Use 'certified' to enforce baseline hashes and emit an ExecutionCertificate.",
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "normal",
+              "description": "Execution mode. Use 'certified' to enforce baseline hashes and emit an ExecutionCertificate.",
+              "enum": [
+                "normal",
+                "certified"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CalculationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Calculate",
+        "tags": [
+          "simulation-calculate"
+        ]
+      }
+    },
+    "/api/v1/simulation/input/chain-a/parametros": {
+      "get": {
+        "operationId": "get_parametros_api_v1_simulation_input_chain_a_parametros_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParametrosCadenaA"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "description": "Parametrization error"
+          }
+        },
+        "summary": "Parámetros de Cadena A",
+        "tags": [
+          "simulation-chain-a"
+        ]
+      }
+    },
+    "/api/v1/simulation/input/chain-b/parametros": {
+      "get": {
+        "operationId": "get_parametros_api_v1_simulation_input_chain_b_parametros_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParametrosCadenaB"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "description": "Parametrization error"
+          }
+        },
+        "summary": "Parámetros de Cadena B",
+        "tags": [
+          "simulation-chain-b"
+        ]
+      }
+    },
+    "/api/v1/simulation/input/chain-c/parametros": {
+      "get": {
+        "operationId": "get_parametros_api_v1_simulation_input_chain_c_parametros_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParametrosCadenaC"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "description": "Parametrization error"
+          }
+        },
+        "summary": "Parámetros de Cadena C",
+        "tags": [
+          "simulation-chain-c"
+        ]
+      }
+    },
+    "/api/v1/simulation/input/panel/parametros": {
+      "get": {
+        "operationId": "get_parametros_api_v1_simulation_input_panel_parametros_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParametrosPanel"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "500": {
+            "description": "Parametrization error"
+          }
+        },
+        "summary": "Parámetros del Panel de Control General",
+        "tags": [
+          "simulation-panel"
+        ]
+      }
+    },
+    "/api/v1/simulation/{simulation_id}/results": {
+      "get": {
+        "description": "Respuesta pública de una ejecución, limitada a la hoja Visión Imprimible.\n\nEl documento técnico completo permanece persistido para auditoría y para\nlas rutas especializadas, pero no se expone en este endpoint.",
+        "operationId": "get_results_api_v1_simulation__simulation_id__results_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionImprimibleApiResponseV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Results",
+        "tags": [
+          "simulation-results"
+        ]
+      }
+    },
+    "/api/v1/simulation/{simulation_id}/results/cost-to-serve": {
+      "get": {
+        "description": "CTS por cadena con desgloses, canales y estructura del equipo. Equivale a la hoja 'Vision CTS' del Excel V2-7.",
+        "operationId": "get_cost_to_serve_api_v1_simulation__simulation_id__results_cost_to_serve_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vision Cost To Serve",
+        "tags": [
+          "cost-to-serve"
+        ]
+      }
+    },
+    "/api/v1/simulation/{simulation_id}/results/vision-imprimible": {
+      "get": {
+        "description": "Proyección pública de la hoja canónica Visión Imprimible: ficha, economics, gráficos, escenarios, control y aprobación, y contingencias.",
+        "operationId": "get_vision_imprimible_api_v1_simulation__simulation_id__results_vision_imprimible_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionImprimibleApiResponseV1"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Visión Imprimible",
+        "tags": [
+          "vision-imprimible"
+        ]
+      }
+    },
+    "/api/v1/simulation/{simulation_id}/results/vision-pyg": {
+      "get": {
+        "description": "Estado de Resultados (P&G) por mes, equivale a la hoja 'Visión P&G' del Excel V2-7.",
+        "operationId": "get_vision_pyg_results_api_v1_simulation__simulation_id__results_vision_pyg_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vision P&G",
+        "tags": [
+          "simulation-visions"
+        ]
+      }
+    },
+    "/api/v1/simulation/{simulation_id}/results/vision-tarifas": {
+      "get": {
+        "description": "Equivale a la hoja 'Vision Tarifas_Modelo_Cobro' del Excel V2-7.",
+        "operationId": "get_vision_tarifas_api_v1_simulation__simulation_id__results_vision_tarifas_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Vision Tarifas — Modelo de Cobro",
+        "tags": [
+          "vision-tarifas"
+        ]
+      }
+    },
+    "/api/v1/simulation/{simulation_id}/traceability": {
+      "get": {
+        "description": "Trazabilidad contractual persistida para una simulación.",
+        "operationId": "get_traceability_api_v1_simulation__simulation_id__traceability_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "simulation_id",
+            "required": true,
+            "schema": {
+              "title": "Simulation Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Traceability",
+        "tags": [
+          "simulation-results"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Health Health Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health"
+      }
+    }
+  }
+}

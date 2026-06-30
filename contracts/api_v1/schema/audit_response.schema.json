@@ -1,0 +1,239 @@
+{
+  "$defs": {
+    "AuditBaselineComparisonV1": {
+      "additionalProperties": false,
+      "description": "Comparison vs a certified baseline (optional).",
+      "properties": {
+        "baseline_id": {
+          "title": "Baseline Id",
+          "type": "string"
+        },
+        "diff": {
+          "additionalProperties": true,
+          "title": "Diff",
+          "type": "object"
+        },
+        "matches_baseline": {
+          "title": "Matches Baseline",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "baseline_id",
+        "matches_baseline"
+      ],
+      "title": "AuditBaselineComparisonV1",
+      "type": "object"
+    },
+    "AuditFormulaV1": {
+      "additionalProperties": false,
+      "description": "One unique formula recorded by a calculator during the simulation.",
+      "properties": {
+        "calculator": {
+          "title": "Calculator",
+          "type": "string"
+        },
+        "formula": {
+          "title": "Formula",
+          "type": "string"
+        },
+        "stage": {
+          "title": "Stage",
+          "type": "string"
+        },
+        "used_count": {
+          "default": 1,
+          "minimum": 1,
+          "title": "Used Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "calculator",
+        "formula",
+        "stage"
+      ],
+      "title": "AuditFormulaV1",
+      "type": "object"
+    },
+    "AuditLineageSummaryV1": {
+      "additionalProperties": false,
+      "description": "Compact summary of the lineage graph.",
+      "properties": {
+        "nodes_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Nodes Count",
+          "type": "integer"
+        },
+        "roots": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Roots",
+          "type": "array"
+        },
+        "stages_summary": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Stages Summary",
+          "type": "object"
+        }
+      },
+      "title": "AuditLineageSummaryV1",
+      "type": "object"
+    },
+    "AuditParametersUsedV1": {
+      "additionalProperties": false,
+      "description": "Split of inputs consumed by the simulation: request vs parametrization.",
+      "properties": {
+        "excel_refs": {
+          "items": {
+            "$ref": "#/$defs/LineageRefV1"
+          },
+          "title": "Excel Refs",
+          "type": "array"
+        },
+        "parametrization": {
+          "additionalProperties": true,
+          "title": "Parametrization",
+          "type": "object"
+        },
+        "request": {
+          "additionalProperties": true,
+          "title": "Request",
+          "type": "object"
+        }
+      },
+      "title": "AuditParametersUsedV1",
+      "type": "object"
+    },
+    "LineageRefV1": {
+      "additionalProperties": false,
+      "description": "One reference inside a lineage chain (audit-facing view).",
+      "properties": {
+        "cell": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cell"
+        },
+        "formula": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formula"
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "title": "Source Type",
+          "type": "string"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "source_type",
+        "source_id"
+      ],
+      "title": "LineageRefV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Audit envelope for one simulation.\n\nAll fields are populated by the audit use case from live VersionMetadata\nand lineage graph at simulation time.",
+  "properties": {
+    "api_version": {
+      "const": "api-v1",
+      "default": "api-v1",
+      "title": "Api Version",
+      "type": "string"
+    },
+    "baseline_comparison": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AuditBaselineComparisonV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "engine_version": {
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "formula_set": {
+      "title": "Formula Set",
+      "type": "string"
+    },
+    "formulas": {
+      "items": {
+        "$ref": "#/$defs/AuditFormulaV1"
+      },
+      "title": "Formulas",
+      "type": "array"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "lineage": {
+      "$ref": "#/$defs/AuditLineageSummaryV1"
+    },
+    "parameters_used": {
+      "$ref": "#/$defs/AuditParametersUsedV1"
+    },
+    "parametrization_hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Parametrization Hashes",
+      "type": "object"
+    },
+    "simulation_id": {
+      "title": "Simulation Id",
+      "type": "string"
+    }
+  },
+  "required": [
+    "simulation_id",
+    "engine_version",
+    "formula_set",
+    "lineage"
+  ],
+  "title": "AuditResponseV1",
+  "type": "object"
+}

@@ -1,0 +1,1000 @@
+{
+  "$defs": {
+    "CadenaARequestV1": {
+      "additionalProperties": false,
+      "description": "Cadena A configuration (frozen).",
+      "properties": {
+        "detalles_recursos_humanos": {
+          "items": {
+            "$ref": "#/$defs/DetalleRecursoHumanoV1"
+          },
+          "title": "Detalles Recursos Humanos",
+          "type": "array"
+        },
+        "perfiles": {
+          "items": {
+            "$ref": "#/$defs/PerfilCadenaAV1"
+          },
+          "title": "Perfiles",
+          "type": "array"
+        }
+      },
+      "title": "CadenaARequestV1",
+      "type": "object"
+    },
+    "CadenaBRequestV1": {
+      "additionalProperties": false,
+      "properties": {
+        "amortizar_dispositivos_sm": {
+          "default": true,
+          "title": "Amortizar Dispositivos Sm",
+          "type": "boolean"
+        },
+        "canales": {
+          "items": {
+            "$ref": "#/$defs/CanalCadenaBV1"
+          },
+          "title": "Canales",
+          "type": "array"
+        },
+        "dispositivos_sm": {
+          "items": {
+            "$ref": "#/$defs/DispositivoSMV1"
+          },
+          "title": "Dispositivos Sm",
+          "type": "array"
+        },
+        "equipo_sm": {
+          "items": {
+            "$ref": "#/$defs/MiembroEquipoSMV1"
+          },
+          "title": "Equipo Sm",
+          "type": "array"
+        },
+        "fte_equipo_sm": {
+          "default": 1.0,
+          "minimum": 0.0,
+          "title": "Fte Equipo Sm",
+          "type": "number"
+        },
+        "inversion_plataforma": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Inversion Plataforma",
+          "type": "number"
+        },
+        "opex_consumo_variable": {
+          "items": {
+            "$ref": "#/$defs/ItemOpexConsumoV1"
+          },
+          "title": "Opex Consumo Variable",
+          "type": "array"
+        }
+      },
+      "title": "CadenaBRequestV1",
+      "type": "object"
+    },
+    "CadenaCRequestV1": {
+      "additionalProperties": false,
+      "properties": {
+        "canales": {
+          "items": {
+            "$ref": "#/$defs/CanalCadenaCV1"
+          },
+          "title": "Canales",
+          "type": "array"
+        },
+        "equipo_transversal": {
+          "items": {
+            "$ref": "#/$defs/MiembroEquipoTransversalV1"
+          },
+          "title": "Equipo Transversal",
+          "type": "array"
+        },
+        "inversion_anual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Inversion Anual",
+          "type": "number"
+        }
+      },
+      "title": "CadenaCRequestV1",
+      "type": "object"
+    },
+    "CanalCadenaBV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "costo_escalamiento": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Costo Escalamiento",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "opex_fijo": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Opex Fijo",
+          "type": "number"
+        },
+        "pct_escalamiento": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Escalamiento",
+          "type": "number"
+        },
+        "producto": {
+          "default": "",
+          "title": "Producto",
+          "type": "string"
+        },
+        "tarifa_unitaria": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Tarifa Unitaria",
+          "type": "number"
+        },
+        "volumen_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Volumen Mensual",
+          "type": "number"
+        }
+      },
+      "title": "CanalCadenaBV1",
+      "type": "object"
+    },
+    "CanalCadenaCV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "costo_escalamiento": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Costo Escalamiento",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "opex_fijo_integ": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Opex Fijo Integ",
+          "type": "number"
+        },
+        "opex_var_integ": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Opex Var Integ",
+          "type": "number"
+        },
+        "pct_escalamiento": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Escalamiento",
+          "type": "number"
+        },
+        "volumen_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Volumen Mensual",
+          "type": "number"
+        }
+      },
+      "title": "CanalCadenaCV1",
+      "type": "object"
+    },
+    "CargoAdicionalV1": {
+      "additionalProperties": false,
+      "description": "Detalle del recurso humano adicional de un escenario de Cadena A.",
+      "properties": {
+        "cargo": {
+          "title": "Cargo",
+          "type": "string"
+        },
+        "ratio": {
+          "minimum": 0.0,
+          "title": "Ratio",
+          "type": "number"
+        },
+        "salario_base": {
+          "minimum": 0.0,
+          "title": "Salario Base",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cargo",
+        "salario_base",
+        "ratio"
+      ],
+      "title": "CargoAdicionalV1",
+      "type": "object"
+    },
+    "ContractMetadataV1": {
+      "additionalProperties": false,
+      "description": "Optional metadata block accompanying every request.",
+      "properties": {
+        "client_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Client Id"
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Notes"
+        },
+        "request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Id"
+        },
+        "source": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source"
+        },
+        "submitted_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Submitted At"
+        }
+      },
+      "title": "ContractMetadataV1",
+      "type": "object"
+    },
+    "DetalleRecursoHumanoV1": {
+      "additionalProperties": false,
+      "description": "Salario y comisión editables usados por los cálculos de Cadena A.",
+      "properties": {
+        "cargo": {
+          "title": "Cargo",
+          "type": "string"
+        },
+        "comisiones": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Comisiones",
+          "type": "number"
+        },
+        "salario_base": {
+          "minimum": 0.0,
+          "title": "Salario Base",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cargo",
+        "salario_base"
+      ],
+      "title": "DetalleRecursoHumanoV1",
+      "type": "object"
+    },
+    "DispositivoSMV1": {
+      "additionalProperties": false,
+      "properties": {
+        "cantidad": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Cantidad",
+          "type": "number"
+        },
+        "costo_unitario": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Costo Unitario",
+          "type": "number"
+        },
+        "meses_amortizacion": {
+          "default": 1,
+          "maximum": 360,
+          "minimum": 1,
+          "title": "Meses Amortizacion",
+          "type": "integer"
+        },
+        "tipo": {
+          "default": "",
+          "title": "Tipo",
+          "type": "string"
+        }
+      },
+      "title": "DispositivoSMV1",
+      "type": "object"
+    },
+    "EscenarioComercialV1": {
+      "additionalProperties": true,
+      "description": "Commercial scenario referencing a channel/modality.\n\nThe wider engine accepts heterogeneous scenario shapes; this contract\nlocks the canonical subset used by the V2-7 baseline cases.",
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "margen": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": -1.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Margen"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "modelo_cobro": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Modelo Cobro"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "parametros": {
+          "additionalProperties": true,
+          "title": "Parametros",
+          "type": "object"
+        }
+      },
+      "title": "EscenarioComercialV1",
+      "type": "object"
+    },
+    "ItemOpexConsumoV1": {
+      "additionalProperties": false,
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "cantidad": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Cantidad",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "producto": {
+          "default": "",
+          "title": "Producto",
+          "type": "string"
+        },
+        "tipo_cobro": {
+          "default": "Unitario",
+          "title": "Tipo Cobro",
+          "type": "string"
+        },
+        "valor_unitario": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Valor Unitario",
+          "type": "number"
+        }
+      },
+      "title": "ItemOpexConsumoV1",
+      "type": "object"
+    },
+    "MiembroEquipoSMV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "pct_dedicacion": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Dedicacion",
+          "type": "number"
+        },
+        "rol": {
+          "default": "",
+          "title": "Rol",
+          "type": "string"
+        }
+      },
+      "title": "MiembroEquipoSMV1",
+      "type": "object"
+    },
+    "MiembroEquipoTransversalV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "pct_dedicacion": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Dedicacion",
+          "type": "number"
+        },
+        "rol": {
+          "default": "",
+          "title": "Rol",
+          "type": "string"
+        }
+      },
+      "title": "MiembroEquipoTransversalV1",
+      "type": "object"
+    },
+    "PanelDeControlRequestV1": {
+      "additionalProperties": false,
+      "description": "Panel de Control (frozen, strict).",
+      "properties": {
+        "activa_financiacion": {
+          "default": true,
+          "title": "Activa Financiacion",
+          "type": "boolean"
+        },
+        "antiguedad_cliente": {
+          "default": "",
+          "title": "Antiguedad Cliente",
+          "type": "string"
+        },
+        "aplica_ley_1819": {
+          "default": true,
+          "title": "Aplica Ley 1819",
+          "type": "boolean"
+        },
+        "ciudad": {
+          "default": "",
+          "title": "Ciudad",
+          "type": "string"
+        },
+        "cliente": {
+          "default": "",
+          "title": "Cliente",
+          "type": "string"
+        },
+        "com_cont": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Com Cont",
+          "type": "number"
+        },
+        "componente_indexacion_humano": {
+          "default": "IPC",
+          "title": "Componente Indexacion Humano",
+          "type": "string"
+        },
+        "componente_indexacion_tecnologico": {
+          "default": "IPC",
+          "title": "Componente Indexacion Tecnologico",
+          "type": "string"
+        },
+        "descuento": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Descuento",
+          "type": "number"
+        },
+        "fecha_inicio": {
+          "default": "",
+          "title": "Fecha Inicio",
+          "type": "string"
+        },
+        "imprevistos": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Imprevistos"
+        },
+        "linea_negocio": {
+          "default": "",
+          "title": "Linea Negocio",
+          "type": "string"
+        },
+        "margen": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "title": "Margen",
+          "type": "number"
+        },
+        "margen_b": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Margen B"
+        },
+        "margen_c": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Margen C"
+        },
+        "markup": {
+          "default": 0.0,
+          "maximum": 10.0,
+          "minimum": -1.0,
+          "title": "Markup",
+          "type": "number"
+        },
+        "mes_ajuste_indexacion": {
+          "anyOf": [
+            {
+              "maximum": 12,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mes Ajuste Indexacion"
+        },
+        "meses_contrato": {
+          "default": 12,
+          "maximum": 120,
+          "minimum": 1,
+          "title": "Meses Contrato",
+          "type": "integer"
+        },
+        "op_cont": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Op Cont",
+          "type": "number"
+        },
+        "pct_ausentismo": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pct Ausentismo"
+        },
+        "pct_rotacion": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pct Rotacion"
+        },
+        "periodo_pago_dias": {
+          "default": 90,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "Periodo Pago Dias",
+          "type": "integer"
+        },
+        "sede": {
+          "default": "",
+          "title": "Sede",
+          "type": "string"
+        },
+        "tasa_gmf": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tasa Gmf"
+        },
+        "tasa_ica": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tasa Ica"
+        },
+        "tasa_interes_mensual": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tasa Interes Mensual"
+        },
+        "tasa_mensual_financ": {
+          "anyOf": [
+            {
+              "maximum": 1.0,
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tasa Mensual Financ"
+        },
+        "tipo_cliente": {
+          "default": "",
+          "title": "Tipo Cliente",
+          "type": "string"
+        }
+      },
+      "title": "PanelDeControlRequestV1",
+      "type": "object"
+    },
+    "PerfilCadenaAV1": {
+      "additionalProperties": false,
+      "description": "One operator profile (frozen).",
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "cargos_adicionales": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/CargoAdicionalV1"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/CargoAdicionalV1"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "title": "Cargos Adicionales"
+        },
+        "comision_pct": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Comision Pct",
+          "type": "number"
+        },
+        "dias_cap_inicial": {
+          "default": 10,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "Dias Cap Inicial",
+          "type": "integer"
+        },
+        "dias_cap_rotacion": {
+          "default": 10,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "Dias Cap Rotacion",
+          "type": "integer"
+        },
+        "fte": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Fte",
+          "type": "number"
+        },
+        "fte_soporte_overrides": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Fte Soporte Overrides",
+          "type": "object"
+        },
+        "incluye_crucero": {
+          "default": false,
+          "title": "Incluye Crucero",
+          "type": "boolean"
+        },
+        "incluye_examenes": {
+          "default": true,
+          "title": "Incluye Examenes",
+          "type": "boolean"
+        },
+        "incluye_seguridad": {
+          "default": false,
+          "title": "Incluye Seguridad",
+          "type": "boolean"
+        },
+        "modalidad": {
+          "default": "Inbound",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "modelo_cobro": {
+          "default": "Fijo FTE",
+          "enum": [
+            "Fijo FTE",
+            "Variable",
+            "Híbrido",
+            "Hibrido",
+            "Volumen",
+            "Por Volumen",
+            "Por Comisión",
+            "Por Comision"
+          ],
+          "title": "Modelo Cobro",
+          "type": "string"
+        },
+        "no_payroll_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "No Payroll Mensual",
+          "type": "number"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "pct_fijo": {
+          "default": 1.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Fijo",
+          "type": "number"
+        },
+        "pct_presencia": {
+          "default": 1.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Presencia",
+          "type": "number"
+        },
+        "rol": {
+          "default": "Agente Basico",
+          "title": "Rol",
+          "type": "string"
+        },
+        "salario_base": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Salario Base"
+        },
+        "tmo_segundos": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Tmo Segundos",
+          "type": "number"
+        },
+        "vol_cadena_a_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Vol Cadena A Mensual",
+          "type": "number"
+        }
+      },
+      "title": "PerfilCadenaAV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Frozen public request contract.\n\nCompared to the legacy ``SimulationRequest``:\n  - ``panel`` (alias ``panel_de_control``) — required, strict.\n  - ``cadena_a``/``b``/``c`` — optional sections (aliases to the\n    legacy ``condiciones_cadena_*`` keys).\n  - ``cadenas_activas`` — explicit ``Set[Literal[\"A\",\"B\",\"C\"]]``,\n    inferred from contents when omitted (resolves W7-OBS-3).\n  - ``escenarios`` — list of commercial scenarios.\n  - ``metadata`` — optional client/request metadata.",
+  "properties": {
+    "cadenas_activas": {
+      "items": {
+        "enum": [
+          "A",
+          "B",
+          "C"
+        ],
+        "type": "string"
+      },
+      "title": "Cadenas Activas",
+      "type": "array",
+      "uniqueItems": true
+    },
+    "condiciones_cadena_a": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CadenaARequestV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "condiciones_cadena_b": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CadenaBRequestV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "condiciones_cadena_c": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CadenaCRequestV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "escenarios_comerciales": {
+      "items": {
+        "$ref": "#/$defs/EscenarioComercialV1"
+      },
+      "title": "Escenarios Comerciales",
+      "type": "array"
+    },
+    "metadata": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ContractMetadataV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "panel_de_control": {
+      "$ref": "#/$defs/PanelDeControlRequestV1"
+    }
+  },
+  "required": [
+    "panel_de_control"
+  ],
+  "title": "EntryDataV1",
+  "type": "object"
+}

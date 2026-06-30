@@ -1,0 +1,920 @@
+{
+  "$defs": {
+    "AjustePrecioV1": {
+      "additionalProperties": false,
+      "properties": {
+        "componente_humano": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Componente Humano"
+        },
+        "componente_tecnologico": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Componente Tecnologico"
+        },
+        "frecuencia": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Frecuencia"
+        }
+      },
+      "title": "AjustePrecioV1",
+      "type": "object"
+    },
+    "AnalisisGraficoV1": {
+      "additionalProperties": false,
+      "properties": {
+        "evolucion_ingreso_neto": {
+          "items": {
+            "$ref": "#/$defs/EvolucionIngresoNetoItemV1"
+          },
+          "title": "Evolucion Ingreso Neto",
+          "type": "array"
+        },
+        "waterfall": {
+          "items": {
+            "$ref": "#/$defs/WaterfallItemV1"
+          },
+          "title": "Waterfall",
+          "type": "array"
+        }
+      },
+      "required": [
+        "waterfall",
+        "evolucion_ingreso_neto"
+      ],
+      "title": "AnalisisGraficoV1",
+      "type": "object"
+    },
+    "AprobacionV1": {
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "title": "Base",
+          "type": "string"
+        },
+        "codigo": {
+          "title": "Codigo",
+          "type": "string"
+        },
+        "nombre": {
+          "title": "Nombre",
+          "type": "string"
+        },
+        "requerida": {
+          "title": "Requerida",
+          "type": "boolean"
+        },
+        "umbral_cop": {
+          "title": "Umbral Cop",
+          "type": "number"
+        },
+        "valor_base": {
+          "title": "Valor Base",
+          "type": "number"
+        }
+      },
+      "required": [
+        "codigo",
+        "nombre",
+        "requerida",
+        "umbral_cop",
+        "base",
+        "valor_base"
+      ],
+      "title": "AprobacionV1",
+      "type": "object"
+    },
+    "ComparativoEscenariosV1": {
+      "additionalProperties": false,
+      "properties": {
+        "escenarios": {
+          "items": {
+            "$ref": "#/$defs/EscenarioImprimibleV1"
+          },
+          "title": "Escenarios",
+          "type": "array"
+        },
+        "total": {
+          "$ref": "#/$defs/TotalEscenariosV1"
+        }
+      },
+      "required": [
+        "escenarios",
+        "total"
+      ],
+      "title": "ComparativoEscenariosV1",
+      "type": "object"
+    },
+    "ComponenteEscenarioV1": {
+      "additionalProperties": false,
+      "properties": {
+        "porcentaje": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Porcentaje"
+        },
+        "tipo": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tipo"
+        }
+      },
+      "title": "ComponenteEscenarioV1",
+      "type": "object"
+    },
+    "ContingenciaAjusteV1": {
+      "additionalProperties": false,
+      "properties": {
+        "aplicado": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Aplicado"
+        },
+        "concepto": {
+          "enum": [
+            "margen_objetivo",
+            "contingencia_operativa",
+            "contingencia_comercial",
+            "markup",
+            "descuento"
+          ],
+          "title": "Concepto",
+          "type": "string"
+        },
+        "estado": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Estado"
+        },
+        "maximo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximo"
+        },
+        "minimo": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimo"
+        }
+      },
+      "required": [
+        "concepto"
+      ],
+      "title": "ContingenciaAjusteV1",
+      "type": "object"
+    },
+    "ControlAprobacionV1": {
+      "additionalProperties": false,
+      "properties": {
+        "aprobaciones": {
+          "items": {
+            "$ref": "#/$defs/AprobacionV1"
+          },
+          "title": "Aprobaciones",
+          "type": "array"
+        },
+        "criterios_riesgo": {
+          "items": {
+            "$ref": "#/$defs/CriterioRiesgoV1"
+          },
+          "maxItems": 10,
+          "minItems": 10,
+          "title": "Criterios Riesgo",
+          "type": "array"
+        },
+        "facturacion_mensual_proyectada": {
+          "title": "Facturacion Mensual Proyectada",
+          "type": "number"
+        },
+        "nivel_riesgo": {
+          "$ref": "#/$defs/NivelRiesgoV1"
+        },
+        "requiere_aprobacion": {
+          "title": "Requiere Aprobacion",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "nivel_riesgo",
+        "facturacion_mensual_proyectada",
+        "requiere_aprobacion",
+        "aprobaciones",
+        "criterios_riesgo"
+      ],
+      "title": "ControlAprobacionV1",
+      "type": "object"
+    },
+    "CriterioRiesgoV1": {
+      "additionalProperties": false,
+      "properties": {
+        "categoria": {
+          "title": "Categoria",
+          "type": "string"
+        },
+        "criterio": {
+          "title": "Criterio",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "integer"
+        },
+        "nivel": {
+          "title": "Nivel",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "criterio",
+        "categoria",
+        "nivel"
+      ],
+      "title": "CriterioRiesgoV1",
+      "type": "object"
+    },
+    "EconomicsImprimibleV1": {
+      "additionalProperties": false,
+      "properties": {
+        "costo_mensual": {
+          "title": "Costo Mensual",
+          "type": "number"
+        },
+        "escenario_seleccionado": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Escenario Seleccionado"
+        },
+        "estado_margen": {
+          "enum": [
+            "cumple_minimo",
+            "bajo_minimo"
+          ],
+          "title": "Estado Margen",
+          "type": "string"
+        },
+        "ingreso_mensual": {
+          "title": "Ingreso Mensual",
+          "type": "number"
+        },
+        "margen_deal": {
+          "title": "Margen Deal",
+          "type": "number"
+        },
+        "moneda": {
+          "default": "COP",
+          "title": "Moneda",
+          "type": "string"
+        },
+        "valor_total_contrato": {
+          "title": "Valor Total Contrato",
+          "type": "number"
+        }
+      },
+      "required": [
+        "ingreso_mensual",
+        "costo_mensual",
+        "margen_deal",
+        "estado_margen",
+        "valor_total_contrato"
+      ],
+      "title": "EconomicsImprimibleV1",
+      "type": "object"
+    },
+    "ErrorDetail": {
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "items": {},
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Details"
+        },
+        "field": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Field"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "ErrorDetail",
+      "type": "object"
+    },
+    "EscenarioImprimibleV1": {
+      "additionalProperties": false,
+      "properties": {
+        "componente_fijo": {
+          "$ref": "#/$defs/ComponenteEscenarioV1"
+        },
+        "componente_variable": {
+          "$ref": "#/$defs/ComponenteEscenarioV1"
+        },
+        "escenario": {
+          "title": "Escenario",
+          "type": "string"
+        },
+        "modalidad_canal": {
+          "title": "Modalidad Canal",
+          "type": "string"
+        },
+        "modelo_cobro": {
+          "title": "Modelo Cobro",
+          "type": "string"
+        },
+        "tarifa_fija": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tarifa Fija"
+        },
+        "tarifa_variable": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Tarifa Variable"
+        }
+      },
+      "required": [
+        "escenario",
+        "modalidad_canal",
+        "modelo_cobro",
+        "componente_fijo",
+        "componente_variable"
+      ],
+      "title": "EscenarioImprimibleV1",
+      "type": "object"
+    },
+    "EvolucionIngresoNetoItemV1": {
+      "additionalProperties": false,
+      "properties": {
+        "ingreso_neto": {
+          "title": "Ingreso Neto",
+          "type": "number"
+        },
+        "mes": {
+          "title": "Mes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mes",
+        "ingreso_neto"
+      ],
+      "title": "EvolucionIngresoNetoItemV1",
+      "type": "object"
+    },
+    "FichaDealImprimibleV1": {
+      "additionalProperties": false,
+      "properties": {
+        "ajuste_precio": {
+          "$ref": "#/$defs/AjustePrecioV1"
+        },
+        "antiguedad_cliente": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Antiguedad Cliente"
+        },
+        "ciudad": {
+          "title": "Ciudad",
+          "type": "string"
+        },
+        "cliente": {
+          "title": "Cliente",
+          "type": "string"
+        },
+        "descuento_aplicado": {
+          "title": "Descuento Aplicado",
+          "type": "number"
+        },
+        "fecha_inicio": {
+          "title": "Fecha Inicio",
+          "type": "string"
+        },
+        "meses_contrato": {
+          "title": "Meses Contrato",
+          "type": "integer"
+        },
+        "periodo_pago_dias": {
+          "title": "Periodo Pago Dias",
+          "type": "integer"
+        },
+        "porcentaje_imprevisto": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Porcentaje Imprevisto"
+        },
+        "sede": {
+          "title": "Sede",
+          "type": "string"
+        },
+        "servicio": {
+          "title": "Servicio",
+          "type": "string"
+        },
+        "tipo_cliente": {
+          "title": "Tipo Cliente",
+          "type": "string"
+        },
+        "volumen_base_mensual": {
+          "title": "Volumen Base Mensual",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cliente",
+        "servicio",
+        "ciudad",
+        "sede",
+        "tipo_cliente",
+        "fecha_inicio",
+        "meses_contrato",
+        "periodo_pago_dias",
+        "ajuste_precio",
+        "volumen_base_mensual",
+        "descuento_aplicado"
+      ],
+      "title": "FichaDealImprimibleV1",
+      "type": "object"
+    },
+    "NivelRiesgoV1": {
+      "additionalProperties": false,
+      "properties": {
+        "clasificacion": {
+          "title": "Clasificacion",
+          "type": "string"
+        },
+        "score_cliente": {
+          "title": "Score Cliente",
+          "type": "number"
+        },
+        "score_deal": {
+          "title": "Score Deal",
+          "type": "number"
+        },
+        "score_operativo": {
+          "title": "Score Operativo",
+          "type": "number"
+        }
+      },
+      "required": [
+        "score_cliente",
+        "score_operativo",
+        "score_deal",
+        "clasificacion"
+      ],
+      "title": "NivelRiesgoV1",
+      "type": "object"
+    },
+    "TotalEscenariosV1": {
+      "additionalProperties": false,
+      "properties": {
+        "componente_fijo_porcentaje": {
+          "title": "Componente Fijo Porcentaje",
+          "type": "number"
+        },
+        "componente_variable_porcentaje": {
+          "title": "Componente Variable Porcentaje",
+          "type": "number"
+        },
+        "modelo_cobro": {
+          "title": "Modelo Cobro",
+          "type": "string"
+        },
+        "tarifa_fija": {
+          "title": "Tarifa Fija",
+          "type": "number"
+        },
+        "tarifa_variable": {
+          "title": "Tarifa Variable",
+          "type": "number"
+        }
+      },
+      "required": [
+        "modelo_cobro",
+        "componente_fijo_porcentaje",
+        "componente_variable_porcentaje",
+        "tarifa_fija",
+        "tarifa_variable"
+      ],
+      "title": "TotalEscenariosV1",
+      "type": "object"
+    },
+    "VisionImprimibleDataV1": {
+      "additionalProperties": false,
+      "properties": {
+        "vision_imprimible": {
+          "$ref": "#/$defs/VisionImprimibleResponseV1"
+        }
+      },
+      "required": [
+        "vision_imprimible"
+      ],
+      "title": "VisionImprimibleDataV1",
+      "type": "object"
+    },
+    "VisionImprimibleResponseV1": {
+      "additionalProperties": false,
+      "properties": {
+        "analisis_grafico": {
+          "$ref": "#/$defs/AnalisisGraficoV1"
+        },
+        "comparativo_escenarios": {
+          "$ref": "#/$defs/ComparativoEscenariosV1"
+        },
+        "contingencias_ajustes": {
+          "items": {
+            "$ref": "#/$defs/ContingenciaAjusteV1"
+          },
+          "maxItems": 5,
+          "minItems": 5,
+          "title": "Contingencias Ajustes",
+          "type": "array"
+        },
+        "control_aprobacion": {
+          "$ref": "#/$defs/ControlAprobacionV1"
+        },
+        "economics": {
+          "$ref": "#/$defs/EconomicsImprimibleV1"
+        },
+        "ficha_deal": {
+          "$ref": "#/$defs/FichaDealImprimibleV1"
+        }
+      },
+      "required": [
+        "ficha_deal",
+        "economics",
+        "analisis_grafico",
+        "comparativo_escenarios",
+        "control_aprobacion",
+        "contingencias_ajustes"
+      ],
+      "title": "VisionImprimibleResponseV1",
+      "type": "object"
+    },
+    "WaterfallItemV1": {
+      "additionalProperties": false,
+      "properties": {
+        "concepto": {
+          "title": "Concepto",
+          "type": "string"
+        },
+        "valor": {
+          "title": "Valor",
+          "type": "number"
+        }
+      },
+      "required": [
+        "concepto",
+        "valor"
+      ],
+      "title": "WaterfallItemV1",
+      "type": "object"
+    }
+  },
+  "description": "Success envelope: ``data`` contains only ``vision_imprimible``.",
+  "examples": [
+    {
+      "data": {
+        "vision_imprimible": {
+          "analisis_grafico": {
+            "evolucion_ingreso_neto": [
+              {
+                "ingreso_neto": 100000000,
+                "mes": 1
+              }
+            ],
+            "waterfall": [
+              {
+                "concepto": "ingreso_neto",
+                "valor": 100000000
+              }
+            ]
+          },
+          "comparativo_escenarios": {
+            "escenarios": [],
+            "total": {
+              "componente_fijo_porcentaje": 0,
+              "componente_variable_porcentaje": 1,
+              "modelo_cobro": "Variable",
+              "tarifa_fija": 0,
+              "tarifa_variable": 10000
+            }
+          },
+          "contingencias_ajustes": [
+            {
+              "aplicado": 0.21,
+              "concepto": "margen_objetivo",
+              "estado": "dentro_rango",
+              "maximo": null,
+              "minimo": 0.17
+            },
+            {
+              "aplicado": 0.05,
+              "concepto": "contingencia_operativa",
+              "estado": "dentro_rango",
+              "maximo": 0.08,
+              "minimo": 0.05
+            },
+            {
+              "aplicado": 0.01,
+              "concepto": "contingencia_comercial",
+              "estado": "dentro_rango",
+              "maximo": 0.03,
+              "minimo": 0.01
+            },
+            {
+              "aplicado": 0.02,
+              "concepto": "markup",
+              "estado": "dentro_rango",
+              "maximo": 0.08,
+              "minimo": 0.02
+            },
+            {
+              "aplicado": 0,
+              "concepto": "descuento",
+              "estado": "dentro_rango",
+              "maximo": 0.08,
+              "minimo": 0
+            }
+          ],
+          "control_aprobacion": {
+            "aprobaciones": [],
+            "criterios_riesgo": [
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 1",
+                "id": 1,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 2",
+                "id": 2,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 3",
+                "id": 3,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 4",
+                "id": 4,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 5",
+                "id": 5,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 6",
+                "id": 6,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 7",
+                "id": 7,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 8",
+                "id": 8,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 9",
+                "id": 9,
+                "nivel": 1
+              },
+              {
+                "categoria": "Cliente",
+                "criterio": "Criterio 10",
+                "id": 10,
+                "nivel": 1
+              }
+            ],
+            "facturacion_mensual_proyectada": 100000000,
+            "nivel_riesgo": {
+              "clasificacion": "Medio",
+              "score_cliente": 1.6,
+              "score_deal": 1.9,
+              "score_operativo": 2.1
+            },
+            "requiere_aprobacion": true
+          },
+          "economics": {
+            "costo_mensual": 79000000,
+            "escenario_seleccionado": "Escenario 1",
+            "estado_margen": "cumple_minimo",
+            "ingreso_mensual": 100000000,
+            "margen_deal": 0.21,
+            "moneda": "COP",
+            "valor_total_contrato": 1200000000
+          },
+          "ficha_deal": {
+            "ajuste_precio": {
+              "componente_humano": "IPC",
+              "componente_tecnologico": "20% SMMLV 80% IPC",
+              "frecuencia": "Anual"
+            },
+            "antiguedad_cliente": "Cliente Antiguo",
+            "ciudad": "Bogota",
+            "cliente": "Cliente A",
+            "descuento_aplicado": 0,
+            "fecha_inicio": "2026-07-01",
+            "meses_contrato": 12,
+            "periodo_pago_dias": 30,
+            "porcentaje_imprevisto": 0,
+            "sede": "Toberin",
+            "servicio": "SAC",
+            "tipo_cliente": "Grupo Aval",
+            "volumen_base_mensual": 100000
+          }
+        }
+      },
+      "error": null,
+      "meta": null,
+      "success": true
+    }
+  ],
+  "properties": {
+    "data": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/VisionImprimibleDataV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "error": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ErrorDetail"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "meta": {
+      "anyOf": [
+        {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Meta"
+    },
+    "success": {
+      "title": "Success",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "success"
+  ],
+  "title": "VisionImprimibleApiResponseV1",
+  "type": "object"
+}

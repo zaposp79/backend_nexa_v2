@@ -1,0 +1,1222 @@
+{
+  "$defs": {
+    "CanalCTSDetalleV1": {
+      "additionalProperties": true,
+      "description": "Per-channel CTS detail — Excel CTS rows 90-125.",
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "capacitacion_inicial": {
+          "default": 0.0,
+          "title": "Capacitacion Inicial",
+          "type": "number"
+        },
+        "capacitacion_rotacion": {
+          "default": 0.0,
+          "title": "Capacitacion Rotacion",
+          "type": "number"
+        },
+        "costos_fijos": {
+          "default": 0.0,
+          "title": "Costos Fijos",
+          "type": "number"
+        },
+        "crucero": {
+          "default": 0.0,
+          "title": "Crucero",
+          "type": "number"
+        },
+        "cts": {
+          "default": 0.0,
+          "title": "Cts",
+          "type": "number"
+        },
+        "estudios_seguridad": {
+          "default": 0.0,
+          "title": "Estudios Seguridad",
+          "type": "number"
+        },
+        "examenes": {
+          "default": 0.0,
+          "title": "Examenes",
+          "type": "number"
+        },
+        "fte": {
+          "default": 0.0,
+          "title": "Fte",
+          "type": "number"
+        },
+        "inversiones": {
+          "default": 0.0,
+          "title": "Inversiones",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "no_payroll": {
+          "default": 0.0,
+          "title": "No Payroll",
+          "type": "number"
+        },
+        "nomina_loaded": {
+          "default": 0.0,
+          "title": "Nomina Loaded",
+          "type": "number"
+        },
+        "opex_fijo": {
+          "default": 0.0,
+          "title": "Opex Fijo",
+          "type": "number"
+        },
+        "participacion_cadena_a": {
+          "default": 0.0,
+          "title": "Participacion Cadena A",
+          "type": "number"
+        },
+        "payroll": {
+          "default": 0.0,
+          "title": "Payroll",
+          "type": "number"
+        },
+        "salario_fijo": {
+          "default": 0.0,
+          "title": "Salario Fijo",
+          "type": "number"
+        },
+        "salario_variable": {
+          "default": 0.0,
+          "title": "Salario Variable",
+          "type": "number"
+        }
+      },
+      "title": "CanalCTSDetalleV1",
+      "type": "object"
+    },
+    "CostToServeDesgloseAV1": {
+      "additionalProperties": true,
+      "properties": {
+        "capacitacion_inicial": {
+          "default": 0.0,
+          "title": "Capacitacion Inicial",
+          "type": "number"
+        },
+        "capacitacion_rotacion": {
+          "default": 0.0,
+          "title": "Capacitacion Rotacion",
+          "type": "number"
+        },
+        "costos_fijos_estacion": {
+          "default": 0.0,
+          "title": "Costos Fijos Estacion",
+          "type": "number"
+        },
+        "crucero": {
+          "default": 0.0,
+          "title": "Crucero",
+          "type": "number"
+        },
+        "estudios_seguridad": {
+          "default": 0.0,
+          "title": "Estudios Seguridad",
+          "type": "number"
+        },
+        "examenes": {
+          "default": 0.0,
+          "title": "Examenes",
+          "type": "number"
+        },
+        "inversiones": {
+          "default": 0.0,
+          "title": "Inversiones",
+          "type": "number"
+        },
+        "no_payroll": {
+          "default": 0.0,
+          "title": "No Payroll",
+          "type": "number"
+        },
+        "nomina": {
+          "default": 0.0,
+          "title": "Nomina",
+          "type": "number"
+        },
+        "nomina_loaded": {
+          "default": 0.0,
+          "title": "Nomina Loaded",
+          "type": "number"
+        },
+        "opex_fijo": {
+          "default": 0.0,
+          "title": "Opex Fijo",
+          "type": "number"
+        },
+        "salario_fijo": {
+          "default": 0.0,
+          "title": "Salario Fijo",
+          "type": "number"
+        },
+        "salario_variable": {
+          "default": 0.0,
+          "title": "Salario Variable",
+          "type": "number"
+        },
+        "total": {
+          "default": 0.0,
+          "title": "Total",
+          "type": "number"
+        }
+      },
+      "title": "CostToServeDesgloseAV1",
+      "type": "object"
+    },
+    "CostToServeDesgloseBV1": {
+      "additionalProperties": true,
+      "properties": {
+        "componente_fijo": {
+          "default": 0.0,
+          "title": "Componente Fijo",
+          "type": "number"
+        },
+        "componente_variable": {
+          "default": 0.0,
+          "title": "Componente Variable",
+          "type": "number"
+        },
+        "hitl": {
+          "default": 0.0,
+          "title": "Hitl",
+          "type": "number"
+        },
+        "inversiones": {
+          "default": 0.0,
+          "title": "Inversiones",
+          "type": "number"
+        },
+        "opex": {
+          "default": 0.0,
+          "title": "Opex",
+          "type": "number"
+        },
+        "opex_variable": {
+          "default": 0.0,
+          "title": "Opex Variable",
+          "type": "number"
+        },
+        "soporte_mantenimiento": {
+          "default": 0.0,
+          "title": "Soporte Mantenimiento",
+          "type": "number"
+        },
+        "tarifa": {
+          "default": 0.0,
+          "title": "Tarifa",
+          "type": "number"
+        },
+        "tasa_escalamiento": {
+          "default": 0.0,
+          "title": "Tasa Escalamiento",
+          "type": "number"
+        },
+        "total": {
+          "default": 0.0,
+          "title": "Total",
+          "type": "number"
+        }
+      },
+      "title": "CostToServeDesgloseBV1",
+      "type": "object"
+    },
+    "CostToServeV1": {
+      "additionalProperties": true,
+      "properties": {
+        "canal_view_habilitado": {
+          "default": false,
+          "title": "Canal View Habilitado",
+          "type": "boolean"
+        },
+        "canales_detalle": {
+          "items": {
+            "$ref": "#/$defs/CanalCTSDetalleV1"
+          },
+          "title": "Canales Detalle",
+          "type": "array"
+        },
+        "costo_total_acumulado": {
+          "default": 0.0,
+          "title": "Costo Total Acumulado",
+          "type": "number"
+        },
+        "cts_cadena_a": {
+          "default": 0.0,
+          "title": "Cts Cadena A",
+          "type": "number"
+        },
+        "cts_cadena_b": {
+          "default": 0.0,
+          "title": "Cts Cadena B",
+          "type": "number"
+        },
+        "cts_cadena_c": {
+          "default": 0.0,
+          "title": "Cts Cadena C",
+          "type": "number"
+        },
+        "cts_ponderado": {
+          "default": 0.0,
+          "title": "Cts Ponderado",
+          "type": "number"
+        },
+        "desglose_a": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CostToServeDesgloseAV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "desglose_b": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CostToServeDesgloseBV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fte_cadena_a": {
+          "default": 0.0,
+          "title": "Fte Cadena A",
+          "type": "number"
+        },
+        "participacion_a": {
+          "default": 0.0,
+          "title": "Participacion A",
+          "type": "number"
+        },
+        "participacion_b": {
+          "default": 0.0,
+          "title": "Participacion B",
+          "type": "number"
+        },
+        "participacion_c": {
+          "default": 0.0,
+          "title": "Participacion C",
+          "type": "number"
+        },
+        "vol_cadena_b": {
+          "default": 0.0,
+          "title": "Vol Cadena B",
+          "type": "number"
+        }
+      },
+      "title": "CostToServeV1",
+      "type": "object"
+    },
+    "DesgloseCadenaTarifasV1": {
+      "additionalProperties": true,
+      "description": "Excel rows B40:C47, B50:C57, B60:C67: cost breakdown per chain.",
+      "properties": {
+        "componente_fijo": {
+          "default": 0.0,
+          "title": "Componente Fijo",
+          "type": "number"
+        },
+        "componente_variable": {
+          "default": 0.0,
+          "title": "Componente Variable",
+          "type": "number"
+        },
+        "costos_financiacion": {
+          "default": 0.0,
+          "title": "Costos Financiacion",
+          "type": "number"
+        },
+        "gmf": {
+          "default": 0.0,
+          "title": "Gmf",
+          "type": "number"
+        },
+        "ica": {
+          "default": 0.0,
+          "title": "Ica",
+          "type": "number"
+        },
+        "ingreso_bruto": {
+          "default": 0.0,
+          "title": "Ingreso Bruto",
+          "type": "number"
+        },
+        "no_payroll": {
+          "default": 0.0,
+          "title": "No Payroll",
+          "type": "number"
+        },
+        "payroll": {
+          "default": 0.0,
+          "title": "Payroll",
+          "type": "number"
+        },
+        "polizas": {
+          "default": 0.0,
+          "title": "Polizas",
+          "type": "number"
+        },
+        "total_costo": {
+          "default": 0.0,
+          "title": "Total Costo",
+          "type": "number"
+        }
+      },
+      "title": "DesgloseCadenaTarifasV1",
+      "type": "object"
+    },
+    "DesgloseProductoOpexV1": {
+      "additionalProperties": true,
+      "description": "Excel rows 91-98: product-level OPEX breakdown.\n\n``costo_financiacion`` and ``polizas`` are ``null`` when the workbook\ndoes not support per-product attribution (financing is platform-level,\npolizas are cadena-level). ``null`` means *not attributable*, not zero.",
+      "properties": {
+        "costo_directo": {
+          "default": 0.0,
+          "title": "Costo Directo",
+          "type": "number"
+        },
+        "costo_financiacion": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Costo Financiacion"
+        },
+        "ingreso_producto": {
+          "default": 0.0,
+          "title": "Ingreso Producto",
+          "type": "number"
+        },
+        "polizas": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Polizas"
+        },
+        "producto": {
+          "default": "",
+          "title": "Producto",
+          "type": "string"
+        }
+      },
+      "title": "DesgloseProductoOpexV1",
+      "type": "object"
+    },
+    "EscenarioTarifasDetalleV1": {
+      "additionalProperties": true,
+      "description": "Hierarchical per-scenario detail container.",
+      "properties": {
+        "cadena_a": {
+          "$ref": "#/$defs/DesgloseCadenaTarifasV1"
+        },
+        "cadena_b": {
+          "$ref": "#/$defs/DesgloseCadenaTarifasV1"
+        },
+        "cadena_c": {
+          "$ref": "#/$defs/DesgloseCadenaTarifasV1"
+        },
+        "componente_fijo": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Componente Fijo"
+        },
+        "componente_variable": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Componente Variable"
+        },
+        "meta": {
+          "$ref": "#/$defs/EscenarioTarifasResumenV1"
+        },
+        "reglas_business": {
+          "$ref": "#/$defs/ReglasBusinessV1"
+        },
+        "tarifas": {
+          "$ref": "#/$defs/TarifasEscenarioV1"
+        },
+        "tarifas_venta": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Tarifas Venta",
+          "type": "array"
+        }
+      },
+      "title": "EscenarioTarifasDetalleV1",
+      "type": "object"
+    },
+    "EscenarioTarifasResumenV1": {
+      "additionalProperties": true,
+      "description": "Excel B10:H21: per-scenario summary.",
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "componente_fijo_label": {
+          "default": "",
+          "title": "Componente Fijo Label",
+          "type": "string"
+        },
+        "componente_variable_label": {
+          "default": "",
+          "title": "Componente Variable Label",
+          "type": "string"
+        },
+        "escenario": {
+          "default": 0,
+          "title": "Escenario",
+          "type": "integer"
+        },
+        "facturacion_directo": {
+          "default": 0.0,
+          "title": "Facturacion Directo",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "modelo_cobro": {
+          "default": "",
+          "title": "Modelo Cobro",
+          "type": "string"
+        },
+        "pct_fijo": {
+          "default": 0.0,
+          "title": "Pct Fijo",
+          "type": "number"
+        },
+        "pct_variable": {
+          "default": 0.0,
+          "title": "Pct Variable",
+          "type": "number"
+        },
+        "tarifa_componente_fijo": {
+          "default": 0.0,
+          "title": "Tarifa Componente Fijo",
+          "type": "number"
+        },
+        "tarifa_componente_variable": {
+          "default": 0.0,
+          "title": "Tarifa Componente Variable",
+          "type": "number"
+        }
+      },
+      "title": "EscenarioTarifasResumenV1",
+      "type": "object"
+    },
+    "KpisV1": {
+      "additionalProperties": false,
+      "description": "Top-level KPIs for the simulated deal.",
+      "properties": {
+        "contribucion_total": {
+          "default": 0.0,
+          "title": "Contribucion Total",
+          "type": "number"
+        },
+        "costo_cadena_a_promedio": {
+          "default": 0.0,
+          "title": "Costo Cadena A Promedio",
+          "type": "number"
+        },
+        "costo_mensual_promedio": {
+          "default": 0.0,
+          "title": "Costo Mensual Promedio",
+          "type": "number"
+        },
+        "costo_total_contrato": {
+          "default": 0.0,
+          "title": "Costo Total Contrato",
+          "type": "number"
+        },
+        "cumple_margen_minimo": {
+          "default": true,
+          "title": "Cumple Margen Minimo",
+          "type": "boolean"
+        },
+        "facturacion_mensual_proyectada": {
+          "default": 0.0,
+          "title": "Facturacion Mensual Proyectada",
+          "type": "number"
+        },
+        "ingreso_bruto_total": {
+          "default": 0.0,
+          "title": "Ingreso Bruto Total",
+          "type": "number"
+        },
+        "ingreso_mensual": {
+          "default": 0.0,
+          "title": "Ingreso Mensual",
+          "type": "number"
+        },
+        "ingreso_neto_total": {
+          "default": 0.0,
+          "title": "Ingreso Neto Total",
+          "type": "number"
+        },
+        "margen_minimo_requerido": {
+          "default": 0.0,
+          "title": "Margen Minimo Requerido",
+          "type": "number"
+        },
+        "pct_utilidad_neta_total": {
+          "default": 0.0,
+          "title": "Pct Utilidad Neta Total",
+          "type": "number"
+        },
+        "utilidad_neta_total": {
+          "default": 0.0,
+          "title": "Utilidad Neta Total",
+          "type": "number"
+        },
+        "valor_total_deal": {
+          "default": 0.0,
+          "title": "Valor Total Deal",
+          "type": "number"
+        }
+      },
+      "title": "KpisV1",
+      "type": "object"
+    },
+    "ReglasBusinessV1": {
+      "additionalProperties": true,
+      "description": "Excel rows 29-37: margins and contingencies per scenario.",
+      "properties": {
+        "cont_comercial": {
+          "default": 0.0,
+          "title": "Cont Comercial",
+          "type": "number"
+        },
+        "cont_operativa": {
+          "default": 0.0,
+          "title": "Cont Operativa",
+          "type": "number"
+        },
+        "descuento_volumen": {
+          "default": 0.0,
+          "title": "Descuento Volumen",
+          "type": "number"
+        },
+        "margen_cadena_a": {
+          "default": 0.0,
+          "title": "Margen Cadena A",
+          "type": "number"
+        },
+        "margen_cadena_b": {
+          "default": 0.0,
+          "title": "Margen Cadena B",
+          "type": "number"
+        },
+        "margen_cadena_c": {
+          "default": 0.0,
+          "title": "Margen Cadena C",
+          "type": "number"
+        },
+        "markup": {
+          "default": 0.0,
+          "title": "Markup",
+          "type": "number"
+        }
+      },
+      "title": "ReglasBusinessV1",
+      "type": "object"
+    },
+    "ResumenEjecutivoPyGV1": {
+      "additionalProperties": true,
+      "properties": {
+        "contribucion_total": {
+          "default": 0.0,
+          "title": "Contribucion Total",
+          "type": "number"
+        },
+        "costo_total_contrato": {
+          "default": 0.0,
+          "title": "Costo Total Contrato",
+          "type": "number"
+        },
+        "cumple_margen_minimo": {
+          "default": true,
+          "title": "Cumple Margen Minimo",
+          "type": "boolean"
+        },
+        "ingreso_neto_total": {
+          "default": 0.0,
+          "title": "Ingreso Neto Total",
+          "type": "number"
+        },
+        "meses_activos": {
+          "default": 0,
+          "title": "Meses Activos",
+          "type": "integer"
+        },
+        "meses_contrato": {
+          "default": 0,
+          "title": "Meses Contrato",
+          "type": "integer"
+        },
+        "pct_utilidad_promedio": {
+          "default": 0.0,
+          "title": "Pct Utilidad Promedio",
+          "type": "number"
+        },
+        "valor_total_deal": {
+          "default": 0.0,
+          "title": "Valor Total Deal",
+          "type": "number"
+        }
+      },
+      "title": "ResumenEjecutivoPyGV1",
+      "type": "object"
+    },
+    "TarifaCanalV1": {
+      "additionalProperties": true,
+      "properties": {
+        "cadena_b_atribuible": {
+          "default": 0.0,
+          "title": "Cadena B Atribuible",
+          "type": "number"
+        },
+        "componente_fijo": {
+          "default": "FTE",
+          "title": "Componente Fijo",
+          "type": "string"
+        },
+        "componente_variable": {
+          "default": "",
+          "title": "Componente Variable",
+          "type": "string"
+        },
+        "costo_atribuible": {
+          "default": 0.0,
+          "title": "Costo Atribuible",
+          "type": "number"
+        },
+        "costo_cadena_a_ch": {
+          "default": 0.0,
+          "title": "Costo Cadena A Ch",
+          "type": "number"
+        },
+        "facturacion": {
+          "default": 0.0,
+          "title": "Facturacion",
+          "type": "number"
+        },
+        "financieros_atribuible": {
+          "default": 0.0,
+          "title": "Financieros Atribuible",
+          "type": "number"
+        },
+        "fte": {
+          "default": 0.0,
+          "title": "Fte",
+          "type": "number"
+        },
+        "ingreso_bruto": {
+          "default": 0.0,
+          "title": "Ingreso Bruto",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "modelo_cobro": {
+          "default": "Fijo FTE",
+          "title": "Modelo Cobro",
+          "type": "string"
+        },
+        "no_payroll_ch": {
+          "default": 0.0,
+          "title": "No Payroll Ch",
+          "type": "number"
+        },
+        "nombre_canal": {
+          "default": "",
+          "title": "Nombre Canal",
+          "type": "string"
+        },
+        "nomina_agente_basico": {
+          "default": 0.0,
+          "title": "Nomina Agente Basico",
+          "type": "number"
+        },
+        "payroll_ch": {
+          "default": 0.0,
+          "title": "Payroll Ch",
+          "type": "number"
+        },
+        "pct_fijo": {
+          "default": 1.0,
+          "title": "Pct Fijo",
+          "type": "number"
+        },
+        "pct_variable": {
+          "default": 0.0,
+          "title": "Pct Variable",
+          "type": "number"
+        },
+        "producto": {
+          "default": "",
+          "title": "Producto",
+          "type": "string"
+        },
+        "tarifa_fijo_fte": {
+          "default": 0.0,
+          "title": "Tarifa Fijo Fte",
+          "type": "number"
+        },
+        "tarifa_hora_loggeada": {
+          "default": 0.0,
+          "title": "Tarifa Hora Loggeada",
+          "type": "number"
+        },
+        "tarifa_hora_pagada": {
+          "default": 0.0,
+          "title": "Tarifa Hora Pagada",
+          "type": "number"
+        },
+        "tarifa_variable": {
+          "default": 0.0,
+          "title": "Tarifa Variable",
+          "type": "number"
+        },
+        "vol_mensual": {
+          "default": 0.0,
+          "title": "Vol Mensual",
+          "type": "number"
+        },
+        "vol_minimo_transaccion": {
+          "default": 0.0,
+          "title": "Vol Minimo Transaccion",
+          "type": "number"
+        }
+      },
+      "title": "TarifaCanalV1",
+      "type": "object"
+    },
+    "TarifasEscenarioV1": {
+      "additionalProperties": true,
+      "description": "Excel G43-G57: tariff calculations per scenario.",
+      "properties": {
+        "facturacion_total": {
+          "default": 0.0,
+          "title": "Facturacion Total",
+          "type": "number"
+        },
+        "ingreso_componente_fijo": {
+          "default": 0.0,
+          "title": "Ingreso Componente Fijo",
+          "type": "number"
+        },
+        "ingreso_componente_variable": {
+          "default": 0.0,
+          "title": "Ingreso Componente Variable",
+          "type": "number"
+        },
+        "tarifa_hora_loggeada": {
+          "default": 0.0,
+          "title": "Tarifa Hora Loggeada",
+          "type": "number"
+        },
+        "tarifa_hora_pagada": {
+          "default": 0.0,
+          "title": "Tarifa Hora Pagada",
+          "type": "number"
+        },
+        "tarifa_por_fte": {
+          "default": 0.0,
+          "title": "Tarifa Por Fte",
+          "type": "number"
+        },
+        "tarifa_por_transaccion": {
+          "default": 0.0,
+          "title": "Tarifa Por Transaccion",
+          "type": "number"
+        },
+        "volumen_minimo_transaccion": {
+          "default": 0.0,
+          "title": "Volumen Minimo Transaccion",
+          "type": "number"
+        }
+      },
+      "title": "TarifasEscenarioV1",
+      "type": "object"
+    },
+    "VisionPyGRowV1": {
+      "additionalProperties": true,
+      "properties": {
+        "acumulado": {
+          "default": 0.0,
+          "title": "Acumulado",
+          "type": "number"
+        },
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "promedio": {
+          "default": 0.0,
+          "title": "Promedio",
+          "type": "number"
+        },
+        "seccion": {
+          "title": "Seccion",
+          "type": "string"
+        },
+        "signo": {
+          "title": "Signo",
+          "type": "string"
+        },
+        "tipo": {
+          "title": "Tipo",
+          "type": "string"
+        },
+        "valores": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Valores",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "seccion",
+        "tipo",
+        "signo"
+      ],
+      "title": "VisionPyGRowV1",
+      "type": "object"
+    },
+    "VisionPyGV1": {
+      "additionalProperties": true,
+      "properties": {
+        "filas": {
+          "items": {
+            "$ref": "#/$defs/VisionPyGRowV1"
+          },
+          "title": "Filas",
+          "type": "array"
+        },
+        "meses_activos": {
+          "default": 0,
+          "title": "Meses Activos",
+          "type": "integer"
+        },
+        "meses_contrato": {
+          "default": 0,
+          "title": "Meses Contrato",
+          "type": "integer"
+        },
+        "resumen": {
+          "$ref": "#/$defs/ResumenEjecutivoPyGV1"
+        }
+      },
+      "title": "VisionPyGV1",
+      "type": "object"
+    },
+    "VisionTarifasV1": {
+      "additionalProperties": true,
+      "properties": {
+        "canales": {
+          "items": {
+            "$ref": "#/$defs/TarifaCanalV1"
+          },
+          "title": "Canales",
+          "type": "array"
+        },
+        "costo_cadena_a_total": {
+          "default": 0.0,
+          "title": "Costo Cadena A Total",
+          "type": "number"
+        },
+        "costo_cadena_b_total": {
+          "default": 0.0,
+          "title": "Costo Cadena B Total",
+          "type": "number"
+        },
+        "costo_cadena_c_total": {
+          "default": 0.0,
+          "title": "Costo Cadena C Total",
+          "type": "number"
+        },
+        "costo_total": {
+          "default": 0.0,
+          "title": "Costo Total",
+          "type": "number"
+        },
+        "desglose_producto_opex": {
+          "items": {
+            "$ref": "#/$defs/DesgloseProductoOpexV1"
+          },
+          "title": "Desglose Producto Opex",
+          "type": "array"
+        },
+        "escenarios_detalle": {
+          "items": {
+            "$ref": "#/$defs/EscenarioTarifasDetalleV1"
+          },
+          "title": "Escenarios Detalle",
+          "type": "array"
+        },
+        "ingreso_mensual": {
+          "default": 0.0,
+          "title": "Ingreso Mensual",
+          "type": "number"
+        }
+      },
+      "title": "VisionTarifasV1",
+      "type": "object"
+    },
+    "VisionsBundleV1": {
+      "additionalProperties": false,
+      "description": "All four official visions in a single envelope.",
+      "properties": {
+        "cost_to_serve": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CostToServeV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "pyg": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisionPyGV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tarifas": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VisionTarifasV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "waterfall": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WaterfallV1"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "VisionsBundleV1",
+      "type": "object"
+    },
+    "WaterfallV1": {
+      "additionalProperties": true,
+      "properties": {
+        "contingencias": {
+          "default": 0.0,
+          "title": "Contingencias",
+          "type": "number"
+        },
+        "contribucion": {
+          "default": 0.0,
+          "title": "Contribucion",
+          "type": "number"
+        },
+        "costo_b": {
+          "default": 0.0,
+          "title": "Costo B",
+          "type": "number"
+        },
+        "costo_c": {
+          "default": 0.0,
+          "title": "Costo C",
+          "type": "number"
+        },
+        "costo_total": {
+          "default": 0.0,
+          "title": "Costo Total",
+          "type": "number"
+        },
+        "financiacion": {
+          "default": 0.0,
+          "title": "Financiacion",
+          "type": "number"
+        },
+        "gmf": {
+          "default": 0.0,
+          "title": "Gmf",
+          "type": "number"
+        },
+        "ica": {
+          "default": 0.0,
+          "title": "Ica",
+          "type": "number"
+        },
+        "ingreso_bruto": {
+          "default": 0.0,
+          "title": "Ingreso Bruto",
+          "type": "number"
+        },
+        "ingreso_neto": {
+          "default": 0.0,
+          "title": "Ingreso Neto",
+          "type": "number"
+        },
+        "markup_descuento": {
+          "default": 0.0,
+          "title": "Markup Descuento",
+          "type": "number"
+        },
+        "meses_activos": {
+          "default": 0,
+          "title": "Meses Activos",
+          "type": "integer"
+        },
+        "no_payroll_a": {
+          "default": 0.0,
+          "title": "No Payroll A",
+          "type": "number"
+        },
+        "payroll_a": {
+          "default": 0.0,
+          "title": "Payroll A",
+          "type": "number"
+        },
+        "polizas": {
+          "default": 0.0,
+          "title": "Polizas",
+          "type": "number"
+        }
+      },
+      "title": "WaterfallV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Stable wrapper around all simulation outputs.\n\nThe legacy endpoint continues to return its existing payload shape;\nthis envelope is used when the caller asks for ``api-v1`` explicitly\n(``Accept: application/vnd.nexa.v1+json`` or ``?format=v1``).\n\nWAVE 14 additions (additive only):\n    * ``formula_set``           — version tag of the active formula set.\n    * ``parametrization_hashes`` — SHA-256 of the active parametrization\n      JSONs (hr/gn/op/business_rules).",
+  "properties": {
+    "api_version": {
+      "const": "api-v1",
+      "default": "api-v1",
+      "title": "Api Version",
+      "type": "string"
+    },
+    "baseline_version": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Baseline Version"
+    },
+    "engine_version": {
+      "default": "unknown",
+      "title": "Engine Version",
+      "type": "string"
+    },
+    "formula_set": {
+      "default": "formula-set-v2-7",
+      "title": "Formula Set",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "kpis": {
+      "$ref": "#/$defs/KpisV1"
+    },
+    "parametrization_hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Parametrization Hashes",
+      "type": "object"
+    },
+    "parametrization_version": {
+      "default": "unknown",
+      "title": "Parametrization Version",
+      "type": "string"
+    },
+    "simulation_id": {
+      "title": "Simulation Id",
+      "type": "string"
+    },
+    "visions": {
+      "$ref": "#/$defs/VisionsBundleV1"
+    }
+  },
+  "required": [
+    "simulation_id"
+  ],
+  "title": "SimulationResultV1",
+  "type": "object"
+}

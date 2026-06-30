@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "_comment": "Bancamia Cobranzas \u2014 escenario canonico del Excel V2-4 para validar K50",
+    "_scenario": "3 perfiles: WA Inbound (6FTE, vol=4516.89), WA Outbound (5FTE), Correo Outbound (13FTE)",
+    "_k50_expected": 4534.890080428954,
+    "_l50_expected": 3000.0,
+    "_part_a_expected": 0.6018521878916099,
+    "_part_b_expected": 0.3981478121083902,
+    "_cts_a_expected": 72437.70177467435,
+    "_cts_b_expected": 119566.96188581701,
+    "_cts_ponderado_expected": 91202.11357421303,
+    "_source": "bancamia_12m_canonical.json + Excel V2-4 openpyxl extraction",
+    "_note": "vol_cadena_a_mensual para WhatsApp Inbound = J17 x N17 = 5516.89 x 0.8187 = 4516.89",
+    "_excel_smmlv": 1750905,
+    "_backend_smmlv": 2100000,
+    "_expected_discrepancy": "SMMLV 2025 vs 2026 causara diferencias menores en CTS_B (~2%)"
+  },
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.489324+00:00"
+}

@@ -1,0 +1,325 @@
+{
+  "$defs": {
+    "CanalCTSDetalleV1": {
+      "additionalProperties": true,
+      "description": "Per-channel CTS detail — Excel CTS rows 90-125.",
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "capacitacion_inicial": {
+          "default": 0.0,
+          "title": "Capacitacion Inicial",
+          "type": "number"
+        },
+        "capacitacion_rotacion": {
+          "default": 0.0,
+          "title": "Capacitacion Rotacion",
+          "type": "number"
+        },
+        "costos_fijos": {
+          "default": 0.0,
+          "title": "Costos Fijos",
+          "type": "number"
+        },
+        "crucero": {
+          "default": 0.0,
+          "title": "Crucero",
+          "type": "number"
+        },
+        "cts": {
+          "default": 0.0,
+          "title": "Cts",
+          "type": "number"
+        },
+        "estudios_seguridad": {
+          "default": 0.0,
+          "title": "Estudios Seguridad",
+          "type": "number"
+        },
+        "examenes": {
+          "default": 0.0,
+          "title": "Examenes",
+          "type": "number"
+        },
+        "fte": {
+          "default": 0.0,
+          "title": "Fte",
+          "type": "number"
+        },
+        "inversiones": {
+          "default": 0.0,
+          "title": "Inversiones",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "no_payroll": {
+          "default": 0.0,
+          "title": "No Payroll",
+          "type": "number"
+        },
+        "nomina_loaded": {
+          "default": 0.0,
+          "title": "Nomina Loaded",
+          "type": "number"
+        },
+        "opex_fijo": {
+          "default": 0.0,
+          "title": "Opex Fijo",
+          "type": "number"
+        },
+        "participacion_cadena_a": {
+          "default": 0.0,
+          "title": "Participacion Cadena A",
+          "type": "number"
+        },
+        "payroll": {
+          "default": 0.0,
+          "title": "Payroll",
+          "type": "number"
+        },
+        "salario_fijo": {
+          "default": 0.0,
+          "title": "Salario Fijo",
+          "type": "number"
+        },
+        "salario_variable": {
+          "default": 0.0,
+          "title": "Salario Variable",
+          "type": "number"
+        }
+      },
+      "title": "CanalCTSDetalleV1",
+      "type": "object"
+    },
+    "CostToServeDesgloseAV1": {
+      "additionalProperties": true,
+      "properties": {
+        "capacitacion_inicial": {
+          "default": 0.0,
+          "title": "Capacitacion Inicial",
+          "type": "number"
+        },
+        "capacitacion_rotacion": {
+          "default": 0.0,
+          "title": "Capacitacion Rotacion",
+          "type": "number"
+        },
+        "costos_fijos_estacion": {
+          "default": 0.0,
+          "title": "Costos Fijos Estacion",
+          "type": "number"
+        },
+        "crucero": {
+          "default": 0.0,
+          "title": "Crucero",
+          "type": "number"
+        },
+        "estudios_seguridad": {
+          "default": 0.0,
+          "title": "Estudios Seguridad",
+          "type": "number"
+        },
+        "examenes": {
+          "default": 0.0,
+          "title": "Examenes",
+          "type": "number"
+        },
+        "inversiones": {
+          "default": 0.0,
+          "title": "Inversiones",
+          "type": "number"
+        },
+        "no_payroll": {
+          "default": 0.0,
+          "title": "No Payroll",
+          "type": "number"
+        },
+        "nomina": {
+          "default": 0.0,
+          "title": "Nomina",
+          "type": "number"
+        },
+        "nomina_loaded": {
+          "default": 0.0,
+          "title": "Nomina Loaded",
+          "type": "number"
+        },
+        "opex_fijo": {
+          "default": 0.0,
+          "title": "Opex Fijo",
+          "type": "number"
+        },
+        "salario_fijo": {
+          "default": 0.0,
+          "title": "Salario Fijo",
+          "type": "number"
+        },
+        "salario_variable": {
+          "default": 0.0,
+          "title": "Salario Variable",
+          "type": "number"
+        },
+        "total": {
+          "default": 0.0,
+          "title": "Total",
+          "type": "number"
+        }
+      },
+      "title": "CostToServeDesgloseAV1",
+      "type": "object"
+    },
+    "CostToServeDesgloseBV1": {
+      "additionalProperties": true,
+      "properties": {
+        "componente_fijo": {
+          "default": 0.0,
+          "title": "Componente Fijo",
+          "type": "number"
+        },
+        "componente_variable": {
+          "default": 0.0,
+          "title": "Componente Variable",
+          "type": "number"
+        },
+        "hitl": {
+          "default": 0.0,
+          "title": "Hitl",
+          "type": "number"
+        },
+        "inversiones": {
+          "default": 0.0,
+          "title": "Inversiones",
+          "type": "number"
+        },
+        "opex": {
+          "default": 0.0,
+          "title": "Opex",
+          "type": "number"
+        },
+        "opex_variable": {
+          "default": 0.0,
+          "title": "Opex Variable",
+          "type": "number"
+        },
+        "soporte_mantenimiento": {
+          "default": 0.0,
+          "title": "Soporte Mantenimiento",
+          "type": "number"
+        },
+        "tarifa": {
+          "default": 0.0,
+          "title": "Tarifa",
+          "type": "number"
+        },
+        "tasa_escalamiento": {
+          "default": 0.0,
+          "title": "Tasa Escalamiento",
+          "type": "number"
+        },
+        "total": {
+          "default": 0.0,
+          "title": "Total",
+          "type": "number"
+        }
+      },
+      "title": "CostToServeDesgloseBV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "canal_view_habilitado": {
+      "default": false,
+      "title": "Canal View Habilitado",
+      "type": "boolean"
+    },
+    "canales_detalle": {
+      "items": {
+        "$ref": "#/$defs/CanalCTSDetalleV1"
+      },
+      "title": "Canales Detalle",
+      "type": "array"
+    },
+    "costo_total_acumulado": {
+      "default": 0.0,
+      "title": "Costo Total Acumulado",
+      "type": "number"
+    },
+    "cts_cadena_a": {
+      "default": 0.0,
+      "title": "Cts Cadena A",
+      "type": "number"
+    },
+    "cts_cadena_b": {
+      "default": 0.0,
+      "title": "Cts Cadena B",
+      "type": "number"
+    },
+    "cts_cadena_c": {
+      "default": 0.0,
+      "title": "Cts Cadena C",
+      "type": "number"
+    },
+    "cts_ponderado": {
+      "default": 0.0,
+      "title": "Cts Ponderado",
+      "type": "number"
+    },
+    "desglose_a": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CostToServeDesgloseAV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "desglose_b": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/CostToServeDesgloseBV1"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "fte_cadena_a": {
+      "default": 0.0,
+      "title": "Fte Cadena A",
+      "type": "number"
+    },
+    "participacion_a": {
+      "default": 0.0,
+      "title": "Participacion A",
+      "type": "number"
+    },
+    "participacion_b": {
+      "default": 0.0,
+      "title": "Participacion B",
+      "type": "number"
+    },
+    "participacion_c": {
+      "default": 0.0,
+      "title": "Participacion C",
+      "type": "number"
+    },
+    "vol_cadena_b": {
+      "default": 0.0,
+      "title": "Vol Cadena B",
+      "type": "number"
+    }
+  },
+  "title": "CostToServeV1",
+  "type": "object"
+}

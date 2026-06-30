@@ -1,0 +1,5559 @@
+{
+  "campana": [
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 1,
+      "valor": 0.85
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 1,
+      "valor": 0.9
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 1,
+      "valor": 0.8
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 1,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 1,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 1,
+      "valor": 0.9
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 2,
+      "valor": 0.92
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 2,
+      "valor": 0.95
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 2,
+      "valor": 0.87
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 2,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 2,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 2,
+      "valor": 0.95
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 3,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 3,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 3,
+      "valor": 0.95
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 3,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 3,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 3,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 4,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 4,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 4,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 4,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 4,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 4,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 5,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 5,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 5,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 5,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 5,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 5,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 6,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 6,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 6,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 6,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 6,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 6,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 7,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 7,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 7,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 7,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 7,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 7,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 8,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 8,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 8,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 8,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 8,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 8,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 9,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 9,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 9,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 9,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 9,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 9,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 10,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 10,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 10,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 10,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 10,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 10,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 11,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 11,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 11,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 11,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 11,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 11,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 12,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 12,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 12,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 12,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 12,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 12,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 13,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 13,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 13,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 13,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 13,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 13,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 14,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 14,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 14,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 14,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 14,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 14,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 15,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 15,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 15,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 15,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 15,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 15,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 16,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 16,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 16,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 16,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 16,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 16,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 17,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 17,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 17,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 17,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 17,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 17,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 18,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 18,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 18,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 18,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 18,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 18,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 19,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 19,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 19,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 19,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 19,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 19,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 20,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 20,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 20,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 20,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 20,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 20,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 21,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 21,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 21,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 21,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 21,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 21,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 22,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 22,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 22,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 22,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 22,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 22,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 23,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 23,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 23,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 23,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 23,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 23,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 24,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 24,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 24,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 24,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 24,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 24,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 25,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 25,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 25,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 25,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 25,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 25,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 26,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 26,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 26,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 26,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 26,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 26,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 27,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 27,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 27,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 27,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 27,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 27,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 28,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 28,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 28,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 28,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 28,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 28,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 29,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 29,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 29,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 29,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 29,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 29,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 30,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 30,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 30,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 30,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 30,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 30,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 31,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 31,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 31,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 31,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 31,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 31,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 32,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 32,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 32,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 32,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 32,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 32,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 33,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 33,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 33,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 33,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 33,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 33,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 34,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 34,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 34,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 34,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 34,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 34,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 35,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 35,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 35,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 35,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 35,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 35,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 36,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 36,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 36,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 36,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 36,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 36,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 37,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 37,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 37,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 37,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 37,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 37,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 38,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 38,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 38,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 38,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 38,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 38,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 39,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 39,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 39,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 39,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 39,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 39,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 40,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 40,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 40,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 40,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 40,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 40,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 41,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 41,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 41,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 41,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 41,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 41,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 42,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 42,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 42,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 42,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 42,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 42,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 43,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 43,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 43,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 43,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 43,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 43,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 44,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 44,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 44,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 44,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 44,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 44,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 45,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 45,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 45,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 45,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 45,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 45,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 46,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 46,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 46,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 46,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 46,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 46,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 47,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 47,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 47,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 47,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 47,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 47,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 48,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 48,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 48,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 48,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 48,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 48,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 49,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 49,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 49,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 49,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 49,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 49,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 50,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 50,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 50,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 50,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 50,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 50,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 51,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 51,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 51,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 51,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 51,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 51,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 52,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 52,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 52,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 52,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 52,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 52,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 53,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 53,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 53,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 53,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 53,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 53,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 54,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 54,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 54,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 54,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 54,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 54,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 55,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 55,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 55,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 55,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 55,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 55,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 56,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 56,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 56,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 56,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 56,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 56,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 57,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 57,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 57,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 57,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 57,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 57,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 58,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 58,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 58,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 58,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 58,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 58,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 59,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 59,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 59,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 59,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 59,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 59,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Cobranzas",
+      "mes": 60,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Sac",
+      "mes": 60,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "mes": 60,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "SACO",
+      "mes": 60,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "mes": 60,
+      "valor": 1.0
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "mes": 60,
+      "valor": 1.0
+    }
+  ],
+  "costo_fijo": [
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Energía",
+      "valor": 153.301
+    },
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Agua",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 11.757
+    },
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Arriendo",
+      "valor": 191.968
+    },
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Barranquilla",
+      "servicio": "Mantenimiento",
+      "valor": 23.088
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Energía",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Agua",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Arriendo",
+      "valor": 415.975
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Vigilancia",
+      "valor": 42.973
+    },
+    {
+      "localidad": "Bogota - Américas",
+      "servicio": "Mantenimiento",
+      "valor": 129.0
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Energía",
+      "valor": 29.859
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Agua",
+      "valor": 960.0
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 18.174
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Arriendo",
+      "valor": 415.975
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Vigilancia",
+      "valor": 36.959
+    },
+    {
+      "localidad": "Bogota - Teusaquillo",
+      "servicio": "Mantenimiento",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Energía",
+      "valor": 25.797
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Agua",
+      "valor": 8.174
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 15.514
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Arriendo",
+      "valor": 415.975
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Vigilancia",
+      "valor": 27.355
+    },
+    {
+      "localidad": "Bogota - Toberin",
+      "servicio": "Mantenimiento",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Energía",
+      "valor": 53.322
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Agua",
+      "valor": 24.36
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 161.8
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Arriendo",
+      "valor": 391.061
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Bucaramanga",
+      "servicio": "Mantenimiento",
+      "valor": 42.616
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Energía",
+      "valor": 43.143
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Agua",
+      "valor": 736.0
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 32.155
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Arriendo",
+      "valor": 383.978
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Vigilancia",
+      "valor": 38.631
+    },
+    {
+      "localidad": "Cali",
+      "servicio": "Mantenimiento",
+      "valor": 12.2
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Energía",
+      "valor": 152.389
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Agua",
+      "valor": 8.754
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 107.701
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Arriendo",
+      "valor": 390.834
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Cartagena",
+      "servicio": "Mantenimiento",
+      "valor": 33.078
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Energía",
+      "valor": 34.746
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Agua",
+      "valor": 6.25
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 181.312
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Arriendo",
+      "valor": 421.659
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Ibague",
+      "servicio": "Mantenimiento",
+      "valor": 52.702
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Energía",
+      "valor": 77.689
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Agua",
+      "valor": 11.698
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 188.784
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Arriendo",
+      "valor": 492.958
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Manizales",
+      "servicio": "Mantenimiento",
+      "valor": 38.859
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Energía",
+      "valor": 31.179
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Agua",
+      "valor": 398.0
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Gas",
+      "valor": 17.0
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 42.093
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Arriendo",
+      "valor": 280.475
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Vigilancia",
+      "valor": 69.473
+    },
+    {
+      "localidad": "Medellín",
+      "servicio": "Mantenimiento",
+      "valor": 8.965
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Energía",
+      "valor": 122.763
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Agua",
+      "valor": 12.0
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 212.581
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Arriendo",
+      "valor": 323.369
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Pasto",
+      "servicio": "Mantenimiento",
+      "valor": 22.712
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Energía",
+      "valor": 42.272
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Agua",
+      "valor": 11.443
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 63.439
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Arriendo",
+      "valor": 263.547
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Vigilancia",
+      "valor": 4.263
+    },
+    {
+      "localidad": "Pereira",
+      "servicio": "Mantenimiento",
+      "valor": 44.661
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Energía",
+      "valor": 108.755
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Agua",
+      "valor": 1.838
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Gas",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Aseo y Cafeteria",
+      "valor": 172.09
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Arriendo",
+      "valor": 454.394
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Vigilancia",
+      "valor": 0.0
+    },
+    {
+      "localidad": "Villavicencio",
+      "servicio": "Mantenimiento",
+      "valor": 50.619
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "16",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "16",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "16",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "16",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "16",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "17",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "17",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "17",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "17",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "17",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "17",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "18",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "18",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "18",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "18",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "18",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "18",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "19",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "19",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "19",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "19",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "19",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "19",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "20",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "20",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "20",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "20",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "20",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "20",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "21",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "21",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "21",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "21",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "21",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "21",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "22",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "22",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "22",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "22",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "22",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "22",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "23",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "23",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "23",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "23",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "23",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "23",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "24",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "24",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "24",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "24",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "24",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "24",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "25",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "25",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "25",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "25",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "25",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "25",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "26",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "26",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "26",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "26",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "26",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "26",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "27",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "27",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "27",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "27",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "27",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "27",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "28",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "28",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "28",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "28",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "28",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "28",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "29",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "29",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "29",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "29",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "29",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "29",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "30",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "30",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "30",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "30",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "30",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "30",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "31",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "31",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "31",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "31",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "31",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "31",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "32",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "32",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "32",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "32",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "32",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "32",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "33",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "33",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "33",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "33",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "33",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "33",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "34",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "34",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "34",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "34",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "34",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "34",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "35",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "35",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "35",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "35",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "35",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "35",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "36",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "36",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "36",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "36",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "36",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "36",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "37",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "37",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "37",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "37",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "37",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "37",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "38",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "38",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "38",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "38",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "38",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "38",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "39",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "39",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "39",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "39",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "39",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "39",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "40",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "40",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "40",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "40",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "40",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "40",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "41",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "41",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "41",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "41",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "41",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "41",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "42",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "42",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "42",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "42",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "42",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "42",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "43",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "43",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "43",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "43",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "43",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "43",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "44",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "44",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "44",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "44",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "44",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "44",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "45",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "45",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "45",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "45",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "45",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "45",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "46",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "46",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "46",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "46",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "46",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "46",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "47",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "47",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "47",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "47",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "47",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "47",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "48",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "48",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "48",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "48",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "48",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "48",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "49",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "49",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "49",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "49",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "49",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "49",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "50",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "50",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "50",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "50",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "50",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "50",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "51",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "51",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "51",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "51",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "51",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "51",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "52",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "52",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "52",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "52",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "52",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "52",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "53",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "53",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "53",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "53",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "53",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "53",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "54",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "54",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "54",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "54",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "54",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "54",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "55",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "55",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "55",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "55",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "55",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "55",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "56",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "56",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "56",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "56",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "56",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "56",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "57",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "57",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "57",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "57",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "57",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "57",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "58",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "58",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "58",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "58",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "58",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "58",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "59",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "59",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "59",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "59",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "59",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "59",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Cobranzas",
+      "servicio": "60",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Sac",
+      "servicio": "60",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Ventas multicanal",
+      "servicio": "60",
+      "valor": 1.0
+    },
+    {
+      "localidad": "SACO",
+      "servicio": "60",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Plataformas",
+      "servicio": "60",
+      "valor": 1.0
+    },
+    {
+      "localidad": "Captura de Datos",
+      "servicio": "60",
+      "valor": 1.0
+    }
+  ],
+  "extra_sheets": {
+    "HR-Complejidad": [
+      {
+        "complejidad": "Baja",
+        "valor": 0.2
+      },
+      {
+        "complejidad": "Media",
+        "valor": 0.5
+      },
+      {
+        "complejidad": "Alta",
+        "valor": 0.5
+      }
+    ],
+    "HR-EquipoHITL": [
+      {
+        "equipohitl": "Human Reviewers"
+      },
+      {
+        "equipohitl": "Conversation Analyst"
+      },
+      {
+        "equipohitl": "Content / Knowledge Manager"
+      },
+      {
+        "equipohitl": "QA / Compliance QA"
+      },
+      {
+        "equipohitl": "MLOps / AIOps"
+      },
+      {
+        "equipohitl": "Data Steward"
+      }
+    ],
+    "HR-EquipoSoporteMantenimiento": [
+      {
+        "equiposoportemantenimiento": "Service Owner"
+      },
+      {
+        "equiposoportemantenimiento": "Platform Admin"
+      },
+      {
+        "equiposoportemantenimiento": "L1 / L2 Support"
+      },
+      {
+        "equiposoportemantenimiento": "RPA Supervisor / Bot Controller"
+      },
+      {
+        "equiposoportemantenimiento": "DevOps / SRE"
+      },
+      {
+        "equiposoportemantenimiento": "MLOps / AIOps"
+      },
+      {
+        "equiposoportemantenimiento": "Data Steward / Data Quality"
+      },
+      {
+        "equiposoportemantenimiento": "Conversation Analyst"
+      },
+      {
+        "equiposoportemantenimiento": "Content / Knowledge Manager"
+      },
+      {
+        "equiposoportemantenimiento": "QA Monitoring / Compliance QA"
+      },
+      {
+        "equiposoportemantenimiento": "Human Reviewers (HITL)"
+      },
+      {
+        "equiposoportemantenimiento": "Security / Privacy / Compliance"
+      }
+    ]
+  },
+  "med_seg": [
+    {
+      "centrocosto": "Costo externo examenes medicos nuevos (iniciales)",
+      "localidad": "Bogota",
+      "valor": 60.8
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (Rotación)",
+      "localidad": "Bogota",
+      "valor": 60.8
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (anual)",
+      "localidad": "Bogota",
+      "valor": 60.8
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (iniciales)",
+      "localidad": "Bogota",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (Rotación)",
+      "localidad": "Bogota",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Iniciales)",
+      "localidad": "Bogota",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Rotación)",
+      "localidad": "Bogota",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos nuevos (iniciales)",
+      "localidad": "Cali",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (Rotación)",
+      "localidad": "Cali",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (anual)",
+      "localidad": "Cali",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (iniciales)",
+      "localidad": "Cali",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (Rotación)",
+      "localidad": "Cali",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Iniciales)",
+      "localidad": "Cali",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Rotación)",
+      "localidad": "Cali",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos nuevos (iniciales)",
+      "localidad": "Medellín",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (Rotación)",
+      "localidad": "Medellín",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (anual)",
+      "localidad": "Medellín",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (iniciales)",
+      "localidad": "Medellín",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (Rotación)",
+      "localidad": "Medellín",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Iniciales)",
+      "localidad": "Medellín",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Rotación)",
+      "localidad": "Medellín",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos nuevos (iniciales)",
+      "localidad": "Bucaramanga",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (Rotación)",
+      "localidad": "Bucaramanga",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (anual)",
+      "localidad": "Bucaramanga",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (iniciales)",
+      "localidad": "Bucaramanga",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (Rotación)",
+      "localidad": "Bucaramanga",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Iniciales)",
+      "localidad": "Bucaramanga",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Rotación)",
+      "localidad": "Bucaramanga",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos nuevos (iniciales)",
+      "localidad": "Barranquilla",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (Rotación)",
+      "localidad": "Barranquilla",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo externo examenes medicos (anual)",
+      "localidad": "Barranquilla",
+      "valor": 58.0
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (iniciales)",
+      "localidad": "Barranquilla",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe preliminar (Rotación)",
+      "localidad": "Barranquilla",
+      "valor": 54.055
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Iniciales)",
+      "localidad": "Barranquilla",
+      "valor": 144.879
+    },
+    {
+      "centrocosto": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Rotación)",
+      "localidad": "Barranquilla",
+      "valor": 144.879
+    }
+  ],
+  "niveles": {
+    "catalogs": {
+      "prestaciones": [
+        {
+          "name": "Cesantías"
+        },
+        {
+          "name": "Primas"
+        },
+        {
+          "name": "Interes a la cesantía"
+        },
+        {
+          "name": "Vacaciones"
+        }
+      ],
+      "recargo": [
+        {
+          "name": "Recargo Festivo"
+        },
+        {
+          "name": "Recargo Dominical"
+        },
+        {
+          "name": "Recargo Nocturno"
+        },
+        {
+          "name": "Recargo Festivo Nocturno"
+        },
+        {
+          "name": "Recargo Dominical Nocturno"
+        },
+        {
+          "name": "Recargo Extra Diurno"
+        },
+        {
+          "name": "Recargo Extra Nocturno"
+        }
+      ],
+      "rol": [
+        {
+          "name": "Director de cuentas"
+        },
+        {
+          "name": "Director de Performance"
+        },
+        {
+          "name": "Jefe Comercial Regional"
+        },
+        {
+          "name": "Analista profesional AFAC"
+        },
+        {
+          "name": "Lider de Entrenamiento"
+        },
+        {
+          "name": "Lider de Experiencia de Cliente y Performance"
+        },
+        {
+          "name": "Lider de Planeación Operativa"
+        },
+        {
+          "name": "Jefe de Operación"
+        },
+        {
+          "name": "Works force"
+        },
+        {
+          "name": "Reporting"
+        },
+        {
+          "name": "GTR"
+        },
+        {
+          "name": "Analista Prof. De Selección (Inicial)"
+        },
+        {
+          "name": "Analista 1 de Reclutamiento (Inicial)"
+        },
+        {
+          "name": "Analista Prof. De Selección (Rotación)"
+        },
+        {
+          "name": "Analista 1 de Reclutamiento (Rotación)"
+        },
+        {
+          "name": "Analista 2 Service Desk"
+        },
+        {
+          "name": "Formadores"
+        },
+        {
+          "name": "Monitor de Calidad"
+        },
+        {
+          "name": "Supervisor"
+        },
+        {
+          "name": "Validador"
+        },
+        {
+          "name": "Aprendiz SENA"
+        },
+        {
+          "name": "Inclusión"
+        },
+        {
+          "name": "Especialista de Proyectos"
+        },
+        {
+          "name": "Service Owner"
+        },
+        {
+          "name": "Platform Admin"
+        },
+        {
+          "name": "L1 / L2 Support"
+        },
+        {
+          "name": "RPA Supervisor / Bot Controller"
+        },
+        {
+          "name": "DevOps / SRE"
+        },
+        {
+          "name": "MLOps / AIOps"
+        },
+        {
+          "name": "Data Steward / Data Quality"
+        },
+        {
+          "name": "Conversation Analyst"
+        },
+        {
+          "name": "Content / Knowledge Manager"
+        },
+        {
+          "name": "QA Monitoring / Compliance QA"
+        },
+        {
+          "name": "Human Reviewers (HITL)"
+        },
+        {
+          "name": "Security / Privacy / Compliance"
+        },
+        {
+          "name": "Human Reviewers"
+        },
+        {
+          "name": "QA / Compliance QA"
+        },
+        {
+          "name": "Data Steward"
+        },
+        {
+          "name": "Product Owner / Service Owner"
+        },
+        {
+          "name": "Solution Architect"
+        },
+        {
+          "name": "Business Analyst / Process Analyst"
+        },
+        {
+          "name": "Change Manager"
+        },
+        {
+          "name": "RPA Developer"
+        },
+        {
+          "name": "RPA Platform / Infra Engineer"
+        },
+        {
+          "name": "Data Engineer"
+        },
+        {
+          "name": "ML / AI Engineer"
+        },
+        {
+          "name": "Conversation Designer"
+        },
+        {
+          "name": "Prompt / Policy Engineer"
+        },
+        {
+          "name": "Integration Engineer / API Developer"
+        },
+        {
+          "name": "DevOps / MLOps Engineer"
+        },
+        {
+          "name": "QA / Test Lead"
+        }
+      ],
+      "servicio": [
+        {
+          "name": "Cobranzas"
+        },
+        {
+          "name": "Serv AC"
+        },
+        {
+          "name": "Ventas multicanal"
+        },
+        {
+          "name": "SACO"
+        },
+        {
+          "name": "Plataformas"
+        },
+        {
+          "name": "Captura de Datos"
+        }
+      ],
+      "ssparafiscales": [
+        {
+          "name": "Salud"
+        },
+        {
+          "name": "Fondo de pensión"
+        },
+        {
+          "name": "ARL"
+        },
+        {
+          "name": "Caja"
+        },
+        {
+          "name": "ICBF + Sena"
+        }
+      ],
+      "tipo": [
+        {
+          "name": "Empleado"
+        },
+        {
+          "name": "Equipo de Soporte y Mantenimiento"
+        },
+        {
+          "name": "Equipo de HITL"
+        },
+        {
+          "name": "Roles de Implementación"
+        }
+      ]
+    }
+  },
+  "nomina": [
+    {
+      "rol": "Director de cuentas",
+      "salario": 18505000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Director de Performance",
+      "salario": 13000000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Jefe Comercial Regional",
+      "salario": 5260000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Analista profesional AFAC",
+      "salario": 2987680.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Lider de Entrenamiento",
+      "salario": 4749000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Lider de Experiencia de Cliente y Performance",
+      "salario": 4749000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Lider de Planeación Operativa",
+      "salario": 5201000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Jefe de Operación",
+      "salario": 4119600.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Works force",
+      "salario": 2674100.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Reporting",
+      "salario": 2674100.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "GTR",
+      "salario": 1612100.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Analista Prof. De Selección (Inicial)",
+      "salario": 2729900.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Analista 1 de Reclutamiento (Inicial)",
+      "salario": 1550074.68525,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Analista Prof. De Selección (Rotación)",
+      "salario": 2729900.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Analista 1 de Reclutamiento (Rotación)",
+      "salario": 1550074.68525,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Analista 2 Service Desk",
+      "salario": 1811500.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Formadores",
+      "salario": 1673000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Monitor de Calidad",
+      "salario": 1747300.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Supervisor",
+      "salario": 2513000.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Validador",
+      "salario": 1423500.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Agente Básico 1",
+      "salario": 2730864.2626,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Aprendiz SENA",
+      "salario": 1423500.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Inclusión",
+      "salario": 1423500.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Especialista de Proyectos",
+      "salario": 5134560.0,
+      "tipo": "Empleado"
+    },
+    {
+      "rol": "Service Owner",
+      "salario": 1906591.86286,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Platform Admin",
+      "salario": 2873765.73,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "L1 / L2 Support",
+      "salario": 1906591.86286,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "RPA Supervisor / Bot Controller",
+      "salario": 2228145.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "DevOps / SRE",
+      "salario": 2057790.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "MLOps / AIOps",
+      "salario": 2149179.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Data Steward / Data Quality",
+      "salario": 3090990.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Conversation Analyst",
+      "salario": 3090990.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Content / Knowledge Manager",
+      "salario": 3090990.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "QA Monitoring / Compliance QA",
+      "salario": 3090990.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Human Reviewers (HITL)",
+      "salario": 3090990.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Security / Privacy / Compliance",
+      "salario": 3090990.0,
+      "tipo": "Equipo de Soporte y Mantenimiento"
+    },
+    {
+      "rol": "Human Reviewers",
+      "salario": 2873765.73,
+      "tipo": "Equipo de HITL"
+    },
+    {
+      "rol": "Conversation Analyst",
+      "salario": 1906591.86286,
+      "tipo": "Equipo de HITL"
+    },
+    {
+      "rol": "Content / Knowledge Manager",
+      "salario": 2228145.0,
+      "tipo": "Equipo de HITL"
+    },
+    {
+      "rol": "QA / Compliance QA",
+      "salario": 2057790.0,
+      "tipo": "Equipo de HITL"
+    },
+    {
+      "rol": "MLOps / AIOps",
+      "salario": 2149179.0,
+      "tipo": "Equipo de HITL"
+    },
+    {
+      "rol": "Data Steward",
+      "salario": 3090990.0,
+      "tipo": "Equipo de HITL"
+    },
+    {
+      "rol": "Product Owner / Service Owner",
+      "salario": 2057790.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Solution Architect",
+      "salario": 2149179.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Business Analyst / Process Analyst",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Change Manager",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "RPA Developer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "RPA Platform / Infra Engineer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Data Engineer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "ML / AI Engineer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Conversation Designer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Prompt / Policy Engineer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Integration Engineer / API Developer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "DevOps / MLOps Engineer",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "QA / Test Lead",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    },
+    {
+      "rol": "Security / Privacy / Compliance",
+      "salario": 3090990.0,
+      "tipo": "Roles de Implementación"
+    }
+  ],
+  "prestaciones": [
+    {
+      "prestaciones": "Cesantías",
+      "valor": 0.0833
+    },
+    {
+      "prestaciones": "Primas",
+      "valor": 0.0833
+    },
+    {
+      "prestaciones": "Interes a la cesantía",
+      "valor": 0.12
+    },
+    {
+      "prestaciones": "Vacaciones",
+      "valor": 0.0417
+    }
+  ],
+  "ratios": [
+    {
+      "agentes": 750.0,
+      "cargo": "Director de cuentas",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1200.0,
+      "cargo": "Director de performance",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 800.0,
+      "cargo": "Jefe Comercial Regional",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 400.0,
+      "cargo": "Analista profesional AFAC",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Entrenamiento",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Experiencia de Cliente y Performance",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Planeación Operativa",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 165.0,
+      "cargo": "Jefe de Operación",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Works force",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Reporting",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 200.0,
+      "cargo": "GTR",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista Prof. De Selección (Inicial)",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 1 de Reclutamiento (Inicial)",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista Prof. De Selección (Rotación)",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 1 de Reclutamiento (Rotación)",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 370.0,
+      "cargo": "Analista 2 Service Desk",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Formadores",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Monitor de Calidad",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Supervisor",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 1.0,
+      "cargo": "Agente Básico 1",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Agente"
+    },
+    {
+      "agentes": 50.0,
+      "cargo": "Validador",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Aprendiz SENA",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 100.0,
+      "cargo": "Inclusión",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Especialista de Proyectos",
+      "categoria_servicio": "Cobranzas",
+      "servicio": "Cobranzas",
+      "tipo": "Especial"
+    },
+    {
+      "agentes": 750.0,
+      "cargo": "Director de cuentas",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1200.0,
+      "cargo": "Director de performance",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 800.0,
+      "cargo": "Jefe Comercial Regional",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 400.0,
+      "cargo": "Analista profesional AFAC",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Entrenamiento",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Experiencia de Cliente y Performance",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Planeación Operativa",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 165.0,
+      "cargo": "Jefe de Operación",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Works force",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Reporting",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 120.0,
+      "cargo": "GTR",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista Prof. De Selección (Inicial)",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 1 de Reclutamiento (Inicial)",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista Prof. De Selección (Rotación)",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 1 de Reclutamiento (Rotación)",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 370.0,
+      "cargo": "Analista 2 Service Desk",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Formadores",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Monitor de Calidad",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Supervisor",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 1.0,
+      "cargo": "Agente Básico 1",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Agente"
+    },
+    {
+      "agentes": 50.0,
+      "cargo": "Validador",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Aprendiz SENA",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 100.0,
+      "cargo": "Inclusión",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Especialista de Proyectos",
+      "categoria_servicio": "Sac",
+      "servicio": "Sac",
+      "tipo": "Especial"
+    },
+    {
+      "agentes": 750.0,
+      "cargo": "Director de cuentas",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1200.0,
+      "cargo": "Director de performance",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 800.0,
+      "cargo": "Jefe Comercial Regional",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 400.0,
+      "cargo": "Analista profesional AFAC",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Entrenamiento",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Experiencia de Cliente y Performance",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Planeación Operativa",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 165.0,
+      "cargo": "Jefe de Operación",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Works force",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Reporting",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 200.0,
+      "cargo": "GTR",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista Prof. De Selección (Inicial)",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 1 de Reclutamiento (Inicial)",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista Prof. De Selección (Rotación)",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 1 de Reclutamiento (Rotación)",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 370.0,
+      "cargo": "Analista 2 Service Desk",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Formadores",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Monitor de Calidad",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Supervisor",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 1.0,
+      "cargo": "Agente Básico 1",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Agente"
+    },
+    {
+      "agentes": 50.0,
+      "cargo": "Validador",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Aprendiz SENA",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 100.0,
+      "cargo": "Inclusión",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Especialista de Proyectos",
+      "categoria_servicio": "Ventas multicanal",
+      "servicio": "Ventas multicanal",
+      "tipo": "Especial"
+    },
+    {
+      "agentes": 2500.0,
+      "cargo": "Director de cuentas",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1500.0,
+      "cargo": "Director de performance",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 800.0,
+      "cargo": "Jefe Comercial Regional",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 400.0,
+      "cargo": "Analista profesional AFAC",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Entrenamiento",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Experiencia de Cliente y Performance",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Planeación Operativa",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 165.0,
+      "cargo": "Jefe de Operación",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Works force",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Reporting",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 120.0,
+      "cargo": "GTR",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 25.0,
+      "cargo": "Analista Prof. De Selección (Inicial)",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 25.0,
+      "cargo": "Analista 1 de Reclutamiento (Inicial)",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 25.0,
+      "cargo": "Analista Prof. De Selección (Rotación)",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 25.0,
+      "cargo": "Analista 1 de Reclutamiento (Rotación)",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 370.0,
+      "cargo": "Analista 2 Service Desk",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Formadores",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Monitor de Calidad",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Supervisor",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 1.0,
+      "cargo": "Agente Básico 1",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Agente"
+    },
+    {
+      "agentes": 50.0,
+      "cargo": "Validador",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Aprendiz SENA",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 100.0,
+      "cargo": "Inclusión",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Especialista de Proyectos",
+      "categoria_servicio": "SACO",
+      "servicio": "SACO",
+      "tipo": "Especial"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Director de cuentas",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Director de performance",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Jefe Comercial Regional",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Analista profesional AFAC",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Lider de Entrenamiento",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Lider de Experiencia de Cliente y Performance",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Lider de Planeación Operativa",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Jefe de Operación",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Works force",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Reporting",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "GTR",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Analista Prof. De Selección (Inicial)",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Analista 1 de Reclutamiento (Inicial)",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Analista Prof. De Selección (Rotación)",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Analista 1 de Reclutamiento (Rotación)",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Analista 2 Service Desk",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Formadores",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Monitor de Calidad",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Supervisor",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 1.0,
+      "cargo": "Agente Básico 1",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Agente"
+    },
+    {
+      "agentes": 50.0,
+      "cargo": "Validador",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Aprendiz SENA",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 100.0,
+      "cargo": "Inclusión",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Especialista de Proyectos",
+      "categoria_servicio": "Plataformas",
+      "servicio": "Plataformas",
+      "tipo": "Especial"
+    },
+    {
+      "agentes": 750.0,
+      "cargo": "Director de cuentas",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1200.0,
+      "cargo": "Director de performance",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 800.0,
+      "cargo": "Jefe Comercial Regional",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 400.0,
+      "cargo": "Analista profesional AFAC",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Entrenamiento",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Experiencia de Cliente y Performance",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 1000.0,
+      "cargo": "Lider de Planeación Operativa",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 165.0,
+      "cargo": "Jefe de Operación",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Works force",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "Reporting",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 300.0,
+      "cargo": "GTR",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 120.0,
+      "cargo": "Analista Prof. De Selección (Inicial)",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista 1 de Reclutamiento (Inicial)",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista Prof. De Selección (Rotación)",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 55.0,
+      "cargo": "Analista 1 de Reclutamiento (Rotación)",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 110.0,
+      "cargo": "Analista 2 Service Desk",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Administrativo"
+    },
+    {
+      "agentes": 370.0,
+      "cargo": "Formadores",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Monitor de Calidad",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 70.0,
+      "cargo": "Supervisor",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 1.0,
+      "cargo": "Agente Básico 1",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Agente"
+    },
+    {
+      "agentes": 50.0,
+      "cargo": "Validador",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Operativo"
+    },
+    {
+      "agentes": 20.0,
+      "cargo": "Aprendiz SENA",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 100.0,
+      "cargo": "Inclusión",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Temporal"
+    },
+    {
+      "agentes": 0.0,
+      "cargo": "Especialista de Proyectos",
+      "categoria_servicio": "Captura de Datos",
+      "servicio": "Captura de Datos",
+      "tipo": "Especial"
+    }
+  ],
+  "recargos": [
+    {
+      "recargo": "Recargo festivo",
+      "valor": 0.9
+    },
+    {
+      "recargo": "Recargo dominical",
+      "valor": 0.9
+    },
+    {
+      "recargo": "Recargo Nocturno",
+      "valor": 0.35
+    },
+    {
+      "recargo": "Recargo Festivo Nocturno",
+      "valor": 0.15
+    },
+    {
+      "recargo": "Recargo Dominical Nocturno",
+      "valor": 0.15
+    },
+    {
+      "recargo": "Recargo Extra Diurno",
+      "valor": 0.25
+    },
+    {
+      "recargo": "Recargo Extra Nocturno",
+      "valor": 0.75
+    }
+  ],
+  "rentabilidad": [
+    {
+      "categoriaservicio": "Cobranzas",
+      "margenobjetivo": 0.18,
+      "minimo": 0.17
+    },
+    {
+      "categoriaservicio": "Sac",
+      "margenobjetivo": 0.18,
+      "minimo": 0.17
+    },
+    {
+      "categoriaservicio": "Ventas multicanal",
+      "margenobjetivo": 0.18,
+      "minimo": 0.17
+    },
+    {
+      "categoriaservicio": "SACO",
+      "margenobjetivo": 0.105,
+      "minimo": 0.105
+    },
+    {
+      "categoriaservicio": "Plataformas",
+      "margenobjetivo": 0.15,
+      "minimo": 0.14
+    },
+    {
+      "categoriaservicio": "Captura de Datos",
+      "margenobjetivo": 0.3292,
+      "minimo": 0.3292
+    }
+  ],
+  "rotacion_ausentismo": [
+    {
+      "linea": "default",
+      "pct_ausentismo": 0.065,
+      "pct_examen_anual": 1.0,
+      "pct_rotacion_mensual": 0.085
+    },
+    {
+      "linea": "Cobranzas",
+      "pct_ausentismo": 0.065,
+      "pct_examen_anual": 1.0,
+      "pct_rotacion_mensual": 0.085
+    },
+    {
+      "linea": "SAC",
+      "pct_ausentismo": 0.065,
+      "pct_examen_anual": 1.0,
+      "pct_rotacion_mensual": 0.085
+    },
+    {
+      "linea": "Ventas",
+      "pct_ausentismo": 0.065,
+      "pct_examen_anual": 1.0,
+      "pct_rotacion_mensual": 0.085
+    },
+    {
+      "linea": "BackOffice",
+      "pct_ausentismo": 0.065,
+      "pct_examen_anual": 1.0,
+      "pct_rotacion_mensual": 0.085
+    },
+    {
+      "linea": "Captura de Datos",
+      "pct_ausentismo": 0.065,
+      "pct_examen_anual": 1.0,
+      "pct_rotacion_mensual": 0.085
+    }
+  ],
+  "salarios": [
+    {
+      "servicio": "Salario Mínimo",
+      "valor": 2100000.0
+    },
+    {
+      "servicio": "Auxilio Transporte",
+      "valor": 249095.0
+    },
+    {
+      "servicio": "%Cumplimiento Variable",
+      "valor": 0.7
+    },
+    {
+      "servicio": "Dotaciones (annual)",
+      "valor": 184500.0
+    },
+    {
+      "servicio": "Dotaciones (mensual)",
+      "valor": 15375.0
+    }
+  ],
+  "seg_social": [
+    {
+      "proporcion": 0.085,
+      "ssparafiscales": "Salud"
+    },
+    {
+      "proporcion": 0.12,
+      "ssparafiscales": "Fondo de pensión"
+    },
+    {
+      "proporcion": 0.00522,
+      "ssparafiscales": "ARL"
+    },
+    {
+      "proporcion": 0.04,
+      "ssparafiscales": "Caja"
+    },
+    {
+      "proporcion": 0.04,
+      "ssparafiscales": "ICBF + Sena"
+    }
+  ],
+  "version_id": "40799552-3477-4a8a-b295-5c3208733ee2"
+}

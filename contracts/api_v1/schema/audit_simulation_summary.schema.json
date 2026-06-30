@@ -1,0 +1,47 @@
+{
+  "additionalProperties": false,
+  "description": "Compact summary for the listing endpoint.",
+  "properties": {
+    "generated_at": {
+      "anyOf": [
+        {
+          "format": "date-time",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Generated At"
+    },
+    "nodes_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Nodes Count",
+      "type": "integer"
+    },
+    "roots_count": {
+      "default": 0,
+      "minimum": 0,
+      "title": "Roots Count",
+      "type": "integer"
+    },
+    "simulation_id": {
+      "title": "Simulation Id",
+      "type": "string"
+    },
+    "stages": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Stages",
+      "type": "array"
+    }
+  },
+  "required": [
+    "simulation_id"
+  ],
+  "title": "AuditSimulationSummaryV1",
+  "type": "object"
+}

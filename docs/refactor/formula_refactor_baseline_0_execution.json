@@ -1,0 +1,45 @@
+{
+  "steps": [
+    "ContractValidator: OK",
+    "UserInputLoader.cargar_desde_dict: OK",
+    "SimulationContextBuilder.construir: OK",
+    "NexaPricingEngine.calcular: OK",
+    "validate_visions_complete: OK",
+    "pricing_result_to_dict: OK"
+  ],
+  "errors": [],
+  "parametrization_versions": {},
+  "simulation_id": "baseline_formula_v0",
+  "output_path": "backend_nexa/storage/simulation_results/baseline_formula_v0.json",
+  "snapshot_path": "backend_nexa/tests/refactor/baseline_formula_snapshot_v0.json",
+  "top_level_keys": [
+    "simulation_id",
+    "scenario",
+    "calculated_at",
+    "vision_por_servicio",
+    "vision_por_canal",
+    "detalle_por_canal",
+    "estructura_equipo",
+    "comparativo_escenarios",
+    "ficha_deal",
+    "kpis",
+    "pyg_por_mes",
+    "waterfall_promedio",
+    "configuracion_comercial",
+    "reglas_negocio",
+    "evaluacion_riesgo",
+    "vision_pyg",
+    "cost_to_serve",
+    "vision_tarifas",
+    "panel",
+    "polizas",
+    "datasets_vision",
+    "audit_trace"
+  ],
+  "kpis_summary": {
+    "ingreso_mensual": 260842533.88337135,
+    "costo_cadena_a_promedio": 185297653.44108772,
+    "pct_utilidad_neta_total": 0.27172491326550124
+  },
+  "pyg_meses": 24
+}

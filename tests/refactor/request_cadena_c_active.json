@@ -1,0 +1,1637 @@
+{
+  "datos_operativos": {
+    "servicio": "Cobranzas",
+    "cliente": "Bancamia",
+    "tipo_cliente": "No Grupo Aval",
+    "fecha_inicio": "2026-01-01",
+    "duracion_meses": 24,
+    "ciudad": "Bogota",
+    "sede": "Toberin",
+    "tarifa_diaria_capacitacion": 20000,
+    "crucero": 8422,
+    "horas_formacion_mes": 8,
+    "pct_ausentismo": 0.065,
+    "pct_rotacion": 0.085,
+    "cons_costo_de_financiacion": true,
+    "sede_combinada_costo_formacion": 1.5,
+    "ciudades_recurso": [
+      {
+        "ciudad": "Bogota",
+        "proporcion": 1.0
+      }
+    ],
+    "tasa_ica": 0.0097,
+    "tasa_gmf": 0.004
+  },
+  "polizas": [
+    {
+      "nombre": "P\u00f3liza de Seriedad",
+      "activa": true,
+      "pct_poliza": 0.005,
+      "pct_atribuible": 0.1,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "P\u00f3liza de Cumplimiento",
+      "activa": true,
+      "pct_poliza": 0.0062,
+      "pct_atribuible": 0.2,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "P\u00f3liza de Salarios",
+      "activa": true,
+      "pct_poliza": 0.0119,
+      "pct_atribuible": 0.1,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "Poliza de Calidad",
+      "activa": true,
+      "pct_poliza": 0.0119,
+      "pct_atribuible": 0.2,
+      "aplica_extension": true,
+      "meses_extension": 36
+    },
+    {
+      "nombre": "Poliza de rc cruzada",
+      "activa": true,
+      "pct_poliza": 0.0275,
+      "pct_atribuible": 0.4,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "poliza de IRF",
+      "activa": true,
+      "pct_poliza": 0.0275,
+      "pct_atribuible": 0.1,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "P\u00f3liza de Responsabilidad",
+      "activa": true,
+      "pct_poliza": 0.0069,
+      "pct_atribuible": 0.4,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "Comisi\u00f3n de Administraci\u00f3n (1.18% sobre ventas (comercial-Operaciones)",
+      "activa": true,
+      "pct_poliza": 0.0118,
+      "pct_atribuible": 1.0,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "Otros impuestos",
+      "activa": true,
+      "pct_poliza": 0.01,
+      "pct_atribuible": 0.0,
+      "aplica_extension": false,
+      "meses_extension": null
+    },
+    {
+      "nombre": "Responsabilidad Civil Protecci\u00f3n de Datos",
+      "activa": true,
+      "pct_poliza": 0.04,
+      "pct_atribuible": 0.4,
+      "aplica_extension": false,
+      "meses_extension": null
+    }
+  ],
+  "reglas_negocio": {
+    "margen_objetivo": 0.18,
+    "contingencia_operativa": {
+      "valor": 0.025,
+      "minimo": 0.025,
+      "maximo": 0.12
+    },
+    "contingencia_comercial": {
+      "valor": 0.04,
+      "minimo": 0.04,
+      "maximo": 0.07
+    },
+    "markup": {
+      "valor": 0.0,
+      "minimo": 0.02,
+      "maximo": 0.08
+    },
+    "imprevistos": 0,
+    "porcentaje_acumulado": {
+      "actual": 0.02,
+      "minimo": 0.012,
+      "maximo": 0.15
+    }
+  },
+  "volumetria": {
+    "indexacion": {
+      "componente_humano": "IPC",
+      "componente_tecnologico": "IPC",
+      "frecuencia": "Anual",
+      "mes_aplicacion": 1,
+      "tasa_interes_mensual": 0.0153
+    },
+    "inbound": {
+      "cadenas_activas": {
+        "cadena_a": true,
+        "cadena_b": true,
+        "cadena_c": false
+      },
+      "canales": [
+        {
+          "canal": "WhatsApp 1",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 10,
+            "participacion": 0.5
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 10000,
+            "participacion": 0.5
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        },
+        {
+          "canal": "Correo",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 0,
+            "participacion": 0.0
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 5000,
+            "participacion": 0.5
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        },
+        {
+          "canal": "WebChat",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 0,
+            "participacion": 0.0
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 3000,
+            "participacion": 0.0
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        }
+      ]
+    },
+    "outbound": {
+      "cadenas_activas": {
+        "cadena_a": true,
+        "cadena_b": false,
+        "cadena_c": false
+      },
+      "canales": [
+        {
+          "canal": "WhatsApp",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 5,
+            "participacion": 0.625
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        },
+        {
+          "canal": "Correo",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 3,
+            "participacion": 0.375
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        }
+      ]
+    }
+  },
+  "escenarios_comerciales": [
+    {
+      "escenario": 1,
+      "modalidad": "Inbound",
+      "canal": "WhatsApp",
+      "modelo_cobro": "FTE",
+      "componente_fijo": "Tiempo",
+      "proporcion_componente_fijo": 1.0,
+      "componente_variable": "",
+      "proporcion_componente_variable": 0.0
+    },
+    {
+      "escenario": 2,
+      "modalidad": "Outbound",
+      "canal": "WhatsApp",
+      "modelo_cobro": "FTE",
+      "componente_fijo": "Tiempo",
+      "proporcion_componente_fijo": 1.0,
+      "componente_variable": "",
+      "proporcion_componente_variable": 0.0
+    },
+    {
+      "escenario": 3,
+      "modalidad": "Outbound",
+      "canal": "Correo",
+      "modelo_cobro": "FTE",
+      "componente_fijo": "Tiempo",
+      "proporcion_componente_fijo": 1.0,
+      "componente_variable": "",
+      "proporcion_componente_variable": 0.0
+    }
+  ],
+  "condiciones_cadena_a": {
+    "Calculo_conversion_fte_interacciones": {
+      "tmo": 0.0145,
+      "tmo_promedio_seg": 522.2,
+      "horas": 3600
+    },
+    "perfiles": [
+      {
+        "nombre": "Inbound 10",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "fte": 10,
+        "pct_presencia": 1.0,
+        "salario_base": 1560000,
+        "comision_pct": 0.0,
+        "estaciones_presenciales": 10,
+        "roles_operativos": [
+          {
+            "incluye_en_deal": true,
+            "rol": "Director de cuentas",
+            "ratio": "750 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Director de Performance",
+            "ratio": "1200 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Jefe Comercial Regional",
+            "ratio": "800 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista profesional AAC",
+            "ratio": "400 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Entrenamiento",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Experiencia de Cliente y Performance",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Planeacion Operativa",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Jefe de Operacion",
+            "ratio": "165 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Work Force",
+            "ratio": "300 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Reporting",
+            "ratio": "300 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "GTR",
+            "ratio": "200 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Data Seleccion",
+            "ratio": "150 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Reclutamiento",
+            "ratio": "65 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Reclutamiento Rotacion",
+            "ratio": "65 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista de Reclutamiento",
+            "ratio": "150 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Jr servicio cliente",
+            "ratio": "370 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Formadores",
+            "ratio": "70 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Monitor de Calidad",
+            "ratio": "70 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Supervisor",
+            "ratio": "20 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Agente Basico I",
+            "ratio": "1 Agente",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": false,
+            "rol": "Validador",
+            "ratio": null,
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Aprendiz SENA",
+            "ratio": "20 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Inclusi\u00f3n",
+            "ratio": "100 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Especialista de Proyectos",
+            "ratio": "0 Agentes",
+            "comision_rol": 0.0,
+            "Complejidad": "Alta"
+          }
+        ],
+        "capacitacion": {
+          "dias_capacitacion_perfil": 10,
+          "por_capacitacion_mes": 0.09,
+          "incluye_costo_examenes_ingreso": true,
+          "incluye_costo_examenes_rotacion": true,
+          "incluye_costo_capacitacion_anual": true,
+          "incluye_estudio_seguridad_ingreso": false,
+          "incluye_estudio_seguridad_rotacion": false,
+          "incluye_estudio_seguridad_final_ingreso": false,
+          "incluye_estudio_seguridad_final_rotacion": false
+        },
+        "opex_fijo": {
+          "items": [
+            {
+              "concepto": "Internet dedicado",
+              "costo": 450000,
+              "cantidad": 10,
+              "costo_totalizado": false
+            },
+            {
+              "concepto": "VPN",
+              "costo": 180000,
+              "cantidad": 10,
+              "costo_totalizado": true
+            },
+            {
+              "concepto": "Licencia Antivirus",
+              "costo": 85000,
+              "cantidad": 10,
+              "costo_totalizado": false
+            },
+            {
+              "concepto": "Plataforma CCaaS",
+              "costo": 180000,
+              "cantidad": 10,
+              "costo_totalizado": true
+            },
+            {
+              "concepto": "Backup usuarios",
+              "costo": 24239,
+              "cantidad": 10,
+              "costo_totalizado": true
+            }
+          ],
+          "staffing": {
+            "analista_staffing": 4.5,
+            "supervisores": 1,
+            "ausentismo_cem": 0.07
+          }
+        },
+        "inversiones": [
+          {
+            "descripcion": "Compra de PC escritorio M70s - Asesores Procesador Core i5 12400 Memoria 8 RAM Disco duro 500GB SSD Pantalla de 19.5' pulgadas - T22i-20 Windows 10 Mouse y Teclado Desktop TC M70q Gen 5 I5 14400T 16G 512GB N W11 + Monitor E22-30(C23215FE0) 21.5'' Monitor (HDMI)",
+            "precio": 3508260,
+            "meses_a_diferir": 60,
+            "precio_mensual": 58471,
+            "es_precio_total": false,
+            "cantidad": 11
+          },
+          {
+            "descripcion": "Diadema JABRA EVOLVE 2020 (Valor variable dado que cotizan en dolares y acorde a la cantidad que se compre)",
+            "precio": 119952,
+            "meses_a_diferir": 24,
+            "precio_mensual": 4998,
+            "es_precio_total": false,
+            "cantidad": 10
+          },
+          {
+            "descripcion": "Licencia Nestkope (SWG filtro)",
+            "precio": 3621,
+            "meses_a_diferir": 1,
+            "precio_mensual": 3621,
+            "es_precio_total": false,
+            "cantidad": 11
+          },
+          {
+            "descripcion": "Soporte Licencia Netskope (SWG filtro)",
+            "precio": 2440,
+            "meses_a_diferir": 1,
+            "precio_mensual": 2440,
+            "es_precio_total": false,
+            "cantidad": 11
+          },
+          {
+            "descripcion": "Licencia EDR Sentinel One Enterprise",
+            "precio": 4612,
+            "meses_a_diferir": 1,
+            "precio_mensual": 4612,
+            "es_precio_total": false,
+            "cantidad": 11
+          },
+          {
+            "descripcion": "Soporte EDR Sentinel One Enterprise",
+            "precio": 752,
+            "meses_a_diferir": 1,
+            "precio_mensual": 752,
+            "es_precio_total": false,
+            "cantidad": 11
+          },
+          {
+            "descripcion": "Licencia Office 365 E3",
+            "precio": 95706,
+            "meses_a_diferir": 1,
+            "precio_mensual": 95706,
+            "es_precio_total": false,
+            "cantidad": 0.79
+          }
+        ]
+      },
+      {
+        "nombre": "Inbound 15 personas",
+        "modalidad": "Inbound",
+        "canal": "Correo",
+        "fte": 15,
+        "pct_presencia": 0.6,
+        "salario_base": 1750905,
+        "comision_pct": 0.0,
+        "estaciones_presenciales": 0,
+        "roles_operativos": [
+          {
+            "incluye_en_deal": true,
+            "rol": "Director de cuentas",
+            "ratio": "750 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Director de Performance",
+            "ratio": "1200 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Jefe Comercial Regional",
+            "ratio": "800 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista profesional AAC",
+            "ratio": "400 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Entrenamiento",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Experiencia de Cliente y Performance",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Planeacion Operativa",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Jefe de Operacion",
+            "ratio": "165 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Work Force",
+            "ratio": "300 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Reporting",
+            "ratio": "300 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "GTR",
+            "ratio": "200 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Data Seleccion",
+            "ratio": "150 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Reclutamiento",
+            "ratio": "65 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Reclutamiento Rotacion",
+            "ratio": "65 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista de Reclutamiento",
+            "ratio": "150 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Jr servicio cliente",
+            "ratio": "370 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Formadores",
+            "ratio": "70 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Monitor de Calidad",
+            "ratio": "70 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Supervisor",
+            "ratio": "20 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Agente Basico I",
+            "ratio": "1 Agente",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": false,
+            "rol": "Validador",
+            "ratio": null,
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Aprendiz SENA",
+            "ratio": "20 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Inclusi\u00f3n",
+            "ratio": "100 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Especialista de Proyectos",
+            "ratio": "0 Agentes",
+            "comision_rol": 0.0,
+            "Complejidad": "Alta"
+          }
+        ],
+        "capacitacion": {
+          "dias_capacitacion_perfil": 10,
+          "por_capacitacion_mes": 0.09,
+          "incluye_costo_examenes_ingreso": true,
+          "incluye_costo_examenes_rotacion": true,
+          "incluye_costo_capacitacion_anual": true,
+          "incluye_estudio_seguridad_ingreso": false,
+          "incluye_estudio_seguridad_rotacion": false,
+          "incluye_estudio_seguridad_final_ingreso": false,
+          "incluye_estudio_seguridad_final_rotacion": false
+        },
+        "opex_fijo": {
+          "items": [
+            {
+              "concepto": "Internet dedicado",
+              "costo": 450000,
+              "cantidad": 0,
+              "costo_totalizado": false
+            },
+            {
+              "concepto": "VPN",
+              "costo": 180000,
+              "cantidad": 0,
+              "costo_totalizado": true
+            },
+            {
+              "concepto": "Licencia Antivirus",
+              "costo": 85000,
+              "cantidad": 0,
+              "costo_totalizado": false
+            },
+            {
+              "concepto": "Plataforma CCaaS",
+              "costo": 180000,
+              "cantidad": 0,
+              "costo_totalizado": true
+            },
+            {
+              "concepto": "Backup usuarios",
+              "costo": 24239,
+              "cantidad": 0,
+              "costo_totalizado": true
+            }
+          ],
+          "staffing": {
+            "analista_staffing": 4.5,
+            "supervisores": 1,
+            "ausentismo_cem": 0.07
+          }
+        },
+        "inversiones": [
+          {
+            "descripcion": "Compra de PC escritorio M70s - Asesores Procesador Core i5 12400 Memoria 8 RAM Disco duro 500GB SSD Pantalla de 19.5' pulgadas - T22i-20 Windows 10 Mouse y Teclado Desktop TC M70q Gen 5 I5 14400T 16G 512GB N W11 + Monitor E22-30(C23215FE0) 21.5'' Monitor (HDMI)",
+            "precio": 3508260,
+            "meses_a_diferir": 60,
+            "precio_mensual": 58471,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Diadema JABRA EVOLVE 2020 (Valor variable dado que cotizan en dolares y acorde a la cantidad que se compre)",
+            "precio": 119952,
+            "meses_a_diferir": 24,
+            "precio_mensual": 4998,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Licencia Nestkope (SWG filtro)",
+            "precio": 3621,
+            "meses_a_diferir": 1,
+            "precio_mensual": 3621,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Soporte Licencia Netskope (SWG filtro)",
+            "precio": 2440,
+            "meses_a_diferir": 1,
+            "precio_mensual": 2440,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Licencia EDR Sentinel One Enterprise",
+            "precio": 4612,
+            "meses_a_diferir": 1,
+            "precio_mensual": 4612,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Soporte EDR Sentinel One Enterprise",
+            "precio": 752,
+            "meses_a_diferir": 1,
+            "precio_mensual": 752,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Licencia Office 365 E3",
+            "precio": 95706,
+            "meses_a_diferir": 1,
+            "precio_mensual": 95706,
+            "es_precio_total": false,
+            "cantidad": 0
+          }
+        ]
+      },
+      {
+        "nombre": "Inbound 20 personas",
+        "modalidad": "Inbound",
+        "canal": "WebChat",
+        "fte": 20,
+        "pct_presencia": 0.6,
+        "salario_base": 1750905,
+        "comision_pct": 0.0,
+        "estaciones_presenciales": 0,
+        "roles_operativos": [
+          {
+            "incluye_en_deal": true,
+            "rol": "Director de cuentas",
+            "ratio": "750 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Director de Performance",
+            "ratio": "1200 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Jefe Comercial Regional",
+            "ratio": "800 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista profesional AAC",
+            "ratio": "400 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Entrenamiento",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Experiencia de Cliente y Performance",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Lider de Planeacion Operativa",
+            "ratio": "1000 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Jefe de Operacion",
+            "ratio": "165 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Work Force",
+            "ratio": "300 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Reporting",
+            "ratio": "300 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "GTR",
+            "ratio": "200 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Data Seleccion",
+            "ratio": "150 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Reclutamiento",
+            "ratio": "65 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Full Reclutamiento Rotacion",
+            "ratio": "65 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista de Reclutamiento",
+            "ratio": "150 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Analista Jr servicio cliente",
+            "ratio": "370 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Formadores",
+            "ratio": "70 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Monitor de Calidad",
+            "ratio": "70 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Supervisor",
+            "ratio": "20 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Agente Basico I",
+            "ratio": "1 Agente",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": false,
+            "rol": "Validador",
+            "ratio": null,
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Aprendiz SENA",
+            "ratio": "20 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Inclusi\u00f3n",
+            "ratio": "100 Agentes",
+            "comision_rol": 0.0
+          },
+          {
+            "incluye_en_deal": true,
+            "rol": "Especialista de Proyectos",
+            "ratio": "0 Agentes",
+            "comision_rol": 0.0,
+            "Complejidad": "Alta"
+          }
+        ],
+        "capacitacion": {
+          "dias_capacitacion_perfil": 10,
+          "por_capacitacion_mes": 0.09,
+          "incluye_costo_examenes_ingreso": true,
+          "incluye_costo_examenes_rotacion": true,
+          "incluye_costo_capacitacion_anual": true,
+          "incluye_estudio_seguridad_ingreso": false,
+          "incluye_estudio_seguridad_rotacion": false,
+          "incluye_estudio_seguridad_final_ingreso": false,
+          "incluye_estudio_seguridad_final_rotacion": false
+        },
+        "opex_fijo": {
+          "items": [
+            {
+              "concepto": "Internet dedicado",
+              "costo": 450000,
+              "cantidad": 0,
+              "costo_totalizado": false
+            },
+            {
+              "concepto": "VPN",
+              "costo": 180000,
+              "cantidad": 0,
+              "costo_totalizado": true
+            },
+            {
+              "concepto": "Licencia Antivirus",
+              "costo": 85000,
+              "cantidad": 0,
+              "costo_totalizado": false
+            },
+            {
+              "concepto": "Plataforma CCaaS",
+              "costo": 180000,
+              "cantidad": 0,
+              "costo_totalizado": true
+            },
+            {
+              "concepto": "Backup usuarios",
+              "costo": 24239,
+              "cantidad": 0,
+              "costo_totalizado": true
+            }
+          ],
+          "staffing": {
+            "analista_staffing": 4.5,
+            "supervisores": 1,
+            "ausentismo_cem": 0.07
+          }
+        },
+        "inversiones": [
+          {
+            "descripcion": "Compra de PC escritorio M70s - Asesores Procesador Core i5 12400 Memoria 8 RAM Disco duro 500GB SSD Pantalla de 19.5' pulgadas - T22i-20 Windows 10 Mouse y Teclado Desktop TC M70q Gen 5 I5 14400T 16G 512GB N W11 + Monitor E22-30(C23215FE0) 21.5'' Monitor (HDMI)",
+            "precio": 3508260,
+            "meses_a_diferir": 60,
+            "precio_mensual": 58471,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Diadema JABRA EVOLVE 2020 (Valor variable dado que cotizan en dolares y acorde a la cantidad que se compre)",
+            "precio": 119952,
+            "meses_a_diferir": 24,
+            "precio_mensual": 4998,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Licencia Nestkope (SWG filtro)",
+            "precio": 3621,
+            "meses_a_diferir": 1,
+            "precio_mensual": 3621,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Soporte Licencia Netskope (SWG filtro)",
+            "precio": 2440,
+            "meses_a_diferir": 1,
+            "precio_mensual": 2440,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Licencia EDR Sentinel One Enterprise",
+            "precio": 4612,
+            "meses_a_diferir": 1,
+            "precio_mensual": 4612,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Soporte EDR Sentinel One Enterprise",
+            "precio": 752,
+            "meses_a_diferir": 1,
+            "precio_mensual": 752,
+            "es_precio_total": false,
+            "cantidad": 0
+          },
+          {
+            "descripcion": "Licencia Office 365 E3",
+            "precio": 95706,
+            "meses_a_diferir": 1,
+            "precio_mensual": 95706,
+            "es_precio_total": false,
+            "cantidad": 0
+          }
+        ]
+      }
+    ]
+  },
+  "condiciones_cadena_b": {
+    "opex": {
+      "items": [
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WhatsApp",
+          "producto": "Token IA",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 3075,
+          "cantidad": 10,
+          "valor_total": 30750
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WhatsApp",
+          "producto": "Token IA",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 196945,
+          "cantidad": 10,
+          "valor_total": 1969450
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WhatsApp",
+          "producto": "WhatsApp minuto",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 28700,
+          "cantidad": 10,
+          "valor_total": 287000
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WhatsApp",
+          "producto": "WhatsApp minuto",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 456125,
+          "cantidad": 10,
+          "valor_total": 4561250
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WebChat",
+          "producto": "WhatsApp minuto",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 61500,
+          "cantidad": 10,
+          "valor_total": 615000
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WebChat",
+          "producto": "WhatsApp minuto",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 18,
+          "cantidad": 10,
+          "valor_total": 180
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WebChat",
+          "producto": "WhatsApp minuto",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 6,
+          "cantidad": 10,
+          "valor_total": 60
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "WebChat",
+          "producto": "Llamada gestionada",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 3.47,
+          "cantidad": 10,
+          "valor_total": 34.7
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Llamada gestionada",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 196945,
+          "cantidad": 10,
+          "valor_total": 1969450
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Llamada gestionada",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 196945,
+          "cantidad": 10,
+          "valor_total": 1969450
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Llamada gestionada",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 61,
+          "cantidad": 10,
+          "valor_total": 610
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Llamada gestionada",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 316,
+          "cantidad": 10,
+          "valor_total": 3160
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Llamada gestionada",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 180,
+          "cantidad": 10,
+          "valor_total": 1800
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Token IA",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 487900,
+          "cantidad": 10,
+          "valor_total": 4879000
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "Correo",
+          "producto": "Token IA",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 18000,
+          "cantidad": 10,
+          "valor_total": 180000
+        },
+        {
+          "rubro": "Plataformas y licencias",
+          "modalidad": "Inbound",
+          "canal": "",
+          "producto": "",
+          "tipo_de_cobro": "Unitario",
+          "tipo_de_gasto": "Fijo",
+          "valor": 295,
+          "cantidad": 10,
+          "valor_total": 2950
+        }
+      ]
+    },
+    "inversiones_capex": [
+      {
+        "rubro": "Infraestructura y cloud",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "tipo_de_cobro": "Total",
+        "valor": 7000,
+        "cantidad": 3,
+        "meses_a_diferir_inversion": 24,
+        "valor_total": 21000,
+        "valor_mes_actual": 710.71
+      }
+    ],
+    "equipo_soporte_mantenimiento": {
+      "fte": 5,
+      "roles": [
+        {
+          "rol": "Service Owner",
+          "activado": true,
+          "dedicacion": 5,
+          "fte": 0.25
+        },
+        {
+          "rol": "Platform Admin",
+          "activado": true,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "L1 / L2 Support",
+          "activado": true,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "RPA Supervisor / Bot Controller",
+          "activado": true,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "DevOps / SRE",
+          "activado": true,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "MLOps / AIOps",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "Data Steward / Data Quality",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "Conversation Analyst",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "Content / Knowledge Manager",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "QA Monitoring / Compliance QA",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "Human Reviewers (HITL)",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        },
+        {
+          "rol": "Security / Privacy / Compliance",
+          "activado": false,
+          "dedicacion": 10,
+          "fte": 0.5
+        }
+      ],
+      "dispositivos_requeridos": [
+        {
+          "descripcion": "Dispositivo Principal",
+          "precio": 1000000,
+          "cantidad_atribuible_a_la_operacion": 5.75
+        },
+        {
+          "descripcion": "Monitores perifericos",
+          "precio": 200000,
+          "cantidad_atribuible_a_la_operacion": 5.75
+        },
+        {
+          "descripcion": "Headsets",
+          "precio": 300000,
+          "cantidad_atribuible_a_la_operacion": 5.75
+        },
+        {
+          "descripcion": "Dispositivo movil",
+          "precio": 100000,
+          "cantidad_atribuible_a_la_operacion": 5.75
+        },
+        {
+          "descripcion": "Mantenimiento / reemplazo de hardware",
+          "precio": 0,
+          "cantidad_atribuible_a_la_operacion": 5.75
+        }
+      ]
+    },
+    "costo_variable": {
+      "tarifas_por_canal": {
+        "inbound": [
+          {
+            "canal": "WhatsApp",
+            "tarifa": 4500
+          },
+          {
+            "canal": "Correo",
+            "tarifa": 0
+          },
+          {
+            "canal": "WebChat",
+            "tarifa": 0
+          },
+          {
+            "canal": "Mensajes",
+            "tarifa": 5000
+          },
+          {
+            "canal": "Voz",
+            "tarifa": 9000
+          },
+          {
+            "canal": "Otros",
+            "tarifa": 9000
+          },
+          {
+            "canal": "IVR",
+            "tarifa": 4000
+          }
+        ],
+        "outbound": [
+          {
+            "canal": "WhatsApp",
+            "tarifa": 4500
+          },
+          {
+            "canal": "Mensajes",
+            "tarifa": 6000
+          },
+          {
+            "canal": "Correo",
+            "tarifa": 800
+          },
+          {
+            "canal": "WebChat",
+            "tarifa": 5000
+          },
+          {
+            "canal": "IVR",
+            "tarifa": 9000
+          },
+          {
+            "canal": "Fuerza de ventas",
+            "tarifa": 4000
+          },
+          {
+            "canal": "Otros",
+            "tarifa": 3000
+          },
+          {
+            "canal": "Voz",
+            "tarifa": 3000
+          }
+        ]
+      },
+      "tasa_escalamiento": {
+        "tarifa_de_escalamiento_indbound": {
+          "tipo": "Input Calculado",
+          "value": 3000
+        },
+        "tarifa_de_escalamiento_outbound": {
+          "tipo": "Input Manual",
+          "value": 0
+        },
+        "inbound": [
+          {
+            "canal": "WhatsApp",
+            "tasa": 0.05
+          },
+          {
+            "canal": "Correo",
+            "tasa": 0.05
+          },
+          {
+            "canal": "WebChat",
+            "tasa": 0.05
+          },
+          {
+            "canal": "Mensajes",
+            "tasa": 0.05
+          },
+          {
+            "canal": "Voz",
+            "tasa": 0.05
+          },
+          {
+            "canal": "Otros",
+            "tasa": 0.05
+          },
+          {
+            "canal": "IVR",
+            "tasa": 0.05
+          }
+        ],
+        "outbound": [
+          {
+            "canal": "WhatsApp",
+            "tasa": 0.03
+          },
+          {
+            "canal": "Mensajes",
+            "tasa": 0.03
+          },
+          {
+            "canal": "Correo",
+            "tasa": 0.03
+          },
+          {
+            "canal": "WebChat",
+            "tasa": 0.03
+          },
+          {
+            "canal": "IVR",
+            "tasa": 0.03
+          },
+          {
+            "canal": "Fuerza de ventas",
+            "tasa": 0.03
+          },
+          {
+            "canal": "Otros",
+            "tasa": 0.03
+          },
+          {
+            "canal": "Voz",
+            "tasa": 0.03
+          }
+        ]
+      }
+    },
+    "hitl": {
+      "total_volumen_cadena_b": 2500,
+      "equipo": [
+        {
+          "rol": "Human Reviewers",
+          "activado": true,
+          "ratio": 4000,
+          "personas": 0.6
+        },
+        {
+          "rol": "Conversation Analyst",
+          "activado": true,
+          "ratio": 560,
+          "personas": 4.5
+        },
+        {
+          "rol": "Content / Knowledge Manager",
+          "activado": true,
+          "ratio": 200,
+          "personas": 12.5
+        },
+        {
+          "rol": "QA / Compliance QA",
+          "activado": true,
+          "ratio": 300,
+          "personas": 8.3
+        },
+        {
+          "rol": "MLOps / AIOps",
+          "activado": true,
+          "ratio": 700,
+          "personas": 3.6
+        },
+        {
+          "rol": "Data Steward",
+          "activado": true,
+          "ratio": 1000,
+          "personas": 2.5
+        }
+      ],
+      "dispositivos_requeridos": [
+        {
+          "descripcion": "Dispositivo Principal",
+          "precio": 1000000,
+          "cantidad_atribuible": 32
+        },
+        {
+          "descripcion": "Monitores perifericos",
+          "precio": 200000,
+          "cantidad_atribuible": 32
+        },
+        {
+          "descripcion": "Headsets",
+          "precio": 300000,
+          "cantidad_atribuible": 32
+        },
+        {
+          "descripcion": "Dispositivo movil",
+          "precio": 100000,
+          "cantidad_atribuible": 32
+        },
+        {
+          "descripcion": "Mantenimiento / reemplazo de hardware",
+          "precio": 0,
+          "cantidad_atribuible": 32
+        }
+      ]
+    }
+  },
+  "condiciones_cadena_c": {
+    "canales": [
+      {
+        "nombre": "Chatbot IA",
+        "modalidad": "Inbound",
+        "volumen_mensual": 15000.0,
+        "activo": true,
+        "tarifa_unitaria": 200.0,
+        "opex_fijo_integ": 5000000.0,
+        "opex_var_integ": 0.0,
+        "pct_escalamiento": 0.1,
+        "costo_escalamiento": 50000.0
+      },
+      {
+        "nombre": "RPA Cobranza",
+        "modalidad": "Outbound",
+        "volumen_mensual": 8000.0,
+        "activo": true,
+        "tarifa_unitaria": 150.0,
+        "opex_fijo_integ": 3000000.0,
+        "opex_var_integ": 0.0,
+        "pct_escalamiento": 0.05,
+        "costo_escalamiento": 30000.0
+      }
+    ],
+    "equipo_transversal": [
+      {
+        "rol": "IA Engineer",
+        "activo": true,
+        "pct_dedicacion": 100.0,
+        "salario_cargado": 7000000.0
+      },
+      {
+        "rol": "Data Scientist",
+        "activo": true,
+        "pct_dedicacion": 50.0,
+        "salario_cargado": 6000000.0
+      }
+    ],
+    "equipo_hitl": [],
+    "opex_dispositivos_por_persona": 0.0,
+    "inversion_anual": 24000000.0
+  }
+}

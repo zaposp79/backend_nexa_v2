@@ -1,0 +1,32 @@
+{
+  "original_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/bancamia_canonical_k50.json",
+  "migration_date": "2026-05-21T18:08:57.489553+00:00",
+  "pollution_fields_removed": [
+    "_comment",
+    "_scenario",
+    "_k50_expected",
+    "_l50_expected",
+    "_part_a_expected",
+    "_part_b_expected",
+    "_cts_a_expected",
+    "_cts_b_expected",
+    "_cts_ponderado_expected",
+    "_source",
+    "_note",
+    "_excel_smmlv",
+    "_backend_smmlv",
+    "_expected_discrepancy"
+  ],
+  "pollution_fields_count": 14,
+  "clean_fields": [
+    "panel_de_control",
+    "condiciones_cadena_a",
+    "condiciones_cadena_b",
+    "condiciones_cadena_c"
+  ],
+  "clean_fields_count": 4,
+  "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_canonical_k50.json",
+  "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_canonical_k50.expected.json",
+  "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_canonical_k50.audit.json",
+  "status": "MIGRATED_PHASE_55"
+}

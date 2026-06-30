@@ -1,0 +1,3281 @@
+{
+  "_metadata": {
+    "workbook_sha256": "5fb7174f998356c1fdc92315d391cd1f09294a058e4916e9c03f0cb0f10e4db0",
+    "extracted_at": "2026-05-28T08:29:55.378989",
+    "extractor_version": "W17",
+    "case": "Captura de Datos preloaded V2-7 — AMERICAS BUSINESS PROCESS SERVICES S.A, 12 months, Cadena A (25 Voz + 15 WhatsApp), Cadena B WhatsApp, Cadena C activated"
+  },
+  "panel_inputs": {
+    "Panel de Control General!C5": {
+      "label": "Servicio",
+      "value": "Captura de Datos"
+    },
+    "Panel de Control General!C6": {
+      "label": "Cliente",
+      "value": "AMERICAS BUSINESS PROCESS SERVICES S.A"
+    },
+    "Panel de Control General!C8": {
+      "label": "Tipo de cliente",
+      "value": "No Grupo Aval"
+    },
+    "Panel de Control General!C9": {
+      "label": "Periodo de pago",
+      "value": 30
+    },
+    "Panel de Control General!C11": {
+      "label": "Duración meses",
+      "value": 12
+    },
+    "Panel de Control General!C12": {
+      "label": "Ciudad",
+      "value": "Bogota "
+    },
+    "Panel de Control General!C13": {
+      "label": "Sede",
+      "value": "Bogota - Toberin"
+    },
+    "Panel de Control General!C16": {
+      "label": "Tarifa diaria capacitacion",
+      "value": 20000
+    },
+    "Panel de Control General!C17": {
+      "label": "Crucero",
+      "value": 8408
+    },
+    "Panel de Control General!C18": {
+      "label": "Horas formacion mensual",
+      "value": 8
+    },
+    "Panel de Control General!C19": {
+      "label": "% Ausentismo",
+      "value": 0.065
+    },
+    "Panel de Control General!C20": {
+      "label": "% Rotacion",
+      "value": 0.085
+    },
+    "Panel de Control General!C28": {
+      "label": "Ciudad Bogota proporcion",
+      "value": 0.6
+    },
+    "Panel de Control General!C29": {
+      "label": "Ciudad Cali proporcion",
+      "value": 0.2
+    },
+    "Panel de Control General!C30": {
+      "label": "Ciudad Medellin proporcion",
+      "value": 0.2
+    },
+    "Panel de Control General!C34": {
+      "label": "ICA",
+      "value": 0.01
+    },
+    "Panel de Control General!C35": {
+      "label": "GMF",
+      "value": 0.004
+    },
+    "Panel de Control General!C63": {
+      "label": "Margen Cadena A",
+      "value": 0.21
+    },
+    "Panel de Control General!D63": {
+      "label": "Margen Cadena B",
+      "value": 0.3
+    },
+    "Panel de Control General!C67": {
+      "label": "Contingencia Operativa",
+      "value": 0
+    },
+    "Panel de Control General!C68": {
+      "label": "Contingencia Comercial",
+      "value": 0
+    },
+    "Panel de Control General!C69": {
+      "label": "Mark up",
+      "value": 0
+    },
+    "Panel de Control General!C70": {
+      "label": "Descuento",
+      "value": 0
+    },
+    "Panel de Control General!C73": {
+      "label": "Imprevistos",
+      "value": 0
+    },
+    "Panel de Control General!C38": {
+      "label": "Poliza Seriedad activa",
+      "value": false
+    },
+    "Panel de Control General!D38": {
+      "label": "Poliza Seriedad tasa",
+      "value": 0.005
+    },
+    "Panel de Control General!C39": {
+      "label": "Poliza Cumplimiento activa",
+      "value": true
+    },
+    "Panel de Control General!D39": {
+      "label": "Poliza Cumplimiento tasa",
+      "value": 0.0062
+    },
+    "Panel de Control General!C40": {
+      "label": "Poliza Salarios activa",
+      "value": true
+    },
+    "Panel de Control General!D40": {
+      "label": "Poliza Salarios tasa",
+      "value": 0.0119
+    },
+    "Panel de Control General!C41": {
+      "label": "Poliza Calidad activa",
+      "value": true
+    },
+    "Panel de Control General!D41": {
+      "label": "Poliza Calidad tasa",
+      "value": 0.0119
+    },
+    "Panel de Control General!C45": {
+      "label": "Comision Admin activa",
+      "value": true
+    },
+    "Panel de Control General!D45": {
+      "label": "Comision Admin tasa",
+      "value": 0.0118
+    }
+  },
+  "expected_outputs": {
+    "vision_tarifas": {
+      "Vision Tarifas_Modelo_Cobro!C19": {
+        "label": "Facturacion Escenario 1",
+        "value": 38510214102.299324,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!D19": {
+        "label": "Facturacion Escenario 2",
+        "value": 1012902192.9160312,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!E19": {
+        "label": "Facturacion Escenario 3",
+        "value": 1012902192.9160312,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!H19": {
+        "label": "Facturacion Total Hibrido",
+        "value": 39523116295.215355,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!C20": {
+        "label": "Tarifa Componente Fijo Esc1",
+        "value": 89857166.23869841,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!E20": {
+        "label": "Tarifa Componente Fijo Esc3",
+        "value": 5627234.405089063,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!H20": {
+        "label": "Tarifa Componente Fijo Hibrido",
+        "value": 41169912.80751599,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!C21": {
+        "label": "Tarifa Componente Variable Esc1",
+        "value": 32285.15207263698,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!D21": {
+        "label": "Tarifa Componente Variable Esc2",
+        "value": 3210.398337562283,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!H21": {
+        "label": "Tarifa Componente Variable Hibrido",
+        "value": 63338.32739617845,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!C40": {
+        "label": "Cadena A Costo Total",
+        "value": 1365353738.0298982,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C41": {
+        "label": "Cadena A Payroll",
+        "value": 1039554872.6578202,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C42": {
+        "label": "Cadena A No Payroll",
+        "value": 289917559.96154934,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C43": {
+        "label": "Cadena A ICA",
+        "value": 16909711.32937049,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C44": {
+        "label": "Cadena A GMF",
+        "value": 5350268.274279499,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C45": {
+        "label": "Cadena A Polizas",
+        "value": 13621325.806878582,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C47": {
+        "label": "Ingreso Total Cadena A",
+        "value": 1728295870.9239216,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!G43": {
+        "label": "Ingreso Componente Fijo",
+        "value": 27026098589.284946,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!G45": {
+        "label": "Tarifa por FTE",
+        "value": 90086995.29761648,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!G53": {
+        "label": "Ingreso Componente Variable",
+        "value": 11582613681.12212,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!G55": {
+        "label": "Tarifa por Transaccion",
+        "value": 32285.15207263698,
+        "category": "tarifa"
+      },
+      "Vision Tarifas_Modelo_Cobro!G57": {
+        "label": "Volumen Minimo Transaccion",
+        "value": 283420.21705518645,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C50": {
+        "label": "Cadena B Costo Total",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C51": {
+        "label": "Cadena B Componente Fijo",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C52": {
+        "label": "Cadena B Componente Variable",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C53": {
+        "label": "Cadena B ICA",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C54": {
+        "label": "Cadena B GMF",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C55": {
+        "label": "Cadena B Polizas",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C57": {
+        "label": "Ingreso Total Cadena B",
+        "value": 0,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!C60": {
+        "label": "Cadena C Costo Total",
+        "value": 29138454298.16108,
+        "category": "costo",
+        "_v28_patch": true,
+        "_v28_old_value": 29135528955.591686
+      },
+      "Vision Tarifas_Modelo_Cobro!C61": {
+        "label": "Cadena C Componente Fijo",
+        "value": 471078158.65180844,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C62": {
+        "label": "Cadena C Componente Variable",
+        "value": 28189144646.401875,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C63": {
+        "label": "Cadena C ICA",
+        "value": 359975980.95932484,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C64": {
+        "label": "Cadena C GMF",
+        "value": 115330169.57867627,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C65": {
+        "label": "Cadena C Polizas",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Tarifas_Modelo_Cobro!C67": {
+        "label": "Ingreso Total Cadena C",
+        "value": 36880416399.48315,
+        "category": "ingreso"
+      },
+      "Vision Tarifas_Modelo_Cobro!C72": {
+        "label": "Facturacion Total",
+        "value": 38608712270.40707,
+        "category": "ingreso"
+      }
+    },
+    "vision_cost_to_serve": {
+      "Vision Cost To Serve!B19": {
+        "label": "Ingreso Mensual Promedio",
+        "value": 38608712270.40707,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!H19": {
+        "label": "Cost To Serve Mensual",
+        "value": 30500882693.621586,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!N19": {
+        "label": "Margen del Deal",
+        "value": 0.21,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C31": {
+        "label": "Participacion Cadena A",
+        "value": 0.5366459627329192,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!G31": {
+        "label": "Participacion Cadena B",
+        "value": 0.28514094601051126,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K31": {
+        "label": "Participacion Cadena C",
+        "value": 0.1782130912565695,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C34": {
+        "label": "CTS Cadena A unit",
+        "value": 5732.246233879688,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!G34": {
+        "label": "CTS Cadena B unit",
+        "value": 171.56249999999997,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K34": {
+        "label": "CTS Cadena C unit",
+        "value": 238859.17020563068,
+        "category": "costo",
+        "_v28_patch": true,
+        "_v28_old_value": 238835.19004211394
+      },
+      "Vision Cost To Serve!C35": {
+        "label": "Payroll Cadena A unit",
+        "value": 4602.967325514803,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C36": {
+        "label": "Nomina Loaded unit",
+        "value": 4531.407823197468,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C37": {
+        "label": "Salario Fijo Cadena A unit",
+        "value": 4368.6010940308015,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C38": {
+        "label": "Salario Variable Cadena A unit",
+        "value": 162.80672916666666,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C39": {
+        "label": "Capacitacion Inicial unit",
+        "value": 22.139126305792978,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C40": {
+        "label": "Capacitacion Rotacion unit",
+        "value": 22.581908831908837,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C41": {
+        "label": "Examenes Medicos unit",
+        "value": 15.669720740887414,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C42": {
+        "label": "Estudios Seguridad unit",
+        "value": 0,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C43": {
+        "label": "Crucero unit",
+        "value": 11.168746438746439,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C45": {
+        "label": "No Payroll Cadena A unit",
+        "value": 1129.278908364885,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C46": {
+        "label": "OPEX Fijo Cadena A unit",
+        "value": 646.7752453525641,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C47": {
+        "label": "Inversiones Cadena A unit",
+        "value": 89.72558072438471,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C48": {
+        "label": "Costos Fijos x Estacion unit",
+        "value": 392.7780822879361,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!G35": {
+        "label": "Componente Fijo Cadena B unit",
+        "value": 171.56249999999997,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K35": {
+        "label": "Tarifa Proveedor Cadena C unit",
+        "value": 200,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K36": {
+        "label": "Costo integracion Cadena C unit",
+        "value": 3925.6513220984034,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K40": {
+        "label": "Costo Variable Cadena C unit",
+        "value": 234709.53872001555,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K41": {
+        "label": "Tasa Escalamiento unit",
+        "value": 123646.94326193698,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K42": {
+        "label": "OPEX Variable Cadena C unit",
+        "value": 3112,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!K43": {
+        "label": "HITL Cadena C unit",
+        "value": 107950.59545807858,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!G49": {
+        "label": "CTS Ponderado",
+        "value": 45688.66381060782,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C64": {
+        "label": "WhatsApp Inbound volumen unit",
+        "value": 26292.225201072382,
+        "category": "costo"
+      },
+      "Vision Cost To Serve!C68": {
+        "label": "Voz Inbound volumen unit",
+        "value": 29820.375335120643,
+        "category": "costo"
+      }
+    },
+    "vision_pyg_monthly": {
+      "Visión P&G!C15": {
+        "label": "Ramp-up M1",
+        "value": 0,
+        "category": "factor",
+        "month": 1
+      },
+      "Visión P&G!D15": {
+        "label": "Ramp-up M2",
+        "value": 0,
+        "category": "factor",
+        "month": 2
+      },
+      "Visión P&G!E15": {
+        "label": "Ramp-up M3",
+        "value": 0,
+        "category": "factor",
+        "month": 3
+      },
+      "Visión P&G!F15": {
+        "label": "Ramp-up M4",
+        "value": 0,
+        "category": "factor",
+        "month": 4
+      },
+      "Visión P&G!G15": {
+        "label": "Ramp-up M5",
+        "value": 0,
+        "category": "factor",
+        "month": 5
+      },
+      "Visión P&G!H15": {
+        "label": "Ramp-up M6",
+        "value": 0.9,
+        "category": "factor",
+        "month": 6
+      },
+      "Visión P&G!I15": {
+        "label": "Ramp-up M7",
+        "value": 0.95,
+        "category": "factor",
+        "month": 7
+      },
+      "Visión P&G!J15": {
+        "label": "Ramp-up M8",
+        "value": 1,
+        "category": "factor",
+        "month": 8
+      },
+      "Visión P&G!K15": {
+        "label": "Ramp-up M9",
+        "value": 1,
+        "category": "factor",
+        "month": 9
+      },
+      "Visión P&G!L15": {
+        "label": "Ramp-up M10",
+        "value": 1,
+        "category": "factor",
+        "month": 10
+      },
+      "Visión P&G!M15": {
+        "label": "Ramp-up M11",
+        "value": 1,
+        "category": "factor",
+        "month": 11
+      },
+      "Visión P&G!N15": {
+        "label": "Ramp-up M12",
+        "value": 1,
+        "category": "factor",
+        "month": 12
+      },
+      "Visión P&G!C18": {
+        "label": "Ingreso Bruto M1",
+        "value": 0,
+        "category": "ingreso",
+        "month": 1
+      },
+      "Visión P&G!D18": {
+        "label": "Ingreso Bruto M2",
+        "value": 0,
+        "category": "ingreso",
+        "month": 2
+      },
+      "Visión P&G!E18": {
+        "label": "Ingreso Bruto M3",
+        "value": 0,
+        "category": "ingreso",
+        "month": 3
+      },
+      "Visión P&G!F18": {
+        "label": "Ingreso Bruto M4",
+        "value": 0,
+        "category": "ingreso",
+        "month": 4
+      },
+      "Visión P&G!G18": {
+        "label": "Ingreso Bruto M5",
+        "value": 0,
+        "category": "ingreso",
+        "month": 5
+      },
+      "Visión P&G!H18": {
+        "label": "Ingreso Bruto M6",
+        "value": 1626947155.826852,
+        "category": "ingreso",
+        "month": 6,
+        "_v28_patch": true,
+        "_v28_old_value": 1626677365.8284237
+      },
+      "Visión P&G!I18": {
+        "label": "Ingreso Bruto M7",
+        "value": 1716326764.975426,
+        "category": "ingreso",
+        "month": 7
+      },
+      "Visión P&G!J18": {
+        "label": "Ingreso Bruto M8",
+        "value": 1806959519.2706323,
+        "category": "ingreso",
+        "month": 8,
+        "_v28_patch": true,
+        "_v28_old_value": 1806659752.6057117
+      },
+      "Visión P&G!K18": {
+        "label": "Ingreso Bruto M9",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 9
+      },
+      "Visión P&G!L18": {
+        "label": "Ingreso Bruto M10",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 10
+      },
+      "Visión P&G!M18": {
+        "label": "Ingreso Bruto M11",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 11
+      },
+      "Visión P&G!N18": {
+        "label": "Ingreso Bruto M12",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 12
+      },
+      "Visión P&G!C19": {
+        "label": "Ingreso Cadena A M1",
+        "value": 0,
+        "category": "ingreso",
+        "month": 1
+      },
+      "Visión P&G!D19": {
+        "label": "Ingreso Cadena A M2",
+        "value": 0,
+        "category": "ingreso",
+        "month": 2
+      },
+      "Visión P&G!E19": {
+        "label": "Ingreso Cadena A M3",
+        "value": 0,
+        "category": "ingreso",
+        "month": 3
+      },
+      "Visión P&G!F19": {
+        "label": "Ingreso Cadena A M4",
+        "value": 0,
+        "category": "ingreso",
+        "month": 4
+      },
+      "Visión P&G!G19": {
+        "label": "Ingreso Cadena A M5",
+        "value": 0,
+        "category": "ingreso",
+        "month": 5
+      },
+      "Visión P&G!H19": {
+        "label": "Ingreso Cadena A M6",
+        "value": 197274163.1742217,
+        "category": "ingreso",
+        "month": 6
+      },
+      "Visión P&G!I19": {
+        "label": "Ingreso Cadena A M7",
+        "value": 207512273.28487968,
+        "category": "ingreso",
+        "month": 7
+      },
+      "Visión P&G!J19": {
+        "label": "Ingreso Cadena A M8",
+        "value": 218433971.87882072,
+        "category": "ingreso",
+        "month": 8
+      },
+      "Visión P&G!K19": {
+        "label": "Ingreso Cadena A M9",
+        "value": 218433971.87882072,
+        "category": "ingreso",
+        "month": 9
+      },
+      "Visión P&G!L19": {
+        "label": "Ingreso Cadena A M10",
+        "value": 218433971.87882072,
+        "category": "ingreso",
+        "month": 10
+      },
+      "Visión P&G!M19": {
+        "label": "Ingreso Cadena A M11",
+        "value": 218433971.87882072,
+        "category": "ingreso",
+        "month": 11
+      },
+      "Visión P&G!N19": {
+        "label": "Ingreso Cadena A M12",
+        "value": 218433971.87882072,
+        "category": "ingreso",
+        "month": 12
+      },
+      "Visión P&G!C20": {
+        "label": "Ingreso Cadena B M1",
+        "value": 0,
+        "category": "ingreso",
+        "month": 1
+      },
+      "Visión P&G!D20": {
+        "label": "Ingreso Cadena B M2",
+        "value": 0,
+        "category": "ingreso",
+        "month": 2
+      },
+      "Visión P&G!E20": {
+        "label": "Ingreso Cadena B M3",
+        "value": 0,
+        "category": "ingreso",
+        "month": 3
+      },
+      "Visión P&G!F20": {
+        "label": "Ingreso Cadena B M4",
+        "value": 0,
+        "category": "ingreso",
+        "month": 4
+      },
+      "Visión P&G!G20": {
+        "label": "Ingreso Cadena B M5",
+        "value": 0,
+        "category": "ingreso",
+        "month": 5
+      },
+      "Visión P&G!H20": {
+        "label": "Ingreso Cadena B M6",
+        "value": 3529285.7142857146,
+        "category": "ingreso",
+        "month": 6
+      },
+      "Visión P&G!I20": {
+        "label": "Ingreso Cadena B M7",
+        "value": 3725357.142857143,
+        "category": "ingreso",
+        "month": 7
+      },
+      "Visión P&G!J20": {
+        "label": "Ingreso Cadena B M8",
+        "value": 3921428.571428572,
+        "category": "ingreso",
+        "month": 8
+      },
+      "Visión P&G!K20": {
+        "label": "Ingreso Cadena B M9",
+        "value": 3921428.571428572,
+        "category": "ingreso",
+        "month": 9
+      },
+      "Visión P&G!L20": {
+        "label": "Ingreso Cadena B M10",
+        "value": 3921428.571428572,
+        "category": "ingreso",
+        "month": 10
+      },
+      "Visión P&G!M20": {
+        "label": "Ingreso Cadena B M11",
+        "value": 3921428.571428572,
+        "category": "ingreso",
+        "month": 11
+      },
+      "Visión P&G!N20": {
+        "label": "Ingreso Cadena B M12",
+        "value": 3921428.571428572,
+        "category": "ingreso",
+        "month": 12
+      },
+      "Visión P&G!C21": {
+        "label": "Ingreso Cadena C M1",
+        "value": 0,
+        "category": "ingreso",
+        "month": 1
+      },
+      "Visión P&G!D21": {
+        "label": "Ingreso Cadena C M2",
+        "value": 0,
+        "category": "ingreso",
+        "month": 2
+      },
+      "Visión P&G!E21": {
+        "label": "Ingreso Cadena C M3",
+        "value": 0,
+        "category": "ingreso",
+        "month": 3
+      },
+      "Visión P&G!F21": {
+        "label": "Ingreso Cadena C M4",
+        "value": 0,
+        "category": "ingreso",
+        "month": 4
+      },
+      "Visión P&G!G21": {
+        "label": "Ingreso Cadena C M5",
+        "value": 0,
+        "category": "ingreso",
+        "month": 5
+      },
+      "Visión P&G!H21": {
+        "label": "Ingreso Cadena C M6",
+        "value": 1425873916.9399164,
+        "category": "ingreso",
+        "month": 6
+      },
+      "Visión P&G!I21": {
+        "label": "Ingreso Cadena C M7",
+        "value": 1505089134.5476892,
+        "category": "ingreso",
+        "month": 7
+      },
+      "Visión P&G!J21": {
+        "label": "Ingreso Cadena C M8",
+        "value": 1584304352.1554625,
+        "category": "ingreso",
+        "month": 8
+      },
+      "Visión P&G!K21": {
+        "label": "Ingreso Cadena C M9",
+        "value": 1584304352.1554625,
+        "category": "ingreso",
+        "month": 9
+      },
+      "Visión P&G!L21": {
+        "label": "Ingreso Cadena C M10",
+        "value": 1584304352.1554625,
+        "category": "ingreso",
+        "month": 10
+      },
+      "Visión P&G!M21": {
+        "label": "Ingreso Cadena C M11",
+        "value": 1584304352.1554625,
+        "category": "ingreso",
+        "month": 11
+      },
+      "Visión P&G!N21": {
+        "label": "Ingreso Cadena C M12",
+        "value": 1584304352.1554625,
+        "category": "ingreso",
+        "month": 12
+      },
+      "Visión P&G!C27": {
+        "label": "Ingreso Neto M1",
+        "value": 0,
+        "category": "ingreso",
+        "month": 1
+      },
+      "Visión P&G!D27": {
+        "label": "Ingreso Neto M2",
+        "value": 0,
+        "category": "ingreso",
+        "month": 2
+      },
+      "Visión P&G!E27": {
+        "label": "Ingreso Neto M3",
+        "value": 0,
+        "category": "ingreso",
+        "month": 3
+      },
+      "Visión P&G!F27": {
+        "label": "Ingreso Neto M4",
+        "value": 0,
+        "category": "ingreso",
+        "month": 4
+      },
+      "Visión P&G!G27": {
+        "label": "Ingreso Neto M5",
+        "value": 0,
+        "category": "ingreso",
+        "month": 5
+      },
+      "Visión P&G!H27": {
+        "label": "Ingreso Neto M6",
+        "value": 1626677365.8284237,
+        "category": "ingreso",
+        "month": 6
+      },
+      "Visión P&G!I27": {
+        "label": "Ingreso Neto M7",
+        "value": 1716326764.975426,
+        "category": "ingreso",
+        "month": 7
+      },
+      "Visión P&G!J27": {
+        "label": "Ingreso Neto M8",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 8
+      },
+      "Visión P&G!K27": {
+        "label": "Ingreso Neto M9",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 9
+      },
+      "Visión P&G!L27": {
+        "label": "Ingreso Neto M10",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 10
+      },
+      "Visión P&G!M27": {
+        "label": "Ingreso Neto M11",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 11
+      },
+      "Visión P&G!N27": {
+        "label": "Ingreso Neto M12",
+        "value": 1806659752.6057117,
+        "category": "ingreso",
+        "month": 12
+      },
+      "Visión P&G!C30": {
+        "label": "Costo Total M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D30": {
+        "label": "Costo Total M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E30": {
+        "label": "Costo Total M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F30": {
+        "label": "Costo Total M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G30": {
+        "label": "Costo Total M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H30": {
+        "label": "Costo Total M6",
+        "value": 1443591171.6203456,
+        "category": "costo",
+        "month": 6,
+        "_v28_patch": true,
+        "_v28_old_value": 1443351358.288409
+      },
+      "Visión P&G!I30": {
+        "label": "Costo Total M7",
+        "value": 1442751319.5086384,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J30": {
+        "label": "Costo Total M8",
+        "value": 1442991132.840575,
+        "category": "costo",
+        "month": 8,
+        "_v28_patch": true,
+        "_v28_old_value": 1442751319.5086384
+      },
+      "Visión P&G!K30": {
+        "label": "Costo Total M9",
+        "value": 1442751319.5086384,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L30": {
+        "label": "Costo Total M10",
+        "value": 1442751319.5086384,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M30": {
+        "label": "Costo Total M11",
+        "value": 1442751319.5086384,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N30": {
+        "label": "Costo Total M12",
+        "value": 1442751319.5086384,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C31": {
+        "label": "Costos Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D31": {
+        "label": "Costos Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E31": {
+        "label": "Costos Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F31": {
+        "label": "Costos Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G31": {
+        "label": "Costos Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H31": {
+        "label": "Costos Cadena A M6",
+        "value": 173162876.56403905,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I31": {
+        "label": "Costos Cadena A M7",
+        "value": 172562837.78426838,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J31": {
+        "label": "Costos Cadena A M8",
+        "value": 172562837.78426838,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K31": {
+        "label": "Costos Cadena A M9",
+        "value": 172562837.78426838,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L31": {
+        "label": "Costos Cadena A M10",
+        "value": 172562837.78426838,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M31": {
+        "label": "Costos Cadena A M11",
+        "value": 172562837.78426838,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N31": {
+        "label": "Costos Cadena A M12",
+        "value": 172562837.78426838,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C32": {
+        "label": "Payroll Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D32": {
+        "label": "Payroll Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E32": {
+        "label": "Payroll Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F32": {
+        "label": "Payroll Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G32": {
+        "label": "Payroll Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H32": {
+        "label": "Payroll Cadena A M6",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I32": {
+        "label": "Payroll Cadena A M7",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J32": {
+        "label": "Payroll Cadena A M8",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K32": {
+        "label": "Payroll Cadena A M9",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L32": {
+        "label": "Payroll Cadena A M10",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M32": {
+        "label": "Payroll Cadena A M11",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N32": {
+        "label": "Payroll Cadena A M12",
+        "value": 138607316.35437602,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C33": {
+        "label": "Nomina Loaded Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D33": {
+        "label": "Nomina Loaded Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E33": {
+        "label": "Nomina Loaded Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F33": {
+        "label": "Nomina Loaded Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G33": {
+        "label": "Nomina Loaded Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H33": {
+        "label": "Nomina Loaded Cadena A M6",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I33": {
+        "label": "Nomina Loaded Cadena A M7",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J33": {
+        "label": "Nomina Loaded Cadena A M8",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K33": {
+        "label": "Nomina Loaded Cadena A M9",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L33": {
+        "label": "Nomina Loaded Cadena A M10",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M33": {
+        "label": "Nomina Loaded Cadena A M11",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N33": {
+        "label": "Nomina Loaded Cadena A M12",
+        "value": 136452473.64652532,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C34": {
+        "label": "Salario Fijo Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D34": {
+        "label": "Salario Fijo Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E34": {
+        "label": "Salario Fijo Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F34": {
+        "label": "Salario Fijo Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G34": {
+        "label": "Salario Fijo Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H34": {
+        "label": "Salario Fijo Cadena A M6",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I34": {
+        "label": "Salario Fijo Cadena A M7",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J34": {
+        "label": "Salario Fijo Cadena A M8",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K34": {
+        "label": "Salario Fijo Cadena A M9",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L34": {
+        "label": "Salario Fijo Cadena A M10",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M34": {
+        "label": "Salario Fijo Cadena A M11",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N34": {
+        "label": "Salario Fijo Cadena A M12",
+        "value": 131549939.64652532,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C35": {
+        "label": "Salario Variable Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D35": {
+        "label": "Salario Variable Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E35": {
+        "label": "Salario Variable Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F35": {
+        "label": "Salario Variable Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G35": {
+        "label": "Salario Variable Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H35": {
+        "label": "Salario Variable Cadena A M6",
+        "value": 4902534,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I35": {
+        "label": "Salario Variable Cadena A M7",
+        "value": 4902534,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J35": {
+        "label": "Salario Variable Cadena A M8",
+        "value": 4902534,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K35": {
+        "label": "Salario Variable Cadena A M9",
+        "value": 4902534,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L35": {
+        "label": "Salario Variable Cadena A M10",
+        "value": 4902534,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M35": {
+        "label": "Salario Variable Cadena A M11",
+        "value": 4902534,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N35": {
+        "label": "Salario Variable Cadena A M12",
+        "value": 4902534,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C36": {
+        "label": "Capacitacion Inicial Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D36": {
+        "label": "Capacitacion Inicial Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E36": {
+        "label": "Capacitacion Inicial Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F36": {
+        "label": "Capacitacion Inicial Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G36": {
+        "label": "Capacitacion Inicial Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H36": {
+        "label": "Capacitacion Inicial Cadena A M6",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I36": {
+        "label": "Capacitacion Inicial Cadena A M7",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J36": {
+        "label": "Capacitacion Inicial Cadena A M8",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K36": {
+        "label": "Capacitacion Inicial Cadena A M9",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L36": {
+        "label": "Capacitacion Inicial Cadena A M10",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M36": {
+        "label": "Capacitacion Inicial Cadena A M11",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N36": {
+        "label": "Capacitacion Inicial Cadena A M12",
+        "value": 666666.6666666667,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C37": {
+        "label": "Capacitacion Rotacion Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D37": {
+        "label": "Capacitacion Rotacion Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E37": {
+        "label": "Capacitacion Rotacion Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F37": {
+        "label": "Capacitacion Rotacion Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G37": {
+        "label": "Capacitacion Rotacion Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H37": {
+        "label": "Capacitacion Rotacion Cadena A M6",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I37": {
+        "label": "Capacitacion Rotacion Cadena A M7",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J37": {
+        "label": "Capacitacion Rotacion Cadena A M8",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K37": {
+        "label": "Capacitacion Rotacion Cadena A M9",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L37": {
+        "label": "Capacitacion Rotacion Cadena A M10",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M37": {
+        "label": "Capacitacion Rotacion Cadena A M11",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N37": {
+        "label": "Capacitacion Rotacion Cadena A M12",
+        "value": 680000.0000000001,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C38": {
+        "label": "Examenes Medicos Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D38": {
+        "label": "Examenes Medicos Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E38": {
+        "label": "Examenes Medicos Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F38": {
+        "label": "Examenes Medicos Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G38": {
+        "label": "Examenes Medicos Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H38": {
+        "label": "Examenes Medicos Cadena A M6",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I38": {
+        "label": "Examenes Medicos Cadena A M7",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J38": {
+        "label": "Examenes Medicos Cadena A M8",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K38": {
+        "label": "Examenes Medicos Cadena A M9",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L38": {
+        "label": "Examenes Medicos Cadena A M10",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M38": {
+        "label": "Examenes Medicos Cadena A M11",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N38": {
+        "label": "Examenes Medicos Cadena A M12",
+        "value": 471856.0411840412,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C40": {
+        "label": "Crucero Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D40": {
+        "label": "Crucero Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E40": {
+        "label": "Crucero Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F40": {
+        "label": "Crucero Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G40": {
+        "label": "Crucero Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H40": {
+        "label": "Crucero Cadena A M6",
+        "value": 336320,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I40": {
+        "label": "Crucero Cadena A M7",
+        "value": 336320,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J40": {
+        "label": "Crucero Cadena A M8",
+        "value": 336320,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K40": {
+        "label": "Crucero Cadena A M9",
+        "value": 336320,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L40": {
+        "label": "Crucero Cadena A M10",
+        "value": 336320,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M40": {
+        "label": "Crucero Cadena A M11",
+        "value": 336320,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N40": {
+        "label": "Crucero Cadena A M12",
+        "value": 336320,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C41": {
+        "label": "No Payroll Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D41": {
+        "label": "No Payroll Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E41": {
+        "label": "No Payroll Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F41": {
+        "label": "No Payroll Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G41": {
+        "label": "No Payroll Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H41": {
+        "label": "No Payroll Cadena A M6",
+        "value": 34555560.20966302,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I41": {
+        "label": "No Payroll Cadena A M7",
+        "value": 33955521.42989236,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J41": {
+        "label": "No Payroll Cadena A M8",
+        "value": 33955521.42989236,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K41": {
+        "label": "No Payroll Cadena A M9",
+        "value": 33955521.42989236,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L41": {
+        "label": "No Payroll Cadena A M10",
+        "value": 33955521.42989236,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M41": {
+        "label": "No Payroll Cadena A M11",
+        "value": 33955521.42989236,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N41": {
+        "label": "No Payroll Cadena A M12",
+        "value": 33955521.42989236,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C42": {
+        "label": "OPEX Fijo Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D42": {
+        "label": "OPEX Fijo Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E42": {
+        "label": "OPEX Fijo Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F42": {
+        "label": "OPEX Fijo Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G42": {
+        "label": "OPEX Fijo Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H42": {
+        "label": "OPEX Fijo Cadena A M6",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I42": {
+        "label": "OPEX Fijo Cadena A M7",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J42": {
+        "label": "OPEX Fijo Cadena A M8",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K42": {
+        "label": "OPEX Fijo Cadena A M9",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L42": {
+        "label": "OPEX Fijo Cadena A M10",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M42": {
+        "label": "OPEX Fijo Cadena A M11",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N42": {
+        "label": "OPEX Fijo Cadena A M12",
+        "value": 19476084.6,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C43": {
+        "label": "Inversiones Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D43": {
+        "label": "Inversiones Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E43": {
+        "label": "Inversiones Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F43": {
+        "label": "Inversiones Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G43": {
+        "label": "Inversiones Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H43": {
+        "label": "Inversiones Cadena A M6",
+        "value": 3251906.11835444,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I43": {
+        "label": "Inversiones Cadena A M7",
+        "value": 2651867.3385837837,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J43": {
+        "label": "Inversiones Cadena A M8",
+        "value": 2651867.3385837837,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K43": {
+        "label": "Inversiones Cadena A M9",
+        "value": 2651867.3385837837,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L43": {
+        "label": "Inversiones Cadena A M10",
+        "value": 2651867.3385837837,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M43": {
+        "label": "Inversiones Cadena A M11",
+        "value": 2651867.3385837837,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N43": {
+        "label": "Inversiones Cadena A M12",
+        "value": 2651867.3385837837,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C44": {
+        "label": "Costos Fijos Estacion Cadena A M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D44": {
+        "label": "Costos Fijos Estacion Cadena A M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E44": {
+        "label": "Costos Fijos Estacion Cadena A M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F44": {
+        "label": "Costos Fijos Estacion Cadena A M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G44": {
+        "label": "Costos Fijos Estacion Cadena A M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H44": {
+        "label": "Costos Fijos Estacion Cadena A M6",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I44": {
+        "label": "Costos Fijos Estacion Cadena A M7",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J44": {
+        "label": "Costos Fijos Estacion Cadena A M8",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K44": {
+        "label": "Costos Fijos Estacion Cadena A M9",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L44": {
+        "label": "Costos Fijos Estacion Cadena A M10",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M44": {
+        "label": "Costos Fijos Estacion Cadena A M11",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N44": {
+        "label": "Costos Fijos Estacion Cadena A M12",
+        "value": 11827569.491308577,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C45": {
+        "label": "Costos Cadena B M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D45": {
+        "label": "Costos Cadena B M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E45": {
+        "label": "Costos Cadena B M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F45": {
+        "label": "Costos Cadena B M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G45": {
+        "label": "Costos Cadena B M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H45": {
+        "label": "Costos Cadena B M6",
+        "value": 2745000,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I45": {
+        "label": "Costos Cadena B M7",
+        "value": 2745000,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J45": {
+        "label": "Costos Cadena B M8",
+        "value": 2745000,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K45": {
+        "label": "Costos Cadena B M9",
+        "value": 2745000,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L45": {
+        "label": "Costos Cadena B M10",
+        "value": 2745000,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M45": {
+        "label": "Costos Cadena B M11",
+        "value": 2745000,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N45": {
+        "label": "Costos Cadena B M12",
+        "value": 2745000,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C46": {
+        "label": "Cadena B Componente Fijo M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D46": {
+        "label": "Cadena B Componente Fijo M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E46": {
+        "label": "Cadena B Componente Fijo M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F46": {
+        "label": "Cadena B Componente Fijo M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G46": {
+        "label": "Cadena B Componente Fijo M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H46": {
+        "label": "Cadena B Componente Fijo M6",
+        "value": 2745000,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I46": {
+        "label": "Cadena B Componente Fijo M7",
+        "value": 2745000,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J46": {
+        "label": "Cadena B Componente Fijo M8",
+        "value": 2745000,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K46": {
+        "label": "Cadena B Componente Fijo M9",
+        "value": 2745000,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L46": {
+        "label": "Cadena B Componente Fijo M10",
+        "value": 2745000,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M46": {
+        "label": "Cadena B Componente Fijo M11",
+        "value": 2745000,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N46": {
+        "label": "Cadena B Componente Fijo M12",
+        "value": 2745000,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C47": {
+        "label": "Cadena B OPEX Fijo M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D47": {
+        "label": "Cadena B OPEX Fijo M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E47": {
+        "label": "Cadena B OPEX Fijo M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F47": {
+        "label": "Cadena B OPEX Fijo M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G47": {
+        "label": "Cadena B OPEX Fijo M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H47": {
+        "label": "Cadena B OPEX Fijo M6",
+        "value": 2745000,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I47": {
+        "label": "Cadena B OPEX Fijo M7",
+        "value": 2745000,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J47": {
+        "label": "Cadena B OPEX Fijo M8",
+        "value": 2745000,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K47": {
+        "label": "Cadena B OPEX Fijo M9",
+        "value": 2745000,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L47": {
+        "label": "Cadena B OPEX Fijo M10",
+        "value": 2745000,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M47": {
+        "label": "Cadena B OPEX Fijo M11",
+        "value": 2745000,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N47": {
+        "label": "Cadena B OPEX Fijo M12",
+        "value": 2745000,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C55": {
+        "label": "Costos Cadena C M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D55": {
+        "label": "Costos Cadena C M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E55": {
+        "label": "Costos Cadena C M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F55": {
+        "label": "Costos Cadena C M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G55": {
+        "label": "Costos Cadena C M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H55": {
+        "label": "Costos Cadena C M6",
+        "value": 1267683295.0563066,
+        "category": "costo",
+        "month": 6,
+        "_v28_patch": true,
+        "_v28_old_value": 1267443481.72437
+      },
+      "Visión P&G!I55": {
+        "label": "Costos Cadena C M7",
+        "value": 1267443481.72437,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J55": {
+        "label": "Costos Cadena C M8",
+        "value": 1267683295.0563066,
+        "category": "costo",
+        "month": 8,
+        "_v28_patch": true,
+        "_v28_old_value": 1267443481.72437
+      },
+      "Visión P&G!K55": {
+        "label": "Costos Cadena C M9",
+        "value": 1267443481.72437,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L55": {
+        "label": "Costos Cadena C M10",
+        "value": 1267443481.72437,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M55": {
+        "label": "Costos Cadena C M11",
+        "value": 1267443481.72437,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N55": {
+        "label": "Costos Cadena C M12",
+        "value": 1267443481.72437,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C56": {
+        "label": "Cadena C Tarifa Proveedor M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D56": {
+        "label": "Cadena C Tarifa Proveedor M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E56": {
+        "label": "Cadena C Tarifa Proveedor M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F56": {
+        "label": "Cadena C Tarifa Proveedor M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G56": {
+        "label": "Cadena C Tarifa Proveedor M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H56": {
+        "label": "Cadena C Tarifa Proveedor M6",
+        "value": 2000000,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I56": {
+        "label": "Cadena C Tarifa Proveedor M7",
+        "value": 2000000,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J56": {
+        "label": "Cadena C Tarifa Proveedor M8",
+        "value": 2000000,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K56": {
+        "label": "Cadena C Tarifa Proveedor M9",
+        "value": 2000000,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L56": {
+        "label": "Cadena C Tarifa Proveedor M10",
+        "value": 2000000,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M56": {
+        "label": "Cadena C Tarifa Proveedor M11",
+        "value": 2000000,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N56": {
+        "label": "Cadena C Tarifa Proveedor M12",
+        "value": 2000000,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C57": {
+        "label": "Cadena C Costo Integracion M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D57": {
+        "label": "Cadena C Costo Integracion M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E57": {
+        "label": "Cadena C Costo Integracion M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F57": {
+        "label": "Cadena C Costo Integracion M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G57": {
+        "label": "Cadena C Costo Integracion M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H57": {
+        "label": "Cadena C Costo Integracion M6",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I57": {
+        "label": "Cadena C Costo Integracion M7",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J57": {
+        "label": "Cadena C Costo Integracion M8",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K57": {
+        "label": "Cadena C Costo Integracion M9",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L57": {
+        "label": "Cadena C Costo Integracion M10",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M57": {
+        "label": "Cadena C Costo Integracion M11",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N57": {
+        "label": "Cadena C Costo Integracion M12",
+        "value": 28974049.105,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C61": {
+        "label": "Cadena C Costo Variable M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D61": {
+        "label": "Cadena C Costo Variable M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E61": {
+        "label": "Cadena C Costo Variable M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F61": {
+        "label": "Cadena C Costo Variable M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G61": {
+        "label": "Cadena C Costo Variable M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H61": {
+        "label": "Cadena C Costo Variable M6",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I61": {
+        "label": "Cadena C Costo Variable M7",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J61": {
+        "label": "Cadena C Costo Variable M8",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K61": {
+        "label": "Cadena C Costo Variable M9",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L61": {
+        "label": "Cadena C Costo Variable M10",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M61": {
+        "label": "Cadena C Costo Variable M11",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N61": {
+        "label": "Cadena C Costo Variable M12",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C62": {
+        "label": "Cadena C Tasa Escalamiento M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D62": {
+        "label": "Cadena C Tasa Escalamiento M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E62": {
+        "label": "Cadena C Tasa Escalamiento M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F62": {
+        "label": "Cadena C Tasa Escalamiento M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G62": {
+        "label": "Cadena C Tasa Escalamiento M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H62": {
+        "label": "Cadena C Tasa Escalamiento M6",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I62": {
+        "label": "Cadena C Tasa Escalamiento M7",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J62": {
+        "label": "Cadena C Tasa Escalamiento M8",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K62": {
+        "label": "Cadena C Tasa Escalamiento M9",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L62": {
+        "label": "Cadena C Tasa Escalamiento M10",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M62": {
+        "label": "Cadena C Tasa Escalamiento M11",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N62": {
+        "label": "Cadena C Tasa Escalamiento M12",
+        "value": 1236469432.61937,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C65": {
+        "label": "Componente Financiero M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D65": {
+        "label": "Componente Financiero M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E65": {
+        "label": "Componente Financiero M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F65": {
+        "label": "Componente Financiero M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G65": {
+        "label": "Componente Financiero M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H65": {
+        "label": "Componente Financiero M6",
+        "value": 158051509.96286184,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I65": {
+        "label": "Componente Financiero M7",
+        "value": 158002309.30460262,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J65": {
+        "label": "Componente Financiero M8",
+        "value": 158002309.30460262,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K65": {
+        "label": "Componente Financiero M9",
+        "value": 158002309.30460262,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L65": {
+        "label": "Componente Financiero M10",
+        "value": 158002309.30460262,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M65": {
+        "label": "Componente Financiero M11",
+        "value": 158002309.30460262,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N65": {
+        "label": "Componente Financiero M12",
+        "value": 158002309.30460262,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C66": {
+        "label": "ICA M1",
+        "value": 0,
+        "category": "impuesto",
+        "month": 1
+      },
+      "Visión P&G!D66": {
+        "label": "ICA M2",
+        "value": 0,
+        "category": "impuesto",
+        "month": 2
+      },
+      "Visión P&G!E66": {
+        "label": "ICA M3",
+        "value": 0,
+        "category": "impuesto",
+        "month": 3
+      },
+      "Visión P&G!F66": {
+        "label": "ICA M4",
+        "value": 0,
+        "category": "impuesto",
+        "month": 4
+      },
+      "Visión P&G!G66": {
+        "label": "ICA M5",
+        "value": 0,
+        "category": "impuesto",
+        "month": 5
+      },
+      "Visión P&G!H66": {
+        "label": "ICA M6",
+        "value": 32239879.674139965,
+        "category": "impuesto",
+        "month": 6
+      },
+      "Visión P&G!I66": {
+        "label": "ICA M7",
+        "value": 32232247.712541215,
+        "category": "impuesto",
+        "month": 7
+      },
+      "Visión P&G!J66": {
+        "label": "ICA M8",
+        "value": 32232247.712541215,
+        "category": "impuesto",
+        "month": 8
+      },
+      "Visión P&G!K66": {
+        "label": "ICA M9",
+        "value": 32232247.712541215,
+        "category": "impuesto",
+        "month": 9
+      },
+      "Visión P&G!L66": {
+        "label": "ICA M10",
+        "value": 32232247.712541215,
+        "category": "impuesto",
+        "month": 10
+      },
+      "Visión P&G!M66": {
+        "label": "ICA M11",
+        "value": 32232247.712541215,
+        "category": "impuesto",
+        "month": 11
+      },
+      "Visión P&G!N66": {
+        "label": "ICA M12",
+        "value": 32232247.712541215,
+        "category": "impuesto",
+        "month": 12
+      },
+      "Visión P&G!C67": {
+        "label": "GMF M1",
+        "value": 0,
+        "category": "impuesto",
+        "month": 1
+      },
+      "Visión P&G!D67": {
+        "label": "GMF M2",
+        "value": 0,
+        "category": "impuesto",
+        "month": 2
+      },
+      "Visión P&G!E67": {
+        "label": "GMF M3",
+        "value": 0,
+        "category": "impuesto",
+        "month": 3
+      },
+      "Visión P&G!F67": {
+        "label": "GMF M4",
+        "value": 0,
+        "category": "impuesto",
+        "month": 4
+      },
+      "Visión P&G!G67": {
+        "label": "GMF M5",
+        "value": 0,
+        "category": "impuesto",
+        "month": 5
+      },
+      "Visión P&G!H67": {
+        "label": "GMF M6",
+        "value": 10318771.702653192,
+        "category": "impuesto",
+        "month": 6
+      },
+      "Visión P&G!I67": {
+        "label": "GMF M7",
+        "value": 10316356.933931423,
+        "category": "impuesto",
+        "month": 7
+      },
+      "Visión P&G!J67": {
+        "label": "GMF M8",
+        "value": 10316356.933931423,
+        "category": "impuesto",
+        "month": 8
+      },
+      "Visión P&G!K67": {
+        "label": "GMF M9",
+        "value": 10316356.933931423,
+        "category": "impuesto",
+        "month": 9
+      },
+      "Visión P&G!L67": {
+        "label": "GMF M10",
+        "value": 10316356.933931423,
+        "category": "impuesto",
+        "month": 10
+      },
+      "Visión P&G!M67": {
+        "label": "GMF M11",
+        "value": 10316356.933931423,
+        "category": "impuesto",
+        "month": 11
+      },
+      "Visión P&G!N67": {
+        "label": "GMF M12",
+        "value": 10316356.933931423,
+        "category": "impuesto",
+        "month": 12
+      },
+      "Visión P&G!C68": {
+        "label": "Comision Admin M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D68": {
+        "label": "Comision Admin M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E68": {
+        "label": "Comision Admin M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F68": {
+        "label": "Comision Admin M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G68": {
+        "label": "Comision Admin M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H68": {
+        "label": "Comision Admin M6",
+        "value": 53762544.54273836,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I68": {
+        "label": "Comision Admin M7",
+        "value": 53749817.64426515,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J68": {
+        "label": "Comision Admin M8",
+        "value": 53749817.64426515,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K68": {
+        "label": "Comision Admin M9",
+        "value": 53749817.64426515,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L68": {
+        "label": "Comision Admin M10",
+        "value": 53749817.64426515,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M68": {
+        "label": "Comision Admin M11",
+        "value": 53749817.64426515,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N68": {
+        "label": "Comision Admin M12",
+        "value": 53749817.64426515,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C69": {
+        "label": "Polizas adicionales M1",
+        "value": 0,
+        "category": "costo",
+        "month": 1
+      },
+      "Visión P&G!D69": {
+        "label": "Polizas adicionales M2",
+        "value": 0,
+        "category": "costo",
+        "month": 2
+      },
+      "Visión P&G!E69": {
+        "label": "Polizas adicionales M3",
+        "value": 0,
+        "category": "costo",
+        "month": 3
+      },
+      "Visión P&G!F69": {
+        "label": "Polizas adicionales M4",
+        "value": 0,
+        "category": "costo",
+        "month": 4
+      },
+      "Visión P&G!G69": {
+        "label": "Polizas adicionales M5",
+        "value": 0,
+        "category": "costo",
+        "month": 5
+      },
+      "Visión P&G!H69": {
+        "label": "Polizas adicionales M6",
+        "value": 61730314.04333032,
+        "category": "costo",
+        "month": 6
+      },
+      "Visión P&G!I69": {
+        "label": "Polizas adicionales M7",
+        "value": 61703887.013864815,
+        "category": "costo",
+        "month": 7
+      },
+      "Visión P&G!J69": {
+        "label": "Polizas adicionales M8",
+        "value": 61703887.013864815,
+        "category": "costo",
+        "month": 8
+      },
+      "Visión P&G!K69": {
+        "label": "Polizas adicionales M9",
+        "value": 61703887.013864815,
+        "category": "costo",
+        "month": 9
+      },
+      "Visión P&G!L69": {
+        "label": "Polizas adicionales M10",
+        "value": 61703887.013864815,
+        "category": "costo",
+        "month": 10
+      },
+      "Visión P&G!M69": {
+        "label": "Polizas adicionales M11",
+        "value": 61703887.013864815,
+        "category": "costo",
+        "month": 11
+      },
+      "Visión P&G!N69": {
+        "label": "Polizas adicionales M12",
+        "value": 61703887.013864815,
+        "category": "costo",
+        "month": 12
+      },
+      "Visión P&G!C74": {
+        "label": "Contribucion M1",
+        "value": 0,
+        "category": "utilidad",
+        "month": 1
+      },
+      "Visión P&G!D74": {
+        "label": "Contribucion M2",
+        "value": 0,
+        "category": "utilidad",
+        "month": 2
+      },
+      "Visión P&G!E74": {
+        "label": "Contribucion M3",
+        "value": 0,
+        "category": "utilidad",
+        "month": 3
+      },
+      "Visión P&G!F74": {
+        "label": "Contribucion M4",
+        "value": 0,
+        "category": "utilidad",
+        "month": 4
+      },
+      "Visión P&G!G74": {
+        "label": "Contribucion M5",
+        "value": 0,
+        "category": "utilidad",
+        "month": 5
+      },
+      "Visión P&G!H74": {
+        "label": "Contribucion M6",
+        "value": 183355984.2065065,
+        "category": "utilidad",
+        "month": 6,
+        "_v28_patch": true,
+        "_v28_old_value": 183326007.54001474
+      },
+      "Visión P&G!I74": {
+        "label": "Contribucion M7",
+        "value": 273575445.4667876,
+        "category": "utilidad",
+        "month": 7
+      },
+      "Visión P&G!J74": {
+        "label": "Contribucion M8",
+        "value": 363968386.4300573,
+        "category": "utilidad",
+        "month": 8,
+        "_v28_patch": true,
+        "_v28_old_value": 363908433.0970733
+      },
+      "Visión P&G!K74": {
+        "label": "Contribucion M9",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 9
+      },
+      "Visión P&G!L74": {
+        "label": "Contribucion M10",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 10
+      },
+      "Visión P&G!M74": {
+        "label": "Contribucion M11",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 11
+      },
+      "Visión P&G!N74": {
+        "label": "Contribucion M12",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 12
+      },
+      "Visión P&G!C75": {
+        "label": "Contribucion por Puesto M1",
+        "value": 0,
+        "category": "utilidad",
+        "month": 1
+      },
+      "Visión P&G!D75": {
+        "label": "Contribucion por Puesto M2",
+        "value": 0,
+        "category": "utilidad",
+        "month": 2
+      },
+      "Visión P&G!E75": {
+        "label": "Contribucion por Puesto M3",
+        "value": 0,
+        "category": "utilidad",
+        "month": 3
+      },
+      "Visión P&G!F75": {
+        "label": "Contribucion por Puesto M4",
+        "value": 0,
+        "category": "utilidad",
+        "month": 4
+      },
+      "Visión P&G!G75": {
+        "label": "Contribucion por Puesto M5",
+        "value": 0,
+        "category": "utilidad",
+        "month": 5
+      },
+      "Visión P&G!H75": {
+        "label": "Contribucion por Puesto M6",
+        "value": 7638583.647500615,
+        "category": "utilidad",
+        "month": 6
+      },
+      "Visión P&G!I75": {
+        "label": "Contribucion por Puesto M7",
+        "value": 11398976.894449482,
+        "category": "utilidad",
+        "month": 7
+      },
+      "Visión P&G!J75": {
+        "label": "Contribucion por Puesto M8",
+        "value": 15162851.37904472,
+        "category": "utilidad",
+        "month": 8
+      },
+      "Visión P&G!K75": {
+        "label": "Contribucion por Puesto M9",
+        "value": 15162851.37904472,
+        "category": "utilidad",
+        "month": 9
+      },
+      "Visión P&G!L75": {
+        "label": "Contribucion por Puesto M10",
+        "value": 15162851.37904472,
+        "category": "utilidad",
+        "month": 10
+      },
+      "Visión P&G!M75": {
+        "label": "Contribucion por Puesto M11",
+        "value": 15162851.37904472,
+        "category": "utilidad",
+        "month": 11
+      },
+      "Visión P&G!N75": {
+        "label": "Contribucion por Puesto M12",
+        "value": 15162851.37904472,
+        "category": "utilidad",
+        "month": 12
+      },
+      "Visión P&G!C76": {
+        "label": "% Contribucion M1",
+        "value": 0,
+        "category": "ratio",
+        "month": 1
+      },
+      "Visión P&G!D76": {
+        "label": "% Contribucion M2",
+        "value": 0,
+        "category": "ratio",
+        "month": 2
+      },
+      "Visión P&G!E76": {
+        "label": "% Contribucion M3",
+        "value": 0,
+        "category": "ratio",
+        "month": 3
+      },
+      "Visión P&G!F76": {
+        "label": "% Contribucion M4",
+        "value": 0,
+        "category": "ratio",
+        "month": 4
+      },
+      "Visión P&G!G76": {
+        "label": "% Contribucion M5",
+        "value": 0,
+        "category": "ratio",
+        "month": 5
+      },
+      "Visión P&G!H76": {
+        "label": "% Contribucion M6",
+        "value": 0.11269967320572612,
+        "category": "ratio",
+        "month": 6
+      },
+      "Visión P&G!I76": {
+        "label": "% Contribucion M7",
+        "value": 0.1593958977099006,
+        "category": "ratio",
+        "month": 7
+      },
+      "Visión P&G!J76": {
+        "label": "% Contribucion M8",
+        "value": 0.20142610282440562,
+        "category": "ratio",
+        "month": 8
+      },
+      "Visión P&G!K76": {
+        "label": "% Contribucion M9",
+        "value": 0.20142610282440562,
+        "category": "ratio",
+        "month": 9
+      },
+      "Visión P&G!L76": {
+        "label": "% Contribucion M10",
+        "value": 0.20142610282440562,
+        "category": "ratio",
+        "month": 10
+      },
+      "Visión P&G!M76": {
+        "label": "% Contribucion M11",
+        "value": 0.20142610282440562,
+        "category": "ratio",
+        "month": 11
+      },
+      "Visión P&G!N76": {
+        "label": "% Contribucion M12",
+        "value": 0.20142610282440562,
+        "category": "ratio",
+        "month": 12
+      },
+      "Visión P&G!C79": {
+        "label": "Utilidad Neta M1",
+        "value": 0,
+        "category": "utilidad",
+        "month": 1
+      },
+      "Visión P&G!D79": {
+        "label": "Utilidad Neta M2",
+        "value": 0,
+        "category": "utilidad",
+        "month": 2
+      },
+      "Visión P&G!E79": {
+        "label": "Utilidad Neta M3",
+        "value": 0,
+        "category": "utilidad",
+        "month": 3
+      },
+      "Visión P&G!F79": {
+        "label": "Utilidad Neta M4",
+        "value": 0,
+        "category": "utilidad",
+        "month": 4
+      },
+      "Visión P&G!G79": {
+        "label": "Utilidad Neta M5",
+        "value": 0,
+        "category": "utilidad",
+        "month": 5
+      },
+      "Visión P&G!H79": {
+        "label": "Utilidad Neta M6",
+        "value": 183355984.2065065,
+        "category": "utilidad",
+        "month": 6,
+        "_v28_patch": true,
+        "_v28_old_value": 183326007.54001474
+      },
+      "Visión P&G!I79": {
+        "label": "Utilidad Neta M7",
+        "value": 273575445.4667876,
+        "category": "utilidad",
+        "month": 7
+      },
+      "Visión P&G!J79": {
+        "label": "Utilidad Neta M8",
+        "value": 363968386.4300573,
+        "category": "utilidad",
+        "month": 8,
+        "_v28_patch": true,
+        "_v28_old_value": 363908433.0970733
+      },
+      "Visión P&G!K79": {
+        "label": "Utilidad Neta M9",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 9
+      },
+      "Visión P&G!L79": {
+        "label": "Utilidad Neta M10",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 10
+      },
+      "Visión P&G!M79": {
+        "label": "Utilidad Neta M11",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 11
+      },
+      "Visión P&G!N79": {
+        "label": "Utilidad Neta M12",
+        "value": 363908433.0970733,
+        "category": "utilidad",
+        "month": 12
+      }
+    },
+    "payroll_intermediates": {
+      "Inputs de Nomina!C4": {
+        "label": "Salario Minimo",
+        "value": 1750905,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C5": {
+        "label": "Auxilio Transporte",
+        "value": 249095,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C6": {
+        "label": "% Cumplimiento Variable",
+        "value": 0.7,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C7": {
+        "label": "Dotaciones annual",
+        "value": 184500,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C8": {
+        "label": "Dotaciones mensual",
+        "value": 15375,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C11": {
+        "label": "Salario Agente Basico",
+        "value": 2730864.2626000005,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C16": {
+        "label": "Director Salario Base",
+        "value": 22761150,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!D16": {
+        "label": "Director Variable",
+        "value": 0,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!E16": {
+        "label": "Director % Comision",
+        "value": 0,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C26": {
+        "label": "GTR Salario Base",
+        "value": 1982883,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!D26": {
+        "label": "GTR Variable",
+        "value": 0,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!E26": {
+        "label": "GTR % Comision",
+        "value": 0,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C39": {
+        "label": "Inbound 25 Salario",
+        "value": 1750905,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!D39": {
+        "label": "Inbound 25 Variable",
+        "value": 122563.34999999999,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!E39": {
+        "label": "Inbound 25 % Comision",
+        "value": 0.1,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!C40": {
+        "label": "Inbound WhatsApp Salario",
+        "value": 1750905,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!D40": {
+        "label": "Inbound WhatsApp Variable",
+        "value": 122563.34999999999,
+        "category": "payroll"
+      },
+      "Inputs de Nomina!E40": {
+        "label": "Inbound WhatsApp % Comision",
+        "value": 0.1,
+        "category": "payroll"
+      }
+    },
+    "polizas_tasas": {},
+    "rotacion_ausentismo": {}
+  }
+}

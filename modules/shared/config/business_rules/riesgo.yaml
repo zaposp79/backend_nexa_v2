@@ -1,0 +1,87 @@
+# Fuente de referencia: Excel V2-4, hoja "Riesgo" (B1:Y282).
+# Fecha: 2026-06-07.
+# Nota: los cambios en esta configuracion no requieren modificar codigo Python.
+
+constantes_regulatorias:
+  umbral_aprobacion_smmlv: 1000.0
+
+pesos_categorias:
+  Cliente: 0.4
+  Operativo: 0.6
+
+clasificacion_score:
+  alto: 2.5
+  medio: 1.5
+
+umbrales:
+  periodo_pago_alto: 60
+  periodo_pago_bajo: 30
+  alertas_alto: 3
+  alertas_medio: 1
+  complejidad_alto: 6
+  complejidad_medio: 3
+  capacitacion_bajo: 8
+  capacitacion_medio: 4
+  rotacion_alto: 0.10
+  rotacion_medio: 0.05
+  dependencia_terceros_alto: 3
+  min_contingencia_operativa: 0.05
+  min_contingencia_comercial: 0.04
+
+tipos_cliente_alto:
+  - "No Grupo Aval"
+
+antiguedad_alto:
+  - "Cliente Nuevo"
+
+criterios:
+  - id: 1
+    factor: "Clasificación de oportunidad"
+    categoria: "Cliente"
+    peso: 0.30
+    evaluador: "_criterio_1_clasificacion_oportunidad"
+  - id: 2
+    factor: "Tipo de cliente"
+    categoria: "Cliente"
+    peso: 0.25
+    evaluador: "_criterio_2_tipo_cliente"
+  - id: 3
+    factor: "Período de pago"
+    categoria: "Cliente"
+    peso: 0.25
+    evaluador: "_criterio_3_periodo_pago"
+  - id: 4
+    factor: "Experiencia con el cliente"
+    categoria: "Cliente"
+    peso: 0.10
+    evaluador: "_criterio_4_experiencia_cliente"
+  - id: 5
+    factor: "Presupuesto de imprevistos"
+    categoria: "Cliente"
+    peso: 0.10
+    evaluador: "_criterio_5_presupuesto_imprevistos"
+  - id: 6
+    factor: "Alertas activadas"
+    categoria: "Operativo"
+    peso: 0.30
+    evaluador: "_criterio_6_alertas_activadas"
+  - id: 7
+    factor: "Complejidad"
+    categoria: "Operativo"
+    peso: 0.20
+    evaluador: "_criterio_7_complejidad"
+  - id: 8
+    factor: "Capacitaciones"
+    categoria: "Operativo"
+    peso: 0.20
+    evaluador: "_criterio_8_capacitaciones"
+  - id: 9
+    factor: "Rotación"
+    categoria: "Operativo"
+    peso: 0.20
+    evaluador: "_criterio_9_rotacion"
+  - id: 10
+    factor: "Dependencia de terceros"
+    categoria: "Operativo"
+    peso: 0.10
+    evaluador: "_criterio_10_dependencia_terceros"

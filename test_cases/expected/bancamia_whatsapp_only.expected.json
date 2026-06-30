@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "_comment": "Bancamia WhatsApp ONLY (Escenario 1 Excel V2-4) \u2014 para comparaci\u00f3n 1:1 con Hoja Maestra Escenario 1",
+    "_excel_facturacion_esperada": 355764509.4,
+    "_excel_payroll_mes1": 30017217,
+    "_excel_polizas_mes1": 25738337,
+    "_excel_ica_mes1": "calcular",
+    "_excel_pct_utilidad_steady": 0.1354
+  },
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.486727+00:00"
+}

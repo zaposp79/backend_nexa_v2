@@ -1,0 +1,1043 @@
+{
+  "sheets": [
+    {
+      "catalogs": {
+        "ica": [
+          {
+            "name": "Tasa"
+          },
+          {
+            "name": "Avisos & Tableros"
+          },
+          {
+            "name": "Bomberos"
+          },
+          {
+            "name": "Otras Sobretasas"
+          }
+        ]
+      },
+      "key": "lv",
+      "name": "OP-LV"
+    },
+    {
+      "key": "opexfijo",
+      "name": "OP-OPEXFijo",
+      "rows": [
+        {
+          "opexitem": "Acceso a internet intalaciones Nexa",
+          "valor": 45000.0
+        },
+        {
+          "opexitem": "Perfil Agente Blending Telefónico Licencia CX1 Nombrada",
+          "valor": 180400.0
+        },
+        {
+          "opexitem": "Worki",
+          "valor": 18000.0
+        },
+        {
+          "opexitem": "Speech Analytics",
+          "valor": 250.0
+        },
+        {
+          "opexitem": "Soporte y Mantenimiento plataforma CCaaS  (7 X 24 X 365), Valor por puesto",
+          "valor": 18050.0
+        },
+        {
+          "opexitem": "Licencia por usuario",
+          "valor": 24190.0
+        }
+      ]
+    },
+    {
+      "key": "hardsoft",
+      "name": "OP-HardSoft",
+      "rows": [
+        {
+          "cantidadmes": 60,
+          "hardwaresoftware": "Computador",
+          "tipo": "Operativo;Agente",
+          "valor": 3508260.0
+        },
+        {
+          "cantidadmes": 24,
+          "hardwaresoftware": "Diadema",
+          "tipo": "Agente",
+          "valor": 119952.0
+        },
+        {
+          "cantidadmes": 1,
+          "hardwaresoftware": "Licencia Nestkope  (SWG filtro)",
+          "tipo": "Operativo;Agente",
+          "valor": 3621.0
+        },
+        {
+          "cantidadmes": 1,
+          "hardwaresoftware": "Soporte Licencia Netskope (SWG filtro)",
+          "tipo": "Operativo;Agente",
+          "valor": 2440.0
+        },
+        {
+          "cantidadmes": 1,
+          "hardwaresoftware": "Licencia EDR Sentinel One Enterprise",
+          "tipo": "Operativo;Agente",
+          "valor": 4612.0
+        },
+        {
+          "cantidadmes": 1,
+          "hardwaresoftware": "Soporte EDR Sentinel One Enterprise",
+          "tipo": "Operativo;Agente",
+          "valor": 752.0
+        },
+        {
+          "cantidadmes": 1,
+          "hardwaresoftware": "Licencia Office 365 E3",
+          "tipo": "Operativo",
+          "valor": 95706.0
+        }
+      ]
+    },
+    {
+      "catalogs": {
+        "dispositivorequerido": [
+          {
+            "name": "Dispositivo Principal"
+          },
+          {
+            "name": "Monitores periféricos"
+          },
+          {
+            "name": "Headset/audio"
+          },
+          {
+            "name": "Dispositivo móvil"
+          },
+          {
+            "name": "Mantenimiento/Reemplazo de hardware"
+          }
+        ]
+      },
+      "key": "dispositivorequerido",
+      "name": "OP-DispositivoRequerido"
+    },
+    {
+      "key": "componente",
+      "name": "OP-Componente",
+      "rows": [
+        {
+          "ano": 2025,
+          "componente": "IPC",
+          "valor": 0.0527
+        },
+        {
+          "ano": 2026,
+          "componente": "IPC",
+          "valor": 0.0527
+        },
+        {
+          "ano": 2027,
+          "componente": "IPC",
+          "valor": 0.0527
+        },
+        {
+          "ano": 2028,
+          "componente": "IPC",
+          "valor": 0.0527
+        },
+        {
+          "ano": 2029,
+          "componente": "IPC",
+          "valor": 0.0527
+        },
+        {
+          "ano": 2030,
+          "componente": "IPC",
+          "valor": 0.0527
+        },
+        {
+          "ano": 2025,
+          "componente": "SMLV",
+          "valor": 0.12
+        },
+        {
+          "ano": 2026,
+          "componente": "SMLV",
+          "valor": 0.12
+        },
+        {
+          "ano": 2027,
+          "componente": "SMLV",
+          "valor": 0.12
+        },
+        {
+          "ano": 2028,
+          "componente": "SMLV",
+          "valor": 0.12
+        },
+        {
+          "ano": 2029,
+          "componente": "SMLV",
+          "valor": 0.12
+        },
+        {
+          "ano": 2030,
+          "componente": "SMLV",
+          "valor": 0.12
+        }
+      ]
+    },
+    {
+      "key": "componenteacumulado",
+      "name": "OP-ComponenteAcumulado",
+      "rows": [
+        {
+          "ano": 2025,
+          "componente": "IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2027,
+          "componente": "IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2028,
+          "componente": "IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2029,
+          "componente": "IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2030,
+          "componente": "IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2025,
+          "componente": "SMLV",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "SMLV",
+          "valor": 1.24
+        },
+        {
+          "ano": 2027,
+          "componente": "SMLV",
+          "valor": 1.39
+        },
+        {
+          "ano": 2028,
+          "componente": "SMLV",
+          "valor": 1.55
+        },
+        {
+          "ano": 2029,
+          "componente": "SMLV",
+          "valor": 1.74
+        },
+        {
+          "ano": 2030,
+          "componente": "SMLV",
+          "valor": 1.95
+        },
+        {
+          "ano": 2025,
+          "componente": "70% SMMLV - 30% IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "70% SMMLV - 30% IPC",
+          "valor": 1.18
+        },
+        {
+          "ano": 2027,
+          "componente": "70% SMMLV - 30% IPC",
+          "valor": 1.3
+        },
+        {
+          "ano": 2028,
+          "componente": "70% SMMLV - 30% IPC",
+          "valor": 1.43
+        },
+        {
+          "ano": 2029,
+          "componente": "70% SMMLV - 30% IPC",
+          "valor": 1.57
+        },
+        {
+          "ano": 2030,
+          "componente": "70% SMMLV - 30% IPC",
+          "valor": 1.73
+        },
+        {
+          "ano": 2025,
+          "componente": "IPC + 1 PUNTO",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "IPC + 1 PUNTO",
+          "valor": 1.06
+        },
+        {
+          "ano": 2027,
+          "componente": "IPC + 1 PUNTO",
+          "valor": 1.13
+        },
+        {
+          "ano": 2028,
+          "componente": "IPC + 1 PUNTO",
+          "valor": 1.2
+        },
+        {
+          "ano": 2029,
+          "componente": "IPC + 1 PUNTO",
+          "valor": 1.28
+        },
+        {
+          "ano": 2030,
+          "componente": "IPC + 1 PUNTO",
+          "valor": 1.36
+        },
+        {
+          "ano": 2025,
+          "componente": "Tarifas definidas",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "Tarifas definidas",
+          "valor": 1.0
+        },
+        {
+          "ano": 2027,
+          "componente": "Tarifas definidas",
+          "valor": 1.0
+        },
+        {
+          "ano": 2028,
+          "componente": "Tarifas definidas",
+          "valor": 1.0
+        },
+        {
+          "ano": 2029,
+          "componente": "Tarifas definidas",
+          "valor": 1.0
+        },
+        {
+          "ano": 2030,
+          "componente": "Tarifas definidas",
+          "valor": 1.0
+        },
+        {
+          "ano": 2025,
+          "componente": "Aumenta octubre 2027",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "Aumenta octubre 2027",
+          "valor": 1.0
+        },
+        {
+          "ano": 2027,
+          "componente": "Aumenta octubre 2027",
+          "valor": 1.0
+        },
+        {
+          "ano": 2028,
+          "componente": "Aumenta octubre 2027",
+          "valor": 1.0
+        },
+        {
+          "ano": 2029,
+          "componente": "Aumenta octubre 2027",
+          "valor": 1.0
+        },
+        {
+          "ano": 2030,
+          "componente": "Aumenta octubre 2027",
+          "valor": 1.0
+        },
+        {
+          "ano": 2025,
+          "componente": "Aumenta abril del 2028",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "Aumenta abril del 2028",
+          "valor": 1.0
+        },
+        {
+          "ano": 2027,
+          "componente": "Aumenta abril del 2028",
+          "valor": 1.0
+        },
+        {
+          "ano": 2028,
+          "componente": "Aumenta abril del 2028",
+          "valor": 1.0
+        },
+        {
+          "ano": 2029,
+          "componente": "Aumenta abril del 2028",
+          "valor": 1.0
+        },
+        {
+          "ano": 2030,
+          "componente": "Aumenta abril del 2028",
+          "valor": 1.0
+        },
+        {
+          "ano": 2025,
+          "componente": "80% SMMLV - 20% IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "80% SMMLV - 20% IPC",
+          "valor": 1.2
+        },
+        {
+          "ano": 2027,
+          "componente": "80% SMMLV - 20% IPC",
+          "valor": 1.33
+        },
+        {
+          "ano": 2028,
+          "componente": "80% SMMLV - 20% IPC",
+          "valor": 1.47
+        },
+        {
+          "ano": 2029,
+          "componente": "80% SMMLV - 20% IPC",
+          "valor": 1.63
+        },
+        {
+          "ano": 2030,
+          "componente": "80% SMMLV - 20% IPC",
+          "valor": 1.8
+        },
+        {
+          "ano": 2025,
+          "componente": "20% SMMLV 80% IPC",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "20% SMMLV 80% IPC",
+          "valor": 1.09
+        },
+        {
+          "ano": 2027,
+          "componente": "20% SMMLV 80% IPC",
+          "valor": 1.16
+        },
+        {
+          "ano": 2028,
+          "componente": "20% SMMLV 80% IPC",
+          "valor": 1.24
+        },
+        {
+          "ano": 2029,
+          "componente": "20% SMMLV 80% IPC",
+          "valor": 1.33
+        },
+        {
+          "ano": 2030,
+          "componente": "20% SMMLV 80% IPC",
+          "valor": 1.42
+        },
+        {
+          "ano": 2030,
+          "componente": "IPC, previa negociación con AVAL",
+          "valor": 1.0
+        },
+        {
+          "ano": 2026,
+          "componente": "IPC, previa negociación con AVAL",
+          "valor": 1.05
+        },
+        {
+          "ano": 2027,
+          "componente": "IPC, previa negociación con AVAL",
+          "valor": 1.11
+        },
+        {
+          "ano": 2028,
+          "componente": "IPC, previa negociación con AVAL",
+          "valor": 1.17
+        },
+        {
+          "ano": 2029,
+          "componente": "IPC, previa negociación con AVAL",
+          "valor": 1.23
+        },
+        {
+          "ano": 2030,
+          "componente": "IPC, previa negociación con AVAL",
+          "valor": 1.29
+        },
+        {
+          "ano": 2025,
+          "componente": "Negociación",
+          "valor": 0.0
+        },
+        {
+          "ano": 2026,
+          "componente": "Negociación",
+          "valor": 0.0
+        },
+        {
+          "ano": 2027,
+          "componente": "Negociación",
+          "valor": 0.0
+        },
+        {
+          "ano": 2028,
+          "componente": "Negociación",
+          "valor": 0.0
+        },
+        {
+          "ano": 2029,
+          "componente": "Negociación",
+          "valor": 0.0
+        },
+        {
+          "ano": 2030,
+          "componente": "Negociación",
+          "valor": 0.0
+        }
+      ]
+    },
+    {
+      "key": "poliza",
+      "name": "OP-Poliza",
+      "rows": [
+        {
+          "poliza": "Póliza de Seriedad",
+          "porcentaje": 0.5,
+          "porcentajeexigido": 10.0
+        },
+        {
+          "poliza": "Póliza de Cumplimiento",
+          "porcentaje": 0.62,
+          "porcentajeexigido": 20.0
+        },
+        {
+          "poliza": "Poliza de Salarios",
+          "porcentaje": 1.19,
+          "porcentajeexigido": 10.0
+        },
+        {
+          "poliza": "Poliza de Calidad",
+          "porcentaje": 1.19,
+          "porcentajeexigido": 20.0
+        },
+        {
+          "poliza": "Poliza de rc cruzada",
+          "porcentaje": 2.75,
+          "porcentajeexigido": 40.0
+        },
+        {
+          "poliza": "poliza de IRF",
+          "porcentaje": 2.75,
+          "porcentajeexigido": 10.0
+        },
+        {
+          "poliza": "Póliza de Responsabilidad",
+          "porcentaje": 0.69,
+          "porcentajeexigido": 40.0
+        },
+        {
+          "poliza": "Comisión de Administración (1,18% sobre ventas Gcomercial-Operaciones)",
+          "porcentaje": 1.18,
+          "porcentajeexigido": 10.0
+        },
+        {
+          "poliza": "Otros impuestos",
+          "porcentaje": 1.0,
+          "porcentajeexigido": 0.0
+        }
+      ]
+    },
+    {
+      "key": "polizafija",
+      "name": "OP-PolizaFija",
+      "rows": [
+        {
+          "poliza": "ICA",
+          "porcentaje": 1.0
+        },
+        {
+          "poliza": "GMF (Gravamen a los movimientos financieros)",
+          "porcentaje": 0.4
+        }
+      ]
+    },
+    {
+      "key": "ica",
+      "name": "OP-ICA",
+      "rows": [
+        {
+          "ciudad": "Armenia",
+          "ica": "Tasa",
+          "valor": 0.006
+        },
+        {
+          "ciudad": "Armenia",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Armenia",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Armenia",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Barranquilla",
+          "ica": "Tasa",
+          "valor": 0.0125
+        },
+        {
+          "ciudad": "Barranquilla",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Barranquilla",
+          "ica": "Bomberos",
+          "valor": 0.03
+        },
+        {
+          "ciudad": "Barranquilla",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Bogotá",
+          "ica": "Tasa",
+          "valor": 0.0097
+        },
+        {
+          "ciudad": "Bogotá",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Bogotá",
+          "ica": "Bomberos",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Bogotá",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Bucaramanga",
+          "ica": "Tasa",
+          "valor": 0.009
+        },
+        {
+          "ciudad": "Bucaramanga",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Bucaramanga",
+          "ica": "Bomberos",
+          "valor": 0.1
+        },
+        {
+          "ciudad": "Bucaramanga",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Buga",
+          "ica": "Tasa",
+          "valor": 0.009
+        },
+        {
+          "ciudad": "Buga",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Buga",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Buga",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cali",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Cali",
+          "ica": "Cali",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cali",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cali",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cartagena",
+          "ica": "Tasa",
+          "valor": 0.008
+        },
+        {
+          "ciudad": "Cartagena",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cartagena",
+          "ica": "Bomberos",
+          "valor": 0.07
+        },
+        {
+          "ciudad": "Cartagena",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cúcuta",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Cúcuta",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Cúcuta",
+          "ica": "Bomberos",
+          "valor": 0.05
+        },
+        {
+          "ciudad": "Cúcuta",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Manizales",
+          "ica": "Tasa",
+          "valor": 0.0045
+        },
+        {
+          "ciudad": "Manizales",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Manizales",
+          "ica": "Bomberos",
+          "valor": 0.05
+        },
+        {
+          "ciudad": "Manizales",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Medellín",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Medellín",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Medellín",
+          "ica": "Bomberos",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Medellín",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Neiva",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Neiva",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Neiva",
+          "ica": "Bomberos",
+          "valor": 0.03
+        },
+        {
+          "ciudad": "Neiva",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Palmira",
+          "ica": "Tasa",
+          "valor": 0.007
+        },
+        {
+          "ciudad": "Palmira",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Palmira",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Palmira",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Pasto",
+          "ica": "Tasa",
+          "valor": 0.006
+        },
+        {
+          "ciudad": "Pasto",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Pasto",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Pasto",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Pereira",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Pereira",
+          "ica": "Avisos & Tableros",
+          "valor": 0.15
+        },
+        {
+          "ciudad": "Pereira",
+          "ica": "Bomberos",
+          "valor": 0.06
+        },
+        {
+          "ciudad": "Pereira",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Popayán",
+          "ica": "Tasa",
+          "valor": 0.007
+        },
+        {
+          "ciudad": "Popayán",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Popayán",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Popayán",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Santa Marta",
+          "ica": "Tasa",
+          "valor": 0.007
+        },
+        {
+          "ciudad": "Santa Marta",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Santa Marta",
+          "ica": "Bomberos",
+          "valor": 0.07
+        },
+        {
+          "ciudad": "Santa Marta",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Sicelejo",
+          "ica": "Tasa",
+          "valor": 0.008
+        },
+        {
+          "ciudad": "Sicelejo",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Sicelejo",
+          "ica": "Bomberos",
+          "valor": 0.05
+        },
+        {
+          "ciudad": "Sicelejo",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Tunja",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Tunja",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Tunja",
+          "ica": "Bomberos",
+          "valor": 0.05
+        },
+        {
+          "ciudad": "Tunja",
+          "ica": "Otras Sobretasas",
+          "valor": 0.05
+        },
+        {
+          "ciudad": "Valledupár",
+          "ica": "Tasa",
+          "valor": 0.01
+        },
+        {
+          "ciudad": "Valledupár",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Valledupár",
+          "ica": "Bomberos",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Valledupár",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Villavicencio",
+          "ica": "Tasa",
+          "valor": 0.006
+        },
+        {
+          "ciudad": "Villavicencio",
+          "ica": "Avisos & Tableros",
+          "valor": 0.0
+        },
+        {
+          "ciudad": "Villavicencio",
+          "ica": "Bomberos",
+          "valor": 0.04
+        },
+        {
+          "ciudad": "Villavicencio",
+          "ica": "Otras Sobretasas",
+          "valor": 0.0
+        }
+      ]
+    },
+    {
+      "key": "costo",
+      "name": "OP-Costo",
+      "rows": [
+        {
+          "costooperativo": "Tarifa diaria de capacitación (COP)",
+          "valor": 20000.0
+        },
+        {
+          "costooperativo": "Crucero (COP)",
+          "valor": 8600.0
+        },
+        {
+          "costooperativo": "Horas de formación mensual",
+          "valor": 8.0
+        },
+        {
+          "costooperativo": "Porcentaje de Ausentismo",
+          "valor": 7.0
+        },
+        {
+          "costooperativo": "Porcentaje de Rotación",
+          "valor": 9.0
+        }
+      ]
+    },
+    {
+      "key": "margenobjetivo",
+      "name": "OP-MargenObjetivo",
+      "rows": [
+        {
+          "cadena": "Cadena A",
+          "porcentaje": 21.0
+        },
+        {
+          "cadena": "Cadena B",
+          "porcentaje": 30.0
+        },
+        {
+          "cadena": "Cadena C",
+          "porcentaje": 20.0
+        }
+      ]
+    }
+  ],
+  "version_id": "8e651172-ba4a-44c4-9afe-38aec3281dd9"
+}

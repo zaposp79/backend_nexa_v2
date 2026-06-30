@@ -1,0 +1,511 @@
+{
+     "condiciones_cadena_b": {
+          "opex": {
+               "items": [
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WhatsApp",
+                         "producto": "Token IA",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 3075,
+                         "cantidad": 10,
+                         "valor_total": 30750
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WhatsApp",
+                         "producto": "Token IA",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 196945,
+                         "cantidad": 10,
+                         "valor_total": 1969450
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WhatsApp",
+                         "producto": "WhatsApp minuto",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 28700,
+                         "cantidad": 10,
+                         "valor_total": 287000
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WhatsApp",
+                         "producto": "WhatsApp minuto",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 456125,
+                         "cantidad": 10,
+                         "valor_total": 4561250
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WebChat",
+                         "producto": "WhatsApp minuto",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 61500,
+                         "cantidad": 10,
+                         "valor_total": 615000
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WebChat",
+                         "producto": "WhatsApp minuto",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 18,
+                         "cantidad": 10,
+                         "valor_total": 180
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WebChat",
+                         "producto": "WhatsApp minuto",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 6,
+                         "cantidad": 10,
+                         "valor_total": 60
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "WebChat",
+                         "producto": "Llamada gestionada",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 3.47,
+                         "cantidad": 10,
+                         "valor_total": 34.7
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Llamada gestionada",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 196945,
+                         "cantidad": 10,
+                         "valor_total": 1969450
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Llamada gestionada",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 196945,
+                         "cantidad": 10,
+                         "valor_total": 1969450
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Llamada gestionada",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 61,
+                         "cantidad": 10,
+                         "valor_total": 610
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Llamada gestionada",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 316,
+                         "cantidad": 10,
+                         "valor_total": 3160
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Llamada gestionada",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 180,
+                         "cantidad": 10,
+                         "valor_total": 1800
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Token IA",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 487900,
+                         "cantidad": 10,
+                         "valor_total": 4879000
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "Correo",
+                         "producto": "Token IA",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 18000,
+                         "cantidad": 10,
+                         "valor_total": 180000
+                    },
+                    {
+                         "rubro": "Plataformas y licencias",
+                         "modalidad": "Inbound",
+                         "canal": "",
+                         "producto": "",
+                         "tipo_de_cobro": "Unitario",
+                         "tipo_de_gasto": "Fijo",
+                         "valor": 295,
+                         "cantidad": 10,
+                         "valor_total": 2950
+                    }
+               ]
+          },
+          "inversiones_capex": [
+               {
+                    "rubro": "Infraestructura y cloud",
+                    "modalidad": "Inbound",
+                    "canal": "WhatsApp",
+                    "tipo_de_cobro": "Total",
+                    "valor": 7000,
+                    "cantidad": 3,
+                    "meses_a_diferir_inversion": 24,
+                    "valor_total": 21000,
+                    "valor_mes_actual": 710.71
+               }
+          ],
+          "equipo_soporte_mantenimiento": {
+               "fte": 5,
+               "roles": [
+                    {
+                         "rol": "Service Owner",
+                         "activado": true,
+                         "dedicacion": 5,
+                         "fte": 0.25
+                    },
+                    {
+                         "rol": "Platform Admin",
+                         "activado": true,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "L1 / L2 Support",
+                         "activado": true,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "RPA Supervisor / Bot Controller",
+                         "activado": true,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "DevOps / SRE",
+                         "activado": true,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "MLOps / AIOps",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "Data Steward / Data Quality",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "Conversation Analyst",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "Content / Knowledge Manager",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "QA Monitoring / Compliance QA",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "Human Reviewers (HITL)",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    },
+                    {
+                         "rol": "Security / Privacy / Compliance",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.5
+                    }
+               ],
+               "dispositivos_requeridos": [
+                    {
+                         "descripcion": "Dispositivo Principal",
+                         "precio": 1000000,
+                         "cantidad_atribuible_a_la_operacion": 5.75
+                    },
+                    {
+                         "descripcion": "Monitores perifericos",
+                         "precio": 200000,
+                         "cantidad_atribuible_a_la_operacion": 5.75
+                    },
+                    {
+                         "descripcion": "Headsets",
+                         "precio": 300000,
+                         "cantidad_atribuible_a_la_operacion": 5.75
+                    },
+                    {
+                         "descripcion": "Dispositivo movil",
+                         "precio": 100000,
+                         "cantidad_atribuible_a_la_operacion": 5.75
+                    },
+                    {
+                         "descripcion": "Mantenimiento / reemplazo de hardware",
+                         "precio": 0,
+                         "cantidad_atribuible_a_la_operacion": 5.75
+                    }
+               ]
+          },
+          "costo_variable": {
+               "tarifas_por_canal": {
+                    "inbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tarifa": 4500
+                         },
+                         {
+                              "canal": "Correo",
+                              "tarifa": 0
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tarifa": 0
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tarifa": 5000
+                         },
+                         {
+                              "canal": "Voz",
+                              "tarifa": 9000
+                         },
+                         {
+                              "canal": "Otros",
+                              "tarifa": 9000
+                         },
+                         {
+                              "canal": "IVR",
+                              "tarifa": 4000
+                         }
+                    ],
+                    "outbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tarifa": 4500
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tarifa": 6000
+                         },
+                         {
+                              "canal": "Correo",
+                              "tarifa": 800
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tarifa": 5000
+                         },
+                         {
+                              "canal": "IVR",
+                              "tarifa": 9000
+                         },
+                         {
+                              "canal": "Fuerza de ventas",
+                              "tarifa": 4000
+                         },
+                         {
+                              "canal": "Otros",
+                              "tarifa": 3000
+                         },
+                         {
+                              "canal": "Voz",
+                              "tarifa": 3000
+                         }
+                    ]
+               },
+               "tasa_escalamiento": {
+                    "tarifa_de_escalamiento_indbound": {
+                         "tipo": "Input Calculado",
+                         "value": 3000
+                    },
+                    "tarifa_de_escalamiento_outbound": {
+                         "tipo": "Input Manual",
+                         "value": 0
+                    },
+                    "inbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tasa": 0.05
+                         },
+                         {
+                              "canal": "Correo",
+                              "tasa": 0.05
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tasa": 0.05
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tasa": 0.05
+                         },
+                         {
+                              "canal": "Voz",
+                              "tasa": 0.05
+                         },
+                         {
+                              "canal": "Otros",
+                              "tasa": 0.05
+                         },
+                         {
+                              "canal": "IVR",
+                              "tasa": 0.05
+                         }
+                    ],
+                    "outbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Correo",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "IVR",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Fuerza de ventas",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Otros",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Voz",
+                              "tasa": 0.03
+                         }
+                    ]
+               }
+          },
+          "hitl": {
+               "total_volumen_cadena_b": 2500,
+               "equipo": [
+                    {
+                         "rol": "Human Reviewers",
+                         "activado": true,
+                         "ratio": 4000,
+                         "personas": 0.6
+                    },
+                    {
+                         "rol": "Conversation Analyst",
+                         "activado": true,
+                         "ratio": 560,
+                         "personas": 4.5
+                    },
+                    {
+                         "rol": "Content / Knowledge Manager",
+                         "activado": true,
+                         "ratio": 200,
+                         "personas": 12.5
+                    },
+                    {
+                         "rol": "QA / Compliance QA",
+                         "activado": true,
+                         "ratio": 300,
+                         "personas": 8.3
+                    },
+                    {
+                         "rol": "MLOps / AIOps",
+                         "activado": true,
+                         "ratio": 700,
+                         "personas": 3.6
+                    },
+                    {
+                         "rol": "Data Steward",
+                         "activado": true,
+                         "ratio": 1000,
+                         "personas": 2.5
+                    }
+               ],
+               "dispositivos_requeridos": [
+                    {
+                         "descripcion": "Dispositivo Principal",
+                         "precio": 1000000,
+                         "cantidad_atribuible": 32
+                    },
+                    {
+                         "descripcion": "Monitores perifericos",
+                         "precio": 200000,
+                         "cantidad_atribuible": 32
+                    },
+                    {
+                         "descripcion": "Headsets",
+                         "precio": 300000,
+                         "cantidad_atribuible": 32
+                    },
+                    {
+                         "descripcion": "Dispositivo movil",
+                         "precio": 100000,
+                         "cantidad_atribuible": 32
+                    },
+                    {
+                         "descripcion": "Mantenimiento / reemplazo de hardware",
+                         "precio": 0,
+                         "cantidad_atribuible": 32
+                    }
+               ]
+          }
+     }
+}

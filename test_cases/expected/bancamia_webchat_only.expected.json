@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "_comment": "Escenario 3 Excel V2-4: WebChat solo (Cadena B)",
+    "_excel_payroll_a": 0,
+    "_excel_no_payroll_a": 0,
+    "_excel_cadena_b_total": 64043187.37,
+    "_excel_comp_fijo_b": 4839065.06,
+    "_excel_comp_var_b": 54414887.94,
+    "_excel_facturacion": 75453401.68
+  },
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.492601+00:00"
+}

@@ -1,0 +1,62 @@
+{
+  "_doc": "Bancamia canonical golden master for WAVE 4. Inputs mirror Excel V2-7 prefilled deal as closely as possible; expected_outputs reflect the engine's calibrated post-WAVE-3 numerical baseline.",
+  "inputs": {
+    "panel_de_control": {
+      "cliente": "Bancamia",
+      "tipo_cliente": "No Grupo Aval",
+      "linea_negocio": "Cobranzas",
+      "ciudad": "Bogotá",
+      "sede": "Bogota - Toberin",
+      "fecha_inicio": "2026-01-01",
+      "meses_contrato": 24,
+      "margen": 0.18,
+      "margen_b": 0.30,
+      "margen_c": 0.20,
+      "op_cont": 0.025,
+      "com_cont": 0.0,
+      "markup": 0.0,
+      "descuento": 0.0,
+      "tasa_ica": 0.01,
+      "tasa_gmf": 0.004,
+      "activa_financiacion": true,
+      "periodo_pago_dias": 90,
+      "tasa_mensual_financ": 0.0153,
+      "imprevistos": 0.0,
+      "cadenas_activas": {"cadena_a": true, "cadena_b": true, "cadena_c": false}
+    },
+    "condiciones_cadena_a": {
+      "perfiles": [{
+        "nombre": "Agregado Cadena A",
+        "rol": "Agente Basico",
+        "modalidad": "Inbound",
+        "canal": "Mixto",
+        "fte": 1.0,
+        "pct_presencia": 1.0,
+        "salario_base": 85065268.0,
+        "comision_pct": 0.0,
+        "dias_cap_inicial": 0,
+        "dias_cap_rotacion": 0,
+        "incluye_examenes": false,
+        "incluye_seguridad": false,
+        "incluye_crucero": false,
+        "modelo_cobro": "Fijo FTE",
+        "pct_fijo": 1.0,
+        "no_payroll_mensual": 0.0
+      }]
+    },
+    "condiciones_cadena_b": {
+      "canales": [{
+        "nombre": "WhatsApp Inbound",
+        "modalidad": "Inbound",
+        "tarifa_unitaria": 4500.0,
+        "volumen_mensual": 0,
+        "opex_fijo": 176438434.0,
+        "pct_escalamiento": 0.03,
+        "costo_escalamiento": 0.0
+      }],
+      "fte_equipo_sm": 1.0,
+      "amortizar_dispositivos_sm": true
+    },
+    "condiciones_cadena_c": {}
+  }
+}

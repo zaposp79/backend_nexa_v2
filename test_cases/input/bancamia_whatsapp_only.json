@@ -1,0 +1,141 @@
+{
+  "panel_de_control": {
+    "cliente": "Bancamia",
+    "tipo_cliente": "No Grupo Aval",
+    "linea_negocio": "Cobranzas",
+    "ciudad": "Bogotá",
+    "sede": "Medellín",
+    "fecha_inicio": "2026-01-01",
+    "meses_contrato": 12,
+    "margen": 0.1339,
+    "op_cont": 0.02,
+    "com_cont": 0.0,
+    "markup": 0.0,
+    "descuento": 0.0,
+    "periodo_pago_dias": 30,
+    "activa_financiacion": true,
+    "antiguedad_cliente": "Cliente Nuevo",
+    "componente_indexacion_humano": "IPC",
+    "componente_indexacion_tecnologico": "IPC",
+    "tasa_ica": 0.02,
+    "tasa_gmf": 0.004,
+    "tasa_mensual_financ": 0.0153,
+    "pct_rotacion": 0.085,
+    "pct_ausentismo": 0.065,
+    "aplica_ley_1819": true,
+    "cadenas_activas": {
+      "cadena_a": true,
+      "cadena_b": true,
+      "cadena_c": false
+    }
+  },
+  "condiciones_cadena_a": {
+    "perfiles": [
+      {
+        "nombre": "Inbound 10",
+        "rol": "Agente Basico",
+        "canal": "WhatsApp",
+        "modalidad": "Inbound",
+        "fte": 6,
+        "pct_presencia": 1.0,
+        "comision_pct": 0.1,
+        "salario_base": 2450000,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": true,
+        "dias_cap_inicial": 7,
+        "dias_cap_rotacion": 7,
+        "modelo_cobro": "Fijo FTE",
+        "pct_fijo": 1.0,
+        "no_payroll_mensual": 6146008.23
+      }
+    ]
+  },
+  "condiciones_cadena_b": {
+    "canales": [
+      {
+        "nombre": "WhatsApp Inbound",
+        "modalidad": "Inbound",
+        "producto": "WhatsApp",
+        "volumen_mensual": 1000,
+        "activo": true,
+        "opex_fijo": 176438434.41,
+        "tarifa_unitaria": 4500,
+        "pct_escalamiento": 0.05,
+        "costo_escalamiento": 0
+      }
+    ],
+    "opex_consumo_variable": [
+      {
+        "nombre": "HITL - Human Reviewers",
+        "producto": "HITL",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "valor_unitario": 163244663.8,
+        "cantidad": 1.0,
+        "tipo_cobro": "Unitario"
+      }
+    ],
+    "equipo_sm": [
+      {
+        "rol": "Service Owner",
+        "activo": true,
+        "pct_dedicacion": 0.05
+      },
+      {
+        "rol": "Platform Admin",
+        "activo": true,
+        "pct_dedicacion": 0.1
+      },
+      {
+        "rol": "L1 / L2 Support",
+        "activo": true,
+        "pct_dedicacion": 0.1
+      },
+      {
+        "rol": "RPA Supervisor / Bot Controller",
+        "activo": true,
+        "pct_dedicacion": 0.1
+      },
+      {
+        "rol": "DevOps / SRE",
+        "activo": true,
+        "pct_dedicacion": 0.1
+      }
+    ],
+    "dispositivos_sm": [
+      {
+        "tipo": "Dispositivo Principal",
+        "costo_unitario": 1000000,
+        "cantidad": 5.75,
+        "meses_amortizacion": 36
+      },
+      {
+        "tipo": "Monitores periféricos",
+        "costo_unitario": 2000,
+        "cantidad": 5.75,
+        "meses_amortizacion": 36
+      },
+      {
+        "tipo": "Headset/audio",
+        "costo_unitario": 300000,
+        "cantidad": 5.75,
+        "meses_amortizacion": 36
+      },
+      {
+        "tipo": "Dispositivo móvil",
+        "costo_unitario": 100000,
+        "cantidad": 5.75,
+        "meses_amortizacion": 36
+      }
+    ],
+    "inversion_plataforma": 710.71,
+    "fte_equipo_sm": 5,
+    "amortizar_dispositivos_sm": false
+  },
+  "condiciones_cadena_c": {
+    "canales": [],
+    "equipo_transversal": [],
+    "inversion_anual": 0.0
+  }
+}

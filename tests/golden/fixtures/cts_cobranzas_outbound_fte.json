@@ -1,0 +1,64 @@
+{
+  "data": {
+    "cts_cadena_a": 4002192.7560828156,
+    "cts_cadena_b": 0.0,
+    "cts_ponderado": 4002192.7560828156,
+    "participacion_a": 1.0,
+    "participacion_b": 0.0,
+    "participacion_c": 0.0,
+    "fte_cadena_a": 10.0,
+    "vol_cadena_b": 0,
+    "vol_cadena_c": 0,
+    "cts_cadena_c": 0.0,
+    "costo_total_acumulado": 480263130.7299379,
+    "desglose_a": {
+      "nomina": 3509377.7560828156,
+      "no_payroll": 492815.0,
+      "nomina_loaded": 3509377.7560828156,
+      "salario_fijo": 3509377.7560828156,
+      "salario_variable": 0.0,
+      "capacitacion_inicial": 0.0,
+      "capacitacion_rotacion": 0.0,
+      "examenes": 0.0,
+      "estudios_seguridad": 0.0,
+      "crucero": 0.0,
+      "opex_fijo": 0.0,
+      "inversiones": 0.0,
+      "costos_fijos_estacion": 492815.0
+    },
+    "desglose_b": {
+      "componente_fijo": 0.0,
+      "opex": 0.0,
+      "inversiones": 0.0,
+      "soporte_mantenimiento": 0.0,
+      "componente_variable": 0.0,
+      "tarifa": 0.0,
+      "opex_variable": 0.0,
+      "tasa_escalamiento": 0.0,
+      "hitl": 0.0
+    },
+    "canal_view_habilitado": false,
+    "canales_detalle": [
+      {
+        "canal": "Voz",
+        "modalidad": "Outbound",
+        "fte": 10.0,
+        "participacion_cadena_a": 0.0,
+        "cts": 4002192.7560828156,
+        "payroll": 3509377.7560828156,
+        "nomina_loaded": 3509377.7560828156,
+        "salario_fijo": 3509377.7560828156,
+        "salario_variable": 0.0,
+        "capacitacion_inicial": 0.0,
+        "capacitacion_rotacion": 0.0,
+        "examenes": 0.0,
+        "estudios_seguridad": 0.0,
+        "crucero": 0.0,
+        "no_payroll": 492815.0,
+        "opex_fijo": 0.0,
+        "inversiones": 0.0,
+        "costos_fijos": 492815.0
+      }
+    ]
+  }
+}

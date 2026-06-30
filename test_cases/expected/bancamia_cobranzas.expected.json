@@ -1,0 +1,8 @@
+{
+  "metadata": {},
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.490276+00:00"
+}

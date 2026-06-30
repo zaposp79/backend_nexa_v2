@@ -1,0 +1,54 @@
+{
+  "additionalProperties": true,
+  "description": "Commercial scenario referencing a channel/modality.\n\nThe wider engine accepts heterogeneous scenario shapes; this contract\nlocks the canonical subset used by the V2-7 baseline cases.",
+  "properties": {
+    "canal": {
+      "default": "",
+      "title": "Canal",
+      "type": "string"
+    },
+    "margen": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": -1.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Margen"
+    },
+    "modalidad": {
+      "default": "",
+      "title": "Modalidad",
+      "type": "string"
+    },
+    "modelo_cobro": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Modelo Cobro"
+    },
+    "nombre": {
+      "default": "",
+      "title": "Nombre",
+      "type": "string"
+    },
+    "parametros": {
+      "additionalProperties": true,
+      "title": "Parametros",
+      "type": "object"
+    }
+  },
+  "title": "EscenarioComercialV1",
+  "type": "object"
+}

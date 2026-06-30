@@ -1,0 +1,424 @@
+{
+  "datos_operativos": {
+    "servicio": "Captura de Datos",
+    "cliente": "AMERICAS BUSINESS PROCESS SERVICES S.A",
+    "tipo_cliente": "No Grupo Aval",
+    "fecha_inicio": "2026-06-01",
+    "duracion_meses": 12,
+    "ciudad": "Bogota",
+    "sede": "Bogota - Toberin",
+    "tarifa_diaria_capacitacion": 20000,
+    "crucero": 8408,
+    "horas_formacion_mes": 8,
+    "pct_ausentismo": 0.065,
+    "pct_rotacion": 0.085,
+    "pct_examen_anual": 0.28,
+    "cons_costo_de_financiacion": false,
+    "ciudades_recurso": [
+      {
+        "ciudad": "Bogota",
+        "proporcion": 0.6
+      },
+      {
+        "ciudad": "Cali",
+        "proporcion": 0.2
+      },
+      {
+        "ciudad": "Medellin",
+        "proporcion": 0.2
+      }
+    ],
+    "tasa_ica": 0.01,
+    "tasa_gmf": 0.004
+  },
+  "reglas_negocio": {
+    "margen_objetivo": 0.21,
+    "contingencia_operativa": {
+      "valor": 0.0,
+      "minimo": 0.0,
+      "maximo": 0.12
+    },
+    "contingencia_comercial": {
+      "valor": 0.0,
+      "minimo": 0.0,
+      "maximo": 0.07
+    },
+    "markup": {
+      "valor": 0.0,
+      "minimo": 0.0,
+      "maximo": 0.08
+    },
+    "imprevistos": 0.0,
+    "porcentaje_acumulado": {
+      "actual": 0.0,
+      "minimo": 0.0,
+      "maximo": 0.15
+    }
+  },
+  "volumetria": {
+    "indexacion": {
+      "componente_humano": "80% SMMLV 20% IPC",
+      "componente_tecnologico": "IPC",
+      "frecuencia": "Anual",
+      "mes_aplicacion": 6,
+      "tasa_interes_mensual": 0.0153
+    },
+    "inbound": {
+      "cadenas_activas": {
+        "cadena_a": true,
+        "cadena_b": false,
+        "cadena_c": false
+      },
+      "canales": [
+        {
+          "canal": "Voz",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 25,
+            "participacion": 1.0
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        },
+        {
+          "canal": "WhatsApp",
+          "cadena_a": {
+            "unidad": "FTE",
+            "valor": 15,
+            "participacion": 1.0
+          },
+          "cadena_b": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          },
+          "cadena_c": {
+            "unidad": "VOLUMEN",
+            "valor": 0,
+            "participacion": 0.0
+          }
+        }
+      ]
+    },
+    "outbound": {
+      "cadenas_activas": {
+        "cadena_a": false,
+        "cadena_b": false,
+        "cadena_c": false
+      },
+      "canales": []
+    }
+  },
+  "escenarios_comerciales": [
+    {
+      "escenario": 1,
+      "modalidad": "Inbound",
+      "canal": "Voz",
+      "modelo_cobro": "Fijo",
+      "componente_fijo": "FTE",
+      "proporcion_componente_fijo": 0.7,
+      "componente_variable": "Transacción",
+      "proporcion_componente_variable": 0.3
+    },
+    {
+      "escenario": 2,
+      "modalidad": "Inbound",
+      "canal": "WhatsApp",
+      "modelo_cobro": "Variable",
+      "componente_fijo": "FTE",
+      "proporcion_componente_fijo": 0.0,
+      "componente_variable": "Transacción",
+      "proporcion_componente_variable": 1.0
+    },
+    {
+      "escenario": 3,
+      "modalidad": "Inbound",
+      "canal": "WhatsApp",
+      "modelo_cobro": "Fijo",
+      "componente_fijo": "FTE",
+      "proporcion_componente_fijo": 1.0,
+      "componente_variable": "",
+      "proporcion_componente_variable": 0.0
+    }
+  ],
+  "polizas": [
+    {
+      "nombre": "Póliza de Cumplimiento",
+      "activa": true,
+      "pct_poliza": 0.0062,
+      "pct_atribuible": 0.2,
+      "aplica_extension": true,
+      "meses_extension": 20
+    },
+    {
+      "nombre": "Poliza de Salarios",
+      "activa": true,
+      "pct_poliza": 0.0119,
+      "pct_atribuible": 0.1,
+      "aplica_extension": true,
+      "meses_extension": 41
+    },
+    {
+      "nombre": "Poliza de Calidad",
+      "activa": true,
+      "pct_poliza": 0.0119,
+      "pct_atribuible": 0.2,
+      "aplica_extension": true,
+      "meses_extension": 20
+    },
+    {
+      "nombre": "Comisión de Administración (1,18%)",
+      "activa": true,
+      "pct_poliza": 0.016756,
+      "pct_atribuible": 1.0,
+      "aplica_extension": false,
+      "meses_extension": null,
+      "is_comision_administracion": true
+    }
+  ],
+  "condiciones_cadena_a": {
+    "condiciones_cadena_a": {
+      "staff_config": [
+        {"nombre": "Director de cuentas", "activo": true},
+        {"nombre": "Director de Performance", "activo": true},
+        {"nombre": "Jefe Comercial Regional", "activo": false},
+        {"nombre": "Analista profesional AFAC", "activo": false},
+        {"nombre": "Lider de Entrenamiento", "activo": true},
+        {"nombre": "Lider de Experiencia de Cliente y Performance", "activo": true},
+        {"nombre": "Lider de Planeación Operativa", "activo": true},
+        {"nombre": "Jefe de Operación", "activo": true},
+        {"nombre": "Works force", "activo": true},
+        {"nombre": "Reporting", "activo": true},
+        {"nombre": "GTR", "activo": true},
+        {"nombre": "Analista Prof. De Selección (Inicial)", "activo": true},
+        {"nombre": "Analista 1 de Reclutamiento (Inicial)", "activo": true},
+        {"nombre": "Analista Prof. De Selección (Rotación)", "activo": true},
+        {"nombre": "Analista 1 de Reclutamiento (Rotación)", "activo": true},
+        {"nombre": "Analista 2 Service Desk", "activo": true},
+        {"nombre": "Formadores", "activo": true},
+        {"nombre": "Monitor de Calidad", "activo": true},
+        {"nombre": "Supervisor", "activo": true},
+        {"nombre": "Agente Básico 1", "activo": true},
+        {"nombre": "Validador", "activo": false}
+      ],
+      "perfiles": [
+        {
+          "nombre": "Inbound 25",
+          "modalidad": "Inbound",
+          "canal": "Voz",
+          "fte": 25,
+          "pct_presencia": 0.6,
+          "salario_base": 1750905,
+          "comision_pct": 0.1,
+          "incluye_crucero": true,
+          "estaciones_presenciales": 15,
+          "roles_operativos": [
+            {
+              "incluye_en_deal": true,
+              "rol": "Director de cuentas",
+              "ratio": "750 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Director de Performance",
+              "ratio": "1200 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Jefe Comercial Regional",
+              "ratio": "800 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Analista profesional AFAC",
+              "ratio": "400 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Lider de Entrenamiento",
+              "ratio": "1000 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Lider de Experiencia de Cliente y Performance",
+              "ratio": "1000 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Lider de Planeación Operativa",
+              "ratio": "1000 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Jefe de Operación",
+              "ratio": "165 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Works force",
+              "ratio": "300 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Reporting",
+              "ratio": "300 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "GTR",
+              "ratio": "200 Agentes",
+              "comision_rol": 0.0
+            }
+          ],
+          "no_payroll_mensual": 15078896.625,
+          "inversiones_mensual": 1688669.106394587,
+          "inversiones_mensual_recurrente": 1657417.0866148649,
+          "costos_fijos_mensual": 7392230.93206786
+        },
+        {
+          "nombre": "inboun Whatsapp",
+          "modalidad": "Inbound",
+          "canal": "WhatsApp",
+          "fte": 15,
+          "pct_presencia": 0.6,
+          "salario_base": 1750905,
+          "comision_pct": 0.1,
+          "incluye_crucero": true,
+          "estaciones_presenciales": 9,
+          "roles_operativos": [
+            {
+              "incluye_en_deal": true,
+              "rol": "Director de cuentas",
+              "ratio": "750 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Director de Performance",
+              "ratio": "1200 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Jefe Comercial Regional",
+              "ratio": "800 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Analista profesional AFAC",
+              "ratio": "400 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Lider de Entrenamiento",
+              "ratio": "1000 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Lider de Experiencia de Cliente y Performance",
+              "ratio": "1000 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Lider de Planeación Operativa",
+              "ratio": "1000 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Jefe de Operación",
+              "ratio": "165 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Works force",
+              "ratio": "300 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "Reporting",
+              "ratio": "300 Agentes",
+              "comision_rol": 0.0
+            },
+            {
+              "incluye_en_deal": true,
+              "rol": "GTR",
+              "ratio": "200 Agentes",
+              "comision_rol": 0.0
+            }
+          ],
+          "no_payroll_mensual": 4397187.975,
+          "inversiones_mensual": 1013201.4638367519,
+          "inversiones_mensual_recurrente": 994450.2519689190,
+          "costos_fijos_mensual": 4435338.5592407165
+        }
+      ]
+    }
+  },
+  "condiciones_cadena_b": {
+    "canales": [],
+    "opex_consumo_variable": [],
+    "equipo_sm": [],
+    "dispositivos_sm": [],
+    "inversion_plataforma": 0.0,
+    "fte_equipo_sm": 0,
+    "amortizar_dispositivos_sm": false
+  },
+  "condiciones_cadena_c": {
+    "tarifa_proveedor_canal": {
+      "items": []
+    },
+    "inversiones_capex": [],
+    "recurso_humano_transversal": {
+      "fte": 0,
+      "roles": [],
+      "opex": []
+    },
+    "costo_variable": {
+      "tarifas_por_canal": {
+        "inbound": [],
+        "outbound": []
+      },
+      "tasa_escalamiento": {
+        "tarifa_de_escalamiento_indbound": {
+          "tipo": "Input Manual",
+          "value": 0
+        },
+        "tarifa_de_escalamiento_outbound": {
+          "tipo": "Input Manual",
+          "value": 0
+        },
+        "inbound": [],
+        "outbound": []
+      },
+      "hitl": {
+        "equipo": [],
+        "total_volumen_cadena_c": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+fastapi>=0.100
+uvicorn>=0.24
+python-multipart>=0.0.6
+openpyxl>=3.1
+pydantic>=2.0
+python-dateutil>=2.8
+python-dotenv>=1.2.2
+PyYAML>=6.0
+
+
+# Persistence layer (FASE DB). Only imported when DB_PROVIDER=cosmos; the
+# default JSON backend works without it. Installed but lazily loaded.
+azure-cosmos>=4.5,<5

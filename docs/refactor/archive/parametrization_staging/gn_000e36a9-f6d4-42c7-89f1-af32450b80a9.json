@@ -1,0 +1,497 @@
+{
+  "lv": {
+    "catalogs": {
+      "cadena": [
+        {
+          "name": "Cadena A"
+        },
+        {
+          "name": "Cadena B"
+        },
+        {
+          "name": "Cadena C"
+        }
+      ],
+      "canal": [
+        {
+          "name": "WhatsApp"
+        },
+        {
+          "name": "Mensajes"
+        },
+        {
+          "name": "Correo"
+        },
+        {
+          "name": "WebChat"
+        },
+        {
+          "name": "IVR"
+        },
+        {
+          "name": "Voz"
+        },
+        {
+          "name": "Fuerza de Ventas"
+        },
+        {
+          "name": "Otros"
+        }
+      ],
+      "categoriaservicio": [
+        {
+          "name": "Cobranzas"
+        },
+        {
+          "name": "SAC"
+        },
+        {
+          "name": "Ventas multicanal"
+        },
+        {
+          "name": "SACO"
+        },
+        {
+          "name": "Plataformas"
+        },
+        {
+          "name": "Captura de Datos"
+        }
+      ],
+      "centrocosto": [
+        {
+          "name": "Costo externo examenes medicos nuevos (iniciales)"
+        },
+        {
+          "name": "Costo externo examenes medicos (Rotación)"
+        },
+        {
+          "name": "Costo externo examenes medicos (anual)"
+        },
+        {
+          "name": "Costo Estudio de Seguridad - Informe preliminar (iniciales)"
+        },
+        {
+          "name": "Costo Estudio de Seguridad - Informe preliminar (Rotación)"
+        },
+        {
+          "name": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Iniciales)"
+        },
+        {
+          "name": "Costo Estudio de Seguridad - Informe final + visita domiciliaria (Rotación)"
+        }
+      ],
+      "ciudad": [
+        {
+          "name": "Armenia"
+        },
+        {
+          "name": "Barranquilla"
+        },
+        {
+          "name": "Bogotá"
+        },
+        {
+          "name": "Bucaramanga"
+        },
+        {
+          "name": "Buga"
+        },
+        {
+          "name": "Cali"
+        },
+        {
+          "name": "Cartagena"
+        },
+        {
+          "name": "Cúcuta"
+        },
+        {
+          "name": "Ibagué"
+        },
+        {
+          "name": "Manizales"
+        },
+        {
+          "name": "Medellín"
+        },
+        {
+          "name": "Neiva"
+        },
+        {
+          "name": "Palmira"
+        },
+        {
+          "name": "Pasto"
+        },
+        {
+          "name": "Pereira"
+        },
+        {
+          "name": "Popayán"
+        },
+        {
+          "name": "Santa Marta"
+        },
+        {
+          "name": "Sicelejo"
+        },
+        {
+          "name": "Tunja"
+        },
+        {
+          "name": "Valledupár"
+        },
+        {
+          "name": "Villavicencio"
+        }
+      ],
+      "cliente": [
+        {
+          "name": "AMERICAS BUSINESS PROCESS SERVICES S.A"
+        },
+        {
+          "name": "APORTES EN LINEA S.A."
+        },
+        {
+          "name": "BANCIEN S.A."
+        },
+        {
+          "name": "BANCO AV VILLAS S.A."
+        },
+        {
+          "name": "BANCO DE BOGOTÁ S.A."
+        },
+        {
+          "name": "BANCO DE OCCIDENTE S.A."
+        },
+        {
+          "name": "BANCO POPULAR"
+        },
+        {
+          "name": "CARROYA.COM S.A.S"
+        },
+        {
+          "name": "CASA EDITORIAL EL TIEMPO"
+        },
+        {
+          "name": "CONSORCIO COMERCIAL FONPET"
+        },
+        {
+          "name": "FIDUCIARIA DE OCCIDENTE S.A."
+        },
+        {
+          "name": "FUNDACION CARDIO-INFANTIL"
+        },
+        {
+          "name": "GASES DE OCCIDENTE S.A."
+        },
+        {
+          "name": "GASES DEL CARIBE S.A"
+        },
+        {
+          "name": "GESTIÓN & FINANZAS DE OCCIDENTE"
+        },
+        {
+          "name": "KREDIT PLUS S.A."
+        },
+        {
+          "name": "METROCUADRADO COM SAS"
+        },
+        {
+          "name": "ORION CONTACT CENTER S.A.S."
+        },
+        {
+          "name": "PARTNERS TELECOM COLOMBIA S.A.S. (WOM)"
+        },
+        {
+          "name": "PORVENIR S.A"
+        },
+        {
+          "name": "SEGUROS ADL LTDA"
+        },
+        {
+          "name": "SEGUROS DE VIDA ALFA S.A. VIDALFA S.A."
+        },
+        {
+          "name": "SURTIDORA DE GAS DEL CARIBE S.A."
+        },
+        {
+          "name": "UNICEF"
+        },
+        {
+          "name": "VANTI S.A. ESP"
+        },
+        {
+          "name": "YAMAHA MOTOR FINANCE COLOMBIA S.A.S"
+        }
+      ],
+      "componente": [
+        {
+          "name": "IPC"
+        },
+        {
+          "name": "SMLV"
+        },
+        {
+          "name": "70% SMMLV - 30% IPC"
+        },
+        {
+          "name": "IPC + 1 PUNTO"
+        },
+        {
+          "name": "Tarifas definidas"
+        },
+        {
+          "name": "Aumenta octubre 2027"
+        },
+        {
+          "name": "Aumenta abril del 2028"
+        },
+        {
+          "name": "80% SMMLV - 20% IPC"
+        },
+        {
+          "name": "IPC, previa negociación con AVAL"
+        },
+        {
+          "name": "Negociación"
+        }
+      ],
+      "componentefijo": [
+        {
+          "name": "FTE"
+        },
+        {
+          "name": "Precio Fijo"
+        },
+        {
+          "name": "Tiempo"
+        }
+      ],
+      "componentevariable": [
+        {
+          "name": "Transaccion"
+        },
+        {
+          "name": "Resultado"
+        },
+        {
+          "name": "Honorarios"
+        }
+      ],
+      "divisa": [
+        {
+          "name": "Cop"
+        }
+      ],
+      "hardwaresoftware": [
+        {
+          "name": "Computador"
+        },
+        {
+          "name": "Diadema"
+        },
+        {
+          "name": "Licencia Nestkope (SWG filtro)"
+        },
+        {
+          "name": "Soporte Licencia Netskope (SWG filtro)"
+        },
+        {
+          "name": "Licencia EDR Sentinel One Enterprise"
+        },
+        {
+          "name": "Soporte EDR Sentinel One Enterprise"
+        },
+        {
+          "name": "Licencia Office 365 E3"
+        },
+        {
+          "name": "Mouse logitech"
+        }
+      ],
+      "localidad": [
+        {
+          "name": "Américas"
+        },
+        {
+          "name": "Teusaquillo"
+        },
+        {
+          "name": "Toberin"
+        }
+      ],
+      "metrica": [
+        {
+          "name": "Ausentismo"
+        },
+        {
+          "name": "Rotación"
+        },
+        {
+          "name": "Rentabilidad Por Servicio"
+        }
+      ],
+      "modalidad": [
+        {
+          "name": "Inbound"
+        },
+        {
+          "name": "Outbound"
+        }
+      ],
+      "modelocombro": [
+        {
+          "name": "Hibrido"
+        },
+        {
+          "name": "Fijo"
+        },
+        {
+          "name": "Variable"
+        }
+      ],
+      "periodopago": [
+        {
+          "name": "30"
+        },
+        {
+          "name": "60"
+        },
+        {
+          "name": "90"
+        },
+        {
+          "name": "120"
+        }
+      ],
+      "poliza": [
+        {
+          "name": "Póliza de Seriedad"
+        },
+        {
+          "name": "Póliza de Cumplimiento"
+        },
+        {
+          "name": "Poliza de Salarios"
+        },
+        {
+          "name": "Poliza de Calidad"
+        },
+        {
+          "name": "Poliza de rc cruzada"
+        },
+        {
+          "name": "poliza de IRF"
+        },
+        {
+          "name": "Póliza de Responsabilidad"
+        },
+        {
+          "name": "Comisión de Administración (1,18% sobre ventas Comercial-Operaciones)"
+        },
+        {
+          "name": "ICA"
+        },
+        {
+          "name": "GMF (Gravamen a los movimientos financieros)"
+        },
+        {
+          "name": "Timbre Nacional"
+        }
+      ],
+      "reglanegocio": [
+        {
+          "name": "Contingencia Operativa"
+        },
+        {
+          "name": "Contingencia Comercial"
+        },
+        {
+          "name": "Mark up (complejidad, horarios)"
+        },
+        {
+          "name": "Descuento volumen"
+        }
+      ],
+      "rubro": [
+        {
+          "name": "Plataformas y licencias"
+        },
+        {
+          "name": "Infraestructura y cloud"
+        },
+        {
+          "name": "Consumo variable (metering)"
+        },
+        {
+          "name": "Implementacion e integracion"
+        },
+        {
+          "name": "Soporte y gestion del servicio (Run)"
+        },
+        {
+          "name": "Seguridad y cumplimiento"
+        },
+        {
+          "name": "Human in the Loop (HITL)"
+        },
+        {
+          "name": "Otros"
+        }
+      ],
+      "servicio": [
+        {
+          "name": "Energía"
+        },
+        {
+          "name": "Agua"
+        },
+        {
+          "name": "Gas"
+        },
+        {
+          "name": "Aseo y Cafeteria"
+        },
+        {
+          "name": "Arriendo"
+        },
+        {
+          "name": "Vigilancia"
+        },
+        {
+          "name": "Mantenimiento"
+        }
+      ],
+      "tipocliente": [
+        {
+          "name": "Grupo Aval"
+        },
+        {
+          "name": "No Grupo Aval"
+        }
+      ],
+      "tipocobro": [
+        {
+          "name": "Unitario"
+        },
+        {
+          "name": "Total"
+        }
+      ],
+      "unidadmedida": [
+        {
+          "name": "FTE"
+        },
+        {
+          "name": "Volumen"
+        }
+      ]
+    },
+    "key": "lv",
+    "name": "GN-LV"
+  },
+  "sheets": [],
+  "version_id": "000e36a9-f6d4-42c7-89f1-af32450b80a9"
+}

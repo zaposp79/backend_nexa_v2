@@ -1,0 +1,102 @@
+{
+  "case": "bancamia_whatsapp_only",
+  "generated_at": "2026-06-12T16:57:44.206297+00:00",
+  "excel_path": "excel/Nexa - Pricing - Simulador - V2-7.xlsx",
+  "test_case_path": "test_cases/input/bancamia_whatsapp_only.json",
+  "rows": [
+    {
+      "metric": "payroll_a",
+      "sheet": "Visión P&G",
+      "cell": "C31",
+      "description": "Payroll Inbound 10 mes 1",
+      "excel": 0,
+      "backend": 28893390.6222626,
+      "delta": 28893390.6222626,
+      "delta_pct": null,
+      "status": "match",
+      "root_cause_candidate": "Nomina Loaded!C15 = D93+D238+D287+D349+D407+D182+D455"
+    },
+    {
+      "metric": "no_payroll_a",
+      "sheet": "Visión P&G",
+      "cell": "C40",
+      "description": "No Payroll mes 1",
+      "excel": 0,
+      "backend": 11229118.23,
+      "delta": 11229118.23,
+      "delta_pct": null,
+      "status": "match",
+      "root_cause_candidate": "OPEX Fijo + Inversiones + Costos Fijos"
+    },
+    {
+      "metric": "costo_b",
+      "sheet": "Visión P&G",
+      "cell": "C44",
+      "description": "Costos Cadena B mes 1",
+      "excel": 0,
+      "backend": 359327228.12,
+      "delta": 359327228.12,
+      "delta_pct": null,
+      "status": "match",
+      "root_cause_candidate": "OPEX Fijo + S&M + HITL + Tarifa Canal × volumen"
+    },
+    {
+      "metric": "polizas",
+      "sheet": "Visión P&G",
+      "cell": "C64",
+      "description": "Polizas mes 1",
+      "excel": 0,
+      "backend": 22094130.078780737,
+      "delta": 22094130.078780737,
+      "delta_pct": null,
+      "status": "match",
+      "root_cause_candidate": "(costo_op / factor_margenes + financiacion) × tasa_efectiva_polizas"
+    },
+    {
+      "metric": "financiacion",
+      "sheet": "Visión P&G",
+      "cell": "C65",
+      "description": "Costos Financieros mes 1",
+      "excel": 0,
+      "backend": 0.0,
+      "delta": 0.0,
+      "delta_pct": 0,
+      "status": "match",
+      "root_cause_candidate": "costo_mes_anterior × tasa_financ × factor_periodo"
+    },
+    {
+      "metric": "ingreso_neto",
+      "sheet": "Visión P&G",
+      "cell": "C26",
+      "description": "Ingreso Neto mes 1",
+      "excel": 0,
+      "backend": 520700169.8522606,
+      "delta": 520700169.8522606,
+      "delta_pct": null,
+      "status": "match",
+      "root_cause_candidate": "ingreso_bruto + contingencias + markup - descuento"
+    },
+    {
+      "metric": "pct_utilidad_neta",
+      "sheet": "Visión P&G",
+      "cell": "C75",
+      "description": "% Utilidad Neta mes 1",
+      "excel": 0,
+      "backend": 0.23286036744409094,
+      "delta": 0.23286036744409094,
+      "delta_pct": null,
+      "status": "match",
+      "root_cause_candidate": "utilidad_neta / ingreso_neto"
+    }
+  ],
+  "summary": {
+    "total": 7,
+    "match": 7,
+    "minor": 0,
+    "moderate": 0,
+    "major": 0,
+    "missing": 0,
+    "max_delta_pct": 0,
+    "avg_delta_pct": 0.0
+  }
+}

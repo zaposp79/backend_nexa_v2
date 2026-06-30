@@ -1,0 +1,21 @@
+{
+  "original_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/bancamia_cobranzas.json",
+  "migration_date": "2026-05-21T18:08:57.490554+00:00",
+  "pollution_fields_removed": [],
+  "pollution_fields_count": 0,
+  "clean_fields": [
+    "panel_de_control",
+    "perfiles_cadena_a",
+    "parametros_nomina",
+    "parametros_no_payroll",
+    "parametros_cadena_b",
+    "parametros_cadena_c",
+    "parametros_calculo",
+    "validaciones"
+  ],
+  "clean_fields_count": 8,
+  "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_cobranzas.json",
+  "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_cobranzas.expected.json",
+  "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_cobranzas.audit.json",
+  "status": "MIGRATED_PHASE_55"
+}

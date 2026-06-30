@@ -1,0 +1,27 @@
+{
+  "original_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/excel_v24_canonical_bancamia.json",
+  "migration_date": "2026-05-21T18:08:57.495183+00:00",
+  "pollution_fields_removed": [
+    "_comment",
+    "_scenario",
+    "_purpose",
+    "_k50_derivation",
+    "_k50_detail",
+    "_l50_derivation",
+    "_excel_smmlv",
+    "_parametrization_agente_basico",
+    "_note"
+  ],
+  "pollution_fields_count": 9,
+  "clean_fields": [
+    "panel_de_control",
+    "condiciones_cadena_a",
+    "condiciones_cadena_b",
+    "condiciones_cadena_c"
+  ],
+  "clean_fields_count": 4,
+  "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/excel_v24_canonical_bancamia.json",
+  "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/excel_v24_canonical_bancamia.expected.json",
+  "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/excel_v24_canonical_bancamia.audit.json",
+  "status": "MIGRATED_PHASE_55"
+}

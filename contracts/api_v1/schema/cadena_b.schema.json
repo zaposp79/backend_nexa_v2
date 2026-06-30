@@ -1,0 +1,211 @@
+{
+  "$defs": {
+    "CanalCadenaBV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "costo_escalamiento": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Costo Escalamiento",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "opex_fijo": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Opex Fijo",
+          "type": "number"
+        },
+        "pct_escalamiento": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Escalamiento",
+          "type": "number"
+        },
+        "producto": {
+          "default": "",
+          "title": "Producto",
+          "type": "string"
+        },
+        "tarifa_unitaria": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Tarifa Unitaria",
+          "type": "number"
+        },
+        "volumen_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Volumen Mensual",
+          "type": "number"
+        }
+      },
+      "title": "CanalCadenaBV1",
+      "type": "object"
+    },
+    "DispositivoSMV1": {
+      "additionalProperties": false,
+      "properties": {
+        "cantidad": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Cantidad",
+          "type": "number"
+        },
+        "costo_unitario": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Costo Unitario",
+          "type": "number"
+        },
+        "meses_amortizacion": {
+          "default": 1,
+          "maximum": 360,
+          "minimum": 1,
+          "title": "Meses Amortizacion",
+          "type": "integer"
+        },
+        "tipo": {
+          "default": "",
+          "title": "Tipo",
+          "type": "string"
+        }
+      },
+      "title": "DispositivoSMV1",
+      "type": "object"
+    },
+    "ItemOpexConsumoV1": {
+      "additionalProperties": false,
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "cantidad": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Cantidad",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "producto": {
+          "default": "",
+          "title": "Producto",
+          "type": "string"
+        },
+        "tipo_cobro": {
+          "default": "Unitario",
+          "title": "Tipo Cobro",
+          "type": "string"
+        },
+        "valor_unitario": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Valor Unitario",
+          "type": "number"
+        }
+      },
+      "title": "ItemOpexConsumoV1",
+      "type": "object"
+    },
+    "MiembroEquipoSMV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "pct_dedicacion": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Dedicacion",
+          "type": "number"
+        },
+        "rol": {
+          "default": "",
+          "title": "Rol",
+          "type": "string"
+        }
+      },
+      "title": "MiembroEquipoSMV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "amortizar_dispositivos_sm": {
+      "default": true,
+      "title": "Amortizar Dispositivos Sm",
+      "type": "boolean"
+    },
+    "canales": {
+      "items": {
+        "$ref": "#/$defs/CanalCadenaBV1"
+      },
+      "title": "Canales",
+      "type": "array"
+    },
+    "dispositivos_sm": {
+      "items": {
+        "$ref": "#/$defs/DispositivoSMV1"
+      },
+      "title": "Dispositivos Sm",
+      "type": "array"
+    },
+    "equipo_sm": {
+      "items": {
+        "$ref": "#/$defs/MiembroEquipoSMV1"
+      },
+      "title": "Equipo Sm",
+      "type": "array"
+    },
+    "fte_equipo_sm": {
+      "default": 1.0,
+      "minimum": 0.0,
+      "title": "Fte Equipo Sm",
+      "type": "number"
+    },
+    "inversion_plataforma": {
+      "default": 0.0,
+      "minimum": 0.0,
+      "title": "Inversion Plataforma",
+      "type": "number"
+    },
+    "opex_consumo_variable": {
+      "items": {
+        "$ref": "#/$defs/ItemOpexConsumoV1"
+      },
+      "title": "Opex Consumo Variable",
+      "type": "array"
+    }
+  },
+  "title": "CadenaBRequestV1",
+  "type": "object"
+}

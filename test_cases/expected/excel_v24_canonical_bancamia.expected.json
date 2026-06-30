@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "_comment": "Bancamia Cobranzas - 12 meses - fixture canonico 1:1 con Excel Simulador V2-4",
+    "_scenario": "3 perfiles Cadena A (WhatsApp 6FTE + Correo 10FTE + WebChat 10FTE), Cadena B completa con S&M y HITL",
+    "_purpose": "Golden fixture para Excel parity certification. Inputs calibrados para 0% PyG match + K50 exacto",
+    "_k50_derivation": "K50 = vol_cadena_a(WA) + vol_cadena_a(Correo) + vol_cadena_a(WebChat) = 4521.89 + 13 + 0 = 4534.89",
+    "_k50_detail": {
+      "K42_WhatsApp": "J17*N17 + J30*N30 = 5516.89*0.8187 + 5*1.0 = 4516.89 + 5 = 4521.89",
+      "K44_Correo": "J18*N18 + J32*N32 = 1000*0 + 13*1.0 = 13.0",
+      "K45_WebChat": "J19*N19 = 1000*0 = 0.0",
+      "K50": "4521.89 + 13.0 + 0.0 = 4534.890080"
+    },
+    "_l50_derivation": "L50 = 1000 + 1000 + 1000 = 3000 (volumenes automation Cadena B)",
+    "_excel_smmlv": 1750905,
+    "_parametrization_agente_basico": 2100000,
+    "_note": "salario_base en perfiles es override explicito del usuario (no SMMLV). Calibrado para match exacto del Excel"
+  },
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.494981+00:00"
+}

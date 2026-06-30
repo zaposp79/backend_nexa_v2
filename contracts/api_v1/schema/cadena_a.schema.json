@@ -1,0 +1,234 @@
+{
+  "$defs": {
+    "CargoAdicionalV1": {
+      "additionalProperties": false,
+      "description": "Detalle del recurso humano adicional de un escenario de Cadena A.",
+      "properties": {
+        "cargo": {
+          "title": "Cargo",
+          "type": "string"
+        },
+        "ratio": {
+          "minimum": 0.0,
+          "title": "Ratio",
+          "type": "number"
+        },
+        "salario_base": {
+          "minimum": 0.0,
+          "title": "Salario Base",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cargo",
+        "salario_base",
+        "ratio"
+      ],
+      "title": "CargoAdicionalV1",
+      "type": "object"
+    },
+    "DetalleRecursoHumanoV1": {
+      "additionalProperties": false,
+      "description": "Salario y comisión editables usados por los cálculos de Cadena A.",
+      "properties": {
+        "cargo": {
+          "title": "Cargo",
+          "type": "string"
+        },
+        "comisiones": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Comisiones",
+          "type": "number"
+        },
+        "salario_base": {
+          "minimum": 0.0,
+          "title": "Salario Base",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cargo",
+        "salario_base"
+      ],
+      "title": "DetalleRecursoHumanoV1",
+      "type": "object"
+    },
+    "PerfilCadenaAV1": {
+      "additionalProperties": false,
+      "description": "One operator profile (frozen).",
+      "properties": {
+        "canal": {
+          "default": "",
+          "title": "Canal",
+          "type": "string"
+        },
+        "cargos_adicionales": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "$ref": "#/$defs/CargoAdicionalV1"
+            },
+            {
+              "items": {
+                "$ref": "#/$defs/CargoAdicionalV1"
+              },
+              "type": "array"
+            }
+          ],
+          "default": 0.0,
+          "title": "Cargos Adicionales"
+        },
+        "comision_pct": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Comision Pct",
+          "type": "number"
+        },
+        "dias_cap_inicial": {
+          "default": 10,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "Dias Cap Inicial",
+          "type": "integer"
+        },
+        "dias_cap_rotacion": {
+          "default": 10,
+          "maximum": 365,
+          "minimum": 0,
+          "title": "Dias Cap Rotacion",
+          "type": "integer"
+        },
+        "fte": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Fte",
+          "type": "number"
+        },
+        "fte_soporte_overrides": {
+          "additionalProperties": {
+            "type": "number"
+          },
+          "title": "Fte Soporte Overrides",
+          "type": "object"
+        },
+        "incluye_crucero": {
+          "default": false,
+          "title": "Incluye Crucero",
+          "type": "boolean"
+        },
+        "incluye_examenes": {
+          "default": true,
+          "title": "Incluye Examenes",
+          "type": "boolean"
+        },
+        "incluye_seguridad": {
+          "default": false,
+          "title": "Incluye Seguridad",
+          "type": "boolean"
+        },
+        "modalidad": {
+          "default": "Inbound",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "modelo_cobro": {
+          "default": "Fijo FTE",
+          "enum": [
+            "Fijo FTE",
+            "Variable",
+            "Híbrido",
+            "Hibrido",
+            "Volumen",
+            "Por Volumen",
+            "Por Comisión",
+            "Por Comision"
+          ],
+          "title": "Modelo Cobro",
+          "type": "string"
+        },
+        "no_payroll_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "No Payroll Mensual",
+          "type": "number"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "pct_fijo": {
+          "default": 1.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Fijo",
+          "type": "number"
+        },
+        "pct_presencia": {
+          "default": 1.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Presencia",
+          "type": "number"
+        },
+        "rol": {
+          "default": "Agente Basico",
+          "title": "Rol",
+          "type": "string"
+        },
+        "salario_base": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Salario Base"
+        },
+        "tmo_segundos": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Tmo Segundos",
+          "type": "number"
+        },
+        "vol_cadena_a_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Vol Cadena A Mensual",
+          "type": "number"
+        }
+      },
+      "title": "PerfilCadenaAV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Cadena A configuration (frozen).",
+  "properties": {
+    "detalles_recursos_humanos": {
+      "items": {
+        "$ref": "#/$defs/DetalleRecursoHumanoV1"
+      },
+      "title": "Detalles Recursos Humanos",
+      "type": "array"
+    },
+    "perfiles": {
+      "items": {
+        "$ref": "#/$defs/PerfilCadenaAV1"
+      },
+      "title": "Perfiles",
+      "type": "array"
+    }
+  },
+  "title": "CadenaARequestV1",
+  "type": "object"
+}

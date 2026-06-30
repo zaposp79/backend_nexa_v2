@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "_comment": "Bancamia Cobranzas - 12 meses - inputs extra\u00eddos del Excel Simulador V2-4",
+    "_scenario": "3 perfiles Cadena A (WhatsApp 6FTE + Correo 10FTE + WebChat 10FTE), Cadena B con opex agregado",
+    "_excel_smmlv": 1750905,
+    "_backend_smmlv": 2100000,
+    "_expected_discrepancy": "SMMLV 2025 vs 2026 causar\u00e1 diferencias en salarios de soporte"
+  },
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.488478+00:00"
+}

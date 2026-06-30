@@ -1,0 +1,36 @@
+# config/business_rules/operaciones.yaml
+# =========================================
+# GAP-RULES-1: Constantes operativas del Contact Center.
+# Fuente: Excel V2-5 — Hoja Maestra Escenarios / Vision Tarifas_Modelo_Cobro.
+#
+# Estas constantes definen la jornada laboral colombiana para el cálculo de
+# tarifa por hora loggeada y tarifa por hora pagada (columnas C21-C23 Hoja Maestra).
+#
+# Restricción: NO modificar sin validación contra el Excel V2-5.
+# Toda constante aquí debe tener trazabilidad a una celda del Excel.
+
+# Jornada laboral semanal en horas (Resolución 2400/1979 Colombia = 48h; convenio BPO = 42h)
+# Fuente: Excel — denominador de "tarifa por hora loggeada"
+horas_semanales: 42
+
+# Semanas por mes (365 días / 12 meses / 7 días = 4.345 semanas/mes)
+# Fuente: Excel — multiplicador para convertir costo mensual en horas totales del mes
+semanas_al_mes: 4.33
+
+# Breaks operativos que reducen tiempo loggeado efectivo (en minutos por día)
+# Estos NO se incluyen en las horas loggeadas facturables.
+# Fuente: Excel V2-5 — Hoja Maestra Escenarios R13-R18, columna C10 'Tiempo (min)'.
+breaks_diarios_min: 30       # breaks alimentación y descanso reglamentarios (HM R13C10=30)
+formacion_min: 20            # capacitaciones/formación al día (HM R14C10=20)
+deslogueos_min: 5            # tiempo de conexión/desconexión del sistema (HM R15C10=5)
+coaching_min: 5              # sesiones de coaching y retroalimentación (HM R16C10=5)
+pausa_activa_min: 5          # pausas activas obligatorias (Resolución 2646/2008) (HM R17C10=5)
+# Total improductivo = 65 min/día (HM R18C10=65 = 30+20+5+5+5)
+
+# Días hábiles por semana (convención BPO Colombia — semana de 5 días laborables)
+# Fuente: Excel V2-5 — denominador de tarifa hora loggeada/pagada.
+# 42h/semana / 5 días = 8.4h/día base de cálculo tarifa.
+dias_habiles_semana: 5
+
+# Horas loggeadas por día = (horas_diarias × 60 - total_improductivo_min) / 60
+# Con jornada 42h/5días = 8.4h/día: (8.4×60 - 65) / 60 = 7.317h loggeadas/día

@@ -1,0 +1,146 @@
+{
+  "generated_at": "2026-06-11T19:10:55.948139+00:00",
+  "schema_version": "1.0",
+  "description": "Hash SHA256 de cada master JSON activo. Verificación de inmutabilidad de storage.",
+  "files": {
+    "hr": {
+      "6506b1fa-b0d2-4bf9-9e87-d27f3f4fc73b.json": {
+        "sha256": "a08f553b05344bc3024cbfe52bd8c9d2ea9abee3f9742383a7fc3f0d6fb38732",
+        "size_bytes": 111895
+      },
+      "_versions": [
+        {
+          "filename": "HR_productiva_2026-05-11-09-52-29.xlsx",
+          "is_active": false,
+          "sheet_count": 15,
+          "total_rows": 836,
+          "uploaded_at": "2026-05-27T21:17:56.752385Z",
+          "version_id": "2236cdcf-7ed0-4894-a20d-c4519c211170"
+        },
+        {
+          "filename": "Nexa - Pricing - Simulador - V2-7.xlsx",
+          "is_active": false,
+          "sheet_count": 23,
+          "total_rows": 0,
+          "uploaded_at": "2026-05-27T18:33:00Z",
+          "version_id": "v2-7",
+          "path": "../v2-7/hr.json"
+        },
+        {
+          "filename": "HR_productiva_2026-05-11-09-52-29.xlsx",
+          "is_active": false,
+          "sheet_count": 15,
+          "total_rows": 836,
+          "uploaded_at": "2026-05-29T11:47:57.152050Z",
+          "version_id": "ca510262-63a1-4e51-af0f-d30384fa6c6a"
+        },
+        {
+          "filename": "HR_productiva_2026-06-10.xlsx",
+          "is_active": true,
+          "sheet_count": 10,
+          "total_rows": 982,
+          "uploaded_at": "2026-06-10T21:47:10Z",
+          "version_id": "6506b1fa-b0d2-4bf9-9e87-d27f3f4fc73b"
+        }
+      ]
+    },
+    "gn": {
+      "60031c65-c3db-45cf-ae4f-a24658322aa1.json": {
+        "sha256": "bc24b5ca5f9cb698b1c435466e6689b9488a32d8c37462fae21f904a942d2b85",
+        "size_bytes": 9494
+      },
+      "_versions": [
+        {
+          "filename": "GN_productiva_2026-05-11-10-25-28.xlsx",
+          "is_active": false,
+          "sheet_count": 1,
+          "total_rows": 26,
+          "uploaded_at": "2026-05-27T15:16:49.797166Z",
+          "version_id": "ce83dd6c-abd4-4092-9bf7-6bc4d5c87aaf"
+        },
+        {
+          "filename": "Nexa - Pricing - Simulador - V2-7.xlsx",
+          "is_active": false,
+          "sheet_count": 23,
+          "total_rows": 0,
+          "uploaded_at": "2026-05-27T18:33:00Z",
+          "version_id": "v2-7",
+          "path": "../v2-7/gn.json"
+        },
+        {
+          "filename": "GN_productiva_2026-06-10.xlsx",
+          "is_active": true,
+          "sheet_count": 0,
+          "total_rows": 0,
+          "uploaded_at": "2026-06-10T21:49:50Z",
+          "version_id": "60031c65-c3db-45cf-ae4f-a24658322aa1"
+        }
+      ]
+    },
+    "op": {
+      "14da70ab-b199-4587-8793-34b8a872ab66.json": {
+        "sha256": "db85a532b4cc25b5a7d11ff03ca76abf5b0913d0d608d5dfa9872ccf05f3b4b7",
+        "size_bytes": 23769
+      },
+      "_versions": [
+        {
+          "version_id": "3dddbdea-5813-4b43-b80b-41cd9e04bc64",
+          "filename": "OP_productiva_2026-05-11-10-35-25.xlsx",
+          "uploaded_at": "2026-05-27T15:16:56.561348Z",
+          "is_active": false,
+          "sheet_count": 8,
+          "total_rows": 191
+        },
+        {
+          "version_id": "v2-7",
+          "filename": "Nexa - Pricing - Simulador - V2-7.xlsx",
+          "uploaded_at": "2026-05-27T18:33:00Z",
+          "is_active": false,
+          "sheet_count": 23,
+          "total_rows": 0,
+          "path": "../v2-7/op.json"
+        },
+        {
+          "version_id": "c4d56710-5b04-47a9-8f8b-511e70930a15",
+          "filename": "OP_productiva_2026-05-11-10-35-25.xlsx",
+          "uploaded_at": "2026-05-29T11:06:26.426664Z",
+          "is_active": false,
+          "sheet_count": 10,
+          "total_rows": 197
+        },
+        {
+          "version_id": "ae84a534-862f-4a84-9c0c-89d287e232ea",
+          "filename": "OP_productiva_2026-05-11-10-35-25.xlsx",
+          "uploaded_at": "2026-05-29T11:32:03.011575Z",
+          "is_active": false,
+          "sheet_count": 10,
+          "total_rows": 198
+        },
+        {
+          "version_id": "485e7a86-9fae-4d21-a7e2-90f8499b60e2",
+          "filename": "OP_productiva_2026-05-11-10-35-25.xlsx",
+          "uploaded_at": "2026-05-29T11:32:12.060655Z",
+          "is_active": false,
+          "sheet_count": 11,
+          "total_rows": 204
+        },
+        {
+          "version_id": "e46e2e77-8176-49e9-bdcd-57a7015257aa",
+          "filename": "OP_productiva_2026-05-11-10-35-25.xlsx",
+          "uploaded_at": "2026-05-29T11:42:56.832859Z",
+          "is_active": false,
+          "sheet_count": 11,
+          "total_rows": 204
+        },
+        {
+          "version_id": "14da70ab-b199-4587-8793-34b8a872ab66",
+          "filename": "OP_productiva_2026-06-10.xlsx",
+          "uploaded_at": "2026-06-10T22:33:59Z",
+          "is_active": true,
+          "sheet_count": 11,
+          "total_rows": 190
+        }
+      ]
+    }
+  }
+}

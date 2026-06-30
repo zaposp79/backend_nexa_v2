@@ -1,0 +1,32 @@
+# config/business_rules/margenes.yaml
+# =====================================
+# GAP-RULES-1: Márgenes mínimos y objetivos por línea de negocio.
+# Fuente: Excel V2-5 — hoja "Rot, Ausent y Rentabilidad", sección "Rentabilidad Por Servicio".
+#
+# Estos valores ya se sirven dinámicamente desde storage/parametrization/
+# a través de IParametrizationProvider.get_margen_minimo(linea_negocio).
+#
+# NOTA: Los valores en storage/parametrization son la fuente autoritativa.
+# Este archivo es referencia de configuración estática para auditoría y documentación.
+# Para modificar márgenes activos, actualizar storage/parametrization/hr/{version}.json.
+#
+# Restricción: NO hardcodear estos valores en calculators/*.
+# Consumir siempre via parametrizacion.get_margen_minimo(linea_negocio).
+
+margen_minimo_por_linea:
+  Cobranzas:          0.17    # Excel: Rot, Ausent y Rent. B29=0.17 (Mínimo)
+  Sac:                0.17    # Excel: B30=0.17
+  SAC:                0.17    # Alias (capitalización alternativa)
+  Ventas_multicanal:  0.17    # Excel: B31=0.17
+  SACO:               0.105   # Excel: B32=0.105
+  Plataformas:        0.14    # Excel: B33=0.14
+  Captura_de_datos:   0.3292  # Excel: B34=0.3292
+
+margen_objetivo_por_linea:
+  Cobranzas:          0.18    # Excel: C29=0.18 (Margen Objetivo)
+  Sac:                0.18    # Excel: C30=0.18
+  SAC:                0.18    # Alias
+  Ventas_multicanal:  0.18    # Excel: C31=0.18
+  SACO:               0.105   # Excel: C32=0.105
+  Plataformas:        0.15    # Excel: C33=0.15
+  Captura_de_datos:   0.3292  # Excel: C34=0.3292

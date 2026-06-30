@@ -1,0 +1,47 @@
+--- request.json.pre_v28_parity.bak	(V2-7 baseline)
++++ request.json	(Stage 1.5 Paso B applied — 14 commits)
+
+5a6,7
+>           "antiguedad": "Cliente Antiguo",
+>           "periodo_pago": 30,
+11c13
+<           "crucero": 8422,
+---
+>           "crucero": 8408,
+14,15c16,17
+<           "pct_rotacion": 0.085,
+<           "cons_costo_de_financiacion": true,
+---
+>           "pct_rotacion": 0.0815,
+>           "cons_costo_de_financiacion": false,
+23c25
+<           "tasa_ica": 0.0097,
+---
+>           "tasa_ica": 0.01,
+38c40
+<                "pct_poliza": 0.0062,
+---
+>                "pct_poliza": 0.0063,
+46c48
+<                "pct_poliza": 0.0119,
+---
+>                "pct_poliza": 0.0128,
+54c56
+<                "pct_poliza": 0.0119,
+---
+>                "pct_poliza": 0.0128,
+109c111,112
+<           "margen_objetivo": 0.18,
+---
+>           "margen_objetivo": 0.21,
+>           "margen_objetivo_cadena_b": 0.30,
+111c114
+<                "valor": 0.025,
+---
+>                "valor": 0,
+116c119
+<                "valor": 0.04,
+---
+>                "valor": 0,
+124a128
+>           "descuento_volumen": 0,

@@ -1,0 +1,200 @@
+{
+  "phase": "5.5",
+  "migration_date": "2026-05-21T18:08:57.495404+00:00",
+  "total_files": 8,
+  "successful": 8,
+  "failed": 0,
+  "total_pollution_fields_removed": 50,
+  "results": [
+    {
+      "file": "bancamia_whatsapp_only.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_comment",
+        "_excel_facturacion_esperada",
+        "_excel_payroll_mes1",
+        "_excel_polizas_mes1",
+        "_excel_ica_mes1",
+        "_excel_pct_utilidad_steady"
+      ],
+      "pollution_fields_count": 6,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ],
+      "clean_fields_count": 4,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_whatsapp_only.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_whatsapp_only.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_whatsapp_only.audit.json"
+    },
+    {
+      "file": "bancamia_excel_match.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_comment",
+        "_scenario",
+        "_excel_smmlv",
+        "_backend_smmlv",
+        "_expected_discrepancy"
+      ],
+      "pollution_fields_count": 5,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ],
+      "clean_fields_count": 4,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_excel_match.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_excel_match.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_excel_match.audit.json"
+    },
+    {
+      "file": "bancamia_canonical_k50.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_comment",
+        "_scenario",
+        "_k50_expected",
+        "_l50_expected",
+        "_part_a_expected",
+        "_part_b_expected",
+        "_cts_a_expected",
+        "_cts_b_expected",
+        "_cts_ponderado_expected",
+        "_source",
+        "_note",
+        "_excel_smmlv",
+        "_backend_smmlv",
+        "_expected_discrepancy"
+      ],
+      "pollution_fields_count": 14,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ],
+      "clean_fields_count": 4,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_canonical_k50.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_canonical_k50.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_canonical_k50.audit.json"
+    },
+    {
+      "file": "bancamia_cobranzas.json",
+      "status": "SUCCESS",
+      "pollution_fields": [],
+      "pollution_fields_count": 0,
+      "clean_fields": [
+        "panel_de_control",
+        "perfiles_cadena_a",
+        "parametros_nomina",
+        "parametros_no_payroll",
+        "parametros_cadena_b",
+        "parametros_cadena_c",
+        "parametros_calculo",
+        "validaciones"
+      ],
+      "clean_fields_count": 8,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_cobranzas.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_cobranzas.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_cobranzas.audit.json"
+    },
+    {
+      "file": "bancamia_correo_only.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_comment",
+        "_excel_payroll_a",
+        "_excel_no_payroll_a",
+        "_excel_cadena_b_total",
+        "_excel_comp_fijo_b",
+        "_excel_comp_var_b",
+        "_excel_facturacion"
+      ],
+      "pollution_fields_count": 7,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ],
+      "clean_fields_count": 4,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_correo_only.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_correo_only.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_correo_only.audit.json"
+    },
+    {
+      "file": "bancamia_webchat_only.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_comment",
+        "_excel_payroll_a",
+        "_excel_no_payroll_a",
+        "_excel_cadena_b_total",
+        "_excel_comp_fijo_b",
+        "_excel_comp_var_b",
+        "_excel_facturacion"
+      ],
+      "pollution_fields_count": 7,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ],
+      "clean_fields_count": 4,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/bancamia_webchat_only.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/bancamia_webchat_only.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/bancamia_webchat_only.audit.json"
+    },
+    {
+      "file": "seguros_adl_cobranzas.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_descripcion",
+        "_nota"
+      ],
+      "pollution_fields_count": 2,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c",
+        "validaciones"
+      ],
+      "clean_fields_count": 5,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/seguros_adl_cobranzas.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/seguros_adl_cobranzas.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/seguros_adl_cobranzas.audit.json"
+    },
+    {
+      "file": "excel_v24_canonical_bancamia.json",
+      "status": "SUCCESS",
+      "pollution_fields": [
+        "_comment",
+        "_scenario",
+        "_purpose",
+        "_k50_derivation",
+        "_k50_detail",
+        "_l50_derivation",
+        "_excel_smmlv",
+        "_parametrization_agente_basico",
+        "_note"
+      ],
+      "pollution_fields_count": 9,
+      "clean_fields": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ],
+      "clean_fields_count": 4,
+      "input_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/input/excel_v24_canonical_bancamia.json",
+      "expected_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/expected/excel_v24_canonical_bancamia.expected.json",
+      "audit_file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/test_cases/audit/excel_v24_canonical_bancamia.audit.json"
+    }
+  ]
+}

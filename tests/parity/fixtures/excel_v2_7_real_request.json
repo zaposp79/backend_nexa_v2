@@ -1,0 +1,204 @@
+{
+  "panel_de_control": {
+    "cliente": "AMERICAS BUSINESS PROCESS SERVICES S.A",
+    "tipo_cliente": "No Grupo Aval",
+    "linea_negocio": "Captura de Datos",
+    "ciudad": "Bogota",
+    "sede": "Bogota - Toberin",
+    "fecha_inicio": "2026-06-01",
+    "meses_contrato": 12,
+    "indexacion_mes_aplicacion": 13,
+    "margen": 0.21,
+    "margen_b": 0.3,
+    "margen_c": 0.2,
+    "op_cont": 0.0,
+    "com_cont": 0.0,
+    "markup": 0.0,
+    "descuento": 0.0,
+    "periodo_pago_dias": 30,
+    "activa_financiacion": false,
+    "antiguedad_cliente": "Cliente Antiguo",
+    "componente_indexacion_humano": "IPC",
+    "componente_indexacion_tecnologico": "IPC",
+    "tasa_ica": 0.01,
+    "tasa_gmf": 0.004,
+    "tasa_mensual_financ": 0.0153,
+    "pct_rotacion": 0.085,
+    "pct_ausentismo": 0.065,
+    "imprevistos": 0.0,
+    "tarifa_diaria_capacitacion": 20000,
+    "tarifa_crucero": 8408,
+    "pct_examen_anual": 0.28,
+    "horas_formacion_mensual": 8,
+    "cadenas_activas": {
+      "cadena_a": true,
+      "cadena_b": true,
+      "cadena_c": true
+    }
+  },
+  "condiciones_cadena_a": {
+    "perfiles": [
+      {
+        "nombre": "Inbound 25",
+        "rol": "Agente Basico",
+        "canal": "Voz",
+        "modalidad": "Inbound",
+        "fte": 25,
+        "pct_presencia": 0.6,
+        "vol_cadena_a_mensual": 19820.375335120643,
+        "comision_pct": 0.1,
+        "salario_base": 1750905,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": true,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "modelo_cobro": "Hibrido",
+        "pct_fijo": 0.7,
+        "no_payroll_mensual": 0.0,
+        "opex_fijo": {
+          "items": [
+            {"concepto": "Acceso a internet instalaciones Nexa", "tipo": "tecnología", "costo": 675000, "costo_totalizado": true},
+            {"concepto": "Perfil Agente Blending Telefónico Licencia CX1 Nombrada", "tipo": "tecnología", "costo": 4510000, "costo_totalizado": true},
+            {"concepto": "Worki", "tipo": "tecnología", "costo": 450000, "costo_totalizado": true},
+            {"concepto": "Speech Analytics", "tipo": "tecnología", "costo": 637646.625, "costo_totalizado": true},
+            {"concepto": "Soporte y Mantenimiento plataforma CCaaS (7x24x365)", "tipo": "tecnología", "costo": 451250, "costo_totalizado": true},
+            {"concepto": "Licencia por usuario", "tipo": "tecnología", "costo": 604750, "costo_totalizado": true},
+            {"concepto": "Licencias Agente Blending Telefónico CX1 Nombrada", "tipo": "tecnología", "costo": 5231600, "costo_totalizado": true},
+            {"concepto": "Costo soporte y mantenimiento genesys", "tipo": "tecnología", "costo": 3500, "costo_totalizado": true},
+            {"concepto": "Modulo de soporte y mantenimiento", "tipo": "tecnología", "costo": 523450, "costo_totalizado": true},
+            {"concepto": "troncal S&P", "tipo": "tecnología", "costo": 1200000, "costo_totalizado": true},
+            {"concepto": "Modulo reporteria genesys", "tipo": "tecnología", "costo": 791700, "costo_totalizado": true}
+          ]
+        },
+        "inversiones": [
+          {"concepto": "Compra de PC escritorio M70s - Asesores", "precio": 3508260, "meses_amortizacion": 60, "cantidad": 25.78185328185328},
+          {"concepto": "Diadema JABRA EVOLVE 2020", "precio": 119952, "meses_amortizacion": 24, "cantidad": 25},
+          {"concepto": "Licencia Nestkope (SWG filtro)", "precio": 3620.5, "meses_amortizacion": 1, "cantidad": 25.78185328185328},
+          {"concepto": "Soporte Licencia Netskope (SWG filtro)", "precio": 2440, "meses_amortizacion": 1, "cantidad": 25.78185328185328},
+          {"concepto": "Licencia EDR Sentinel One Enterprise", "precio": 4612, "meses_amortizacion": 1, "cantidad": 25.78185328185328},
+          {"concepto": "Soporte EDR Sentinel One Enterprise", "precio": 752, "meses_amortizacion": 1, "cantidad": 25.78185328185328},
+          {"concepto": "Licencia Office 365 E3", "precio": 95706, "meses_amortizacion": 1, "cantidad": 0.781853281853282}
+        ]
+      },
+      {
+        "nombre": "inboun Whatsapp",
+        "rol": "Agente Basico",
+        "canal": "WhatsApp",
+        "modalidad": "Inbound",
+        "fte": 15,
+        "pct_presencia": 0.6,
+        "vol_cadena_a_mensual": 10292.225200960785,
+        "comision_pct": 0.1,
+        "salario_base": 1750905,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": true,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "modelo_cobro": "Fijo FTE",
+        "pct_fijo": 1.0,
+        "no_payroll_mensual": 0.0,
+        "opex_fijo": {
+          "items": [
+            {"concepto": "Acceso a internet instalaciones Nexa", "tipo": "tecnología", "costo": 405000, "costo_totalizado": true},
+            {"concepto": "Perfil Agente Blending Telefónico Licencia CX1 Nombrada", "tipo": "tecnología", "costo": 2706000, "costo_totalizado": true},
+            {"concepto": "Worki", "tipo": "tecnología", "costo": 270000, "costo_totalizado": true},
+            {"concepto": "Speech Analytics", "tipo": "tecnología", "costo": 382587.975, "costo_totalizado": true},
+            {"concepto": "Soporte y Mantenimiento plataforma CCaaS (7x24x365)", "tipo": "tecnología", "costo": 270750, "costo_totalizado": true},
+            {"concepto": "Licencia por usuario", "tipo": "tecnología", "costo": 362850, "costo_totalizado": true}
+          ]
+        },
+        "inversiones": [
+          {"concepto": "Compra de PC escritorio M70s - Asesores", "precio": 3508260, "meses_amortizacion": 60, "cantidad": 15.46911196911197},
+          {"concepto": "Diadema JABRA EVOLVE 2020", "precio": 119952, "meses_amortizacion": 24, "cantidad": 15},
+          {"concepto": "Licencia Nestkope (SWG filtro)", "precio": 3620.5, "meses_amortizacion": 1, "cantidad": 15.46911196911197},
+          {"concepto": "Soporte Licencia Netskope (SWG filtro)", "precio": 2440, "meses_amortizacion": 1, "cantidad": 15.46911196911197},
+          {"concepto": "Licencia EDR Sentinel One Enterprise", "precio": 4612, "meses_amortizacion": 1, "cantidad": 15.46911196911197},
+          {"concepto": "Soporte EDR Sentinel One Enterprise", "precio": 752, "meses_amortizacion": 1, "cantidad": 15.46911196911197},
+          {"concepto": "Licencia Office 365 E3", "precio": 95706, "meses_amortizacion": 1, "cantidad": 0.46911196911196906}
+        ]
+      }
+    ],
+    "staff_config": [
+      {"nombre": "Director de cuentas", "activo": true},
+      {"nombre": "Director de performance", "activo": true},
+      {"nombre": "Jefe Comercial Regional", "activo": false},
+      {"nombre": "Analista profesional AFAC", "activo": false},
+      {"nombre": "Lider de Entrenamiento", "activo": true},
+      {"nombre": "Lider de Experiencia de Cliente y Performance", "activo": true},
+      {"nombre": "Lider de Planeación Operativa", "activo": true},
+      {"nombre": "Jefe de Operación", "activo": true},
+      {"nombre": "Works force", "activo": true},
+      {"nombre": "Reporting", "activo": true},
+      {"nombre": "GTR", "activo": true, "ratio_override": 200},
+      {"nombre": "Analista Prof. De Selección (Inicial)", "activo": true},
+      {"nombre": "Analista 1 de Reclutamiento (Inicial)", "activo": true},
+      {"nombre": "Analista Prof. De Selección (Rotación)", "activo": true},
+      {"nombre": "Analista 1 de Reclutamiento (Rotación)", "activo": true},
+      {"nombre": "Analista 2 Service Desk", "activo": true},
+      {"nombre": "Formadores", "activo": true},
+      {"nombre": "Monitor de Calidad", "activo": true},
+      {"nombre": "Supervisor", "activo": true},
+      {"nombre": "Validador", "activo": false},
+      {"nombre": "Aprendiz SENA", "activo": true},
+      {"nombre": "Inclusión", "activo": true},
+      {"nombre": "Especialista de Proyectos", "activo": true}
+    ]
+  },
+  "condiciones_cadena_b": {
+    "canales": [
+      {
+        "nombre": "WhatsApp Inbound",
+        "modalidad": "Inbound",
+        "producto": "WhatsApp",
+        "volumen_mensual": 15000.0,
+        "tarifa_unitaria": 183.0,
+        "pct_escalamiento": 0.0,
+        "costo_escalamiento": 0.0,
+        "vol_escalamiento": 1000.0,
+        "opex_fijo": 0.0,
+        "activo": true
+      }
+    ]
+  },
+  "condiciones_cadena_c": {
+    "canales": [
+      {
+        "nombre": "Voz Inbound Cadena C",
+        "modalidad": "Inbound",
+        "producto": "Voz",
+        "tarifa_unitaria": 200.0,
+        "volumen_mensual": 10000.0,
+        "activo": true,
+        "opex_fijo_integ": 13300000.0,
+        "opex_var_integ": 31120000.0,
+        "pct_escalamiento": 0.03,
+        "costo_escalamiento": 4121564.775
+      }
+    ],
+    "equipo_transversal": [
+      {"rol": "Product Owner / Service Owner", "activo": true, "pct_dedicacion": 0.60, "salario_cargado": 4284360.04832668},
+      {"rol": "Business Analyst / Process Analyst", "activo": true, "pct_dedicacion": 0.30, "salario_cargado": 4284360.04832668},
+      {"rol": "RPA Developer", "activo": true, "pct_dedicacion": 0.30, "salario_cargado": 4284360.04832668},
+      {"rol": "Data Engineer", "activo": true, "pct_dedicacion": 1.20, "salario_cargado": 4284360.04832668}
+    ],
+    "equipo_hitl": [
+      {"rol": "Conversation Analyst", "activado": true, "ratio": 560.0, "salario_cargado": 4284360.0},
+      {"rol": "Content/Knowledge Manager", "activado": true, "ratio": 200.0, "salario_cargado": 14249938.0},
+      {"rol": "QA", "activado": true, "ratio": 300.0, "salario_cargado": 4459007.0}
+    ],
+    "opex_dispositivos_por_persona": 1402000.0,
+    "inversion_anual": 188088589.26
+  },
+  "polizas": [
+    {"nombre": "Póliza de Seriedad", "activa": true, "pct_poliza": 0.005, "pct_atribuible": 0.1, "aplica_extension": false, "meses_extension": null, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}},
+    {"nombre": "Póliza de Cumplimiento", "activa": true, "pct_poliza": 0.0062, "pct_atribuible": 0.2, "aplica_extension": true, "meses_extension": 3, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}, "per_canal": true},
+    {"nombre": "Poliza de Salarios", "activa": true, "pct_poliza": 0.0119, "pct_atribuible": 0.1, "aplica_extension": true, "meses_extension": 24, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}, "per_canal": true},
+    {"nombre": "Poliza de Calidad", "activa": true, "pct_poliza": 0.0119, "pct_atribuible": 0.2, "aplica_extension": true, "meses_extension": 3, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}, "per_canal": true},
+    {"nombre": "Poliza de rc cruzada", "activa": true, "pct_poliza": 0.0275, "pct_atribuible": 0.4, "aplica_extension": false, "meses_extension": null, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}},
+    {"nombre": "poliza de IRF", "activa": true, "pct_poliza": 0.0275, "pct_atribuible": 0.1, "aplica_extension": false, "meses_extension": null, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}},
+    {"nombre": "Póliza de Responsabilidad", "activa": true, "pct_poliza": 0.0069, "pct_atribuible": 0.4, "aplica_extension": false, "meses_extension": null, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}},
+    {"nombre": "Comisión de Administración (1,18% sobre ventas Comercial-Operaciones)", "activa": true, "pct_poliza": 0.0118, "pct_atribuible": 1.0, "aplica_extension": false, "meses_extension": null, "cadenas": {"cadena_a": true, "cadena_b": true, "cadena_c": true}, "is_comision_administracion": true}
+  ]
+}

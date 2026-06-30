@@ -1,0 +1,57 @@
+{
+  "condiciones_cadena_a": {
+    "perfiles": [
+      {
+        "canal": "Voz",
+        "comision_pct": 0.0,
+        "dias_cap_inicial": 0,
+        "dias_cap_rotacion": 0,
+        "fte": 10.0,
+        "incluye_crucero": false,
+        "incluye_examenes": false,
+        "incluye_seguridad": false,
+        "modalidad": "Inbound",
+        "modelo_cobro": "Fijo FTE",
+        "no_payroll_mensual": 0.0,
+        "nombre": "Sac Inbound Voz",
+        "pct_fijo": 1.0,
+        "pct_presencia": 1.0,
+        "rol": "Agente Basico",
+        "salario_base": 1750905.0
+      }
+    ]
+  },
+  "condiciones_cadena_b": {
+    "canales": []
+  },
+  "condiciones_cadena_c": {},
+  "panel_de_control": {
+    "activa_financiacion": false,
+    "cadenas_activas": {
+      "cadena_a": true,
+      "cadena_b": false,
+      "cadena_c": false
+    },
+    "ciudad": "Bogotá",
+    "cliente": "BaselineCert",
+    "com_cont": 0.03,
+    "descuento": 0.0,
+    "fecha_inicio": "2026-01-01",
+    "imprevistos": 0.0,
+    "linea_negocio": "Sac",
+    "margen": 0.21,
+    "margen_b": 0.3,
+    "margen_c": 0.2,
+    "markup": 0.0,
+    "meses_contrato": 12,
+    "op_cont": 0.05,
+    "pct_ausentismo": 0.065,
+    "pct_rotacion": 0.085,
+    "periodo_pago_dias": 30,
+    "sede": "Bogota - Toberin",
+    "tasa_gmf": 0.004,
+    "tasa_ica": 0.01,
+    "tasa_mensual_financ": 0.0153,
+    "tipo_cliente": "No Grupo Aval"
+  }
+}

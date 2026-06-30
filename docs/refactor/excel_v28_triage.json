@@ -1,0 +1,2283 @@
+{
+  "by_label": {
+    "NEW_FUNCTION": 106,
+    "DROPPED_FUNCTION": 26,
+    "TRIVIAL_REWRITE": 16,
+    "LIKELY_LAYOUT_REORG": 3,
+    "CONSTANT_IN_FORMULA": 26
+  },
+  "per_sheet": {
+    "Condiciones Cadena A": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 65,
+        "example_coord": "G84",
+        "funcs_added": [
+          "OR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=IF(G$83<>\"\",E$19,0)",
+        "v28": "=IF($C84=TRUE,IF(OR($D84=$D$90,$D84=$D$91),((G$9+G$26+G$30+G$34)/G111)*'Panel de Control General'!$C$20,((G$9+G$26+G$30+G$34)/G111)),0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 15,
+        "example_coord": "E29",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "AND",
+          "INDEX",
+          "MATCH"
+        ],
+        "v27": "=IF(AND($D29=$D$35,$B$35=8,$C$35=TRUE,E$16<>\"\"),200,IF(AND($C29=TRUE,E$16<>\"\"),INDEX('Inputs de Nomina'!$C$110:$H$133,MATCH($D29,'Inputs de Nomina'!$B$110:$B$133,0),MATCH('Panel de Control General'!$C$5,'Inputs de Nomina'!$C$109:$H$109,0)),\"\"))",
+        "v28": "=IF(E28<>\"\",'Inputs de Nomina'!$C$4,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 13,
+        "example_coord": "G87",
+        "funcs_added": [
+          "IF",
+          "OR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(((($E$118*$E$119*(1-$E$120)*E17)*60)*50%)*2%)",
+        "v28": "=IF($C87=TRUE,IF(OR($D87=$D$90,$D87=$D$91),((G$9+G$26+G$30+G$34)/G114)*'Panel de Control General'!$C$20,((G$9+G$26+G$30+G$34)/G114)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "G95",
+        "funcs_added": [
+          "IF",
+          "OR"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(W41:W43)",
+        "v28": "=IF($C95=TRUE,IF(OR($D95=$D$90,$D95=$D$91),((G$9+G$26+G$30+G$34)/G122)*'Panel de Control General'!$C$20,((G$9+G$26+G$30+G$34)/G122)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E120",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "='Panel de Control General'!C19",
+        "v28": "=IF(AND($D120=$D$114,$B$87=8,$C$87=TRUE,E$8<>\"\"),200,INDEX('Inputs de Nomina'!$C$179:$H$202,MATCH($D120,'Inputs de Nomina'!$B$179:$B$202,0),MATCH('Panel de Control General'!$C$5,'Inputs de Nomina'!$C$178:$H$178,0)))"
+      }
+    ],
+    "Condiciones Cadena C": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 22,
+        "example_coord": "J62",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF(E62=\"Total\",G62,G62*H62)",
+        "v28": "=IFERROR((I62/H62)*(1+'Panel de Control General'!$L$11),0)"
+      }
+    ],
+    "Costo Cadena C": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 899,
+        "example_coord": "E273",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=E$271*$D273",
+        "v28": "=IF(AND(E$159>=$D$3,$D$4>=E$159),$D273,0)*(IF(MONTH(E$160)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$160),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$160)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 580,
+        "example_coord": "H366",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF(AND(H$364>=$D$3,$D$4>=H$364),$E366,0)*(IF(MONTH(H$365)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$365),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$365)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=IF(AND(H$362>=$D$3,$D$4>=H$362),$G366*$F366,0)*(IF(MONTH(H$363)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$363),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$363)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 378,
+        "example_coord": "K248",
+        "funcs_added": [
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(AND(K$232>='Nomina Loaded'!$C$3,K$232<=($I248+'Nomina Loaded'!$C$3-1),K$232<=$D$3+'Panel de Control General'!$C$11-1),$J248,0),0)",
+        "v28": "=IF(AND(K$134>=$D$3,$D$4>=K$134),$D248,0)*(IF(MONTH(K$135)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(K$135),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(K$135)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 290,
+        "example_coord": "F307",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(M$234:M$262,$E$234:$E$262,$C307,$D$234:$D$262,$C$306)+IFERROR(G295,0)",
+        "v28": "=E$298*$D307"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 290,
+        "example_coord": "H403",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(H$396>=$D$3,$D$4>=H$396),$G403*$F403,0)*(IF(MONTH(H$397)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$397),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$397)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=G$396*$D403"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 177,
+        "example_coord": "F272",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [],
+        "v27": "=F$271*$D272",
+        "v28": "=EDATE(E272,1)"
+      },
+      {
+        "label": "LIKELY_LAYOUT_REORG",
+        "count": 120,
+        "example_coord": "E298",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=E$294*$D298",
+        "v28": "=(F$346+E$354)*$D298"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 118,
+        "example_coord": "F332",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(G$380+F$388)*$D332",
+        "v28": "=IF(AND(F$330>=$D$3,$D$4>=F$330),$E332,0)*(IF(MONTH(F$331)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$331),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$331)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 118,
+        "example_coord": "G338",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(F338,1)",
+        "v28": "=IF(AND(G$330>=$D$3,$D$4>=G$330),$E338,0)*(IF(MONTH(G$331)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(G$331),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(G$331)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 117,
+        "example_coord": "F380",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(F366:F379)",
+        "v28": "=D380*E380"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 116,
+        "example_coord": "G315",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(G307:G314)",
+        "v28": "=EDATE(F315,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 116,
+        "example_coord": "H402",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(H$396>=$D$3,$D$4>=H$396),$G402*$F402,0)*(IF(MONTH(H$397)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$397),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$397)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=EDATE(G402,1)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 115,
+        "example_coord": "F306",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(E306,1)",
+        "v28": "=E$298*$D306"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 61,
+        "example_coord": "F410",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [],
+        "v27": "=D410*E410",
+        "v28": "=SUM(F403:F409)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "F312",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(M$234:M$262,$E$234:$E$262,$C312,$D$234:$D$262,$C$306)+IFERROR(G300,0)",
+        "v28": "=SUM(F305:F311)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "H365",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(G365,1)",
+        "v28": "=IF(AND(H$362>=$D$3,$D$4>=H$362),$G365*$F365,0)*(IF(MONTH(H$363)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$363),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$363)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "H371",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(H$364>=$D$3,$D$4>=H$364),$E371,0)*(IF(MONTH(H$365)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$365),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$365)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=SUM(H364:H370)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "H380",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(H366:H379)",
+        "v28": "=IF(AND(H$373>=$D$3,$D$4>=H$373),$G380*$F380,0)*(IF(MONTH(H$374)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$374),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$374)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "H410",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(H$407>=$D$3,$D$4>=H$407),$G410*$F410,0)*(IF(MONTH(H$408)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$408),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(H$408)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=SUM(H403:H409)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "G431",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(H$472+G$479)*$D431",
+        "v28": "=EDATE(F431,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 57,
+        "example_coord": "I374",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(I$364>=$D$3,$D$4>=I$364),$E374,0)*(IF(MONTH(I$365)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(I$365),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(I$365)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=EDATE(H374,1)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 56,
+        "example_coord": "I397",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(H397,1)",
+        "v28": "=(J$438+I$445)*$D397"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 54,
+        "example_coord": "K247",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(AND(K$232>='Nomina Loaded'!$C$3,K$232<=($I247+'Nomina Loaded'!$C$3-1),K$232<=$D$3+'Panel de Control General'!$C$11-1),$J247,0),0)",
+        "v28": "=EDATE(J247,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 54,
+        "example_coord": "K255",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(AND(K$232>='Nomina Loaded'!$C$3,K$232<=($I255+'Nomina Loaded'!$C$3-1),K$232<=$D$3+'Panel de Control General'!$C$11-1),$J255,0),0)",
+        "v28": "=SUM(K248:K254)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 10,
+        "example_coord": "F366",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(F$364>=$D$3,$D$4>=F$364),$E366,0)*(IF(MONTH(F$365)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$365),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$365)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=D366*E366"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 10,
+        "example_coord": "G366",
+        "funcs_added": [
+          "ISNUMBER"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(G$364>=$D$3,$D$4>=G$364),$E366,0)*(IF(MONTH(G$365)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(G$365),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(G$365)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=IF(ISNUMBER('Condiciones Cadena C'!D127)=TRUE,'Condiciones Cadena C'!D127,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 7,
+        "example_coord": "E339",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=INDEX($F339:$BM339,MATCH('Nomina Loaded'!$C$3,$F$337:$BM$337,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$9,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))",
+        "v28": "=IFERROR(D339*INDEX('Inputs de Nomina'!$AK$158:$AK$171,MATCH($C339,'Inputs de Nomina'!$B$158:$B$171,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 5,
+        "example_coord": "E307",
+        "funcs_added": [
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(L$234:L$262,$E$234:$E$262,$C307,$D$234:$D$262,$C$306)+IFERROR(F295,0)",
+        "v28": "=INDEX($F307:$BM307,MATCH('Nomina Loaded'!$C$3,$F$303:$BM$303,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 5,
+        "example_coord": "E366",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(D366*INDEX('Inputs de Nomina'!$AK$89:$AK$102,MATCH($C366,'Inputs de Nomina'!$B$89:$B$102,0)),0)",
+        "v28": "=INDEX('Condiciones Cadena C'!$C$125:$C$131,MATCH(C366,'Condiciones Cadena C'!$B$125:$B$131,0))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 5,
+        "example_coord": "E375",
+        "funcs_added": [
+          "ANCHORARRAY"
+        ],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(D375*INDEX('Inputs de Nomina'!$AK$89:$AK$102,MATCH($C375,'Inputs de Nomina'!$B$89:$B$102,0)),0)",
+        "v28": "=INDEX('Condiciones Cadena C'!$C$134:$C$141,MATCH(C375,_xlfn.ANCHORARRAY('Condiciones Cadena C'!$B$134),0))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 5,
+        "example_coord": "G403",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF('Condiciones Cadena C'!$F$122=\"Input Calculado\",'Vision Cost To Serve'!$C$98,'Condiciones Cadena C'!$G$122)",
+        "v28": "=F$396*$D403"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 3,
+        "example_coord": "E409",
+        "funcs_added": [
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "ANCHORARRAY"
+        ],
+        "v27": "=INDEX('Condiciones Cadena C'!$C$132:$C$139,MATCH(C409,_xlfn.ANCHORARRAY('Condiciones Cadena C'!$B$132),0))",
+        "v28": "=INDEX($F409:$BM409,MATCH('Nomina Loaded'!$C$3,$F$401:$BM$401,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 2,
+        "example_coord": "E332",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(F$380+E$388)*$D332",
+        "v28": "=IFERROR(D332*INDEX('Inputs de Nomina'!$AK$158:$AK$171,MATCH($C332,'Inputs de Nomina'!$B$158:$B$171,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 2,
+        "example_coord": "G402",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF('Condiciones Cadena C'!$F$122=\"Input Calculado\",'Vision Cost To Serve'!$C$98,'Condiciones Cadena C'!$G$122)",
+        "v28": "=EDATE(F402,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 2,
+        "example_coord": "E403",
+        "funcs_added": [
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=INDEX('Condiciones Cadena C'!$C$123:$C$129,MATCH(C403,'Condiciones Cadena C'!$B$123:$B$129,0))",
+        "v28": "=INDEX($F403:$BM403,MATCH('Nomina Loaded'!$C$3,$F$401:$BM$401,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E306",
+        "funcs_added": [
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(D306,1)",
+        "v28": "=INDEX($F306:$BM306,MATCH('Nomina Loaded'!$C$3,$F$303:$BM$303,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E354",
+        "funcs_added": [
+          "AND"
+        ],
+        "funcs_dropped": [],
+        "v27": "=INDEX($F354:$BM354,MATCH('Nomina Loaded'!$C$3,$F$348:$BM$348,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$9,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))",
+        "v28": "=IF(AND(E$352>=$D$3,$D$4>=E$352),$D354,0)*(IF(MONTH(E$353)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$353),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$353)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "G365",
+        "funcs_added": [
+          "IF",
+          "ISNUMBER"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(F365,1)",
+        "v28": "=IF(ISNUMBER('Condiciones Cadena C'!D126)=TRUE,'Condiciones Cadena C'!D126,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "G380",
+        "funcs_added": [
+          "IF",
+          "ISNUMBER"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(G366:G379)",
+        "v28": "=IF(ISNUMBER('Condiciones Cadena C'!D139)=TRUE,'Condiciones Cadena C'!D139,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "G410",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF('Condiciones Cadena C'!$F$131=\"Input Calculado\",'Vision Cost To Serve'!$C$98,'Condiciones Cadena C'!$G$131)",
+        "v28": "=SUM(G403:G409)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E437",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=INDEX($F437:$BM437,MATCH('Nomina Loaded'!$C$3,$F$435:$BM$435,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$9,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))",
+        "v28": "=D437*IFERROR(INDEX('Inputs de Nomina'!$AK$146:$AK$151,MATCH($C437,'Inputs de Nomina'!$B$146:$B$151,0)),0)"
+      }
+    ],
+    "Costo Fijo": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 378,
+        "example_coord": "K110",
+        "funcs_added": [
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF(AND(K$93>='Nomina Loaded'!$C$3,K$93<=($I110+'Nomina Loaded'!$C$3-1),K$93<=$D$3+'Panel de Control General'!$C$11-1),$J110,0),0)",
+        "v28": "=IFERROR(IF(AND(K$108>=$D$3,$D$4>=K$108),$D110,0),0)*(IF(MONTH(K$109)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(K$109),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(K$109)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 360,
+        "example_coord": "E134",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "IFERROR",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=E$132*$D134",
+        "v28": "=IFERROR(IF(AND(E$108>=$D$3,$D$4>=E$108),$D134,0),0)*(IF(MONTH(E$109)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$109),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$109)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 232,
+        "example_coord": "F172",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(M$95:M$123,$E$95:$E$123,$C172,$D$95:$D$123,$C$167)+IFERROR(G160,0)",
+        "v28": "=E$156*$D172"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 120,
+        "example_coord": "E157",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [],
+        "v27": "=E$155*$D157",
+        "v28": "=SUM(E155:E156)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 117,
+        "example_coord": "F133",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [],
+        "v27": "=F$132*$D133",
+        "v28": "=EDATE(E133,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 70,
+        "example_coord": "F189",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(G$233+F$240)*$D189",
+        "v28": "=IF(AND(F$185>=$D$3,$D$4>=F$185),$E189,0)*(IF(MONTH(F$186)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$186),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$186)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 60,
+        "example_coord": "E155",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(K$95:K$123,$E$95:$E$123,$C155,$D$95:$D$123,$C$154)",
+        "v28": "=(F$199+E$206)*$D155"
+      },
+      {
+        "label": "LIKELY_LAYOUT_REORG",
+        "count": 60,
+        "example_coord": "E156",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=E$155*$D156",
+        "v28": "=(F$199+E$206)*$D156"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 59,
+        "example_coord": "F188",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(E188,1)",
+        "v28": "=IF(AND(F$185>=$D$3,$D$4>=F$185),$E188,0)*(IF(MONTH(F$186)>=$D$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$186),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($D$5,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$186)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 58,
+        "example_coord": "F167",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(E167,1)",
+        "v28": "=E$155*$D167"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 58,
+        "example_coord": "F168",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(M$95:M$123,$E$95:$E$123,$C168,$D$95:$D$123,$C$167)+IFERROR(G156,0)",
+        "v28": "=SUM(F161:F167)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 58,
+        "example_coord": "F176",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(F168:F175)",
+        "v28": "=E$156*$D176"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 57,
+        "example_coord": "G171",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(N$95:N$123,$E$95:$E$123,$C171,$D$95:$D$123,$C$167)+IFERROR(H159,0)",
+        "v28": "=EDATE(F171,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 54,
+        "example_coord": "K109",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(AND(K$93>='Nomina Loaded'!$C$3,K$93<=($I109+'Nomina Loaded'!$C$3-1),K$93<=$D$3+'Panel de Control General'!$C$11-1),$J109,0),0)",
+        "v28": "=EDATE(J109,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 54,
+        "example_coord": "K117",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(AND(K$93>='Nomina Loaded'!$C$3,K$93<=($I117+'Nomina Loaded'!$C$3-1),K$93<=$D$3+'Panel de Control General'!$C$11-1),$J117,0),0)",
+        "v28": "=SUM(K110:K116)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 4,
+        "example_coord": "E172",
+        "funcs_added": [
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(L$95:L$123,$E$95:$E$123,$C172,$D$95:$D$123,$C$167)+IFERROR(F160,0)",
+        "v28": "=INDEX($F172:$BM172,MATCH('Nomina Loaded'!$C$3,$F$170:$BM$170,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 3,
+        "example_coord": "E161",
+        "funcs_added": [
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=E$155*$D161",
+        "v28": "=INDEX($F161:$BM161,MATCH('Nomina Loaded'!$C$3,$F$159:$BM$159,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 2,
+        "example_coord": "E189",
+        "funcs_added": [
+          "IF",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(F$233+E$240)*$D189",
+        "v28": "=IFERROR(IF('Condiciones Cadena B'!$C85=TRUE,INDEX('Inputs de Nomina'!$AK$129:$AK$140,MATCH($C189,'Inputs de Nomina'!$B$129:$B$140,0)),0),0)*$D189"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "D150",
+        "funcs_added": [
+          "IF"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "SUMIFS"
+        ],
+        "v27": "=SUMIFS(K$95:K$123,$E$95:$E$123,$C150,$D$95:$D$123,$C$143)+IFERROR(E139,0)",
+        "v28": "=IF('Panel de Control General'!N17=TRUE,'Panel de Control General'!$N$26,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "D151",
+        "funcs_added": [
+          "IF"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(D144:D150)",
+        "v28": "=IF('Panel de Control General'!N30=TRUE,'Panel de Control General'!$N$40,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E167",
+        "funcs_added": [
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(D167,1)",
+        "v28": "=INDEX($F167:$BM167,MATCH('Nomina Loaded'!$C$3,$F$159:$BM$159,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E176",
+        "funcs_added": [
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(E168:E175)",
+        "v28": "=INDEX($F176:$BM176,MATCH('Nomina Loaded'!$C$3,$F$170:$BM$170,0))/IF(MONTH('Panel de Control General'!$C$10)>='Panel de Control General'!$L$10,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH('Panel de Control General'!$L$8,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR('Panel de Control General'!$C$10)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0)))"
+      }
+    ],
+    "Costo Variable": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 15,
+        "example_coord": "G125",
+        "funcs_added": [
+          "ISNUMBER"
+        ],
+        "funcs_dropped": [],
+        "v27": "=IF('Condiciones Cadena B'!$F$123=\"Input Calculado\",'Vision Cost To Serve'!$C$98,'Condiciones Cadena B'!$G$123)",
+        "v28": "=IF(ISNUMBER('Condiciones Cadena B'!D124)=TRUE,'Condiciones Cadena B'!D124,0)"
+      }
+    ],
+    "Costos Totales": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1440,
+        "example_coord": "E10",
+        "funcs_added": [
+          "IF"
+        ],
+        "funcs_dropped": [],
+        "v27": "=SUMIFS('Nomina Loaded'!F:F,'Nomina Loaded'!$D:$D,$B10)+SUMIFS('No payroll'!F:F,'No payroll'!$D:$D,$B10)",
+        "v28": "=IF($B10<>\"\",SUMIFS('Nomina Loaded'!F:F,'Nomina Loaded'!$D:$D,$B10),0)+IF($B10<>\"\",SUMIFS('No payroll'!F:F,'No payroll'!$D:$D,$B10),0)"
+      }
+    ],
+    "Graficos": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 24,
+        "example_coord": "AC5",
+        "funcs_added": [
+          "IF",
+          "SUMIFS"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(N5:AB5)",
+        "v28": "=IF(AC$4<>\"\",(SUMIFS('Nomina Loaded'!O$43:O$66,'Nomina Loaded'!$B$43:$B$66,$P5)+SUMIFS('Nomina Loaded'!O$155:O$178,'Nomina Loaded'!$B$155:$B$178,$P5)),0)"
+      }
+    ],
+    "Hoja Maestra Escenarios": [
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 12,
+        "example_coord": "G11",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "='Panel de Control General'!$C$63+SUM(G6:G9)",
+        "v28": "='Panel de Control General'!$C$63"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 6,
+        "example_coord": "G13",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=+'Panel de Control General'!$E$63+SUM(G6:G9)",
+        "v28": "=+'Panel de Control General'!$E$63"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 6,
+        "example_coord": "G21",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF(C10=\"FTE\",G19/C13/'Panel de Control General'!C11,G19/L26/'Panel de Control General'!C11),0)",
+        "v28": "=IFERROR(IF(C10=\"FTE\",G19/C13,G19/L26),0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 5,
+        "example_coord": "G33",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF(C11=\"Transacción\",(SUM(C16,C26,C36)*D11)/G31,(G29+G31)/'Vision Tarifas_Modelo_Cobro'!$C$133)",
+        "v28": "=IF(C11=\"Transacción\",(SUM(C16,C26,C36)*D11)/G31,(G31)/'Vision Tarifas_Modelo_Cobro'!$C$140)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 4,
+        "example_coord": "G71",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF(C58=\"Tiempo\",G67/L72/'Panel de Control General'!C11,0)",
+        "v28": "=IF(C58=\"Tiempo\",G67/L72,0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 2,
+        "example_coord": "G23",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF(C10=\"Tiempo\",G19/L24/'Panel de Control General'!C11,0),0)",
+        "v28": "=IFERROR(IF(C10=\"Tiempo\",G19/L24,0),0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 1,
+        "example_coord": "G226",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(C204=\"Transacción\",(SUM(C209,C219,C229)*D204)/G224,(G222+G224)/'Vision Tarifas_Modelo_Cobro'!$C$133),0)",
+        "v28": "=IF(C204=\"Transacción\",(SUM(C209,C219,C229)*D204)/G224,(G224)/'Vision Tarifas_Modelo_Cobro'!$C$140)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 1,
+        "example_coord": "G273",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF(C253=\"Transacción\",G271/IF(G277<>\"\",(G277*'Panel de Control General'!L52)+SUM('Panel de Control General'!N52:O52),SUM('Panel de Control General'!M52:O52))/'Panel de Control General'!C11,IF(OR(C253=\"Resultados\",C253=\"Honorarios\"),'Vision Tarifas_Modelo_Cobro'!$C$77,0))",
+        "v28": "=IF(C253=\"Transacción\",G271/IF(G277<>\"\",(G277*'Panel de Control General'!V31)+SUM('Panel de Control General'!X31:Y31),SUM('Panel de Control General'!W31:Y31)),IF(OR(C253=\"Resultados\",C253=\"Honorarios\"),'Vision Tarifas_Modelo_Cobro'!$C$80,0))"
+      }
+    ],
+    "Inputs de Nomina": [
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 32,
+        "example_coord": "F60",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=SUM(D60:E60,AJ60)",
+        "v28": "=SUM(C60:D60)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "G60",
+        "funcs_added": [
+          "AND"
+        ],
+        "funcs_dropped": [],
+        "v27": "=+IF(D60>10*$C$4,D60*$I$13*70%,0)",
+        "v28": "=+IF(AND(F60<(2*$C$4),F60>0),$C$5,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "H60",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=+IF((F60-E60)>$C$4*10,(F60-E60)*$J$13*70%,(F60-E60)*$J$13)",
+        "v28": "=SUM(F60:G60,AL60)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "M60",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=+IF($F60>$C$4*10,$F60*O$13*70%,0)",
+        "v28": "=SUM(H60:L60)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "N60",
+        "funcs_added": [
+          "IF"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(L60:M60)",
+        "v28": "=+IF((H60-G60)>$C$4*10,(H60-G60)*N$36*70%,(H60-G60)*N$36)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 32,
+        "example_coord": "O60",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=+IF($F60>10*$C$4,0,$F60*Q$13)",
+        "v28": "=+IF($F60>$C$4*10,$F60*O$36*70%,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "P60",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=+IF($F60>10*$C$4,0,$F60*R$13)",
+        "v28": "=SUM(N60:O60)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 32,
+        "example_coord": "R60",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=+IF((F60-E60)>=$C$4*10,((F60-E60)*70%)*$T$13,(F60-E60)*$T$13)",
+        "v28": "=+IF($H60>10*$C$4,0,$H60*R$36)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 32,
+        "example_coord": "S60",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(O60:R60)",
+        "v28": "=$S$36*Q60"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 32,
+        "example_coord": "T60",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "AND"
+        ],
+        "v27": "=+IF(AND((D60-E60)<(2*$C$4),D60>0),$C$8,0)",
+        "v28": "=+IF((H60-G60)>=$C$4*10,((H60-G60)*70%)*$T$36,(H60-G60)*$T$36)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "U60",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [],
+        "v27": "=+K60+N60+S60+T60",
+        "v28": "=SUM(Q60:T60)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 32,
+        "example_coord": "AB60",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=(A60/220)*AC60*(1+$AD$13)",
+        "v28": "=(C60/220)*AC60*($AB$36)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 32,
+        "example_coord": "AJ60",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=V60+X60+Z60+AB60+AD60+AF60+AH60",
+        "v28": "=(C60/220)*AK60*(1+$AJ$36)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 31,
+        "example_coord": "V61",
+        "funcs_added": [
+          "AND",
+          "IF"
+        ],
+        "funcs_dropped": [],
+        "v27": "=(A61/220)*W61*($X$13)",
+        "v28": "=+IF(AND((F61-G61)<(2*$C$4),F61>0),$C$8,0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 20,
+        "example_coord": "AK77",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=U77",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!#REF!,MATCH($B77,'Condiciones Cadena A'!#REF!,0)),0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 13,
+        "example_coord": "C39",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(INDEX('Condiciones Cadena A'!$E$20:$S$20,MATCH($B39,'Condiciones Cadena A'!$E$16:$S$16,0)),0)",
+        "v28": "=INDEX('Condiciones Cadena A'!$E$44:$E$66,MATCH(B39,'Condiciones Cadena A'!$D$44:$D$66,0))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 13,
+        "example_coord": "D39",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=E39*C39*$C$6",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$F$44:$F$66,MATCH(B39,'Condiciones Cadena A'!$D$104:$D$127,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 12,
+        "example_coord": "D60",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=C60",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$F$44:$F$66,MATCH(B60,'Condiciones Cadena A'!$D$104:$D$127,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 10,
+        "example_coord": "AK62",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=U62",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$E$15:$S$21,MATCH(AK$38,'Condiciones Cadena A'!$D$15:$D$21,0),MATCH($B62,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 6,
+        "example_coord": "C66",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=2513000*(1+23%)",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$E$12:$S$12,MATCH($B66,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C16",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=18505000*(1+23%)",
+        "v28": "=4749000*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C17",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=13000000*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=5201000*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C18",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=5260000*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=4119600*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C19",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=2987680*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=2674100*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C20",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=4749000*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=2674100*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C21",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=4749000*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=1612100*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C22",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=5201000*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=2729900*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C23",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=4119600*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=1550074.685248*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C24",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=2674100*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=2729900*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C25",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=2674100*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=1550074.685248*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C26",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=1612100*(1+23%)",
+        "v28": "=1811500*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C27",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=2729900*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=1673000*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C28",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=1550074.685248*(1+23%)",
+        "v28": "=1747300*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C29",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=2729900*(1+'Tasas, TRM, Polizas'!$B$4)",
+        "v28": "=2513000*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C30",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=1550074.685248*(1+23%)",
+        "v28": "=1423500*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C31",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=1811500*(1+23%)",
+        "v28": "=1423500*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C32",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=1673000*(1+23%)",
+        "v28": "=1423500*(1+23%)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C33",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=1747300*(1+23%)",
+        "v28": "=5134560*(1+'Tasas, TRM, Polizas'!$B$4)"
+      },
+      {
+        "label": "LIKELY_LAYOUT_REORG",
+        "count": 1,
+        "example_coord": "AM39",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=W39",
+        "v28": "=+W39"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C63",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=1811500*(1+23%)",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$E$12:$S$12,MATCH($B63,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C64",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=1673000*(1+23%)",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$E$12:$S$12,MATCH($B64,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C65",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=1747300*(1+23%)",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$E$12:$S$12,MATCH($B65,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      }
+    ],
+    "Listas Desplegables": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 59,
+        "example_coord": "B52",
+        "funcs_added": [
+          "IF",
+          "MATCH"
+        ],
+        "funcs_dropped": [],
+        "v27": "=A52+1",
+        "v28": "=IF(B54>=MATCH($B$50,$A$55:$BH$55,0),B54-MATCH($B$50,$A$55:$BH$55,0)+1,\"\")"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 59,
+        "example_coord": "B53",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(A53,1)",
+        "v28": "=IF(AND(MONTH($B$50)=MONTH(B$55),YEAR($B$50)=YEAR(B$55)),B$54,0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 1,
+        "example_coord": "B50",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IF",
+          "MATCH"
+        ],
+        "v27": "=IF(B52>=MATCH($B$48,$A$53:$BH$53,0),B52-MATCH($B$48,$A$53:$BH$53,0)+1,\"\")",
+        "v28": "='Panel de Control General'!$C$10"
+      }
+    ],
+    "Nomina Loaded": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1186,
+        "example_coord": "F89",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(F72:F88)",
+        "v28": "=IF(AND(F$85>=$C$4,$C$5>=F$85),$E89,0)*(IF(MONTH(F$86)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$86),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$86)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1000,
+        "example_coord": "G86",
+        "funcs_added": [
+          "EDATE"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(G$70>=$C$4,$C$5>=G$70),$E86,0)*(IF(MONTH(G$71)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(G$71),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(G$71)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=EDATE(F86,1)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 753,
+        "example_coord": "F92",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(E92,1)",
+        "v28": "=IF(AND(F$85>=$C$4,$C$5>=F$85),$E92,0)*(IF(MONTH(F$86)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$86),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$86)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 606,
+        "example_coord": "F81",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(F$70>=$C$4,$C$5>=F$70),$E81,0)*(IF(MONTH(F$71)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$71),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$71)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=SUM(F69:F80)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 128,
+        "example_coord": "F104",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(E104,1)",
+        "v28": "=SUM(F87:F103)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 120,
+        "example_coord": "F169",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(F$70>=$C$4,$C$5>=F$70),$E169,0)*(IF(MONTH(F$71)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$71),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$71)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=IFERROR(IF($B169=$B$63,INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH(F$42,'Inputs de Nomina'!$B$39:$B$76,0)),INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH($B169,'Inputs de Nomina'!$B$39:$B$76,0)))*INDEX('Condiciones Cadena A'!$E$77:$S$100,MATCH($B169,'Condiciones Cadena A'!$D$77:$D$100,0),MATCH(F$42,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 98,
+        "example_coord": "D140",
+        "funcs_added": [
+          "AND",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF($B140=$B$63,INDEX('Inputs de Nomina'!$D$16:$D$51,MATCH(D$42,'Inputs de Nomina'!$B$16:$B$51,0)),INDEX('Inputs de Nomina'!$D$16:$D$51,MATCH($B140,'Inputs de Nomina'!$B$16:$B$51,0)))*INDEX('Condiciones Cadena A'!$W$25:$AK$48,MATCH($B140,'Condiciones Cadena A'!$V$25:$V$48,0),MATCH(D$42,'Condiciones Cadena A'!$E$16:$S$16,0)),0)",
+        "v28": "=IF(AND(D$118>=$C$4,$C$5>=D$118),$C140,0)*(IF(MONTH(D$119)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(D$119),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(D$119)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 34,
+        "example_coord": "D212",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "ANCHORARRAY",
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(INDEX('Condiciones Cadena A'!$E$64:$T$64,MATCH(D211,_xlfn.ANCHORARRAY('Condiciones Cadena A'!$E$63),0)),\"\")",
+        "v28": "=IF(AND(D$118>=$C$4,$C$5>=D$118),$C212,0)*(IF(MONTH(D$119)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(D$119),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(D$119)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 32,
+        "example_coord": "F228",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(F$215>=$C$4,$C$5>=F$215),$E228,0)*(IF(MONTH(F$216)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$216),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(F$216)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=IFERROR(INDEX('Condiciones Cadena A'!$E$139:$T$139,MATCH(F227,'Condiciones Cadena A'!$E$138:$T$138,0)),\"\")"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 28,
+        "example_coord": "D379",
+        "funcs_added": [
+          "AND",
+          "MONTH",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF(INDEX('Condiciones Cadena A'!$E71:$T71,MATCH(D$378,'Condiciones Cadena A'!$E$63:$T$63,0))=TRUE,$C373*INDEX('Condiciones Cadena A'!$E$17:$S$17,MATCH(D$378,'Condiciones Cadena A'!$E$16:$S$16,0)),0),0)/'Panel de Control General'!$C$11",
+        "v28": "=IF(AND(D$118>=$C$4,$C$5>=D$118),$C379,0)*(IF(MONTH(D$119)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(D$119),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(D$119)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 15,
+        "example_coord": "C165",
+        "funcs_added": [
+          "IF",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(C$140:C$163)",
+        "v28": "=IFERROR(IF($B165=$B$63,INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH(C$42,'Inputs de Nomina'!$B$39:$B$76,0)),INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH($B165,'Inputs de Nomina'!$B$39:$B$76,0)))*INDEX('Condiciones Cadena A'!$E$77:$S$100,MATCH($B165,'Condiciones Cadena A'!$D$77:$D$100,0),MATCH(C$42,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 11,
+        "example_coord": "G168",
+        "funcs_added": [
+          "IF",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(F168,1)",
+        "v28": "=IFERROR(IF($B168=$B$63,INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH(G$42,'Inputs de Nomina'!$B$39:$B$76,0)),INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH($B168,'Inputs de Nomina'!$B$39:$B$76,0)))*INDEX('Condiciones Cadena A'!$E$77:$S$100,MATCH($B168,'Condiciones Cadena A'!$D$77:$D$100,0),MATCH(G$42,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 10,
+        "example_coord": "E169",
+        "funcs_added": [
+          "IF"
+        ],
+        "funcs_dropped": [
+          "ANCHORARRAY"
+        ],
+        "v27": "=IFERROR(INDEX($C$165:$BE$165,MATCH(D169,_xlfn.ANCHORARRAY($C$139),0)),0)",
+        "v28": "=IFERROR(IF($B169=$B$63,INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH(E$42,'Inputs de Nomina'!$B$39:$B$76,0)),INDEX('Inputs de Nomina'!$D$39:$D$76,MATCH($B169,'Inputs de Nomina'!$B$39:$B$76,0)))*INDEX('Condiciones Cadena A'!$E$77:$S$100,MATCH($B169,'Condiciones Cadena A'!$D$77:$D$100,0),MATCH(E$42,'Condiciones Cadena A'!$E$8:$S$8,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 8,
+        "example_coord": "C120",
+        "funcs_added": [
+          "SUMIFS"
+        ],
+        "funcs_dropped": [
+          "IF",
+          "INDEX",
+          "MATCH"
+        ],
+        "v27": "=IF(B120<>\"\",INDEX($C$43:$Q$66,MATCH($B$63,$B$43:$B$66,0),MATCH($B120,$C$42:$Q$42,0)),0)+IF(B120<>\"\",INDEX($C$140:$Q$163,MATCH($B$159,$B$140:$B$163,0),MATCH($B120,$C$139:$Q$139,0)),0)",
+        "v28": "=SUMIFS($E$87:$E$103,$B$87:$B$103,$B$119,$C$87:$C$103,$B120)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 7,
+        "example_coord": "E93",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(E$91>=$C$4,$C$5>=E$91),$C93,0)*(IF(MONTH(E$92)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$92),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$92)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=IFERROR(INDEX($C$83:$R$83,MATCH(D93,$C$42:$Q$42,0)),0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 7,
+        "example_coord": "C140",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(IF($B140=$B$159,INDEX('Inputs de Nomina'!$D$16:$D$51,MATCH(C$139,'Inputs de Nomina'!$B$16:$B$51,0)),INDEX('Inputs de Nomina'!$D$16:$D$51,MATCH($B140,'Inputs de Nomina'!$B$16:$B$51,0)))*INDEX('Condiciones Cadena A'!$W$25:$AK$48,MATCH($B140,'Condiciones Cadena A'!$V$25:$V$48,0),MATCH(C$139,'Condiciones Cadena A'!$E$16:$S$16,0)),0)",
+        "v28": "=IF(B140<>\"\",INDEX($C$43:$Q$66,MATCH($B$63,$B$43:$B$66,0),MATCH($B140,$C$42:$Q$42,0)),0)+IF(B140<>\"\",INDEX($C$155:$Q$178,MATCH($B$174,$B$155:$B$178,0),MATCH($B140,$C$154:$Q$154,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 5,
+        "example_coord": "E185",
+        "funcs_added": [
+          "ANCHORARRAY",
+          "IFERROR"
+        ],
+        "funcs_dropped": [
+          "AND",
+          "IF",
+          "MONTH",
+          "YEAR"
+        ],
+        "v27": "=IF(AND(E$91>=$C$4,$C$5>=E$91),$C185,0)*(IF(MONTH(E$92)>=$C$7,INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$92),'Tasas, TRM, Polizas'!$B$7:$G$7,0)),INDEX('Tasas, TRM, Polizas'!$B$8:$G$17,MATCH($C$6,'Tasas, TRM, Polizas'!$A$8:$A$17,0),MATCH(YEAR(E$92)-1,'Tasas, TRM, Polizas'!$B$7:$G$7,0))))",
+        "v28": "=IFERROR(INDEX($C$181:$BE$181,MATCH(D185,_xlfn.ANCHORARRAY($C$154),0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 2,
+        "example_coord": "E81",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "v27": "=IFERROR(INDEX($C$68:$R$68,MATCH(D81,$C$42:$Q$42,0)),0)",
+        "v28": "=SUM(E69:E80)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 2,
+        "example_coord": "C379",
+        "funcs_added": [
+          "SUMIFS"
+        ],
+        "funcs_dropped": [
+          "IF",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "v27": "=IFERROR(IF(INDEX('Condiciones Cadena A'!$E71:$T71,MATCH(C$378,'Condiciones Cadena A'!$E$63:$T$63,0))=TRUE,$C373*INDEX('Condiciones Cadena A'!$E$17:$S$17,MATCH(C$378,'Condiciones Cadena A'!$E$16:$S$16,0)),0),0)/'Panel de Control General'!$C$11",
+        "v28": "=SUMIFS($E$345:$E$361,$B$345:$B$361,$B$376,$C$345:$C$361,$B379)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E92",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(D92,1)",
+        "v28": "=IFERROR(INDEX($C$83:$R$83,MATCH(D92,$C$42:$Q$42,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E100",
+        "funcs_added": [
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(E93:E99)",
+        "v28": "=IFERROR(INDEX($C$83:$R$83,MATCH(D100,$C$42:$Q$42,0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E189",
+        "funcs_added": [
+          "ANCHORARRAY",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=SUM(E182:E188)",
+        "v28": "=IFERROR(INDEX($C$181:$BE$181,MATCH(D189,_xlfn.ANCHORARRAY($C$154),0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "E193",
+        "funcs_added": [
+          "ANCHORARRAY",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "funcs_dropped": [
+          "EDATE"
+        ],
+        "v27": "=EDATE(D193,1)",
+        "v28": "=IFERROR(INDEX($C$181:$BE$181,MATCH(D193,_xlfn.ANCHORARRAY($C$154),0)),0)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C212",
+        "funcs_added": [
+          "SUMIFS"
+        ],
+        "funcs_dropped": [
+          "ANCHORARRAY",
+          "IFERROR",
+          "INDEX",
+          "MATCH"
+        ],
+        "v27": "=IFERROR(INDEX('Condiciones Cadena A'!$E$64:$T$64,MATCH(C211,_xlfn.ANCHORARRAY('Condiciones Cadena A'!$E$63),0)),\"\")",
+        "v28": "=SUMIFS($E$185:$E$194,$B$185:$B$194,$B$209,$C$185:$C$194,$B212)"
+      }
+    ],
+    "Pólizas - Costo Financiacion": [
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 2280,
+        "example_coord": "E93",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF('Costos Totales'!E$8<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),('Costos Totales'!E37+E198+E378)*'Panel de Control General'!$C$35,0)",
+        "v28": "=IF(E$91<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),('Costos Totales'!E37+E198+E378+E223)*'Panel de Control General'!$C$35,0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 1860,
+        "example_coord": "E23",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF('Costos Totales'!E$8<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),(('Costos Totales'!E48/((1-'Panel de Control General'!$C$63)*(1-'Panel de Control General'!$C$67)*(1-'Panel de Control General'!$C$68)*(1-'Panel de Control General'!$C$69)*(1+'Panel de Control General'!$C$70)))+E209+E389)*'Panel de Control General'!$C$34,0)",
+        "v28": "=IF(E$21<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),(('Costos Totales'!E48+E209+E389+E234)/((1-'Panel de Control General'!$C$63)*(1-'Panel de Control General'!$C$67)*(1-'Panel de Control General'!$C$68)*(1-'Panel de Control General'!$C$69)*(1+'Panel de Control General'!$C$70)))*'Panel de Control General'!$C$34,0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 420,
+        "example_coord": "E12",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IF('Costos Totales'!E$8<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),(('Costos Totales'!E37/((1-'Panel de Control General'!$C$63)*(1-'Panel de Control General'!$C$67)*(1-'Panel de Control General'!$C$68)*(1-'Panel de Control General'!$C$69)*(1+'Panel de Control General'!$C$70)))+E198+E378)*'Panel de Control General'!$C$34,0)",
+        "v28": "=IF(E$10<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),((('Costos Totales'!E37+E198+E378+E223)/((1-'Panel de Control General'!$C$63)*(1-'Panel de Control General'!$C$67)*(1-'Panel de Control General'!$C$68)*(1-'Panel de Control General'!$C$69)*(1+'Panel de Control General'!$C$70))))*'Panel de Control General'!$C$34,0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 420,
+        "example_coord": "E65",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF('Costos Totales'!E$8<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),(('Costos Totales'!E91/((1-'Panel de Control General'!$E$63)*(1-'Panel de Control General'!$C$67)*(1-'Panel de Control General'!$C$68)*(1-'Panel de Control General'!$C$69)*(1+'Panel de Control General'!$C$70)))+E308+E438)*'Panel de Control General'!$C$34,0),0)",
+        "v28": "=IFERROR(IF(E$63<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),(('Costos Totales'!E91+E308+E438+E333)/((1-'Panel de Control General'!$E$63)*(1-'Panel de Control General'!$C$67)*(1-'Panel de Control General'!$C$68)*(1-'Panel de Control General'!$C$69)*(1+'Panel de Control General'!$C$70)))*'Panel de Control General'!$C$34,0),0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 420,
+        "example_coord": "E145",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF('Costos Totales'!E$8<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),('Costos Totales'!E91+E308+E438)*'Panel de Control General'!$C$35,0),0)",
+        "v28": "=IFERROR(IF(E$143<=('Panel de Control General'!$C$11+'Nomina Loaded'!$C$3-1),('Costos Totales'!E91+E308+E438+E333)*'Panel de Control General'!$C$35,0),0)"
+      }
+    ],
+    "Riesgo": [
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 1,
+        "example_coord": "L11",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "AVERAGE"
+        ],
+        "v27": "=AVERAGE('Condiciones Cadena A'!E65:T65)",
+        "v28": "='Panel de Control General'!C20"
+      }
+    ],
+    "Tasas, TRM, Polizas": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 5,
+        "example_coord": "C13",
+        "funcs_added": [
+          "IF",
+          "YEAR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=B13+(C4*50%+C5*50%)",
+        "v28": "=IF('Panel de Control General'!$L$6=\"No\",100%,IF(YEAR('Panel de Control General'!$C$10)=C$7,100%,B13+K13))"
+      }
+    ],
+    "Vision Cost To Serve": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 15,
+        "example_coord": "I159",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF(I137<>\"\",(I139+$I$129+$I$132-I168)/($I$128+$I$131+I153),0)",
+        "v28": "=SUM(I154:I158,I153)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 1,
+        "example_coord": "K38",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(SUM(IF('Panel de Control General'!O17=TRUE,'Costo Cadena C'!D290:BK290,0),IF('Panel de Control General'!O30=TRUE,'Costo Cadena C'!D315:BK315,0))/'Panel de Control General'!$C$11/'Panel de Control General'!$O$52,0)",
+        "v28": "=IFERROR(SUM(IF('Panel de Control General'!O17=TRUE,'Costo Cadena C'!#REF!,0),IF('Panel de Control General'!O30=TRUE,'Costo Cadena C'!#REF!,0))/'Panel de Control General'!$C$11/'Panel de Control General'!$Y$31,0)"
+      }
+    ],
+    "Vision Tarifas_Modelo_Cobro": [
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 5,
+        "example_coord": "D143",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF(C143=0,0,C143+$G$53)",
+        "v28": "=C143/$C$140"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 5,
+        "example_coord": "D150",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR(((($C$40+$C$50+$C$60)*$D$35)+D77)/C150,0)",
+        "v28": "=C150/$C$140"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 5,
+        "example_coord": "D157",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(((($C$40+$C$50+$C$60)*$D$35)+D84)/C157,0)",
+        "v28": "=IFERROR(D80/C157,0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 2,
+        "example_coord": "G36",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "=+'Panel de Control General'!D63+SUM(G30:G33)",
+        "v28": "=+'Panel de Control General'!D63"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 2,
+        "example_coord": "D124",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=C121*(1-C124)",
+        "v28": "=C124/(($C$114/6)*60)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "D21",
+        "funcs_added": [
+          "IFERROR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=IF(D16=\"Transacción\",'Hoja Maestra Escenarios'!G79,IF(OR(D16=\"Resultados\",D16=\"Honorarios\"),'Hoja Maestra Escenarios'!G81,0))",
+        "v28": "=IFERROR(IF(D16=\"Transacción\",'Hoja Maestra Escenarios'!G79,IF(OR(D16=\"Resultados\",D16=\"Honorarios\"),'Hoja Maestra Escenarios'!G81,0)),0)"
+      },
+      {
+        "label": "DROPPED_FUNCTION",
+        "count": 1,
+        "example_coord": "G35",
+        "funcs_added": [],
+        "funcs_dropped": [
+          "SUM"
+        ],
+        "v27": "='Panel de Control General'!$C$63+SUM(G30:G33)",
+        "v28": "='Panel de Control General'!$C$63"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "G45",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF(C34=\"FTE\",G43/C37/12,G43/E126),0)",
+        "v28": "=IFERROR(IF(C34=\"FTE\",G43/C37,G43/E133),0)"
+      },
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 1,
+        "example_coord": "G57",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=IFERROR(IF(C35=\"Transacción\",(SUM(C40,C50,C60)*D35)/G55,(G53+G55)/C133/'Panel de Control General'!$C$11),0)",
+        "v28": "=IFERROR(IF(C35=\"Transacción\",(SUM(C40,C51,C62)*D35)/G55,(G55)/C140),0)"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "C121",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=$C$107*$C$109*C37",
+        "v28": "=((C115/4)/6)*60"
+      },
+      {
+        "label": "CONSTANT_IN_FORMULA",
+        "count": 1,
+        "example_coord": "D121",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "=C121*60",
+        "v28": "=C121/(($C$114/6)*60)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C125",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [],
+        "v27": "='Panel de Control General'!$C$19",
+        "v28": "=SUM(C120:C124)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C133",
+        "funcs_added": [
+          "SUM"
+        ],
+        "funcs_dropped": [
+          "IF"
+        ],
+        "v27": "=IF('Panel de Control General'!$C$5=\"SACO\",'Panel de Control General'!$C$124,IF('Panel de Control General'!$C$5=\"Cobranzas\",'Panel de Control General'!$C$155,0))",
+        "v28": "=SUM(D120:D122)"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C137",
+        "funcs_added": [
+          "IF",
+          "OR"
+        ],
+        "funcs_dropped": [],
+        "v27": "=+C78",
+        "v28": "=IF(OR(C35=\"Honorarios\",C35=\"Resultados\"),\"✓ Habilitado\",\"— Deshabilitado\")"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 1,
+        "example_coord": "C140",
+        "funcs_added": [
+          "IF"
+        ],
+        "funcs_dropped": [],
+        "v27": "=+C81",
+        "v28": "=IF('Panel de Control General'!$C$5=\"SACO\",'Panel de Control General'!$C$124,IF('Panel de Control General'!$C$5=\"Cobranzas\",'Panel de Control General'!$C$155,0))"
+      }
+    ],
+    "Visión Imprimible": [
+      {
+        "label": "TRIVIAL_REWRITE",
+        "count": 1,
+        "example_coord": "T13",
+        "funcs_added": [],
+        "funcs_dropped": [],
+        "v27": "='Panel de Control General'!L7 & \" · \" & 'Panel de Control General'!L8",
+        "v28": "='Panel de Control General'!K7&\" · \"&'Panel de Control General'!L7 & \" · \" & 'Panel de Control General'!L9"
+      }
+    ],
+    "Visión P&G": [
+      {
+        "label": "NEW_FUNCTION",
+        "count": 180,
+        "example_coord": "C19",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "INDEX",
+          "MATCH",
+          "SUM",
+          "YEAR"
+        ],
+        "funcs_dropped": [
+          "IFERROR"
+        ],
+        "v27": "=IFERROR((C31/(1-'Panel de Control General'!$C$63))*C$15,0)",
+        "v28": "=IF(AND(C$12>=SUM('Listas Desplegables'!$A$53:$BH$53),C12<=$K$5),'Hoja Maestra Escenarios'!$C$296,0)*C$15*(1+INDEX('Tasas, TRM, Polizas'!$J$8:$O$16,MATCH('Panel de Control General'!$L$7,'Tasas, TRM, Polizas'!$I$8:$I$16,0),MATCH(YEAR(C$13),'Tasas, TRM, Polizas'!$J$7:$O$7,0)))"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 180,
+        "example_coord": "C22",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "SUM",
+          "SUMIFS"
+        ],
+        "funcs_dropped": [],
+        "v27": "=C$18*'Panel de Control General'!$C67",
+        "v28": "=IF(AND(C$12>=SUM('Listas Desplegables'!$A$53:$BH$53),C12<=$K$5),SUMIFS('Hoja Maestra Escenarios'!$D$295:$D$316,'Hoja Maestra Escenarios'!$B$295:$B$316,$B22),0)*C$15"
+      },
+      {
+        "label": "NEW_FUNCTION",
+        "count": 60,
+        "example_coord": "C25",
+        "funcs_added": [
+          "AND",
+          "IF",
+          "SUM",
+          "SUMIFS"
+        ],
+        "funcs_dropped": [],
+        "v27": "=C$18*'Panel de Control General'!$C70",
+        "v28": "=IF(AND(C$12>=SUM('Listas Desplegables'!$A$53:$BH$53),C12<=$K$5),-SUMIFS('Hoja Maestra Escenarios'!$D$295:$D$316,'Hoja Maestra Escenarios'!$B$295:$B$316,$B25),0)*C$15"
+      }
+    ]
+  }
+}

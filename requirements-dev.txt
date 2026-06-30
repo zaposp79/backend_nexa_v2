@@ -1,0 +1,14 @@
+# Development/test dependencies for the certification gate.
+#
+# Keep runtime dependencies in requirements.txt. Use this file for pytest-based
+# validation, preferably with constraints/python314.txt during Python 3.14
+# certification:
+#
+#   python -m pip install -r requirements-dev.txt -c constraints/python314.txt
+
+-r requirements.txt
+
+pytest
+pytest-cov
+httpx
+coverage

@@ -1,0 +1,106 @@
+{
+  "$defs": {
+    "CanalCadenaCV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "costo_escalamiento": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Costo Escalamiento",
+          "type": "number"
+        },
+        "modalidad": {
+          "default": "",
+          "title": "Modalidad",
+          "type": "string"
+        },
+        "nombre": {
+          "default": "",
+          "title": "Nombre",
+          "type": "string"
+        },
+        "opex_fijo_integ": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Opex Fijo Integ",
+          "type": "number"
+        },
+        "opex_var_integ": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Opex Var Integ",
+          "type": "number"
+        },
+        "pct_escalamiento": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Escalamiento",
+          "type": "number"
+        },
+        "volumen_mensual": {
+          "default": 0.0,
+          "minimum": 0.0,
+          "title": "Volumen Mensual",
+          "type": "number"
+        }
+      },
+      "title": "CanalCadenaCV1",
+      "type": "object"
+    },
+    "MiembroEquipoTransversalV1": {
+      "additionalProperties": false,
+      "properties": {
+        "activo": {
+          "default": true,
+          "title": "Activo",
+          "type": "boolean"
+        },
+        "pct_dedicacion": {
+          "default": 0.0,
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Pct Dedicacion",
+          "type": "number"
+        },
+        "rol": {
+          "default": "",
+          "title": "Rol",
+          "type": "string"
+        }
+      },
+      "title": "MiembroEquipoTransversalV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "canales": {
+      "items": {
+        "$ref": "#/$defs/CanalCadenaCV1"
+      },
+      "title": "Canales",
+      "type": "array"
+    },
+    "equipo_transversal": {
+      "items": {
+        "$ref": "#/$defs/MiembroEquipoTransversalV1"
+      },
+      "title": "Equipo Transversal",
+      "type": "array"
+    },
+    "inversion_anual": {
+      "default": 0.0,
+      "minimum": 0.0,
+      "title": "Inversion Anual",
+      "type": "number"
+    }
+  },
+  "title": "CadenaCRequestV1",
+  "type": "object"
+}

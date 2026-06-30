@@ -1,0 +1,624 @@
+{
+  "version": "1.0",
+  "date": "2026-05-21",
+  "status": "OFFICIAL MAPPING — PHASE 8 REFERENCE",
+  "description": "Matriz oficial de mappings: entry_data fields → domain models → @property derivados → endpoint responses. Canonical names y aliases, fuentes, fórmulas.",
+  "metadata": {
+    "total_entry_fields": 31,
+    "total_domain_fields": 120,
+    "total_property_fields": 19,
+    "total_endpoint_exposures": 85
+  },
+  "sections": {
+    "entry_data_contract": {
+      "description": "Campos de entrada desde frontend (official contract)",
+      "root_sections": [
+        "panel_de_control",
+        "condiciones_cadena_a",
+        "condiciones_cadena_b",
+        "condiciones_cadena_c"
+      ]
+    },
+    "property_fields_pyg": {
+      "description": "@property fields derived in PyGMensual — 9 campos calculados",
+      "fields": [
+        {
+          "canonical_name": "ingreso_bruto",
+          "endpoint_name": "ingreso_bruto",
+          "formula": "ingreso_bruto_a + ingreso_bruto_b + ingreso_bruto_c",
+          "source": "PyGCalculator (derivado de ingreso_bruto_*, calculados en calculadores respectivos)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:400",
+          "nullable": false,
+          "depends_on": [
+            "ingreso_bruto_a",
+            "ingreso_bruto_b",
+            "ingreso_bruto_c"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "ingreso_neto",
+          "endpoint_name": "ingreso_neto",
+          "formula": "ingreso_bruto + contingencia_op + contingencia_com + markup_ingreso - descuento_ingreso",
+          "source": "PyGCalculator (aplicar contingencias y markup)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:403-406",
+          "nullable": false,
+          "depends_on": [
+            "ingreso_bruto",
+            "contingencia_op",
+            "contingencia_com",
+            "markup_ingreso",
+            "descuento_ingreso"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "costo_a",
+          "endpoint_name": "costo_a",
+          "formula": "payroll_a + no_payroll_a",
+          "source": "PyGCalculator (suma de Cadena A)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:409-410",
+          "nullable": false,
+          "depends_on": [
+            "payroll_a",
+            "no_payroll_a"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "costos_financieros",
+          "endpoint_name": "costos_financieros",
+          "formula": "ica + gmf + polizas + financiacion",
+          "source": "PyGCalculator (suma de componentes financieros)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:413-414",
+          "nullable": false,
+          "depends_on": [
+            "ica",
+            "gmf",
+            "polizas",
+            "financiacion"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "costo_total",
+          "endpoint_name": "costo_total",
+          "formula": "costo_a + costo_b + costo_c",
+          "source": "PyGCalculator (suma total de costos todas cadenas)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:417-418",
+          "nullable": false,
+          "depends_on": [
+            "costo_a",
+            "costo_b",
+            "costo_c"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "contribucion",
+          "endpoint_name": "contribucion",
+          "formula": "ingreso_neto - costo_total",
+          "source": "PyGCalculator (residual/profit por mes)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:421-422",
+          "nullable": false,
+          "depends_on": [
+            "ingreso_neto",
+            "costo_total"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "pct_contribucion",
+          "endpoint_name": "pct_contribucion",
+          "formula": "contribucion / ingreso_neto (if ingreso_neto else 0.0)",
+          "source": "PyGCalculator (percentage)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:425-426",
+          "nullable": false,
+          "depends_on": [
+            "contribucion",
+            "ingreso_neto"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "utilidad_neta",
+          "endpoint_name": "utilidad_neta",
+          "formula": "contribucion (alias)",
+          "source": "PyGCalculator (same as contribucion)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:429-430",
+          "nullable": false,
+          "depends_on": [
+            "contribucion"
+          ],
+          "documentation_needed": true,
+          "note": "This is an alias for 'contribucion' — consider consolidating"
+        },
+        {
+          "canonical_name": "pct_utilidad_neta",
+          "endpoint_name": "pct_utilidad_neta",
+          "formula": "utilidad_neta / ingreso_neto (if ingreso_neto else 0.0)",
+          "source": "PyGCalculator (percentage)",
+          "domain_model": "PyGMensual",
+          "location": "domain/models.py:433-434",
+          "nullable": false,
+          "depends_on": [
+            "utilidad_neta",
+            "ingreso_neto"
+          ],
+          "documentation_needed": true
+        }
+      ]
+    },
+    "property_fields_desglose": {
+      "description": "@property fields in DesgloseCTS — 2 campos agregados",
+      "fields": [
+        {
+          "canonical_name": "desglose_cts_cadena_a_total",
+          "endpoint_name": "desglose_a.total",
+          "formula": "nomina + no_payroll",
+          "source": "CostToServeCalculator (DesgloseCTSCadenaA)",
+          "domain_model": "DesgloseCTSCadenaA",
+          "location": "domain/models.py:481-483",
+          "nullable": false,
+          "depends_on": [
+            "nomina",
+            "no_payroll"
+          ],
+          "documentation_needed": true
+        },
+        {
+          "canonical_name": "desglose_cts_cadena_b_total",
+          "endpoint_name": "desglose_b.total",
+          "formula": "componente_fijo + componente_variable",
+          "source": "CostToServeCalculator (DesgloseCTSCadenaB)",
+          "domain_model": "DesgloseCTSCadenaB",
+          "location": "domain/models.py:518-520",
+          "nullable": false,
+          "depends_on": [
+            "componente_fijo",
+            "componente_variable"
+          ],
+          "documentation_needed": true
+        }
+      ]
+    },
+    "nomenclatura_aliases": {
+      "description": "Aliases actuales y nombres canónicos propuestos",
+      "aliases": [
+        {
+          "id": "ALIAS_001",
+          "current_name": "tarifa_fijo_fte",
+          "canonical_name": "tarifa_fija",
+          "location": "TarifaCanal (vision_tarifas output)",
+          "affected_endpoints": [
+            "GET /results/vision-tarifas",
+            "GET /results (configuracion_comercial)"
+          ],
+          "recommendation": "Estandarizar a 'tarifa_fija' en TODOS los lugares",
+          "phase": "8",
+          "status": "PENDING_FIX"
+        },
+        {
+          "id": "ALIAS_002",
+          "current_name": "modelo_cobro",
+          "alias_in_endpoint": "modelo_cobro_principal",
+          "canonical_name": "modelo_cobro",
+          "location": "pricing_serializer._configuracion_comercial()",
+          "affected_endpoints": [
+            "GET /results (configuracion_comercial)"
+          ],
+          "recommendation": "Remover suffix '_principal' — usar modelo_cobro, pero seleccionar correctamente (no canales[0])",
+          "phase": "8",
+          "status": "PENDING_FIX"
+        },
+        {
+          "id": "ALIAS_003",
+          "current_name": "salario_variable_ch",
+          "canonical_name": "comisiones_ch",
+          "location": "TarifaCanal (vision_tarifas output)",
+          "affected_endpoints": [
+            "GET /results/vision-tarifas"
+          ],
+          "recommendation": "Usar 'comisiones' para consistencia con salario_variable field name origin",
+          "phase": "8",
+          "status": "PENDING_FIX"
+        },
+        {
+          "id": "ALIAS_004",
+          "current_name": "estudios_seguridad",
+          "alias_old": "seguridad",
+          "canonical_name": "estudios_seguridad",
+          "location": "PerfilCadenaA, DesgloseCTSCadenaA",
+          "affected_endpoints": [
+            "GET /results (vision_tarifas desglose)"
+          ],
+          "recommendation": "Usar 'estudios_seguridad' consistentemente",
+          "phase": "8",
+          "status": "DONE"
+        }
+      ]
+    },
+    "naming_suffixes": {
+      "description": "Convención de suffixes para nombres de campos",
+      "suffixes": [
+        {
+          "suffix": "_ch",
+          "meaning": "por Canal (Channel)",
+          "example": "payroll_ch, tarifa_fijo_ch",
+          "used_in": [
+            "TarifaCanal",
+            "DesgloseCTSCadenaA"
+          ],
+          "status": "ESTABLISHED"
+        },
+        {
+          "suffix": "_mensual",
+          "meaning": "Valor por mes (no acumulado)",
+          "example": "costo_mensual, salario_mensual, volumen_mensual",
+          "used_in": [
+            "PanelDeControl",
+            "PerfilCadenaA",
+            "CanalCadenaB"
+          ],
+          "status": "ESTABLISHED"
+        },
+        {
+          "suffix": "_total",
+          "meaning": "Sumatoria o agregado total",
+          "example": "costo_total, valor_total_deal, ingreso_total",
+          "used_in": [
+            "PyGMensual",
+            "DesgloseCTS",
+            "ResultadoVisionTarifas"
+          ],
+          "status": "ESTABLISHED"
+        },
+        {
+          "suffix": "_promedio",
+          "meaning": "Promedio sobre período",
+          "example": "costo_mensual_promedio, cts_ponderado (es promedio ponderado)",
+          "used_in": [
+            "KPIsDeal",
+            "ResultadoCostToServe"
+          ],
+          "status": "ESTABLISHED"
+        },
+        {
+          "suffix": "_ponderado",
+          "meaning": "Promedio ponderado por participación",
+          "example": "cts_ponderado",
+          "used_in": [
+            "ResultadoCostToServe"
+          ],
+          "status": "ESTABLISHED"
+        },
+        {
+          "suffix": "_atribuible",
+          "meaning": "Costo atribuido a un canal específico",
+          "example": "cadena_b_atribuible, financieros_atribuible",
+          "used_in": [
+            "TarifaCanal"
+          ],
+          "status": "ESTABLISHED"
+        }
+      ]
+    },
+    "critical_fixes_phase_8": {
+      "description": "Correcciones CRÍTICAS que deben hacerse en Fase 8",
+      "fixes": [
+        {
+          "fix_id": "F8.1",
+          "issue": "canales[0] hardcoding in _configuracion_comercial()",
+          "file": "adapters/pricing_serializer.py",
+          "lines": "214-227",
+          "current_code": "canal_principal = canales[0] if canales else None",
+          "options": [
+            {
+              "option": "A",
+              "description": "Usar canal con máximo ingreso/facturación",
+              "code": "canal_principal = max(canales, key=lambda c: c.facturacion) if canales else None"
+            },
+            {
+              "option": "B",
+              "description": "Usar promedio ponderado",
+              "code": "canal_principal = _aggregate_channels_weighted(canales)"
+            },
+            {
+              "option": "C",
+              "description": "Requerir selección explícita",
+              "code": "canal_principal = self._get_principal_channel(panel, canales)"
+            }
+          ],
+          "recommendation": "OPTION A es más simple. Implementar con test multi-channel.",
+          "affected_fields": [
+            "modelo_cobro_principal",
+            "pct_fijo_global",
+            "pct_variable_global",
+            "tarifa_fija",
+            "tarifa_variable"
+          ],
+          "priority": "CRITICAL"
+        },
+        {
+          "fix_id": "F8.2",
+          "issue": "Silent defaults en _configuracion_comercial() si no hay canales",
+          "file": "adapters/pricing_serializer.py",
+          "lines": "229-233",
+          "current_code": "modelo_cobro_principal = canal_principal.modelo_cobro if canal_principal else \"\"",
+          "options": [
+            {
+              "option": "A",
+              "description": "Fail loudly — raise error si no hay canales",
+              "code": "if not canal_principal: raise ValueError('No active channels in vision_tarifas')"
+            },
+            {
+              "option": "B",
+              "description": "Return None/sentinel values",
+              "code": "modelo_cobro_principal = canal_principal.modelo_cobro if canal_principal else None"
+            },
+            {
+              "option": "C",
+              "description": "Log warning pero continuar con defaults",
+              "code": "if not canal_principal: logger.warning(f'No channels for {panel.cliente}'); # entonces defaults"
+            }
+          ],
+          "recommendation": "OPTION A — fail loudly es más seguro. Frontend debe estar preparado.",
+          "priority": "CRITICAL"
+        },
+        {
+          "fix_id": "F8.3",
+          "issue": "Extra wrapping en vision_tarifas endpoint",
+          "file": "api/v1/simulation/results_router.py",
+          "lines": "143-145",
+          "current_code": "return ApiResponse.ok({\"canales\": canales})",
+          "options": [
+            {
+              "option": "A",
+              "description": "Devolver estructura completa via serializer",
+              "code": "return ApiResponse.ok(data.get(\"vision_tarifas\"))"
+            },
+            {
+              "option": "B",
+              "description": "Mantener wrapping pero documentar explícitamente",
+              "code": "# Devuelve: {\"canales\": [...]} (note extra wrapper vs other endpoints)"
+            }
+          ],
+          "recommendation": "OPTION A — consistencia con otros endpoints.",
+          "priority": "HIGH"
+        },
+        {
+          "fix_id": "F8.4",
+          "issue": "@property fields sin documentación",
+          "file": "adapters/pricing_serializer.py",
+          "lines": "46-60, 63-82",
+          "current_code": "d[\"ingreso_bruto\"] = p.ingreso_bruto  # sin documentar source/formula",
+          "action": "Crear docs/audit/07_property_fields_documented.md con: source, formula, nullability, validation para CADA @property",
+          "affected_fields": 11,
+          "deliverable": "docs/audit/07_property_fields_documented.md",
+          "priority": "HIGH"
+        }
+      ]
+    }
+  },
+  "mapping_by_section": {
+    "panel_de_control_mappings": [
+      {
+        "entry_data_field": "panel.cliente",
+        "domain_model": "PanelDeControl.cliente",
+        "used_in_calculators": [
+          "RiesgoCalculator (score_cliente)",
+          "KPIsCalculator"
+        ],
+        "exposed_in_endpoints": [
+          "GET /results (ficha_deal.cliente)",
+          "GET /results (configuracion_comercial)"
+        ],
+        "canonical_name": "cliente",
+        "status": "✓ CONSISTENT"
+      },
+      {
+        "entry_data_field": "panel.valor_total_deal",
+        "domain_model": "PanelDeControl.valor_total_deal",
+        "used_in_calculators": [
+          "RiesgoCalculator (approval threshold)",
+          "KPIsCalculator"
+        ],
+        "exposed_in_endpoints": [
+          "GET /results/kpis (valor_total_deal)"
+        ],
+        "canonical_name": "valor_total_deal",
+        "status": "✓ CONSISTENT"
+      },
+      {
+        "entry_data_field": "panel.cadena_a_activa",
+        "domain_model": "PanelDeControl.cadena_a_activa",
+        "used_in_calculators": [
+          "Engine (orchestration)"
+        ],
+        "exposed_in_endpoints": [
+          "NONE — campo huérfano"
+        ],
+        "canonical_name": "cadena_a_activa",
+        "status": "⚠️ ORPHAN — Usar en entrada pero NO expuesto"
+      },
+      {
+        "entry_data_field": "panel.tipo_de_cobro",
+        "domain_model": "PanelDeControl.tipo_de_cobro",
+        "used_in_calculators": [
+          "UNKNOWN — necesita auditar"
+        ],
+        "exposed_in_endpoints": [
+          "NONE — campo huérfano"
+        ],
+        "canonical_name": "tipo_de_cobro",
+        "status": "🔴 UNKNOWN — Validar usage o remover"
+      },
+      {
+        "entry_data_field": "panel.tipo_de_gasto",
+        "domain_model": "PanelDeControl.tipo_de_gasto",
+        "used_in_calculators": [
+          "UNKNOWN — necesita auditar"
+        ],
+        "exposed_in_endpoints": [
+          "NONE — campo huérfano"
+        ],
+        "canonical_name": "tipo_de_gasto",
+        "status": "🔴 UNKNOWN — Validar usage o remover"
+      },
+      {
+        "entry_data_field": "panel.rubro",
+        "domain_model": "PanelDeControl.rubro",
+        "used_in_calculators": [
+          "UNKNOWN — necesita auditar"
+        ],
+        "exposed_in_endpoints": [
+          "NONE — campo huérfano"
+        ],
+        "canonical_name": "rubro",
+        "status": "🔴 UNKNOWN — Validar usage o remover"
+      }
+    ],
+    "vision_tarifas_mappings": [
+      {
+        "vision_field": "canales[].tarifa_fijo_fte",
+        "endpoint_field": "GET /results/vision-tarifas → canales[].tarifa_fijo_fte",
+        "source": "VisionTarifasCalculator (facturacion / fte)",
+        "canonical_name": "tarifa_fijo_fte",
+        "aliases": [
+          "tarifa_fija (in configuracion_comercial)"
+        ],
+        "status": "⚠️ ALIAS — Estandarizar nombre"
+      },
+      {
+        "vision_field": "canales[].modelo_cobro",
+        "endpoint_field": "GET /results → configuracion_comercial.modelo_cobro_principal",
+        "source": "PerfilCadenaA (per-channel)",
+        "canonical_name": "modelo_cobro",
+        "current_issue": "canales[0] hardcoded",
+        "status": "🔴 CRITICAL — Fijar selección de canal"
+      }
+    ]
+  },
+  "endpoints_contract_mapping": {
+    "GET /results": {
+      "response_type": "PricingResult",
+      "fields": {
+        "configuracion_comercial": {
+          "schema": {
+            "modelo_cobro_principal": "string",
+            "pct_fijo_global": "float",
+            "pct_variable_global": "float",
+            "tarifa_fija": "float",
+            "tarifa_variable": "float",
+            "descuento": "float",
+            "volumen_base_mensual": "float",
+            "margen_objetivo": "float",
+            "ingreso_mensual": "float",
+            "costo_mensual_total": "float",
+            "valor_total_deal": "float"
+          },
+          "issues": [
+            "canales[0] hardcoded (H7.1)",
+            "silent defaults (H7.2)",
+            "modelo_cobro_principal suffix (H7.5)"
+          ]
+        },
+        "kpis": "KPIsDeal",
+        "pyg_por_mes": "List[PyGMensual]",
+        "panel": "PanelDeControl",
+        "cost_to_serve": "ResultadoCostToServe",
+        "vision_tarifas": "ResultadoVisionTarifas"
+      }
+    },
+    "GET /results/vision-tarifas": {
+      "response_type": "ResultadoVisionTarifas",
+      "current_format": "{\"canales\": [...]}",
+      "issue": "Extra wrapping vs other endpoints (H7.3)",
+      "should_be": "Return full ResultadoVisionTarifas object"
+    }
+  },
+  "validation_rules": {
+    "description": "Validaciones que deben aplicarse en Fase 8",
+    "rules": [
+      {
+        "rule_id": "V8.1",
+        "description": "Fail-fast si no hay canales en vision_tarifas",
+        "where": "_configuracion_comercial() entrada",
+        "condition": "resultado.vision_tarifas is None or len(canales) == 0",
+        "action": "raise ValueError with clear message"
+      },
+      {
+        "rule_id": "V8.2",
+        "description": "Validar canal_principal != None",
+        "where": "_configuracion_comercial() después selección",
+        "condition": "canal_principal is None",
+        "action": "raise ValueError('Selected principal channel is None')"
+      },
+      {
+        "rule_id": "V8.3",
+        "description": "No permitir silent defaults",
+        "where": "Toda la serialización",
+        "condition": "required_field is None",
+        "action": "Retornar None explícito (no string vacío, no 0.0, no 1.0)"
+      }
+    ]
+  },
+  "phase_8_deliverables": {
+    "code_changes": [
+      {
+        "file": "adapters/pricing_serializer.py",
+        "changes": [
+          "Fix H8.1: Reemplazar canales[0] con max()/weighted selection",
+          "Fix H8.2: Fail-fast validation si no hay canales",
+          "Fix H8.3: Remove extra wrapping en vision_tarifas wrapper",
+          "Document: Cada @property con source/formula/nullability"
+        ]
+      },
+      {
+        "file": "api/v1/simulation/results_router.py",
+        "changes": [
+          "Fix H8.3: Retornar estructura completa de vision_tarifas"
+        ]
+      },
+      {
+        "file": "tests/unit/test_phase8_contract_enforcement.py",
+        "changes": [
+          "NEW: test_multi_channel_principal_channel_selection()",
+          "NEW: test_silent_defaults_validation()",
+          "NEW: test_property_fields_completeness()",
+          "NEW: test_endpoint_contract_consistency()"
+        ]
+      }
+    ],
+    "documentation": [
+      {
+        "file": "docs/audit/07_property_fields_documented.md",
+        "purpose": "Documentar TODAS las @property fields: source, formula, nullability, validation"
+      },
+      {
+        "file": "docs/audit/nomenclatura_mapping_oficial_fase8.json",
+        "purpose": "Este documento — matrix oficial de mappings"
+      },
+      {
+        "file": "docs/audit/08_phase_8_implementation_guide.md",
+        "purpose": "Step-by-step guide para implementar todos los fixes de Fase 8"
+      }
+    ]
+  },
+  "sign_off": {
+    "status": "READY FOR IMPLEMENTATION",
+    "blockers": "NONE",
+    "next_step": "Ejecutar fixes en orden: F8.1 → F8.2 → F8.3 → F8.4 (documentation)",
+    "timeline": "3-4 días",
+    "owner": "Dev Team",
+    "reviewer": "Tech Lead"
+  }
+}

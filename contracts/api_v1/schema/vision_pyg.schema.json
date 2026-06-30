@@ -1,0 +1,127 @@
+{
+  "$defs": {
+    "ResumenEjecutivoPyGV1": {
+      "additionalProperties": true,
+      "properties": {
+        "contribucion_total": {
+          "default": 0.0,
+          "title": "Contribucion Total",
+          "type": "number"
+        },
+        "costo_total_contrato": {
+          "default": 0.0,
+          "title": "Costo Total Contrato",
+          "type": "number"
+        },
+        "cumple_margen_minimo": {
+          "default": true,
+          "title": "Cumple Margen Minimo",
+          "type": "boolean"
+        },
+        "ingreso_neto_total": {
+          "default": 0.0,
+          "title": "Ingreso Neto Total",
+          "type": "number"
+        },
+        "meses_activos": {
+          "default": 0,
+          "title": "Meses Activos",
+          "type": "integer"
+        },
+        "meses_contrato": {
+          "default": 0,
+          "title": "Meses Contrato",
+          "type": "integer"
+        },
+        "pct_utilidad_promedio": {
+          "default": 0.0,
+          "title": "Pct Utilidad Promedio",
+          "type": "number"
+        },
+        "valor_total_deal": {
+          "default": 0.0,
+          "title": "Valor Total Deal",
+          "type": "number"
+        }
+      },
+      "title": "ResumenEjecutivoPyGV1",
+      "type": "object"
+    },
+    "VisionPyGRowV1": {
+      "additionalProperties": true,
+      "properties": {
+        "acumulado": {
+          "default": 0.0,
+          "title": "Acumulado",
+          "type": "number"
+        },
+        "key": {
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "title": "Label",
+          "type": "string"
+        },
+        "promedio": {
+          "default": 0.0,
+          "title": "Promedio",
+          "type": "number"
+        },
+        "seccion": {
+          "title": "Seccion",
+          "type": "string"
+        },
+        "signo": {
+          "title": "Signo",
+          "type": "string"
+        },
+        "tipo": {
+          "title": "Tipo",
+          "type": "string"
+        },
+        "valores": {
+          "items": {
+            "type": "number"
+          },
+          "title": "Valores",
+          "type": "array"
+        }
+      },
+      "required": [
+        "key",
+        "label",
+        "seccion",
+        "tipo",
+        "signo"
+      ],
+      "title": "VisionPyGRowV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "filas": {
+      "items": {
+        "$ref": "#/$defs/VisionPyGRowV1"
+      },
+      "title": "Filas",
+      "type": "array"
+    },
+    "meses_activos": {
+      "default": 0,
+      "title": "Meses Activos",
+      "type": "integer"
+    },
+    "meses_contrato": {
+      "default": 0,
+      "title": "Meses Contrato",
+      "type": "integer"
+    },
+    "resumen": {
+      "$ref": "#/$defs/ResumenEjecutivoPyGV1"
+    }
+  },
+  "title": "VisionPyGV1",
+  "type": "object"
+}

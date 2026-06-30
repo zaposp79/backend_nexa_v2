@@ -1,0 +1,82 @@
+{
+  "additionalProperties": true,
+  "properties": {
+    "contingencias": {
+      "default": 0.0,
+      "title": "Contingencias",
+      "type": "number"
+    },
+    "contribucion": {
+      "default": 0.0,
+      "title": "Contribucion",
+      "type": "number"
+    },
+    "costo_b": {
+      "default": 0.0,
+      "title": "Costo B",
+      "type": "number"
+    },
+    "costo_c": {
+      "default": 0.0,
+      "title": "Costo C",
+      "type": "number"
+    },
+    "costo_total": {
+      "default": 0.0,
+      "title": "Costo Total",
+      "type": "number"
+    },
+    "financiacion": {
+      "default": 0.0,
+      "title": "Financiacion",
+      "type": "number"
+    },
+    "gmf": {
+      "default": 0.0,
+      "title": "Gmf",
+      "type": "number"
+    },
+    "ica": {
+      "default": 0.0,
+      "title": "Ica",
+      "type": "number"
+    },
+    "ingreso_bruto": {
+      "default": 0.0,
+      "title": "Ingreso Bruto",
+      "type": "number"
+    },
+    "ingreso_neto": {
+      "default": 0.0,
+      "title": "Ingreso Neto",
+      "type": "number"
+    },
+    "markup_descuento": {
+      "default": 0.0,
+      "title": "Markup Descuento",
+      "type": "number"
+    },
+    "meses_activos": {
+      "default": 0,
+      "title": "Meses Activos",
+      "type": "integer"
+    },
+    "no_payroll_a": {
+      "default": 0.0,
+      "title": "No Payroll A",
+      "type": "number"
+    },
+    "payroll_a": {
+      "default": 0.0,
+      "title": "Payroll A",
+      "type": "number"
+    },
+    "polizas": {
+      "default": 0.0,
+      "title": "Polizas",
+      "type": "number"
+    }
+  },
+  "title": "WaterfallV1",
+  "type": "object"
+}

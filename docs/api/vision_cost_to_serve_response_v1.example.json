@@ -1,0 +1,548 @@
+{
+  "success": true,
+  "data": {
+    "cost_to_serve": {
+      "cts_cadena_a": 150.5,
+      "cts_cadena_b": 75.25,
+      "cts_cadena_c": 45.0,
+      "cts_ponderado": 270.75,
+      "participacion_a": 0.556,
+      "participacion_b": 0.278,
+      "participacion_c": 0.166,
+      "fte_cadena_a": 12.0,
+      "vol_cadena_b": 5000,
+      "vol_cadena_c": 2000,
+      "costo_total_acumulado": 270.75,
+      "canal_view_habilitado": true,
+      "desglose_a": {
+        "nomina": 90.0,
+        "no_payroll": 30.0,
+        "nomina_loaded": 80.0,
+        "salario_fijo": 50.0,
+        "salario_variable": 30.0,
+        "capacitacion_inicial": 8.0,
+        "capacitacion_rotacion": 5.0,
+        "examenes": 3.0,
+        "estudios_seguridad": 3.0,
+        "crucero": 2.0,
+        "opex_fijo": 20.0,
+        "inversiones": 10.0,
+        "costos_fijos_estacion": 5.0,
+        "total": 150.5
+      },
+      "desglose_b": {
+        "componente_fijo": 45.0,
+        "componente_variable": 15.0,
+        "opex": 12.0,
+        "inversiones": 8.0,
+        "soporte_mantenimiento": 5.0,
+        "tarifa": 0.0,
+        "opex_variable": 0.0,
+        "tasa_escalamiento": 0.0,
+        "hitl": 0.0,
+        "total": 85.0
+      },
+      "canales_detalle": [
+        {
+          "canal": "Chat",
+          "modalidad": "Inbound",
+          "fte": 6.0,
+          "participacion_cadena_a": 0.5,
+          "nomina_loaded": 40.0,
+          "salario_fijo": 25.0,
+          "salario_variable": 15.0,
+          "capacitacion_inicial": 4.0,
+          "capacitacion_rotacion": 2.5,
+          "examenes": 1.5,
+          "estudios_seguridad": 1.5,
+          "crucero": 1.0,
+          "opex_fijo": 10.0,
+          "inversiones": 5.0,
+          "costos_fijos_estacion": 2.5,
+          "no_payroll": 15.0,
+          "payroll": 45.0,
+          "cts": 75.0
+        },
+        {
+          "canal": "Email",
+          "modalidad": "Inbound",
+          "fte": 4.0,
+          "participacion_cadena_a": 0.333,
+          "nomina_loaded": 30.0,
+          "salario_fijo": 18.0,
+          "salario_variable": 12.0,
+          "capacitacion_inicial": 3.0,
+          "capacitacion_rotacion": 1.5,
+          "examenes": 1.0,
+          "estudios_seguridad": 1.0,
+          "crucero": 0.5,
+          "opex_fijo": 8.0,
+          "inversiones": 4.0,
+          "costos_fijos_estacion": 2.0,
+          "no_payroll": 10.0,
+          "payroll": 35.0,
+          "cts": 45.5
+        }
+      ]
+    },
+    "vision_por_servicio": [
+      {
+        "servicio": "SAC",
+        "ingreso_mensual": 500000.0,
+        "cts_ponderado": 270.75,
+        "costo_mensual": 270.75,
+        "margen": 499729.25,
+        "contribucion_total": 300000.0,
+        "fte_total": 16.0,
+        "volumen_mensual": 15000,
+        "meses_contrato": 12,
+        "cadenas_activas": ["A", "B", "C"]
+      },
+      {
+        "servicio": "Soporte Técnico",
+        "ingreso_mensual": 300000.0,
+        "cts_ponderado": 180.5,
+        "costo_mensual": 180.5,
+        "margen": 299819.5,
+        "contribucion_total": 200000.0,
+        "fte_total": 10.0,
+        "volumen_mensual": 8000,
+        "meses_contrato": 12,
+        "cadenas_activas": ["A", "B"]
+      }
+    ],
+    "vision_por_canal": [
+      {
+        "canal": "Chat",
+        "modalidad": "Inbound",
+        "modelo_cobro": "Por transacción",
+        "estado": "Activo",
+        "fte": 6.0,
+        "participacion_cadena_a": 0.5,
+        "volumen_mensual": 5000,
+        "facturacion": 250000.0,
+        "ingreso_bruto": 250000.0,
+        "costo_atribuible": 75.0,
+        "pct_fijo": 60.0,
+        "pct_variable": 40.0
+      },
+      {
+        "canal": "Email",
+        "modalidad": "Inbound",
+        "modelo_cobro": "Por volumen",
+        "estado": "Activo",
+        "fte": 4.0,
+        "participacion_cadena_a": 0.333,
+        "volumen_mensual": 3000,
+        "facturacion": 180000.0,
+        "ingreso_bruto": 180000.0,
+        "costo_atribuible": 45.5,
+        "pct_fijo": 55.0,
+        "pct_variable": 45.0
+      },
+      {
+        "canal": "Phone",
+        "modalidad": "Inbound",
+        "modelo_cobro": "Por minuto",
+        "estado": "Activo",
+        "fte": 3.0,
+        "participacion_cadena_a": 0.25,
+        "volumen_mensual": 4000,
+        "facturacion": 200000.0,
+        "ingreso_bruto": 200000.0,
+        "costo_atribuible": 60.0,
+        "pct_fijo": 65.0,
+        "pct_variable": 35.0
+      }
+    ],
+    "detalle_por_canal": [
+      {
+        "canal": "Chat",
+        "modalidad": "Inbound",
+        "fte": 6.0,
+        "participacion_cadena_a": 0.5,
+        "nomina_loaded": 40.0,
+        "salario_fijo": 25.0,
+        "salario_variable": 15.0,
+        "capacitacion_inicial": 4.0,
+        "capacitacion_rotacion": 2.5,
+        "examenes": 1.5,
+        "estudios_seguridad": 1.5,
+        "crucero": 1.0,
+        "opex_fijo": 10.0,
+        "inversiones": 5.0,
+        "costos_fijos_estacion": 2.5,
+        "no_payroll": 15.0,
+        "payroll": 45.0,
+        "cts": 75.0
+      },
+      {
+        "canal": "Email",
+        "modalidad": "Inbound",
+        "fte": 4.0,
+        "participacion_cadena_a": 0.333,
+        "nomina_loaded": 30.0,
+        "salario_fijo": 18.0,
+        "salario_variable": 12.0,
+        "capacitacion_inicial": 3.0,
+        "capacitacion_rotacion": 1.5,
+        "examenes": 1.0,
+        "estudios_seguridad": 1.0,
+        "crucero": 0.5,
+        "opex_fijo": 8.0,
+        "inversiones": 4.0,
+        "costos_fijos_estacion": 2.0,
+        "no_payroll": 10.0,
+        "payroll": 35.0,
+        "cts": 45.5
+      }
+    ],
+    "estructura_equipo": {
+      "roles": [
+        {
+          "rol": "Agente Senior",
+          "cargo_tipo": "Agente Senior",
+          "canal": "Chat",
+          "modalidad": "Inbound",
+          "fte": 3.0,
+          "es_soporte": false,
+          "salario_cargado_unitario": 2500.0,
+          "costo_mensual": 7500.0
+        },
+        {
+          "rol": "Agente Junior",
+          "cargo_tipo": "Agente Junior",
+          "canal": "Chat",
+          "modalidad": "Inbound",
+          "fte": 2.5,
+          "es_soporte": false,
+          "salario_cargado_unitario": 1800.0,
+          "costo_mensual": 4500.0
+        },
+        {
+          "rol": "Quality Assurance",
+          "cargo_tipo": "QA",
+          "canal": "Chat",
+          "modalidad": "Inbound",
+          "fte": 0.5,
+          "es_soporte": true,
+          "salario_cargado_unitario": 2200.0,
+          "costo_mensual": 1100.0
+        },
+        {
+          "rol": "Team Lead",
+          "cargo_tipo": "Supervisor",
+          "canal": "Email",
+          "modalidad": "Inbound",
+          "fte": 1.0,
+          "es_soporte": true,
+          "salario_cargado_unitario": 3000.0,
+          "costo_mensual": 3000.0
+        }
+      ],
+      "por_cargo": [
+        {
+          "cargo_tipo": "Agente Senior",
+          "fte": 3.0,
+          "costo_mensual": 7500.0
+        },
+        {
+          "cargo_tipo": "Agente Junior",
+          "fte": 2.5,
+          "costo_mensual": 4500.0
+        },
+        {
+          "cargo_tipo": "QA",
+          "fte": 0.5,
+          "costo_mensual": 1100.0
+        },
+        {
+          "cargo_tipo": "Supervisor",
+          "fte": 1.0,
+          "costo_mensual": 3000.0
+        }
+      ],
+      "fte_total": 7.0,
+      "fte_agentes": 5.5,
+      "fte_soporte": 1.5,
+      "costo_total_mensual": 16100.0
+    },
+    "charts": {
+      "configurations": [
+        {
+          "id": "cts_por_cadena_stacked",
+          "title": "CTS Ponderado por Cadena",
+          "type": "bar_stacked",
+          "source": "pricing_result.cost_to_serve",
+          "x_axis": {
+            "field": "cadena",
+            "format": "string"
+          },
+          "y_axis": {
+            "field": "cts_ponderado",
+            "format": "currency"
+          },
+          "series": [
+            {
+              "name": "Cadena A",
+              "value_field": "cts_cadena_a"
+            },
+            {
+              "name": "Cadena B",
+              "value_field": "cts_cadena_b"
+            },
+            {
+              "name": "Cadena C",
+              "value_field": "cts_cadena_c"
+            }
+          ],
+          "data": [
+            {
+              "cadena": "A",
+              "cts_cadena_a": 150.5,
+              "cts_cadena_b": 0.0,
+              "cts_cadena_c": 0.0,
+              "cts_ponderado": 150.5
+            },
+            {
+              "cadena": "B",
+              "cts_cadena_a": 0.0,
+              "cts_cadena_b": 75.25,
+              "cts_cadena_c": 0.0,
+              "cts_ponderado": 75.25
+            },
+            {
+              "cadena": "C",
+              "cts_cadena_a": 0.0,
+              "cts_cadena_b": 0.0,
+              "cts_cadena_c": 45.0,
+              "cts_ponderado": 45.0
+            }
+          ]
+        },
+        {
+          "id": "vision_por_canal_fte",
+          "title": "FTE por Canal",
+          "type": "bar_horizontal",
+          "source": "pricing_result.vision_imprimible.vision_por_canal",
+          "x_axis": {
+            "field": "fte",
+            "format": "number"
+          },
+          "y_axis": {
+            "field": "canal",
+            "format": "string"
+          },
+          "series": [
+            {
+              "name": "FTE",
+              "value_field": "fte"
+            }
+          ],
+          "data": [
+            {
+              "canal": "Chat",
+              "fte": 6.0
+            },
+            {
+              "canal": "Email",
+              "fte": 4.0
+            },
+            {
+              "canal": "Phone",
+              "fte": 3.0
+            }
+          ]
+        },
+        {
+          "id": "vision_por_servicio_economics",
+          "title": "Economics por Servicio",
+          "type": "bar_grouped",
+          "source": "pricing_result.vision_imprimible.vision_por_servicio",
+          "x_axis": {
+            "field": "servicio",
+            "format": "string"
+          },
+          "y_axis": {
+            "field": "amount",
+            "format": "currency"
+          },
+          "series": [
+            {
+              "name": "Ingreso Mensual",
+              "value_field": "ingreso_mensual"
+            },
+            {
+              "name": "CTS Ponderado",
+              "value_field": "cts_ponderado"
+            },
+            {
+              "name": "Margen",
+              "value_field": "margen"
+            }
+          ],
+          "data": [
+            {
+              "servicio": "SAC",
+              "ingreso_mensual": 500000.0,
+              "cts_ponderado": 270.75,
+              "margen": 499729.25
+            },
+            {
+              "servicio": "Soporte Técnico",
+              "ingreso_mensual": 300000.0,
+              "cts_ponderado": 180.5,
+              "margen": 299819.5
+            }
+          ]
+        },
+        {
+          "id": "fte_estructura_pie",
+          "title": "Distribución FTE — Agentes vs Soporte",
+          "type": "pie",
+          "source": "pricing_result.vision_imprimible.estructura_equipo",
+          "series": [
+            {
+              "name": "Agentes",
+              "value_field": "fte_agentes"
+            },
+            {
+              "name": "Soporte",
+              "value_field": "fte_soporte"
+            }
+          ],
+          "data": [
+            {
+              "label": "Agentes",
+              "value": 5.5,
+              "percentage": 78.57
+            },
+            {
+              "label": "Soporte",
+              "value": 1.5,
+              "percentage": 21.43
+            }
+          ]
+        },
+        {
+          "id": "nomina_por_cargo",
+          "title": "Participación Nómina por Cargo",
+          "type": "bar_horizontal",
+          "source": "pricing_result.vision_imprimible.estructura_equipo.por_cargo",
+          "x_axis": {
+            "field": "pct_participacion",
+            "format": "percentage"
+          },
+          "y_axis": {
+            "field": "cargo_tipo",
+            "format": "string"
+          },
+          "series": [
+            {
+              "name": "Participación %",
+              "value_field": "pct_participacion"
+            }
+          ],
+          "data": [
+            {
+              "cargo_tipo": "Agente Senior",
+              "costo_mensual": 7500.0,
+              "fte": 3.0,
+              "pct_participacion": 46.58
+            },
+            {
+              "cargo_tipo": "Agente Junior",
+              "costo_mensual": 4500.0,
+              "fte": 2.5,
+              "pct_participacion": 27.95
+            },
+            {
+              "cargo_tipo": "QA",
+              "costo_mensual": 1100.0,
+              "fte": 0.5,
+              "pct_participacion": 6.83
+            },
+            {
+              "cargo_tipo": "Supervisor",
+              "costo_mensual": 3000.0,
+              "fte": 1.0,
+              "pct_participacion": 18.63
+            }
+          ]
+        },
+        {
+          "id": "desglose_b_por_componente",
+          "title": "Desglose Cadena B — Componentes",
+          "type": "bar_horizontal",
+          "source": "pricing_result.cost_to_serve.desglose_b",
+          "x_axis": {
+            "field": "monto",
+            "format": "currency"
+          },
+          "y_axis": {
+            "field": "componente",
+            "format": "string"
+          },
+          "series": [
+            {
+              "name": "Monto",
+              "value_field": "monto"
+            }
+          ],
+          "data": [
+            {
+              "componente": "Fijo",
+              "monto": 45.0
+            },
+            {
+              "componente": "Variable",
+              "monto": 15.0
+            },
+            {
+              "componente": "OpEx",
+              "monto": 12.0
+            },
+            {
+              "componente": "Inversiones",
+              "monto": 8.0
+            },
+            {
+              "componente": "Soporte/Mantenimiento",
+              "monto": 5.0
+            }
+          ]
+        }
+      ],
+      "data_status": {
+        "available_charts": 6,
+        "missing_charts": 4,
+        "missing_upstream_data": [
+          {
+            "chart_id": "nomina_por_grupo",
+            "reason": "missing_semantic_group_mapping",
+            "required_source": "grupo_semantico persisted in estructura_equipo.por_cargo or external parametrization"
+          },
+          {
+            "chart_id": "detalle_canal_waterfall",
+            "reason": "missing_waterfall_fact",
+            "required_source": "WaterfallCTS structured fact in cost_to_serve (steps: cadena_a, cadena_b, financiero, total)"
+          },
+          {
+            "chart_id": "risk_heatmap",
+            "reason": "risk_contract_not_defined_for_cts",
+            "required_source": "evaluacion_riesgo (currently only in vision_imprimible, not in /cost-to-serve endpoint)"
+          },
+          {
+            "chart_id": "comparativo_escenarios",
+            "reason": "scenario_variants_not_persisted_for_cts",
+            "required_source": "escenarios_comerciales[] per channel in cost_to_serve result"
+          }
+        ]
+      }
+    }
+  },
+  "error": null,
+  "meta": {
+    "charts_version": "1.0"
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "label": "baseline",
+  "modules": {
+    "nexa_engine.modules.calculator.context_builder": {
+      "loaded": true,
+      "file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/modules/calculator/context_builder.py",
+      "id": 4387072944
+    },
+    "nexa_engine.modules.calculator.context_builder_methods": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.calculator.engine": {
+      "loaded": true,
+      "file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/modules/calculator/engine.py",
+      "id": 4387067824
+    },
+    "nexa_engine.modules.parametrizacion.provider": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.parametrizacion.provider_fin_op": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.parametrizacion.profitability_parametrization_repository": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.parametrizacion.financial_parametrization_repository": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.parametrizacion.payroll_parametrization_repository": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.parametrizacion.resolver": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    },
+    "nexa_engine.modules.vision_tarifas.reglas": {
+      "loaded": true,
+      "file": "/Users/darwin.minota.quinto/Projects/NEXA/backend_nexa/modules/vision_tarifas/reglas.py",
+      "id": 4378947520
+    },
+    "nexa_engine.modules.vision_tarifas.reglas_methods": {
+      "loaded": false,
+      "file": null,
+      "id": null
+    }
+  },
+  "classes": {
+    "nexa_engine.modules.calculator.context_builder.SimulationContextBuilder": {
+      "id": 5199233104,
+      "module": "nexa_engine.modules.calculator.context_builder",
+      "mro_ids": [
+        5199233104,
+        5199231360,
+        5486641744,
+        5486630912,
+        5486640768,
+        5486632656,
+        5486636032,
+        5199230384,
+        4383297960
+      ],
+      "mro_names": [
+        "nexa_engine.modules.calculator.context_builder.SimulationContextBuilder",
+        "nexa_engine.modules.calculator.mixins.context_builder_methods.ContextBuilderMethodsMixin",
+        "nexa_engine.modules.calculator.mixins.context_builder_cadena_a_mixin.ContextBuilderCadenaAMixin",
+        "nexa_engine.modules.calculator.mixins.context_builder_panel_mixin.ContextBuilderPanelMixin",
+        "nexa_engine.modules.calculator.mixins.context_builder_perfiles_mixin.ContextBuilderPerfilesMixin",
+        "nexa_engine.modules.calculator.mixins.context_builder_perfiles_light_mixin.ContextBuilderPerfilesLightMixin",
+        "nexa_engine.modules.calculator.mixins.context_builder_perfiles_soporte_mixin.ContextBuilderPerfilesSoporteMixin",
+        "nexa_engine.modules.calculator.mixins.context_builder_panel_bc_mixin.ContextBuilderPanelBCMixin",
+        "builtins.object"
+      ]
+    },
+    "nexa_engine.modules.calculator.engine.NexaPricingEngine": {
+      "id": 5220104640,
+      "module": "nexa_engine.modules.calculator.engine",
+      "mro_ids": [
+        5220104640,
+        4383297960
+      ],
+      "mro_names": [
+        "nexa_engine.modules.calculator.engine.NexaPricingEngine",
+        "builtins.object"
+      ]
+    },
+    "nexa_engine.modules.shared.i_parametrization_provider.IParametrizationProvider": {
+      "id": 5219981808,
+      "module": "nexa_engine.modules.shared.i_parametrization_provider",
+      "mro_ids": [
+        5219981808,
+        5486499392,
+        5486187056,
+        4383297960
+      ],
+      "mro_names": [
+        "nexa_engine.modules.shared.i_parametrization_provider.IParametrizationProvider",
+        "typing.Protocol",
+        "typing.Generic",
+        "builtins.object"
+      ]
+    },
+    "nexa_engine.modules.vision_tarifas.reglas.VisionTarifasCalculator": {
+      "id": 5468881264,
+      "module": "nexa_engine.modules.vision_tarifas.reglas",
+      "mro_ids": [
+        5468881264,
+        5468879520,
+        5199225408,
+        5468878544,
+        4383297960
+      ],
+      "mro_names": [
+        "nexa_engine.modules.vision_tarifas.reglas.VisionTarifasCalculator",
+        "nexa_engine.modules.vision_tarifas.mixins.reglas_methods.VisionTarifasMethodsMixin",
+        "nexa_engine.modules.vision_tarifas.mixins.reglas_methods_1.VisionTarifasMethodsMixin1",
+        "nexa_engine.modules.vision_tarifas.mixins.reglas_methods_2.VisionTarifasMethodsMixin2",
+        "builtins.object"
+      ]
+    }
+  },
+  "singleton": {
+    "singleton_present": false,
+    "singleton_id": null
+  },
+  "file_refs": {},
+  "oracle": {
+    "success": true,
+    "values": {
+      "ingreso_mensual": 27994306.8779,
+      "costo_mensual_promedio": 77019069.0924,
+      "costo_cadena_a_promedio": 21053985.7591,
+      "contribucion_total": 764723545.6396,
+      "pct_utilidad_neta_total": 0.292641,
+      "vt_costo_cadena_a_total": 505295658.2184,
+      "vt_costo_total": 1848462590.2184,
+      "vt_ingreso_mensual": 811085166.0018,
+      "pyg_m1_payroll_a": 17636001.3647,
+      "pyg_m1_ingreso_bruto": 89997589.1722,
+      "pyg_m1_costo_total": 75933411.6754
+    },
+    "param_used": {
+      "provider_id": 4378826976,
+      "tasa_financiacion": "<bound method ProviderFinOpMixin.tasa_mensual_financiacion of <nexa_engine.modules.parametrizacion.services.provider.ParametrizationProvider object at 0x104ff98e0>>",
+      "gmf": 0.004,
+      "margen_cobranzas": 0.21,
+      "rampup_cobranzas_m1": 0.85,
+      "profitability_repo_id": 4379014304,
+      "financial_repo_id": 4373700272
+    },
+    "frozen_kpis": {
+      "costo_cadena_a_promedio": 23517717.413326,
+      "ingreso_mensual": 31270193.01088,
+      "contribucion_total": 798417343.398446,
+      "pct_utilidad_neta_total": 0.288794
+    },
+    "delta_vs_frozen": {
+      "ingreso_mensual": {
+        "expected": 31270193.01088,
+        "actual": 27994306.8779,
+        "pct": -10.4761,
+        "match": false
+      },
+      "costo_mensual_promedio": {
+        "expected": 81926621.246659,
+        "actual": 77019069.0924,
+        "pct": -5.9902,
+        "match": false
+      },
+      "costo_cadena_a_promedio": {
+        "expected": 23517717.413326,
+        "actual": 21053985.7591,
+        "pct": -10.4761,
+        "match": false
+      },
+      "contribucion_total": {
+        "expected": 798417343.398446,
+        "actual": 764723545.6396,
+        "pct": -4.2201,
+        "match": false
+      },
+      "pct_utilidad_neta_total": {
+        "expected": 0.288794,
+        "actual": 0.292641,
+        "pct": 1.3321,
+        "match": false
+      }
+    }
+  }
+}

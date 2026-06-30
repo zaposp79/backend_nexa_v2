@@ -1,0 +1,73 @@
+{
+  "additionalProperties": false,
+  "description": "Top-level KPIs for the simulated deal.",
+  "properties": {
+    "contribucion_total": {
+      "default": 0.0,
+      "title": "Contribucion Total",
+      "type": "number"
+    },
+    "costo_cadena_a_promedio": {
+      "default": 0.0,
+      "title": "Costo Cadena A Promedio",
+      "type": "number"
+    },
+    "costo_mensual_promedio": {
+      "default": 0.0,
+      "title": "Costo Mensual Promedio",
+      "type": "number"
+    },
+    "costo_total_contrato": {
+      "default": 0.0,
+      "title": "Costo Total Contrato",
+      "type": "number"
+    },
+    "cumple_margen_minimo": {
+      "default": true,
+      "title": "Cumple Margen Minimo",
+      "type": "boolean"
+    },
+    "facturacion_mensual_proyectada": {
+      "default": 0.0,
+      "title": "Facturacion Mensual Proyectada",
+      "type": "number"
+    },
+    "ingreso_bruto_total": {
+      "default": 0.0,
+      "title": "Ingreso Bruto Total",
+      "type": "number"
+    },
+    "ingreso_mensual": {
+      "default": 0.0,
+      "title": "Ingreso Mensual",
+      "type": "number"
+    },
+    "ingreso_neto_total": {
+      "default": 0.0,
+      "title": "Ingreso Neto Total",
+      "type": "number"
+    },
+    "margen_minimo_requerido": {
+      "default": 0.0,
+      "title": "Margen Minimo Requerido",
+      "type": "number"
+    },
+    "pct_utilidad_neta_total": {
+      "default": 0.0,
+      "title": "Pct Utilidad Neta Total",
+      "type": "number"
+    },
+    "utilidad_neta_total": {
+      "default": 0.0,
+      "title": "Utilidad Neta Total",
+      "type": "number"
+    },
+    "valor_total_deal": {
+      "default": 0.0,
+      "title": "Valor Total Deal",
+      "type": "number"
+    }
+  },
+  "title": "KpisV1",
+  "type": "object"
+}

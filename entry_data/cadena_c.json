@@ -1,0 +1,368 @@
+{
+     "condiciones_cadena_c": {
+          "tarifa_proveedor_canal": {
+               "items": [
+                    {
+                         "proveeedor": "",
+                         "servicio": "Inbound",
+                         "modalidad": "Inbound",
+                         "canal": "WhatsApp",
+                         "tipo_de_cobro": "Unitario",
+                         "valor": 3075,
+                         "cantidad": 10,
+                         "valor_total": 30750
+                    }
+               ]
+          },
+          "inversiones_capex": [
+               {
+                    "descripcion": "Infraestructura y cloud",
+                    "modalidad": "Inbound",
+                    "canal": "WhatsApp",
+                    "tipo_de_cobro": "Total",
+                    "tipo_de_gasto": "Fijo",
+                    "valor": 7000,
+                    "cantidad": 3,
+                    "meses_a_diferir": 24,
+                    "valor_total": 21000,
+                    "valor_mensual": 710.71
+               }
+          ],
+          "recurso_humano_transversal": {
+               "fte": 3,
+               "roles": [
+                    {
+                         "rol": "Product Owner / Service Owner",
+                         "activado": true,
+                         "dedicacion": 20,
+                         "fte": 0.6
+                    },
+                    {
+                         "rol": "Solution Architect",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "Business Analyst / Process Analyst",
+                         "activado": true,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "Change Manager",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "RPA Developer",
+                         "activado": true,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3,
+                         "rol": "RPA Platform / Infra Engineer"
+                    },
+                    {
+                         "rol": "Data Engineer",
+                         "activado": true,
+                         "dedicacion": 40,
+                         "fte": 1.2
+                    },
+                    {
+                         "rol": "ML / AI Engineer",
+                         "activado": false,
+                         "dedicacion": 40,
+                         "fte": 1.2
+                    },
+                    {
+                         "rol": "Conversation Designer",
+                         "activado": false,
+                         "dedicacion": 60,
+                         "fte": 1.8
+                    },
+                    {
+                         "rol": "Prompt / Policy Engineer",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "Integration Engineer / API Developer",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "DevOps / MLOps Engineer",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "QA / Test Lead",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    },
+                    {
+                         "rol": "Security / Privacy / Compliance",
+                         "activado": false,
+                         "dedicacion": 10,
+                         "fte": 0.3
+                    }
+               ],
+               "opex": [
+                    {
+                         "descripcion": "Dispositivo Principal",
+                         "precio": 0,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 7.8
+                    },
+                    {
+                         "descripcion": "Monitores perifericos",
+                         "precio": 0,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 7.8
+                    },
+                    {
+                         "descripcion": "Headsets",
+                         "precio": 0,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 7.8
+                    },
+                    {
+                         "descripcion": "Dispositivo movil",
+                         "precio": 0,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 7.8
+                    },
+                    {
+                         "descripcion": "Mantenimiento / reemplazo de hardware",
+                         "precio": 0,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 7.8
+                    }
+               ]
+          },
+          "costo_variable": {
+               "tarifas_por_canal": {
+                    "inbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tarifa": 4500
+                         },
+                         {
+                              "canal": "Correo",
+                              "tarifa": 0
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tarifa": 0
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tarifa": 5000
+                         },
+                         {
+                              "canal": "Voz",
+                              "tarifa": 9000
+                         },
+                         {
+                              "canal": "Otros",
+                              "tarifa": 9000
+                         },
+                         {
+                              "canal": "IVR",
+                              "tarifa": 4000
+                         }
+                    ],
+                    "outbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tarifa": 4500
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tarifa": 6000
+                         },
+                         {
+                              "canal": "Correo",
+                              "tarifa": 800
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tarifa": 5000
+                         },
+                         {
+                              "canal": "IVR",
+                              "tarifa": 9000
+                         },
+                         {
+                              "canal": "Fuerza de ventas",
+                              "tarifa": 4000
+                         },
+                         {
+                              "canal": "Otros",
+                              "tarifa": 3000
+                         },
+                         {
+                              "canal": "Voz",
+                              "tarifa": 3000
+                         }
+                    ]
+               },
+               "tasa_escalamiento": {
+                    "tarifa_de_escalamiento_indbound": {
+                         "tipo": "Input Calculado",
+                         "value": 0
+                    },
+                    "tarifa_de_escalamiento_outbound": {
+                         "tipo": "Input Manual",
+                         "value": 5000
+                    },
+                    "inbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Correo",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Voz",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "Otros",
+                              "tasa": 0.03
+                         },
+                         {
+                              "canal": "IVR",
+                              "tasa": 0.03
+                         }
+                    ],
+                    "outbound": [
+                         {
+                              "canal": "WhatsApp",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "Mensajes",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "Correo",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "WebChat",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "IVR",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "Fuerza de ventas",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "Otros",
+                              "tasa": 0.00
+                         },
+                         {
+                              "canal": "Voz",
+                              "tasa": 0.10
+                         }
+                    ]
+               }
+          },
+          "hitl": {
+               "total_volumen_cadena_c": 2500,
+               "equipo": [
+                    {
+                         "rol": "Human Reviewers",
+                         "activado": false,
+                         "ratio": 4000,
+                         "personas": 0.0
+                    },
+                    {
+                         "rol": "Conversation Analyst",
+                         "activado": true,
+                         "ratio": 560,
+                         "personas": 0.0
+                    },
+                    {
+                         "rol": "Content / Knowledge Manager",
+                         "activado": true,
+                         "ratio": 200,
+                         "personas": 0.0
+                    },
+                    {
+                         "rol": "QA / Compliance QA",
+                         "activado": true,
+                         "ratio": 300,
+                         "personas": 0.0
+                    },
+                    {
+                         "rol": "MLOps / AIOps",
+                         "activado": false,
+                         "ratio": 700,
+                         "personas": 0.0
+                    },
+                    {
+                         "rol": "Data Steward",
+                         "activado": false,
+                         "ratio": 1000,
+                         "personas": 0.0
+                    }
+               ],
+               "opex": [
+                    {
+                         "descripcion": "Dispositivo Principal",
+                         "precio": 1000000,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 0
+                    },
+                    {
+                         "descripcion": "Monitores perifericos",
+                         "precio": 200000,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 0
+                    },
+                    {
+                         "descripcion": "Headsets",
+                         "precio": 300000,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 0
+                    },
+                    {
+                         "descripcion": "Dispositivo movil",
+                         "precio": 100000,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 0
+                    },
+                    {
+                         "descripcion": "Mantenimiento / reemplazo de hardware",
+                         "precio": 0,
+                         "cantidad_total": 14,
+                         "cantidad_atribuible": 0
+                    }
+               ]
+          }
+     }
+}

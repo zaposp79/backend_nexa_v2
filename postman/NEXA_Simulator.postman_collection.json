@@ -1,0 +1,830 @@
+{
+	"info": {
+		"_postman_id": "nexa-simulator-api-collection",
+		"name": "NEXA Simulator API v2-7",
+		"description": "Postman collection for the NEXA Simulator API v2-7. Base URL is configurable via the `baseUrl` collection variable (default: http://localhost:8000). All v1 routes live under `/api/v1`.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "simulation_id",
+			"value": "550e8400-e29b-41d4-a716-446655440000",
+			"type": "string",
+			"description": "Simulation ID returned from POST /simulate/calculate"
+		},
+		{
+			"key": "certificate_id",
+			"value": "cert-550e8400-e29b-41d4-a716-446655440000",
+			"type": "string",
+			"description": "Certificate ID from GET /certification/certificates"
+		},
+		{
+			"key": "baseline_id",
+			"value": "baseline-001",
+			"type": "string",
+			"description": "Baseline ID for audit comparison"
+		},
+		{
+			"key": "version_id",
+			"value": "v1.0.0",
+			"type": "string",
+			"description": "Version ID for parametrization"
+		}
+	],
+	"item": [
+		{
+			"name": "Simulation - Calculate",
+			"item": [
+				{
+					"name": "POST /api/v1/simulation/calculate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_input\": {\n    \"cliente\": \"Bancamia\",\n    \"linea_negocio\": \"SAC\",\n    \"ciudad\": \"Bogota\",\n    \"sede\": \"Principal\",\n    \"tipo_cliente\": \"Financiera\",\n    \"antiguedad_cliente_meses\": 24,\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 24,\n    \"margen\": 0.18,\n    \"periodo_pago_dias\": 30,\n    \"ajuste_precio_tipo\": \"Indexado\",\n    \"ajuste_precio_frecuencia\": \"Anual\",\n    \"perfiles_cadena_a\": [\n      {\n        \"nombre\": \"Agente Voz\",\n        \"modalidad\": \"Inbound\",\n        \"canal\": \"Voz\",\n        \"fte\": 5.0,\n        \"salario_base\": 1200000,\n        \"es_soporte\": false\n      }\n    ],\n    \"canales_b\": [],\n    \"canales_c\": []\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/calculate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"calculate"
+							],
+							"query": [
+								{
+									"key": "mode",
+									"value": "normal",
+									"description": "Execution mode: 'normal' or 'certified'",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Execute the NEXA pricing engine. Returns simulation_id and calculates all 10 layers of the pricing model (nomina, no-payroll, cadena-b/c, costos-financieros, pyg, kpis, vision-tarifas, cost-to-serve, vision-pyg, vision-imprimible)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Simulation - Results",
+			"item": [
+				{
+					"name": "GET /api/v1/simulation/{simulation_id}/results",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"{{simulation_id}}",
+								"results"
+							]
+						},
+						"description": "Get the complete simulation result document with all sections (kpis, pyg_por_mes, cost_to_serve, vision_tarifas, vision_pyg, etc.) and metadata."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-imprimible",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-imprimible",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"{{simulation_id}}",
+								"results",
+								"vision-imprimible"
+							]
+						},
+						"description": "Get the Visión Imprimible (Printable Vision) - the 9 official sections of the deal data (ficha, kpis, configuracion_comercial, waterfall, vision_pyg, riesgo, reglas_negocio, cost_to_serve, vision_tarifas)."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-pyg",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-pyg",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"{{simulation_id}}",
+								"results",
+								"vision-pyg"
+							]
+						},
+						"description": "Get Vision P&G (Income Statement) for the contract duration. Equivalent to 'Visión P&G' sheet in Excel V2-7."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-tarifas",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-tarifas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"{{simulation_id}}",
+								"results",
+								"vision-tarifas"
+							]
+						},
+						"description": "Get Vision Tarifas (Charging Model) - tariff rates by channel. Equivalent to 'Vision Tarifas_Modelo_Cobro' sheet in Excel V2-7."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/simulation/{simulation_id}/results/cost-to-serve",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/cost-to-serve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"{{simulation_id}}",
+								"results",
+								"cost-to-serve"
+							]
+						},
+						"description": "Get Cost To Serve (CTS) per cadena with breakdowns, channels and team structure. Equivalent to 'Vision CTS' sheet in Excel V2-7."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Simulation - Extended Vision",
+			"item": [
+				{
+					"name": "GET /api/v1/simulation/{simulation_id}/traceability",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/traceability",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"{{simulation_id}}",
+								"traceability"
+							]
+						},
+						"description": "Get the contractual traceability persisted for a simulation (field-level traceability to Excel references)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Audit",
+			"item": [
+				{
+					"name": "GET /api/v1/audit/simulations",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit/simulations?limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"simulations"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Maximum number of simulations to return (1-500)"
+								}
+							]
+						},
+						"description": "List simulations that have a persisted lineage graph."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/audit/simulation/{simulation_id}",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit/simulation/{{simulation_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"simulation",
+								"{{simulation_id}}"
+							]
+						},
+						"description": "Get full audit envelope for a simulation: formulas, parameters used, lineage summary. Requires the simulation to have been run with lineage tracking enabled."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/audit/simulation/{simulation_id}/explain",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit/simulation/{{simulation_id}}/explain?value_name=kpis.ingreso_mensual",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"simulation",
+								"{{simulation_id}}",
+								"explain"
+							],
+							"query": [
+								{
+									"key": "value_name",
+									"value": "kpis.ingreso_mensual",
+									"description": "Canonical value name in the lineage graph (e.g., 'kpis.ingreso_mensual')"
+								}
+							]
+						},
+						"description": "Get the lineage chain and human-readable explanation for a specific value in the simulation."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/audit/simulation/{simulation_id}/baseline-diff",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/audit/simulation/{{simulation_id}}/baseline-diff?baseline_id={{baseline_id}}&baseline_version=v2-7-certified",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"audit",
+								"simulation",
+								"{{simulation_id}}",
+								"baseline-diff"
+							],
+							"query": [
+								{
+									"key": "baseline_id",
+									"value": "{{baseline_id}}",
+									"description": "Certified baseline id"
+								},
+								{
+									"key": "baseline_version",
+									"value": "v2-7-certified",
+									"description": "Baseline collection version under storage/baselines/"
+								}
+							]
+						},
+						"description": "Compare a simulation's KPIs vs a certified baseline."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Certification",
+			"item": [
+				{
+					"name": "GET /api/v1/certification/certificates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/certification/certificates?limit=50",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"certification",
+								"certificates"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50",
+									"description": "Maximum number of certificates to return"
+								}
+							]
+						},
+						"description": "List most recent certificates (descending by modification time)."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/certification/certificate/{certificate_id}",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/certification/certificate/{{certificate_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"certification",
+								"certificate",
+								"{{certificate_id}}"
+							]
+						},
+						"description": "Get a specific certificate by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/v1/certification/verify/{certificate_id}",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/certification/verify/{{certificate_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"certification",
+								"verify",
+								"{{certificate_id}}"
+							]
+						},
+						"description": "Re-validate a certificate against the live parametrization hashes. Returns whether the certificate is still valid and any detected drift."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Parametrization - HR",
+			"item": [
+				{
+					"name": "POST /api/v1/parametrization/hr/upload",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"description": "HR parametrization Excel file (.xlsx / .xls). Sent as multipart/form-data."
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/hr/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"hr",
+								"upload"
+							]
+						},
+						"description": "Upload and process an HR Excel parametrization file. Body MUST be multipart/form-data with a single field `file`."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/hr/versions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/hr/versions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"hr",
+								"versions"
+							]
+						},
+						"description": "List all HR parametrization versions."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/hr/active",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/hr/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"hr",
+								"active"
+							]
+						},
+						"description": "Get the currently active HR parametrization version."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/hr/{version_id}/activate",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/hr/{{version_id}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"hr",
+								"{{version_id}}",
+								"activate"
+							]
+						},
+						"description": "Activate a specific HR parametrization version."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /api/v1/parametrization/hr/{version_id}",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/hr/{{version_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"hr",
+								"{{version_id}}"
+							]
+						},
+						"description": "Delete a specific HR parametrization version."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Parametrization - OP",
+			"item": [
+				{
+					"name": "POST /api/v1/parametrization/op/upload",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"description": "OP (Operations) parametrization Excel file (.xlsx / .xls). Sent as multipart/form-data."
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/op/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"op",
+								"upload"
+							]
+						},
+						"description": "Upload and process an OP Excel parametrization file. Body MUST be multipart/form-data with a single field `file`."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/op/versions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/op/versions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"op",
+								"versions"
+							]
+						},
+						"description": "List all OP parametrization versions."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/op/active",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/op/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"op",
+								"active"
+							]
+						},
+						"description": "Get the currently active OP parametrization version."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/op/{version_id}/activate",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/op/{{version_id}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"op",
+								"{{version_id}}",
+								"activate"
+							]
+						},
+						"description": "Activate a specific OP parametrization version."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /api/v1/parametrization/op/{version_id}",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/op/{{version_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"op",
+								"{{version_id}}"
+							]
+						},
+						"description": "Delete a specific OP parametrization version."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Parametrization - GN",
+			"item": [
+				{
+					"name": "POST /api/v1/parametrization/gn/upload",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "",
+									"contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+									"description": "GN (General) parametrization Excel file (.xlsx / .xls). Sent as multipart/form-data."
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/gn/upload",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"gn",
+								"upload"
+							]
+						},
+						"description": "Upload and process a GN Excel parametrization file. Body MUST be multipart/form-data with a single field `file`."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/gn/versions",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/gn/versions",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"gn",
+								"versions"
+							]
+						},
+						"description": "List all GN parametrization versions."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/gn/active",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/gn/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"gn",
+								"active"
+							]
+						},
+						"description": "Get the currently active GN parametrization version."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/parametrization/gn/{version_id}/activate",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/gn/{{version_id}}/activate",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"gn",
+								"{{version_id}}",
+								"activate"
+							]
+						},
+						"description": "Activate a specific GN parametrization version."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE /api/v1/parametrization/gn/{version_id}",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/gn/{{version_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"gn",
+								"{{version_id}}"
+							]
+						},
+						"description": "Delete a specific GN parametrization version."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-06-11T19:10:55.948139+00:00",
+  "schema_version": "1.0",
+  "description": "Fingerprint (SHA256 + size + mtime) de los Excel master. Detecta modificaciones al simulador.",
+  "files": {
+    "Copia de HR_productiva_2026-05-11-09-52-29.xlsx": {
+      "sha256": "6b2d2dba753bb5000ea8fa006eeebc19d960fca0c73a71becf369a93f0d325bf",
+      "size_bytes": 36377,
+      "mtime_iso": "2026-06-11T03:57:21.436034+00:00"
+    },
+    "GN_productiva_2026-05-11-10-25-28.xlsx": {
+      "sha256": "9e4511062aef96f990da1834e303990e4e0b4adb8196f0ea1d88a7d3872ac953",
+      "size_bytes": 11371,
+      "mtime_iso": "2026-06-11T03:57:05.356960+00:00"
+    },
+    "HR_productiva_2026-05-11-09-52-29.xlsx": {
+      "sha256": "63d6eee5f7d0332affcbdda43c82697f0c7c6a0f4199b5187790103685ca8fe1",
+      "size_bytes": 38645,
+      "mtime_iso": "2026-06-11T03:57:05.358155+00:00"
+    },
+    "Nexa - Pricing - Simulador - V2-7.xlsx": {
+      "sha256": "5fb7174f998356c1fdc92315d391cd1f09294a058e4916e9c03f0cb0f10e4db0",
+      "size_bytes": 2094312,
+      "mtime_iso": "2026-05-28T19:13:24.671928+00:00"
+    },
+    "Nexa - Pricing - Simulador - V2-8.xlsx": {
+      "sha256": "48d51055d8b7dd021905732dd73c54fa2416d54611c60cfe8193f7a28f23cecf",
+      "size_bytes": 2084410,
+      "mtime_iso": "2026-06-10T18:25:59.762440+00:00"
+    },
+    "OP_productiva_2026-05-11-10-35-25.xlsx": {
+      "sha256": "23041d32f6775491654d66ace6d1c2d9a575f78090f0d3ccdd63634c26a7cb1d",
+      "size_bytes": 18875,
+      "mtime_iso": "2026-06-11T03:57:05.359512+00:00"
+    },
+    "~$HR_productiva_2026-05-11-09-52-29.xlsx": {
+      "sha256": "b99e93a6ce47b42c25c77c577d4ab47c320b596ee6d00152f31697c52f052249",
+      "size_bytes": 165,
+      "mtime_iso": "2026-06-11T01:56:22.684043+00:00"
+    }
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "panel_de_control": {
+    "cliente": "SEGUROS ADL LTDA",
+    "tipo_cliente": "No Grupo Aval",
+    "linea_negocio": "Cobranzas",
+    "ciudad": "Bogota",
+    "sede": "Bogota - Toberin",
+    "fecha_inicio": "2026-01-01",
+    "meses_contrato": 24,
+    "margen": 0.18,
+    "op_cont": 0.025,
+    "com_cont": 0.0,
+    "markup": 0.0,
+    "descuento": 0.0,
+    "periodo_pago_dias": 90,
+    "activa_financiacion": true,
+    "antiguedad_cliente": "Cliente Antiguo",
+    "componente_indexacion_humano": "70SMMLV_30IPC",
+    "componente_indexacion_tecnologico": "IPC",
+    "tasa_ica": 0.01,
+    "tasa_gmf": 0.004,
+    "tasa_mensual_financ": 0.0153,
+    "pct_rotacion": 0.085,
+    "pct_ausentismo": 0.065
+  },
+  "condiciones_cadena_a": {
+    "perfiles": [
+      {
+        "nombre": "Inbound 10",
+        "rol": "Agente Basico",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "fte": 10,
+        "pct_presencia": 1.0,
+        "salario_base": 2450000,
+        "comision_pct": 0.1,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": true,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "tmo_segundos": 522.2,
+        "no_payroll_mensual": 8739051.72
+      },
+      {
+        "nombre": "Inbound 15 personas",
+        "rol": "Agente Basico",
+        "modalidad": "Inbound",
+        "canal": "Correo",
+        "fte": 15,
+        "pct_presencia": 0.6,
+        "comision_pct": 0.0,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": true,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "tmo_segundos": 0.0,
+        "no_payroll_mensual": 14846334.25
+      },
+      {
+        "nombre": "Inbound 20 personas",
+        "rol": "Agente Basico",
+        "modalidad": "Inbound",
+        "canal": "WebChat",
+        "fte": 20,
+        "pct_presencia": 0.6,
+        "comision_pct": 0.0,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": true,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 0,
+        "tmo_segundos": 0.0,
+        "no_payroll_mensual": 20220210.08,
+        "cadena_b_mensual": 5266330.22,
+        "costos_financieros_mensual": 11990977.55
+      }
+    ]
+  },
+  "condiciones_cadena_b": {
+    "canales": [
+      {
+        "nombre": "Inbound WhatsApp",
+        "modalidad": "Inbound",
+        "producto": "WhatsApp",
+        "volumen_mensual": 5,
+        "tarifa_unitaria": 4500,
+        "activo": true
+      },
+      {
+        "nombre": "Inbound Correo",
+        "modalidad": "Inbound",
+        "producto": "Correo",
+        "volumen_mensual": 7,
+        "tarifa_unitaria": 0,
+        "activo": true
+      },
+      {
+        "nombre": "Inbound WebChat",
+        "modalidad": "Inbound",
+        "producto": "WebChat",
+        "volumen_mensual": 10,
+        "tarifa_unitaria": 0,
+        "activo": true
+      },
+      {
+        "nombre": "Outbound WhatsApp",
+        "modalidad": "Outbound",
+        "producto": "WhatsApp",
+        "volumen_mensual": 5,
+        "tarifa_unitaria": 4500,
+        "activo": true
+      },
+      {
+        "nombre": "Outbound Mensajes",
+        "modalidad": "Outbound",
+        "producto": "Mensajes",
+        "volumen_mensual": 7,
+        "tarifa_unitaria": 6000,
+        "activo": true
+      }
+    ],
+    "opex_consumo_variable": [
+      {
+        "nombre": "Token IA consulta corta",
+        "producto": "Token IA",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "valor_unitario": 3075.0,
+        "cantidad": 3
+      },
+      {
+        "nombre": "Token IA consulta larga",
+        "producto": "Token IA",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "valor_unitario": 196945.0,
+        "cantidad": 3
+      },
+      {
+        "nombre": "WhatsApp minuto",
+        "producto": "WhatsApp minuto",
+        "modalidad": "Inbound",
+        "canal": "WhatsApp",
+        "valor_unitario": 28700.0,
+        "cantidad": 3
+      }
+    ],
+    "equipo_sm": [
+      {
+        "rol": "Service Owner",
+        "activo": true,
+        "pct_dedicacion": 0.25
+      },
+      {
+        "rol": "Platform Admin",
+        "activo": true,
+        "pct_dedicacion": 0.5
+      },
+      {
+        "rol": "L1 / L2 Support",
+        "activo": true,
+        "pct_dedicacion": 0.5
+      },
+      {
+        "rol": "RPA Supervisor / Bot Controller",
+        "activo": true,
+        "pct_dedicacion": 0.5
+      },
+      {
+        "rol": "DevOps / SRE",
+        "activo": true,
+        "pct_dedicacion": 0.5
+      }
+    ],
+    "dispositivos_sm": [
+      {
+        "tipo": "Dispositivo Principal",
+        "costo_unitario": 1000000,
+        "cantidad": 5.75
+      },
+      {
+        "tipo": "Monitores perif\u00e9ricos",
+        "costo_unitario": 2000,
+        "cantidad": 5.75
+      },
+      {
+        "tipo": "Headset/audio",
+        "costo_unitario": 300000,
+        "cantidad": 5.75
+      },
+      {
+        "tipo": "Dispositivo m\u00f3vil",
+        "costo_unitario": 100000,
+        "cantidad": 5.75
+      }
+    ],
+    "fte_equipo_sm": 1.0,
+    "amortizar_dispositivos_sm": true
+  },
+  "condiciones_cadena_c": {
+    "canales": [],
+    "equipo_transversal": [
+      {
+        "rol": "Solution Architect",
+        "activo": false,
+        "pct_dedicacion": 0.0
+      },
+      {
+        "rol": "Integration Engineer / API Developer",
+        "activo": false,
+        "pct_dedicacion": 0.0
+      }
+    ],
+    "inversion_anual": 0.0
+  }
+}

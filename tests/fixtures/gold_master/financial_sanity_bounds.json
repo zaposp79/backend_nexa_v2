@@ -1,0 +1,164 @@
+{
+  "_meta": {
+    "version": "2026-05",
+    "descripcion": "Rangos actuariales y financieros para validación de sanidad del motor NEXA",
+    "fuentes": [
+      "Histórico contratos BPO Colombia 2022-2026 (ACDEAM/ACODESI)",
+      "Benchmarks salariales sector servicios Colombia 2026",
+      "Decretos SMMLV 2020-2026",
+      "Ley 1819 de 2016 (Reforma Tributaria)",
+      "Código Sustantivo del Trabajo Colombia (CST)",
+      "Decreto 1295/1994 (ARL Colombia)",
+      "Ley 100/1993 (Sistema General de SS)"
+    ],
+    "ultima_actualizacion": "2026-05-26",
+    "notas": "Actualizar cuando cambien SMMLV, reformas tributarias o benchmarks de mercado"
+  },
+
+  "smmlv_2026": {
+    "descripcion": "Rango válido para SMMLV 2026 post-ajuste IPC",
+    "min": 1600000,
+    "max": 2000000,
+    "valor_certificado": 1750905,
+    "decreto": "2353/2023 ajustado IPC 2025-2026"
+  },
+
+  "auxilio_transporte_2026": {
+    "descripcion": "Auxilio de transporte 2026",
+    "min": 220000,
+    "max": 290000,
+    "valor_certificado": 249095
+  },
+
+  "costo_fte_sobre_smmlv": {
+    "descripcion": "Ratio nómina cargada / salario para empleado típico BPO",
+    "min": 1.45,
+    "max": 2.0,
+    "fuente": "Nómina cargada incluye SS + parafiscales + prestaciones + beneficios",
+    "notas": [
+      "Para salario SMMLV: ratio ≈ 1.56 (Ley 1819 exoneración activa)",
+      "Para salario 5×SMMLV: ratio ≈ 1.58",
+      "Para salario > 10×SMMLV: ratio ≈ 1.23 (factor 0.70 + sin cesantías)"
+    ]
+  },
+
+  "costo_fte_mes_absoluto": {
+    "descripcion": "Costo mensual absoluto por FTE en BPO Colombia",
+    "rango_tipico": {
+      "min": 2000000,
+      "max": 6000000,
+      "fuente": "Contratos BPO agentes de servicio y cobranzas"
+    },
+    "rango_extendido": {
+      "min": 1500000,
+      "max": 15000000,
+      "fuente": "Incluye todos los perfiles desde aprendiz hasta gerentes"
+    }
+  },
+
+  "costo_alto_salario_ratio": {
+    "descripcion": "Para salarios > 10×SMMLV: ratio costo/salario (factor 0.70 activo)",
+    "min": 1.10,
+    "max": 1.50,
+    "notas": "Factor 0.70 reduce SS patronal pero sube base imponible"
+  },
+
+  "prestaciones_sobre_haberes": {
+    "descripcion": "Prestaciones sociales como % de t_haberes",
+    "min": 0.18,
+    "max": 0.30,
+    "calculo_teorico": "Cesantías(8.33%) + Primas(8.33%) + Int.Ces(1%) + Vac(4.17%) ≈ 21.83%",
+    "notas": "Rango ampliado para tolerancia con factores de alto salario"
+  },
+
+  "polizas_sobre_nomina_mensual": {
+    "descripcion": "Ratio pólizas totales (10 pólizas) / nómina cargada mensual",
+    "min": 0.05,
+    "max": 0.25,
+    "notas": [
+      "Rango actuarial para 10 pólizas con tasas 0.5%-4%",
+      "Factor de atribución varía por tipo de póliza"
+    ]
+  },
+
+  "opex_fijo_sobre_nomina": {
+    "descripcion": "Ratio OPEX fijo / nómina cargada mensual",
+    "min": 0.05,
+    "max": 0.60,
+    "notas": "Varía enormemente según infraestructura y modelo BPO"
+  },
+
+  "margen_operativo_bpo": {
+    "descripcion": "Margen operativo típico contratos BPO Colombia",
+    "minimo_viable": 0.10,
+    "objetivo_tipico": 0.18,
+    "maximo_historico": 0.35,
+    "notas": "Margen < 10% es señal de alerta en la cotización"
+  },
+
+  "tasas_legales_colombia_2026": {
+    "_descripcion": "Rangos legales exactos para las tasas patronales Colombia 2026",
+    "salud": {
+      "min": 0.084, "max": 0.086,
+      "valor_vigente": 0.085,
+      "ley": "Artículo 202 Ley 100/1993"
+    },
+    "pension": {
+      "min": 0.119, "max": 0.121,
+      "valor_vigente": 0.12,
+      "ley": "Ley 100/1993 Art. 204 (aporte patronal sobre 16% total)"
+    },
+    "arl_clase_riesgo_i": {
+      "min": 0.00348, "max": 0.009,
+      "valor_vigente_bpo": 0.00522,
+      "ley": "Decreto 1295/1994 — Clase Riesgo I"
+    },
+    "arl_clase_riesgo_ii": {
+      "min": 0.00174, "max": 0.009
+    },
+    "caja_compensacion": {
+      "min": 0.039, "max": 0.041,
+      "valor_vigente": 0.04,
+      "ley": "Ley 21/1982"
+    },
+    "icbf_sena": {
+      "min": 0.039, "max": 0.041,
+      "valor_vigente": 0.04,
+      "ley": "Decreto 2665/1988 (ICBF 3%) + Ley 119/1994 (SENA 2%) — sin Ley 1819"
+    },
+    "cesantias": {
+      "min": 0.082, "max": 0.085,
+      "valor_vigente": 0.0833,
+      "ley": "CST Art. 249 (1 mes por año = 1/12 ≈ 8.33%)"
+    },
+    "primas": {
+      "min": 0.082, "max": 0.085,
+      "valor_vigente": 0.0833,
+      "ley": "CST Art. 306 (1 mes por año = 1/12 ≈ 8.33%)"
+    },
+    "interes_cesantia": {
+      "min": 0.119, "max": 0.121,
+      "valor_vigente": 0.12,
+      "ley": "Ley 52/1975 — 12% sobre cesantías anuales"
+    },
+    "vacaciones": {
+      "min": 0.041, "max": 0.043,
+      "valor_vigente": 0.0417,
+      "ley": "CST Art. 186 — 15 días hábiles/año = 1/24 ≈ 4.17%"
+    }
+  },
+
+  "ley_1819_verificacion": {
+    "descripcion": "Parámetros de la Ley 1819 de 2016",
+    "umbral_smmlv_exacto": 10.0,
+    "factor_corrector_exacto": 0.70,
+    "conceptos_exonerados_bajo_umbral": ["salud (8.5%)", "icbf_sena (4%)"],
+    "conceptos_NO_exonerados_nunca": ["pension (12%)", "arl", "caja (4%)"],
+    "fuente_legal": "Ley 1819/2016 Art. 65 — Exoneración aportes parafiscales",
+    "notas": [
+      "El umbral de 10×SMMLV aplica sobre T.Imponible (no salario base)",
+      "T.Imponible = salario_base × (1 + comision_pct × pct_cumplimiento)",
+      "Para altos salarios: se cobran salud e ICBF+Sena con factor 0.70"
+    ]
+  }
+}

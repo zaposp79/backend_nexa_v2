@@ -1,0 +1,252 @@
+{
+  "additionalProperties": false,
+  "description": "Panel de Control (frozen, strict).",
+  "properties": {
+    "activa_financiacion": {
+      "default": true,
+      "title": "Activa Financiacion",
+      "type": "boolean"
+    },
+    "antiguedad_cliente": {
+      "default": "",
+      "title": "Antiguedad Cliente",
+      "type": "string"
+    },
+    "aplica_ley_1819": {
+      "default": true,
+      "title": "Aplica Ley 1819",
+      "type": "boolean"
+    },
+    "ciudad": {
+      "default": "",
+      "title": "Ciudad",
+      "type": "string"
+    },
+    "cliente": {
+      "default": "",
+      "title": "Cliente",
+      "type": "string"
+    },
+    "com_cont": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Com Cont",
+      "type": "number"
+    },
+    "componente_indexacion_humano": {
+      "default": "IPC",
+      "title": "Componente Indexacion Humano",
+      "type": "string"
+    },
+    "componente_indexacion_tecnologico": {
+      "default": "IPC",
+      "title": "Componente Indexacion Tecnologico",
+      "type": "string"
+    },
+    "descuento": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Descuento",
+      "type": "number"
+    },
+    "fecha_inicio": {
+      "default": "",
+      "title": "Fecha Inicio",
+      "type": "string"
+    },
+    "imprevistos": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Imprevistos"
+    },
+    "linea_negocio": {
+      "default": "",
+      "title": "Linea Negocio",
+      "type": "string"
+    },
+    "margen": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": -1.0,
+      "title": "Margen",
+      "type": "number"
+    },
+    "margen_b": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Margen B"
+    },
+    "margen_c": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Margen C"
+    },
+    "markup": {
+      "default": 0.0,
+      "maximum": 10.0,
+      "minimum": -1.0,
+      "title": "Markup",
+      "type": "number"
+    },
+    "mes_ajuste_indexacion": {
+      "anyOf": [
+        {
+          "maximum": 12,
+          "minimum": 1,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Mes Ajuste Indexacion"
+    },
+    "meses_contrato": {
+      "default": 12,
+      "maximum": 120,
+      "minimum": 1,
+      "title": "Meses Contrato",
+      "type": "integer"
+    },
+    "op_cont": {
+      "default": 0.0,
+      "maximum": 1.0,
+      "minimum": 0.0,
+      "title": "Op Cont",
+      "type": "number"
+    },
+    "pct_ausentismo": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pct Ausentismo"
+    },
+    "pct_rotacion": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Pct Rotacion"
+    },
+    "periodo_pago_dias": {
+      "default": 90,
+      "maximum": 365,
+      "minimum": 0,
+      "title": "Periodo Pago Dias",
+      "type": "integer"
+    },
+    "sede": {
+      "default": "",
+      "title": "Sede",
+      "type": "string"
+    },
+    "tasa_gmf": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tasa Gmf"
+    },
+    "tasa_ica": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tasa Ica"
+    },
+    "tasa_interes_mensual": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tasa Interes Mensual"
+    },
+    "tasa_mensual_financ": {
+      "anyOf": [
+        {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tasa Mensual Financ"
+    },
+    "tipo_cliente": {
+      "default": "",
+      "title": "Tipo Cliente",
+      "type": "string"
+    }
+  },
+  "title": "PanelDeControlRequestV1",
+  "type": "object"
+}

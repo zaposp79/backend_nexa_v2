@@ -1,0 +1,11 @@
+{
+  "metadata": {
+    "_descripcion": "Caso de prueba: SEGUROS ADL LTDA \u2014 Cobranzas 24 meses",
+    "_nota": "Solo contiene inputs del usuario (Panel, Cadena A/B/C). Tasas, p\u00f3lizas, salarios, rotaci\u00f3n, ausentismo y no-payroll se cargan autom\u00e1ticamente desde storage/parametrization/."
+  },
+  "expected_values": {
+    "description": "Expected output values for validation against Excel",
+    "note": "These values are extracted from Excel V2-4 for comparison"
+  },
+  "timestamp": "2026-05-21T18:08:57.493712+00:00"
+}

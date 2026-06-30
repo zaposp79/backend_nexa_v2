@@ -1,0 +1,31 @@
+# Fuente: Excel V2-7 — Panel de Control General B66:E70
+# Nota: rangos de política min/max para validación de inputs del panel.
+# Consumido por: IParametrizationProvider.get_politicas_comerciales()
+# y PanelService.build_parametros()
+
+politicas_comerciales:
+  - nombre: contingencia_operativa
+    label: "Contingencia Operativa"
+    min: 0.025
+    max: 0.12
+  - nombre: contingencia_comercial
+    label: "Contingencia Comercial"
+    min: 0.04
+    max: 0.07
+  - nombre: markup
+    label: "Markup"
+    min: 0.02
+    max: 0.08
+  - nombre: descuento
+    label: "Descuento volumen"
+    min: 0.0
+    max: 0.15
+  - nombre: imprevistos
+    label: "Imprevistos"
+    min: 0.0
+    max: 1.0
+
+margen_objetivo:
+  cadena_a: 0.15
+  cadena_b: 0.12
+  cadena_c: 0.10

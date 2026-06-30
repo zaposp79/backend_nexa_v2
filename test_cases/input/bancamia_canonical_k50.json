@@ -1,0 +1,147 @@
+{
+  "panel_de_control": {
+    "cliente": "Bancamia",
+    "tipo_cliente": "No Grupo Aval",
+    "linea_negocio": "Cobranzas",
+    "ciudad": "Bogotá",
+    "sede": "Medellín",
+    "fecha_inicio": "2026-01-01",
+    "meses_contrato": 12,
+    "margen": 0.1339,
+    "op_cont": 0.02,
+    "com_cont": 0.0,
+    "markup": 0.0,
+    "descuento": 0.0,
+    "periodo_pago_dias": 30,
+    "activa_financiacion": true,
+    "antiguedad_cliente": "Cliente Nuevo",
+    "componente_indexacion_humano": "IPC",
+    "componente_indexacion_tecnologico": "IPC",
+    "tasa_ica": 0.0097,
+    "tasa_gmf": 0.004,
+    "tasa_mensual_financ": 0.0153,
+    "pct_rotacion": 0.085,
+    "pct_ausentismo": 0.065,
+    "aplica_ley_1819": true,
+    "cadenas_activas": {
+      "cadena_a": true,
+      "cadena_b": true,
+      "cadena_c": false
+    }
+  },
+  "condiciones_cadena_a": {
+    "perfiles": [
+      {
+        "_comment": "WhatsApp Inbound — 6 agentes humanos manejan 4516.89 transacciones/mes",
+        "_k50_contrib": "vol_cadena_a_mensual = J17 x N17 = 5516.89 x 0.8187 = 4516.89",
+        "nombre": "WA Inbound Cobranzas",
+        "rol": "Agente Basico",
+        "canal": "WhatsApp",
+        "modalidad": "Inbound",
+        "fte": 6,
+        "pct_presencia": 1.0,
+        "comision_pct": 0.0,
+        "salario_base": 1750905,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": false,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "modelo_cobro": "Fijo FTE",
+        "pct_fijo": 1.0,
+        "no_payroll_mensual": 0.0,
+        "vol_cadena_a_mensual": 4516.890080428954
+      },
+      {
+        "_comment": "WhatsApp Outbound — 5 FTE, N=1.0, contrib K50 = 5 (FTE convention)",
+        "_k50_contrib": "fte = 5 (outbound: J_outbound=FTE, N_outbound=1.0)",
+        "nombre": "WA Outbound Cobranzas",
+        "rol": "Agente Basico",
+        "canal": "WhatsApp",
+        "modalidad": "Outbound",
+        "fte": 5,
+        "pct_presencia": 1.0,
+        "comision_pct": 0.0,
+        "salario_base": 1750905,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": false,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "modelo_cobro": "Fijo FTE",
+        "pct_fijo": 1.0,
+        "no_payroll_mensual": 0.0,
+        "vol_cadena_a_mensual": 0.0
+      },
+      {
+        "_comment": "Correo Outbound — 13 FTE, N=1.0, contrib K50 = 13",
+        "_k50_contrib": "fte = 13 (outbound: J_outbound=FTE, N_outbound=1.0)",
+        "nombre": "Correo Outbound Cobranzas",
+        "rol": "Agente Basico",
+        "canal": "Correo",
+        "modalidad": "Outbound",
+        "fte": 13,
+        "pct_presencia": 1.0,
+        "comision_pct": 0.0,
+        "salario_base": 1750905,
+        "incluye_examenes": true,
+        "incluye_seguridad": false,
+        "incluye_crucero": false,
+        "dias_cap_inicial": 10,
+        "dias_cap_rotacion": 10,
+        "modelo_cobro": "Fijo FTE",
+        "pct_fijo": 1.0,
+        "no_payroll_mensual": 0.0,
+        "vol_cadena_a_mensual": 0.0
+      }
+    ]
+  },
+  "condiciones_cadena_b": {
+    "canales": [
+      {
+        "_comment": "WA Inbound — 1000 transacciones automation / mes (L17 en Excel)",
+        "_l_contribution": 1000,
+        "nombre": "WhatsApp Inbound",
+        "modalidad": "Inbound",
+        "producto": "WhatsApp",
+        "volumen_mensual": 1000.0,
+        "tarifa_unitaria": 43545.0,
+        "pct_escalamiento": 0.0,
+        "costo_escalamiento": 0.0,
+        "opex_fijo": 0.0,
+        "activo": true
+      },
+      {
+        "_comment": "Correo Inbound — 1000 transacciones automation / mes (L18 en Excel)",
+        "_l_contribution": 1000,
+        "nombre": "Correo Inbound",
+        "modalidad": "Inbound",
+        "producto": "Correo",
+        "volumen_mensual": 1000.0,
+        "tarifa_unitaria": 59253.953,
+        "pct_escalamiento": 0.0,
+        "costo_escalamiento": 0.0,
+        "opex_fijo": 0.0,
+        "activo": true
+      },
+      {
+        "_comment": "WebChat Inbound — 1000 transacciones automation / mes (L19 en Excel)",
+        "_l_contribution": 1000,
+        "nombre": "WebChat Inbound",
+        "modalidad": "Inbound",
+        "producto": "WebChat",
+        "volumen_mensual": 1000.0,
+        "tarifa_unitaria": 59253.953,
+        "pct_escalamiento": 0.0,
+        "costo_escalamiento": 0.0,
+        "opex_fijo": 0.0,
+        "activo": true
+      }
+    ],
+    "fte_equipo_sm": 1.0,
+    "amortizar_dispositivos_sm": true
+  },
+  "condiciones_cadena_c": {
+    "canales": []
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "$defs": {
+    "LineageRefV1": {
+      "additionalProperties": false,
+      "description": "One reference inside a lineage chain (audit-facing view).",
+      "properties": {
+        "cell": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Cell"
+        },
+        "formula": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Formula"
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        },
+        "source_id": {
+          "title": "Source Id",
+          "type": "string"
+        },
+        "source_type": {
+          "title": "Source Type",
+          "type": "string"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "source_type",
+        "source_id"
+      ],
+      "title": "LineageRefV1",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Cadena de lineage humanamente legible para un valor concreto.",
+  "properties": {
+    "calculator": {
+      "default": "",
+      "title": "Calculator",
+      "type": "string"
+    },
+    "explanation": {
+      "default": "",
+      "title": "Explanation",
+      "type": "string"
+    },
+    "formula": {
+      "default": "",
+      "title": "Formula",
+      "type": "string"
+    },
+    "refs_chain": {
+      "items": {
+        "$ref": "#/$defs/LineageRefV1"
+      },
+      "title": "Refs Chain",
+      "type": "array"
+    },
+    "simulation_id": {
+      "title": "Simulation Id",
+      "type": "string"
+    },
+    "stage": {
+      "default": "",
+      "title": "Stage",
+      "type": "string"
+    },
+    "value": {
+      "default": null,
+      "title": "Value"
+    },
+    "value_name": {
+      "title": "Value Name",
+      "type": "string"
+    }
+  },
+  "required": [
+    "simulation_id",
+    "value_name"
+  ],
+  "title": "AuditValueExplanationV1",
+  "type": "object"
+}
