@@ -15,17 +15,17 @@ class PayrollSalaryMixin:
     """Mixin: Salary, contributions and benefits methods."""
 
     def get_salary_for_role(self, rol: str, tipo: str = "Empleado") -> float:
-        """Get salary for a role and employment type.
+        """Get salary for a cargo. Fuente: HR-Nomina (columna Cargo).
 
         Args:
-            rol: Role name (e.g., "Director de cuentas").
-            tipo: Employment type (default "Empleado").
+            rol: Nombre del cargo (e.g., "Director de cuentas").
+            tipo: Mantenido por compatibilidad de firma; ya no existe en HR-Nomina.
 
         Returns:
             Salary amount.
 
         Raises:
-            RoleNotFoundError: if role not found.
+            RoleNotFoundError: if cargo not found.
         """
         self._ensure_hr_loaded()
 
@@ -35,24 +35,13 @@ class PayrollSalaryMixin:
 
         rol_norm = self._normalize(rol)
         for row in nomina:
-            if (self._normalize(row.get("rol", "")) == rol_norm
-                    and row.get("tipo") == tipo):
+            if self._normalize(row.get("cargo", "")) == rol_norm:
                 salario = row.get("salario")
                 if salario is not None:
-                    logger.debug(f"[PARAMETRIZATION] Salary for {rol}/{tipo}: {salario}")
+                    logger.debug("[PARAMETRIZATION] Salary for %s: %s", rol, salario)
                     return float(salario)
 
-        # Fallback: try without tipo filter (any employment type)
-        for row in nomina:
-            if self._normalize(row.get("rol", "")) == rol_norm:
-                salario = row.get("salario")
-                if salario is not None:
-                    logger.debug(
-                        f"[PARAMETRIZATION] Salary for {rol} (tipo mismatch, found '{row.get('tipo')}'): {salario}"
-                    )
-                    return float(salario)
-
-        raise RoleNotFoundError(f"Role '{rol}' with type '{tipo}' not found in HR-Nomina")
+        raise RoleNotFoundError(f"Cargo '{rol}' not found in HR-Nomina")
 
     @staticmethod
 
@@ -139,7 +128,7 @@ class PayrollSalaryMixin:
         - Converts annual dotations to monthly by dividing by 12
         """
         self._ensure_hr_loaded()
-        salarios = self._hr_data.get("salarios", [])
+        salarios = self._hr_data.get("salariobasico", [])
 
         # Primary mapping: exact matches for backward compatibility
         mapping = {

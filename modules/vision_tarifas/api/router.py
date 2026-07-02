@@ -1,6 +1,6 @@
 """Vision Tarifas — HTTP endpoint."""
 from __future__ import annotations
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Path
 from fastapi.responses import JSONResponse
 from nexa_engine.db.dependencies import get_results_repository
 from nexa_engine.modules.calculator.persistence.results_repository import ResultsRepository
@@ -52,7 +52,7 @@ router = APIRouter(prefix="/simulation", tags=["Vision Tarifas"])
     },
 )
 def get_vision_tarifas_modelo_cobro(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     repo: ResultsRepository = Depends(get_results_repository),
 ):
     """
@@ -85,7 +85,7 @@ def get_vision_tarifas_modelo_cobro(
     response_model=ModeloCobroApiResponseV1,
 )
 def post_vision_tarifas_modelo_cobro_recalculate(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     body: ModeloCobroRecalculateRequest = Body(...),
     repo: ResultsRepository = Depends(get_results_repository),
 ):

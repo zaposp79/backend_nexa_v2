@@ -57,8 +57,8 @@ class ProviderHrMixin:
         nomina = self._payroll._hr_data.get("nomina", [])
         rol_norm = rol.strip().lower()
         for row in nomina:
-            row_rol = str(row.get("rol", "")).strip().lower()
-            if row_rol == rol_norm:
+            row_cargo = str(row.get("cargo", "")).strip().lower()
+            if row_cargo == rol_norm:
                 pct = float(row.get("comision_pct", 0.0) or 0.0)
                 logger.debug(
                     "[REPOSITORY] operation=get_comision_pct_rol rol=%s value=%s source=HR-Nomina",
@@ -142,11 +142,6 @@ class ProviderHrMixin:
                 f"salarios: {list(base.keys())}",
                 module="hr",
             ) from ke
-
-    # ──────────────────────────────────────────────────────────────────────────
-    # Rotación / Ausentismo  (HR-rotacion_ausentismo)
-    # ──────────────────────────────────────────────────────────────────────────
-
 
     def _resolve_linea(self, linea: str) -> str:
         """WAVE 5: canonicalize a line-of-business name semantically.
@@ -336,27 +331,33 @@ class ProviderHrMixin:
     def get_complejidad_especialista(self) -> dict:
         """Retorna mapa de complejidad → multiplicador para Especialista de Proyectos.
 
-        Fuente: HR-complejidad_especialista en parametrización activa.
+        Fuente: HR-Complejidad (columnas Complejidad, Valor).
 
         Returns:
             {"BAJA": 0.20, "MEDIA": 0.50, "ALTA": 0.50}
 
         Raises:
-            ParametrizationError: si la clave no existe en HR.
+            ParametrizationError: si la hoja HR-Complejidad está vacía o ausente.
         """
         self._payroll._ensure_hr_loaded()
-        data = self._payroll._hr_data.get("complejidad_especialista")
-        if data is None:
+        rows = self._payroll._hr_data.get("complejidad")
+        if not rows:
             raise ParametrizationError(
-                "HR parametrization missing 'complejidad_especialista'. "
-                "Verifique storage/parametrization/hr/*.json",
+                "HR parametrization missing 'complejidad' (HR-Complejidad sheet). "
+                "Verifique que el Excel incluye la hoja HR-Complejidad.",
                 module="hr",
             )
+        result = {
+            str(row.get("complejidad", "")).strip().upper(): float(row.get("valor", 0.0))
+            for row in rows
+            if row.get("complejidad")
+        }
         logger.debug(
             "[PARAMETRIZATION] operation=get_complejidad_especialista "
-            "source=HR-complejidad_especialista"
+            "source=HR-Complejidad entries=%d",
+            len(result),
         )
-        return data
+        return result
 
 
     def get_clasificacion_cargos(self) -> dict:

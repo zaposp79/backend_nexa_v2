@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 from nexa_engine.modules.parametrizacion.gn.contracts import GN_CONTRACT
@@ -9,7 +10,7 @@ from nexa_engine.modules.parametrizacion.gn.dto.dto import GNSheetPreview, GNUpl
 from nexa_engine.modules.parametrizacion.gn.mappers.mapper import GNMapper
 from nexa_engine.modules.parametrizacion.gn.repositories.gn_repository import GNRepository
 from nexa_engine.modules.parametrizacion.gn.validators.validator import GNValidator
-from nexa_engine.modules.parametrizacion.shared.helpers.excel_preflight import check_ooxml_safety
+from nexa_engine.modules.parametrizacion.shared.helpers.excel_preflight import check_excel_safety
 from nexa_engine.modules.parametrizacion.shared.helpers.excel_reader import read_excel_sheets
 from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
     check_file_size,
@@ -18,6 +19,8 @@ from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
 from nexa_engine.modules.parametrizacion.shared.contracts.normalizer import normalize_sheets_by_contract
 from nexa_engine.modules.shared.exceptions import ValidationError
 from nexa_engine.modules.parametrizacion.shared.models.version_summary import VersionSummary
+
+_COLOMBIA_TZ = timezone(timedelta(hours=-5))
 
 
 class GNService:
@@ -33,7 +36,7 @@ class GNService:
         self._validator = validator or GNValidator()
         self._mapper = mapper or GNMapper()
 
-    def process_upload(self, filename: str, file_bytes: bytes) -> GNUploadResponse:
+    def process_upload(self, filename: str, file_bytes: bytes, user_id: str = "anonymous") -> GNUploadResponse:
         # 1. Sanitize filename (must not be used for path operations until sanitized)
         filename = sanitize_filename(filename)
 
@@ -41,7 +44,7 @@ class GNService:
         check_file_size(file_bytes)
 
         # 3. OOXML security preflight — ZIP-level checks, formula detection, VBA, etc.
-        check_ooxml_safety(file_bytes)
+        check_excel_safety(file_bytes, filename)
 
         # 4. Read sheets with strict contract validation (sheet names + exact headers)
         sheets = read_excel_sheets(file_bytes, "GN-", contract=GN_CONTRACT)
@@ -59,6 +62,9 @@ class GNService:
         master = self._mapper.map(version_id, sheets)
         data_dict = self._mapper.to_dict(master)
 
+        colombia_version_id = datetime.now(_COLOMBIA_TZ).strftime("%Y-%m-%d %H:%M:%S")
+        data_dict["version_id"] = colombia_version_id
+
         total_rows = sum(len(rows) for rows in sheets.values())
         uploaded_at = self._repo.now_iso()
 
@@ -72,10 +78,22 @@ class GNService:
         )
 
         # 8. Persist only after full validation
-        self._repo.save_version(summary, data_dict)
+        metadata = {
+            "pk": "gn",
+            "version_id": colombia_version_id,
+            "type": "parametrization_version",
+            "status": "active",
+            "created_at": datetime.now(_COLOMBIA_TZ).isoformat(),
+            "file_name": filename,
+            "sheet_count": len(sheets),
+            "total_rows": total_rows,
+            "user_id": user_id,
+            "sheets_found": list(sheets.keys()),
+        }
+        self._repo.save_version(summary, data_dict, metadata)
 
         return GNUploadResponse(
-            version_id=version_id,
+            version_id=colombia_version_id,
             filename=filename,
             uploaded_at=uploaded_at,
             sheets_found=list(sheets.keys()),

@@ -29,7 +29,7 @@ import logging
 import re
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
 
 from nexa_engine.db.dependencies import get_audit_use_case
 from nexa_engine.modules.shared.contracts.api_v1.response.audit import (
@@ -158,6 +158,18 @@ def _validate_baseline_id(baseline_id: str) -> None:
         )
 
 
+def _safe_baseline_path(baseline_root: Path, baseline_id: str) -> Path:
+    """Resolve and validate that the final path stays inside baseline_root.
+
+    Prevents symlink-based traversal by resolving before comparing.
+    """
+    safe_root = baseline_root.resolve()
+    target = (baseline_root / baseline_id).resolve()
+    if not str(target).startswith(str(safe_root)):
+        raise HTTPException(status_code=400, detail="Invalid baseline path.")
+    return target
+
+
 @router.get(
     "/simulations",
     response_model=list[AuditSimulationSummaryV1],
@@ -187,7 +199,7 @@ def list_audit_simulations(
     summary="Full audit envelope for a simulation.",
 )
 def get_simulation_audit(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     use_case: AuditSimulationUseCase = Depends(get_audit_use_case),
 ) -> AuditResponseV1:
     """Return the audit envelope for `simulation_id`.
@@ -208,8 +220,8 @@ def get_simulation_audit(
     summary="Lineage chain for a specific value in a simulation.",
 )
 def explain_value(
-    simulation_id: str,
-    value_name: str = Query(..., description="Canonical value name in the lineage graph."),
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+    value_name: str = Query(..., min_length=1, max_length=256, description="Canonical value name in the lineage graph."),
     use_case: AuditSimulationUseCase = Depends(get_audit_use_case),
 ) -> AuditValueExplanationV1:
     """Return the trace_back chain + human explanation for `value_name`."""
@@ -228,7 +240,7 @@ def explain_value(
     summary="Compare a simulation's kpis vs a certified baseline.",
 )
 def diff_vs_baseline(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     baseline_id: str = Query(..., description="Certified baseline id."),
     baseline_version: str = Query(
         "v2-7-certified",
@@ -241,6 +253,7 @@ def diff_vs_baseline(
     _validate_baseline_id(baseline_id)
 
     baseline_root = Path.cwd() / "storage" / "baselines" / baseline_version / "cases"
+    _safe_baseline_path(baseline_root, baseline_id)  # path-traversal guard via resolve()
     try:
         diff = use_case.diff_vs_baseline(simulation_id, baseline_id, baseline_root)
     except AuditNotAvailableError as exc:

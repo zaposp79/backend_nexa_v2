@@ -7,6 +7,7 @@ from typing import Any, Dict, List
 
 from nexa_engine.modules.parametrizacion.hr.models.models import (
     CampanaConfig,
+    ComplejidadConfig,
     CostoFijoConfig,
     HRMasterData,
     MedSegConfig,
@@ -21,6 +22,17 @@ from nexa_engine.modules.parametrizacion.hr.models.models import (
 )
 
 logger = logging.getLogger("nexa.parametrization.hr")
+
+# Maps normalized HR-LV column names → API catalog keys
+_LV_KEY_MAP = {
+    "tiporecurso": "tiporecurso",
+    "cargo": "cargo",
+    "prestaciones": "prestaciones",
+    "ss&parafiscales": "ssparafiscales",
+    "recargo": "recargo",
+    "equipohitl": "equipohitl",
+    "equiposoportemantenimiento": "equiposoportemantenimiento",
+}
 
 
 def _float(val: Any, default: float = 0.0) -> float:
@@ -50,15 +62,16 @@ def _str(val: Any, default: str = "") -> str:
 class HRMapper:
     """Converts raw sheet row-dicts to :class:`HRMasterData`."""
 
-    def map(self, version_id: str, sheets: Dict[str, List[dict]]) -> HRMasterData:
-        # Standard HR sheets (typed, specific mappers)
+    def map(self, sheets: Dict[str, List[dict]]) -> HRMasterData:
         STANDARD_SHEETS = {
             "HR-LV", "HR-SalarioBasico", "HR-Nomina", "HR-Recargos",
             "HR-SegSocial", "HR-Prestaciones", "HR-Ratios", "HR-Rentabilidad",
-            "HR-Campana", "HR-CostoFijo", "HR-Med-Seg"
+            "HR-Campana", "HR-CostoFijo", "HR-Med-Seg", "HR-Complejidad",
+            # Legacy separate sheets — columns now live in HR-LV; kept here to
+            # prevent them from appearing in extra_sheets if present in old files.
+            "HR-EquipoHITL", "HR-EquipoSoporteMantenimiento",
         }
 
-        # Capture any additional sheets not in the standard list
         extra_sheets = {
             sheet_name: rows
             for sheet_name, rows in sheets.items()
@@ -72,9 +85,8 @@ class HRMapper:
             )
 
         return HRMasterData(
-            version_id=version_id,
-            niveles=self._map_niveles(sheets.get("HR-LV", [])),
-            salarios=self._map_salarios(sheets.get("HR-SalarioBasico", [])),
+            lv=self._map_niveles(sheets),
+            salariobasico=self._map_salarios(sheets.get("HR-SalarioBasico", [])),
             nomina=self._map_nomina(sheets.get("HR-Nomina", [])),
             recargos=self._map_recargos(sheets.get("HR-Recargos", [])),
             seg_social=self._map_seg_social(sheets.get("HR-SegSocial", [])),
@@ -84,20 +96,31 @@ class HRMapper:
             campana=self._map_campana(sheets.get("HR-Campana", [])),
             costo_fijo=self._map_costo_fijo(sheets.get("HR-CostoFijo", [])),
             med_seg=self._map_med_seg(sheets.get("HR-Med-Seg", [])),
+            complejidad=self._map_complejidad(sheets.get("HR-Complejidad", [])),
             extra_sheets=extra_sheets,
         )
 
-    def _map_niveles(self, rows: List[dict]) -> NivelesLV:
-        if not rows:
+    def _map_niveles(self, sheets: Dict[str, List[dict]]) -> NivelesLV:
+        """Build LV catalogs from HR-LV columns (includes EquipoHITL and EquipoSoporteMantenimiento)."""
+        lv_rows = sheets.get("HR-LV", [])
+        if not lv_rows:
             return NivelesLV()
-        seen: dict = {col: {} for col in rows[0].keys()}
+        return NivelesLV(catalogs=self._collect_lv_catalogs(lv_rows))
+
+    @staticmethod
+    def _collect_lv_catalogs(rows: List[dict]) -> Dict[str, List[Dict[str, str]]]:
+        """Collect distinct non-empty values per HR-LV column, remapping to API keys."""
+        seen: Dict[str, Dict[str, Dict[str, str]]] = {col: {} for col in rows[0].keys()}
         for row in rows:
             for col, val in row.items():
                 v = _str(val)
                 if v and v not in seen[col]:
                     seen[col][v] = {"name": v}
-        catalogs = {col: list(vals.values()) for col, vals in seen.items() if vals}
-        return NivelesLV(catalogs=catalogs)
+        return {
+            _LV_KEY_MAP.get(col.lower(), col.lower()): list(vals.values())
+            for col, vals in seen.items()
+            if vals
+        }
 
     def _map_salarios(self, rows: List[dict]) -> List[SalarioBasico]:
         result = []
@@ -112,9 +135,9 @@ class HRMapper:
         result = []
         for row in rows:
             result.append(NominaConfig(
-                tipo=_str(row.get("tipo")),
-                rol=_str(row.get("rol")),
+                cargo=_str(row.get("cargo")),
                 salario=_float(row.get("salario")),
+                comision=_float(row.get("comision")),
             ))
         return result
 
@@ -147,62 +170,19 @@ class HRMapper:
 
     def _map_ratios(self, rows: List[dict]) -> List[RatiosConfig]:
         result = []
-
-        # Log column names from first row to debug mapping issues
-        if rows:
-            col_names = list(rows[0].keys())
-            logger.warning(
-                "[MAPPING] HR-Ratios sheet columns: %s",
-                col_names
-            )
-
-        for idx, row in enumerate(rows, start=1):
-            cargo = _str(row.get("cargo")) or _str(row.get("Cargo"))
+        for row in rows:
+            cargo = _str(row.get("cargo"))
             if not cargo:
                 continue
-
-            # Try multiple variations of column names (case-insensitive approach)
-            # Look for each field with various possible Excel column names
-            categoria_servicio = (
-                _str(row.get("CategoriaServicio")) or
-                _str(row.get("categoriaservicio")) or
-                _str(row.get("categoria_servicio")) or
-                _str(row.get("Categoria Servicio")) or
-                _str(row.get("categoria servicio")) or
-                _str(row.get("servicio")) or
-                _str(row.get("Servicio"))
-            )
-
-            tipo = (
-                _str(row.get("Tipo")) or
-                _str(row.get("tipo")) or
-                _str(row.get("TIPO"))
-            )
-
-            agentes = _float(
-                row.get("Agentes") or
-                row.get("agentes") or
-                row.get("AGENTES")
-            )
-
-            # Log all rows to see actual values
-            logger.info(
-                "[MAPPING] HR-Ratios row %d: cargo=%r, categoria_servicio=%r, tipo=%r, agentes=%s | raw_keys=%s",
-                idx, cargo, categoria_servicio, tipo, agentes,
-                list(row.keys())
-            )
-
             result.append(RatiosConfig(
                 cargo=cargo,
-                servicio=categoria_servicio,  # Primary field for backward compatibility
-                agentes=agentes,
-                tipo=tipo,
-                categoria_servicio=categoria_servicio,
+                categoria_servicio=_str(row.get("categoriaservicio")),
+                tipo=_str(row.get("tipo")),
+                agentes=_float(row.get("agentes")),
             ))
         return result
 
     def _map_rentabilidad(self, rows: List[dict]) -> List[RentabilidadConfig]:
-        # minimo / margenobjetivo arrive as float (0.17) after contract normalization
         result = []
         for row in rows:
             result.append(RentabilidadConfig(
@@ -222,28 +202,36 @@ class HRMapper:
             ))
         return result
 
+    def _map_complejidad(self, rows: List[dict]) -> List[ComplejidadConfig]:
+        result = []
+        for row in rows:
+            complejidad = _str(row.get("complejidad")).strip()
+            if not complejidad:
+                continue
+            result.append(ComplejidadConfig(
+                complejidad=complejidad,
+                valor=_float(row.get("valor")),
+            ))
+        return result
+
     def _map_costo_fijo(self, rows: List[dict]) -> List[CostoFijoConfig]:
         result = []
         for row in rows:
-            # CRITICAL: Keep localidad EXACTLY as-is from Excel (no truncation)
+            ciudad = _str(row.get("ciudad")).strip()
             localidad = _str(row.get("localidad")).strip()
-            servicio = _str(row.get("servicio")).strip()
-
-            # CRITICAL: Convert valor to float WITHOUT division or rounding
-            # If Excel has 153301, store as 153301.0 (not 153.301)
+            servicio_publico = _str(row.get("serviciopublico")).strip()
             valor_raw = row.get("valor")
             if valor_raw is None:
                 valor = 0.0
             else:
                 try:
-                    # Convert directly without _float() which rounds to 5 decimals
                     valor = float(valor_raw)
                 except (ValueError, TypeError):
                     valor = 0.0
-
             result.append(CostoFijoConfig(
+                ciudad=ciudad,
                 localidad=localidad,
-                servicio=servicio,
+                servicio_publico=servicio_publico,
                 valor=valor,
             ))
         return result
@@ -251,11 +239,8 @@ class HRMapper:
     def _map_med_seg(self, rows: List[dict]) -> List[MedSegConfig]:
         result = []
         for row in rows:
-            # CRITICAL: Keep localidad EXACTLY as-is from Excel (no truncation)
-            localidad = _str(row.get("localidad")).strip()
+            ciudad = _str(row.get("ciudad")).strip()
             centrocosto = _str(row.get("centrocosto")).strip()
-
-            # CRITICAL: Convert valor to float WITHOUT division or transformation
             valor_raw = row.get("valor")
             if valor_raw is None:
                 valor = 0.0
@@ -264,12 +249,7 @@ class HRMapper:
                     valor = float(valor_raw)
                 except (ValueError, TypeError):
                     valor = 0.0
-
-            result.append(MedSegConfig(
-                localidad=localidad,
-                centrocosto=centrocosto,
-                valor=valor,
-            ))
+            result.append(MedSegConfig(ciudad=ciudad, centrocosto=centrocosto, valor=valor))
         return result
 
     def to_dict(self, master: HRMasterData) -> dict:

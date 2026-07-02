@@ -22,10 +22,10 @@ from nexa_engine.modules.shared.config.config import OP_DIR
 class OPActiveParametrizationRepository:
     """Lee la data de parametrización OP activa."""
 
-    def __init__(self, store: DocumentStore) -> None:
+    def __init__(self, store: DocumentStore, version_index: VersionIndexRepository) -> None:
         self._store = store
         self._codec = OPVersionDocumentCodec()
-        self._version_index = VersionIndexRepository(store=store, collection=OP_PARAMETRIZATION_COLLECTION)
+        self._version_index = version_index
 
     def get_active_data(self) -> Dict[str, Any]:
         active = self._version_index.get_active()

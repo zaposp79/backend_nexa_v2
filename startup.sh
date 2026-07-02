@@ -24,8 +24,8 @@ fi
 cd "$ROOT"
 export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
 
-# Puerto: App Service Linux espera el contenedor en 8000 (o el de WEBSITES_PORT).
-PORT="${APP_PORT:-8000}"
+# Puerto: Azure App Service inyecta WEBSITES_PORT; también se puede sobrescribir con APP_PORT.
+PORT="${APP_PORT:-${WEBSITES_PORT:-8000}}"
 
 # Arranque ASGI con la application factory. APP_ENV/COSMOS_*/CORS_ALLOWED_ORIGINS
 # se leen desde las Application Settings del App Service (NO desde .env).

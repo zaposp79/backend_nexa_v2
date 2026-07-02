@@ -428,6 +428,37 @@
 			]
 		},
 		{
+			"name": "Parametrization - Active (Consolidated)",
+			"item": [
+				{
+					"name": "GET /api/v1/parametrization/active",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/active",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"active"
+							]
+						},
+						"description": "Retorna la parametrización activa consolidada de HR, GN y OP en un solo objeto.\n\nFusiona los catálogos `lv.catalogs` de los 3 archivos y agrupa todas las hojas en `payload`.\n\n**Respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"id_hr\": \"<version_id_hr>\",\n    \"id_gn\": \"<version_id_gn>\",\n    \"id_op\": \"<version_id_op>\",\n    \"user_id\": null,\n    \"payload\": {\n      \"lv\": { \"catalogs\": { ... } },\n      \"salariobasico\": [...],\n      \"nomina\": [...],\n      \"recargos\": [...],\n      \"seg_social\": [...],\n      \"prestaciones\": [...],\n      \"ratios\": [...],\n      \"complejidad\": [...],\n      \"rentabilidad\": [...],\n      \"campana\": [...],\n      \"costo_fijo\": [...],\n      \"med_seg\": [...],\n      \"opexfijo\": [...],\n      \"hardsoft\": [...],\n      \"componente\": [...],\n      \"componenteacumulado\": [...],\n      \"poliza\": [...],\n      \"polizafija\": [...],\n      \"ica\": [...],\n      \"costo\": [...],\n      \"margenobjetivo\": [...]\n    }\n  },\n  \"error\": null,\n  \"meta\": null\n}\n```\n\nRetorna 404 si ningún archivo tiene versión activa."
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Parametrization - HR",
 			"item": [
 				{

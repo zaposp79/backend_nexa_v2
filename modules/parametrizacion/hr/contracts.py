@@ -3,11 +3,11 @@
 Based on production file: HR_productiva_2026-05-11-09-52-29.xlsx
 
 Sheet inventory:
-  Required (7):  HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
-                 HR-SegSocial, HR-Prestaciones, HR-Ratios
-  Optional (8):  HR-Complejidad, HR-Rentabilidad, HR-Campana, HR-AutRot,
-                 HR-CostoFijo, HR-Med-Seg, HR-EquipoHITL,
-                 HR-EquipoSoporteMantenimiento
+  Required (12): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
+                 HR-SegSocial, HR-Prestaciones, HR-Ratios,
+                 HR-Complejidad, HR-Rentabilidad, HR-Campana,
+                 HR-CostoFijo, HR-Med-Seg
+  Optional (3):  HR-AutRot, HR-EquipoHITL, HR-EquipoSoporteMantenimiento
 
 Column-type decisions
 ---------------------
@@ -60,12 +60,13 @@ HR_LV = SheetContract(
     required=True,
     sheet_type=SheetType.CATALOG_BY_COLUMN,
     columns=[
-        ColumnContract("Tipo",            _CAT),
-        ColumnContract("Rol",             _CAT),
-        ColumnContract("Servicio",        _CAT),
-        ColumnContract("Prestaciones",    _CAT),
-        ColumnContract("SS&Parafiscales", _CAT),
-        ColumnContract("Recargo",         _CAT),
+        ColumnContract("TipoRecurso",                _CAT),
+        ColumnContract("Cargo",                      _CAT),
+        ColumnContract("Prestaciones",               _CAT),
+        ColumnContract("SS&Parafiscales",            _CAT),
+        ColumnContract("Recargo",                    _CAT),
+        ColumnContract("EquipoHITL",                 _CAT),
+        ColumnContract("EquipoSoporteMantenimiento", _CAT),
     ],
     allow_trailing_unnamed=False,
 )
@@ -86,11 +87,11 @@ HR_NOMINA = SheetContract(
     required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
-        ColumnContract("Tipo",   _S),
-        ColumnContract("Rol",    _S),
-        ColumnContract("Salario", _MON),
+        ColumnContract("Cargo",    _S),
+        ColumnContract("Salario",  _MON),
+        ColumnContract("Comision", _MON),
     ],
-    allow_trailing_unnamed=True,  # production: 2 trailing None cols
+    allow_trailing_unnamed=True,
 )
 
 HR_RECARGOS = SheetContract(
@@ -131,7 +132,7 @@ HR_RATIOS = SheetContract(
     required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
-        ColumnContract("Cargo",             _S),   # production header "Cargo " (space stripped)
+        ColumnContract("Cargo",             _S),
         ColumnContract("CategoriaServicio", _S),
         ColumnContract("Tipo",              _S),
         ColumnContract("Agentes",           _NUM),
@@ -141,7 +142,7 @@ HR_RATIOS = SheetContract(
 
 HR_COMPLEJIDAD = SheetContract(
     excel_name="HR-Complejidad",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Complejidad", _S),
@@ -152,7 +153,7 @@ HR_COMPLEJIDAD = SheetContract(
 
 HR_RENTABILIDAD = SheetContract(
     excel_name="HR-Rentabilidad",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("CategoriaServicio", _S),
@@ -164,7 +165,7 @@ HR_RENTABILIDAD = SheetContract(
 
 HR_CAMPANA = SheetContract(
     excel_name="HR-Campana",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("CategoriaServicio", _S),
@@ -189,22 +190,23 @@ HR_AUT_ROT = SheetContract(
 
 HR_COSTO_FIJO = SheetContract(
     excel_name="HR-CostoFijo",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
-        ColumnContract("Localidad", _S),
-        ColumnContract("Servicio",  _S),
-        ColumnContract("Valor",     _MON),  # COP monetary (153301, 11.757)
+        ColumnContract("Ciudad",         _S),
+        ColumnContract("Localidad",      _S),
+        ColumnContract("ServicioPublico", _S),
+        ColumnContract("Valor",          _MON),  # COP monetary (153301, 11.757)
     ],
     allow_trailing_unnamed=False,
 )
 
 HR_MED_SEG = SheetContract(
     excel_name="HR-Med-Seg",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
-        ColumnContract("Localidad",   _S),
+        ColumnContract("Ciudad",      _S),
         ColumnContract("CentroCosto", _S),
         ColumnContract("Valor",       _MON),
     ],

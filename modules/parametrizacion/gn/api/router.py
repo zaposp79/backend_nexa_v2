@@ -1,14 +1,17 @@
 """Endpoints de parametrización GN."""
 
-from fastapi import APIRouter, Depends, HTTPException, Request, UploadFile, File, status
+from fastapi import APIRouter, Depends, Path, Query, Request, UploadFile, File
+from fastapi.responses import JSONResponse
 
 from nexa_engine.modules.parametrizacion.gn.services.gn_service import GNService
-from nexa_engine.modules.shared.exceptions import DomainError, NotFoundError, UploadError, ValidationError
-from nexa_engine.modules.shared.config.config import (
-    ALLOWED_EXCEL_EXTENSIONS,
-    MAX_EXCEL_UPLOAD_BYTES,
+from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
+    check_filename_prefix,
+    check_file_extension,
+    check_file_size,
+    sanitize_user_id,
 )
-from nexa_engine.modules.shared.responses import ApiResponse
+from nexa_engine.modules.shared.config.config import MAX_EXCEL_UPLOAD_BYTES
+from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry
 
 router = APIRouter(prefix="/parametrization/gn", tags=["Parametrization"])
@@ -21,41 +24,26 @@ def _get_service(request: Request) -> GNService:
     return request.app.state.container.gn_upload_service
 
 
-def _check_extension(filename: str) -> None:
-    from pathlib import Path
-    ext = Path(filename).suffix.lower()
-    if ext not in ALLOWED_EXCEL_EXTENSIONS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Tipo de archivo no permitido ('{ext}'). Solo se acepta .xlsx.",
-        )
-
-
 @router.post(
     "/upload",
     summary="Subir archivo Excel GN",
     description="Carga y procesa un archivo Excel de parametrización de Gastos de Negociación.",
     operation_id="uploadGn",
+    status_code=201,
 )
-async def upload_gn(file: UploadFile = File(...), service: GNService = Depends(_get_service)):
-    _check_extension(file.filename or "")
-
+async def upload_gn(
+    file: UploadFile = File(...),
+    user_id: str = Query(default="anonymous"),
+    service: GNService = Depends(_get_service),
+):
+    filename = file.filename or ""
+    check_filename_prefix(filename, "GN")
+    check_file_extension(filename)
     file_bytes = await file.read(MAX_EXCEL_UPLOAD_BYTES + 1)
-    if len(file_bytes) > MAX_EXCEL_UPLOAD_BYTES:
-        return ApiResponse.fail(
-            "EXCEL_LIMIT_EXCEEDED",
-            "El archivo supera el tamaño máximo permitido.",
-        )
-
-    try:
-        resp = service.process_upload(file.filename or "upload.xlsx", file_bytes)
-        return ApiResponse.ok(resp.model_dump())
-    except ValidationError as exc:
-        return ApiResponse.fail("VALIDATION_ERROR", exc.message, details=exc.errors)
-    except UploadError as exc:
-        return ApiResponse.fail(exc.code, exc.message)
-    except DomainError:
-        return ApiResponse.fail("DOMAIN_ERROR", "Error procesando el archivo.")
+    check_file_size(file_bytes)
+    user_id = sanitize_user_id(user_id)
+    resp = service.process_upload(filename or "upload.xlsx", file_bytes, user_id=user_id)
+    return ApiResponse.ok(resp.model_dump())
 
 
 @router.get(
@@ -77,7 +65,13 @@ def list_gn_versions(service: GNService = Depends(_get_service)):
 def get_gn_active(service: GNService = Depends(_get_service)):
     active = service.get_active()
     if active is None:
-        return ApiResponse.fail("NOT_FOUND", "No hay versión GN activa.")
+        return JSONResponse(
+            status_code=404,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="NOT_FOUND", message="No hay versión GN activa."),
+            ).model_dump(),
+        )
     return ApiResponse.ok(active)
 
 
@@ -87,13 +81,13 @@ def get_gn_active(service: GNService = Depends(_get_service)):
     description="Activa una versión específica de parametrización de Gastos de Negociación.",
     operation_id="activateGnVersion",
 )
-def activate_gn(version_id: str, service: GNService = Depends(_get_service)):
-    try:
-        summary = service.activate(version_id)
-        _version_registry.invalidate_cache()
-        return ApiResponse.ok(summary.model_dump())
-    except NotFoundError:
-        return ApiResponse.fail("NOT_FOUND", "Versión no encontrada.")
+def activate_gn(
+    version_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+    service: GNService = Depends(_get_service),
+):
+    summary = service.activate(version_id)
+    _version_registry.invalidate_cache()
+    return ApiResponse.ok(summary.model_dump())
 
 
 @router.delete(
@@ -101,10 +95,11 @@ def activate_gn(version_id: str, service: GNService = Depends(_get_service)):
     summary="Eliminar versión GN",
     description="Elimina una versión específica de parametrización de Gastos de Negociación.",
     operation_id="deleteGnVersion",
+    status_code=200,
 )
-def delete_gn(version_id: str, service: GNService = Depends(_get_service)):
-    try:
-        service.delete(version_id)
-        return ApiResponse.ok(None)
-    except NotFoundError:
-        return ApiResponse.fail("NOT_FOUND", "Versión no encontrada.")
+def delete_gn(
+    version_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+    service: GNService = Depends(_get_service),
+):
+    service.delete(version_id)
+    return ApiResponse.ok(None)

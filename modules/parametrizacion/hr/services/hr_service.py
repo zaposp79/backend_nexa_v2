@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import logging
 import time
+from datetime import datetime, timezone, timedelta
 
 from nexa_engine.modules.parametrizacion.hr.contracts import HR_CONTRACT
-from nexa_engine.modules.parametrizacion.hr.dto.dto import HRUploadResponse, HRVersionSummary
+from nexa_engine.modules.parametrizacion.hr.dto.dto import (
+    HRUploadResult,
+    HRUploadSummary,
+    HRVersionSummary,
+)
 from nexa_engine.modules.parametrizacion.hr.mappers.mapper import HRMapper
 from nexa_engine.modules.parametrizacion.hr.repositories.hr_repository import HRRepository
 from nexa_engine.modules.parametrizacion.hr.validators.validator import (
@@ -14,7 +19,7 @@ from nexa_engine.modules.parametrizacion.hr.validators.validator import (
     REQUIRED_SHEETS,
     OPTIONAL_SHEETS,
 )
-from nexa_engine.modules.parametrizacion.shared.helpers.excel_preflight import check_ooxml_safety
+from nexa_engine.modules.parametrizacion.shared.helpers.excel_preflight import check_excel_safety
 from nexa_engine.modules.parametrizacion.shared.helpers.excel_reader import read_excel_sheets
 from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
     check_file_size,
@@ -25,6 +30,8 @@ from nexa_engine.modules.shared.exceptions import NotFoundError, UploadError, Va
 from nexa_engine.modules.parametrizacion.shared.models.version_summary import VersionSummary
 
 logger = logging.getLogger("nexa.parametrization.hr")
+
+_COLOMBIA_TZ = timezone(timedelta(hours=-5))
 
 
 class HRService:
@@ -40,47 +47,33 @@ class HRService:
         self._validator = validator or HRValidator()
         self._mapper = mapper or HRMapper()
 
-    def process_upload(self, filename: str, file_bytes: bytes) -> HRUploadResponse:
+    def process_upload(
+        self,
+        filename: str,
+        file_bytes: bytes,
+        user_id: str = "anonymous",
+    ) -> HRUploadResult:
         """Valida, mapea y persiste un archivo Excel HR.
 
         La nueva versión queda activa automáticamente y desactiva versiones previas.
 
-        Flujo de validación (en orden, sin excepción):
-            sanitize_filename
-            → check_file_size
-            → check_ooxml_safety          (ZIP-level: macros, formulas, ext links)
-            → read_excel_sheets + contract (sheet names + exact headers)
-            → normalize_sheets_by_contract (typed per column: percentage_decimal, int, money…)
-            → HRValidator.validate        (numeric values, empty fields)
-            → mapper.map + persist
-
-        Raises:
-            UploadError: el archivo no puede parsearse o viola un límite.
-            ValidationError: violación de contrato (hojas, encabezados, valores).
+        Returns:
+            HRUploadResult with summary (metadata + upload stats) and payload (full mapped data).
         """
         t0 = time.monotonic()
 
         logger.info("=" * 80)
         logger.info("[PARAMETRIZATION] HR upload started: file=%s", filename)
 
-        # 1. Sanitize filename
         filename = sanitize_filename(filename)
-
-        # 2. Size check — before any parsing
         check_file_size(file_bytes)
-
-        # 3. OOXML security preflight
-        check_ooxml_safety(file_bytes)
+        check_excel_safety(file_bytes, filename)
 
         previous_active = self._repo.get_active()
         previous_version_id = previous_active.version_id if previous_active else None
         if previous_version_id:
-            logger.info(
-                "[PARAMETRIZATION] Previous active version: %s",
-                previous_version_id,
-            )
+            logger.info("[PARAMETRIZATION] Previous active version: %s", previous_version_id)
 
-        # 4. Read with strict contract (raises ValidationError on violation)
         logger.info("[PARAMETRIZATION] → Parsing Excel sheets with contract validation")
         sheets = read_excel_sheets(file_bytes, "HR-", contract=HR_CONTRACT)
 
@@ -91,55 +84,108 @@ class HRService:
         if sheets_missing:
             logger.warning("[PARAMETRIZATION] Missing required: %s", sheets_missing)
 
-        # 5. Normalize cell values by contract column types
         sheets = normalize_sheets_by_contract(sheets, HR_CONTRACT)
 
-        # 6. Business value validation — errors are NEVER silenced into warnings
         validation = self._validator.validate(sheets)
         if not validation.is_valid:
-            raise ValidationError(
-                "HR Excel validation failed", errors=validation.errors
-            )
+            raise ValidationError("HR Excel validation failed", errors=validation.errors)
 
-        # 7. Map to domain model
         logger.info("[PARAMETRIZATION] → Mapping sheets to domain models")
-        version_id = self._repo.new_version_id()
-        master = self._mapper.map(version_id, sheets)
+        doc_id = self._repo.new_version_id()
+        uploaded_at = self._repo.now_iso()
+        display_version_id = datetime.now(_COLOMBIA_TZ).strftime("%Y-%m-%d %H:%M:%S")
+
+        master = self._mapper.map(sheets)
         data_dict = self._mapper.to_dict(master)
 
         row_counts = {name: len(rows) for name, rows in sheets.items()}
         total_rows = sum(row_counts.values())
 
-        # 8. Persist only after full validation
-        uploaded_at = self._repo.now_iso()
-        summary = VersionSummary(
-            version_id=version_id,
+        summary_record = VersionSummary(
+            version_id=doc_id,
             filename=filename,
             uploaded_at=uploaded_at,
             is_active=True,
             sheet_count=len(sheets_found),
             total_rows=total_rows,
         )
-        self._repo.save_version(summary, data_dict)
+        metadata = {
+            "pk": "hr",
+            "version_id": display_version_id,
+            "type": "parametrization_version",
+            "status": "active",
+            "created_at": datetime.now(_COLOMBIA_TZ).isoformat(),
+            "file_name": filename,
+            "sheet_count": len(sheets_found),
+            "total_rows": total_rows,
+            "user_id": user_id,
+            "sheets_found": sheets_found,
+        }
+        self._repo.save_version(summary_record, data_dict, metadata)
 
         logger.info(
             "[PARAMETRIZATION] HR active version updated: previous=%s, current=%s",
             previous_version_id or "None",
-            version_id,
+            doc_id,
         )
         elapsed_ms = (time.monotonic() - t0) * 1000
         logger.info("[PARAMETRIZATION] ✓ HR upload completed in %.1f ms", elapsed_ms)
         logger.info("=" * 80)
 
-        return HRUploadResponse(
-            version_id=version_id,
+        upload_summary = HRUploadSummary(
+            version_id=display_version_id,
             filename=filename,
             uploaded_at=uploaded_at,
+            is_active=True,
+            sheet_count=len(sheets_found),
+            total_rows=total_rows,
+            user_id=user_id,
+            id=doc_id,
             sheets_found=sheets_found,
             sheets_missing=sheets_missing,
             row_counts=row_counts,
             warnings=validation.warnings,
         )
+
+        return HRUploadResult(
+            summary=upload_summary,
+            payload=self._build_payload(display_version_id, data_dict),
+        )
+
+    def _build_payload(self, version_id: str, data_dict: dict) -> dict:
+        """Project stored data_dict into the API payload format."""
+        nomina_api = [
+            {
+                "cargo": n["cargo"],
+                "salario": n["salario"],
+                "comision": n.get("comision", 0.0),
+            }
+            for n in data_dict.get("nomina", [])
+        ]
+        ratios_api = [
+            {
+                "cargo": r["cargo"],
+                "categoria_servicio": r.get("categoria_servicio", ""),
+                "tipo": r.get("tipo", ""),
+                "agentes": r["agentes"],
+            }
+            for r in data_dict.get("ratios", [])
+        ]
+        return {
+            "version_id": version_id,
+            "lv": data_dict.get("lv", {}),
+            "salariobasico": data_dict.get("salariobasico", []),
+            "nomina": nomina_api,
+            "complejidad": data_dict.get("complejidad", []),
+            "recargos": data_dict.get("recargos", []),
+            "seg_social": data_dict.get("seg_social", []),
+            "prestaciones": data_dict.get("prestaciones", []),
+            "ratios": ratios_api,
+            "rentabilidad": data_dict.get("rentabilidad", []),
+            "campana": data_dict.get("campana", []),
+            "costo_fijo": data_dict.get("costo_fijo", []),
+            "med_seg": data_dict.get("med_seg", []),
+        }
 
     def list_versions(self):
         summaries = self._repo.list_versions()
@@ -167,14 +213,14 @@ class HRService:
             if isinstance(section_data, list):
                 row_counts[section_name] = len(section_data)
             elif isinstance(section_data, dict):
-                if section_name == "niveles" and "catalogs" in section_data:
+                if section_name == "lv" and "catalogs" in section_data:
                     catalogs = section_data["catalogs"]
                     row_counts[section_name] = sum(len(v) for v in catalogs.values())
                 else:
                     row_counts[section_name] = len(section_data)
 
         preview = {}
-        for section in ["costo_fijo", "med_seg", "ratios", "nomina", "salarios"]:
+        for section in ["costo_fijo", "med_seg", "ratios", "nomina", "salariobasico"]:
             section_data = data.get(section, [])
             if isinstance(section_data, list) and section_data:
                 preview[section] = section_data[:5]
@@ -226,7 +272,6 @@ class HRService:
         }
 
         discrepancies = []
-
         for section_key, sheet_key in [("costo_fijo", "HR-CostoFijo"), ("med_seg", "HR-Med-Seg")]:
             if sheet_key not in sheets or section_key not in stored_data:
                 continue
@@ -240,9 +285,8 @@ class HRService:
                     "json_count": len(json_rows),
                 })
 
-        is_valid = len(discrepancies) == 0
         return {
-            "valid": is_valid,
+            "valid": len(discrepancies) == 0,
             "discrepancies": discrepancies,
             "excel_row_counts": excel_row_counts,
             "json_row_counts": json_row_counts,

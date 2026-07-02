@@ -22,10 +22,16 @@ def save_version_payload_and_index(
     payload_record: StoredDocument,
     summary: VersionSummary,
 ) -> None:
-    """Guarda payload e índice usando batch atómico si el store lo soporta."""
-    index_record = version_index_repository.build_append_record(summary)
+    """Guarda payload e índice usando batch atómico si el store lo soporta.
 
-    if isinstance(store, AtomicDocumentStore):
+    El batch atómico solo se usa si el índice de versiones usa el mismo store
+    que el payload (ambos en Cosmos). Si el índice usa filesystem, se persisten
+    por separado para evitar insertar el documento 'versions' en Cosmos.
+    """
+    index_record = version_index_repository.build_append_record(summary)
+    index_same_store = version_index_repository.index_store is store
+
+    if isinstance(store, AtomicDocumentStore) and index_same_store:
         precondition = (
             AtomicWritePrecondition(
                 logical_id=index_record.id,

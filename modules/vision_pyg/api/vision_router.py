@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from nexa_engine.db.dependencies import get_results_repository
 from nexa_engine.modules.shared.exceptions import NotFoundError
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/simulation", tags=["Vision PYG"])
     response_model=VisionPygApiResponseV1,
 )
 def get_vision_pyg(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     repo: ResultsRepository = Depends(get_results_repository),
 ):
     try:

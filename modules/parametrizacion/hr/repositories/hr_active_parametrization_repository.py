@@ -27,10 +27,10 @@ from nexa_engine.modules.shared.config.config import HR_DIR
 class HRActiveParametrizationRepository:
     """Lee la data de parametrización HR activa."""
 
-    def __init__(self, store: DocumentStore) -> None:
+    def __init__(self, store: DocumentStore, version_index: VersionIndexRepository) -> None:
         self._store = store
         self._codec = HRVersionDocumentCodec()
-        self._version_index = VersionIndexRepository(store=store, collection=HR_PARAMETRIZATION_COLLECTION)
+        self._version_index = version_index
 
     def get_active_data(self) -> Dict[str, Any]:
         active = self._version_index.get_active()

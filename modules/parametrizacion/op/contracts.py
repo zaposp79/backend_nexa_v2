@@ -63,7 +63,12 @@ OP_LV = SheetContract(
     excel_name="OP-LV",
     required=False,
     sheet_type=SheetType.CATALOG_BY_COLUMN,
-    columns=[ColumnContract("ICA", _CAT)],
+    columns=[
+        ColumnContract("ICA",                  _CAT),
+        ColumnContract("DispositivoRequerido", _CAT),
+        ColumnContract("DuracionMes",          _INT),
+        ColumnContract("InteresIndexMensual",  _DEC),
+    ],
     allow_trailing_unnamed=False,
 )
 

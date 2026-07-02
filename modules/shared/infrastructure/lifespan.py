@@ -25,18 +25,19 @@ def make_lifespan(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         ensure_storage_dirs()
-        logger.info("[NEXA] Storage directories initialised")
         app.state.container = build_container()
-        logger.info(
-            "[NEXA] Persistence container ready (provider=%s)",
-            app.state.container.store.__class__.__name__,
-        )
-        logger.info(
-            "[NEXA] Starting in %r mode (docs=%s, reload=%s)",
-            resolved_settings.app_env,
-            resolved_settings.docs_enabled,
-            resolved_settings.reload,
-        )
+
+        _on  = "ON "
+        _off = "OFF"
+        logger.info("=" * 60)
+        logger.info("[NEXA] %s v%s — arrancando", resolved_settings.app_title, resolved_settings.app_version)
+        logger.info("[NEXA]   APP_ENV    : %s", resolved_settings.app_env.upper())
+        logger.info("[NEXA]   Swagger    : %s  (/docs)", _on if resolved_settings.docs_enabled else _off)
+        logger.info("[NEXA]   ReDoc      : %s  (/redoc)", _on if resolved_settings.docs_enabled else _off)
+        logger.info("[NEXA]   Hot reload : %s", _on if resolved_settings.reload else _off)
+        logger.info("[NEXA]   DB backend : %s", app.state.container.store.__class__.__name__)
+        logger.info("=" * 60)
+
         yield
         app.state.container.close()
 

@@ -44,12 +44,12 @@ ALL_STORAGE_DIRS = [
     SIMULATIONS_DIR,
 ]
 
-ALLOWED_EXCEL_EXTENSIONS = {".xlsx"}
+ALLOWED_EXCEL_EXTENSIONS = {".xlsx", ".xls"}
 
 # ---------------------------------------------------------------------------
 # Excel upload security limits — all configurable via environment variables.
 # ---------------------------------------------------------------------------
-MAX_EXCEL_UPLOAD_BYTES: int = int(os.getenv("MAX_EXCEL_UPLOAD_BYTES", str(10 * 1024 * 1024)))       # 10 MB
+MAX_EXCEL_UPLOAD_BYTES: int = int(os.getenv("MAX_EXCEL_UPLOAD_BYTES", str(5 * 1024 * 1024)))        # 5 MB
 MAX_EXCEL_UNCOMPRESSED_BYTES: int = int(os.getenv("MAX_EXCEL_UNCOMPRESSED_BYTES", str(100 * 1024 * 1024)))  # 100 MB
 MAX_EXCEL_COMPRESSION_RATIO: float = float(os.getenv("MAX_EXCEL_COMPRESSION_RATIO", "50"))
 MAX_EXCEL_SHEETS: int = int(os.getenv("MAX_EXCEL_SHEETS", "30"))

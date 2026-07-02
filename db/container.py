@@ -61,6 +61,9 @@ from nexa_engine.modules.parametrizacion.services.resolver import (
 from nexa_engine.modules.parametrizacion.services.provider import (
     ParametrizationProvider,
 )
+from nexa_engine.modules.parametrizacion.services.active_parametrization_service import (
+    ActiveParametrizationService,
+)
 from nexa_engine.modules.cadena_a.services.parameters_query_service import (
     CadenaAParametersQueryService,
 )
@@ -98,6 +101,7 @@ class ApplicationContainer:
     cadena_b_parameters_service: CadenaBParametersQueryService
     cadena_c_parameters_service: CadenaCParametersQueryService
     panel_service: PanelService
+    active_parametrization_service: ActiveParametrizationService
 
     def close(self) -> None:
         """Cerrar recursos (sin efecto para el backend JSON)."""
@@ -110,33 +114,27 @@ def _build_parametrization_repos(db_config) -> dict:
     internamente; no es necesario ramificar aquí por tipo de backend.
     """
     param_store = build_parametrization_document_store(db_config)
+    hr_version_index = VersionIndexRepository(store=None, collection=HR_PARAMETRIZATION_COLLECTION)
+    gn_version_index = VersionIndexRepository(store=None, collection=GN_PARAMETRIZATION_COLLECTION)
+    op_version_index = VersionIndexRepository(store=None, collection=OP_PARAMETRIZATION_COLLECTION)
     return {
         "param_store": param_store,
-        "hr_repo": HRActiveParametrizationRepository(param_store),
+        "hr_repo": HRActiveParametrizationRepository(param_store, hr_version_index),
         "hr_upload_repo": HRRepository(
             store=param_store,
-            version_index_repository=VersionIndexRepository(
-                store=param_store,
-                collection=HR_PARAMETRIZATION_COLLECTION,
-            ),
+            version_index_repository=hr_version_index,
             codec=HRVersionDocumentCodec(),
         ),
-        "gn_repo": GNActiveParametrizationRepository(param_store),
+        "gn_repo": GNActiveParametrizationRepository(param_store, gn_version_index),
         "gn_upload_repo": GNRepository(
             store=param_store,
-            version_index_repository=VersionIndexRepository(
-                store=param_store,
-                collection=GN_PARAMETRIZATION_COLLECTION,
-            ),
+            version_index_repository=gn_version_index,
             codec=GNVersionDocumentCodec(),
         ),
-        "op_repo": OPActiveParametrizationRepository(param_store),
+        "op_repo": OPActiveParametrizationRepository(param_store, op_version_index),
         "op_upload_repo": OPRepository(
             store=param_store,
-            version_index_repository=VersionIndexRepository(
-                store=param_store,
-                collection=OP_PARAMETRIZATION_COLLECTION,
-            ),
+            version_index_repository=op_version_index,
             codec=OPVersionDocumentCodec(),
         ),
     }
@@ -193,6 +191,11 @@ def build_container() -> ApplicationContainer:
         ),
         panel_service=PanelService(
             op_repo=op_repo, gn_repo=gn_repo
+        ),
+        active_parametrization_service=ActiveParametrizationService(
+            hr_service=hr_upload_service,
+            gn_service=gn_upload_service,
+            op_service=op_upload_service,
         ),
     )
 

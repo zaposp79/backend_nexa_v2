@@ -11,8 +11,10 @@
 #   CORS_ALLOWED_ORIGINS — obligatorio si APP_ENV=production
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PACKAGE_NAME="$(basename "$SCRIPT_DIR")"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT" || exit 1
+export PYTHONPATH="$PROJECT_ROOT:${PYTHONPATH:-}"
 
 # Activar entorno virtual
 if [ -f "$SCRIPT_DIR/venv/bin/activate" ]; then
@@ -33,4 +35,4 @@ fi
 # Iniciar via __main__ del módulo, que usa uvicorn factory mode internamente.
 # Equivalente a:
 #   uvicorn backend_nexa.app:create_app --factory --host 0.0.0.0 --port 8000 [--reload]
-python -m backend_nexa.app
+python -m "${PACKAGE_NAME}.app"

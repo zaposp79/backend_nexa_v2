@@ -42,6 +42,8 @@ if TYPE_CHECKING:  # pragma: no cover - solo tipado
 
 logger = logging.getLogger(__name__)
 
+_ERR_BATCH_PRECONDITION = "Cosmos transactional batch precondition failed"
+
 
 class _InjectedCosmosExceptions:
     """Excepciones mínimas para tests con cliente fake sin azure-cosmos."""
@@ -59,11 +61,7 @@ class _InjectedCosmosExceptions:
 class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
     """Almacén documental sobre Cosmos. Se construye solo si Cosmos está seleccionado."""
 
-    _RECORD_COLLECTION_FIELD = "_collection"
-    _RECORD_LOGICAL_ID_FIELD = "_logical_id"
-    _RECORD_KIND_FIELD = "_kind"
-    _RECORD_PARTITION_FIELD = "_pk"
-    _RECORD_KIND_VALUE = "stored_document"
+    _RECORD_PARTITION_FIELD = "domain"
     _ETAG_FIELD = "_etag"
     _PRECONDITION_FAILED_STATUS = 412
 
@@ -137,7 +135,7 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
 
     @classmethod
     def _record_item_id(cls, collection: CollectionConfig, document_id: str) -> str:
-        return f"{collection.name}:{cls._safe_document_id(document_id)}"
+        return cls._safe_document_id(document_id)
 
     @classmethod
     def _record_partition_value(
@@ -175,16 +173,26 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
             record,
             explicit_partition_value=explicit_partition_value,
         )
-        item = {
+        _reserved = frozenset({FIELD_ID, self._RECORD_PARTITION_FIELD, "payload"})
+
+        # 1. id + domain (partition key)
+        item: dict = {
             FIELD_ID: self._record_item_id(collection, record.id),
-            self._RECORD_COLLECTION_FIELD: collection.name,
-            self._RECORD_LOGICAL_ID_FIELD: record.id,
-            self._RECORD_KIND_FIELD: self._RECORD_KIND_VALUE,
             self._RECORD_PARTITION_FIELD: partition_value,
-            "payload": copy.deepcopy(record.payload),
         }
+
+        # 2. User-visible metadata fields (pk, version_id, type, status, …)
+        if record.root_metadata:
+            for k, v in record.root_metadata.items():
+                if k not in _reserved:
+                    item[k] = v
+
+        # 3. payload
+        item["payload"] = copy.deepcopy(record.payload)
+
         if collection.partition_key_field:
             item[collection.partition_key_field] = partition_value
+
         return item
 
     def _item_to_record(
@@ -192,22 +200,35 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         collection: CollectionConfig,
         item: dict,
     ) -> StoredDocument:
-        doc_id = item.get(self._RECORD_LOGICAL_ID_FIELD) or item.get(FIELD_ID)
+        doc_id = item.get(FIELD_ID)
         if not isinstance(doc_id, str) or not doc_id:
             raise DbSerializationError(f"Cosmos item in {collection.name!r} is missing '{FIELD_ID}'")
         payload = item.get("payload")
         if not isinstance(payload, (dict, list)):
             raise DbSerializationError(f"Cosmos item {doc_id!r} is missing logical payload")
-        partition_value = None
         raw_partition = item.get(self._RECORD_PARTITION_FIELD)
         if raw_partition is None and collection.partition_key_field:
             raw_partition = item.get(collection.partition_key_field)
         partition_value = None if raw_partition is None else str(raw_partition)
+        _system_keys = {
+            FIELD_ID,
+            self._RECORD_PARTITION_FIELD,
+            "payload",
+            "_rid",
+            "_self",
+            "_etag",
+            "_attachments",
+            "_ts",
+        }
+        if collection.partition_key_field:
+            _system_keys = _system_keys | {collection.partition_key_field}
+        root_metadata = {k: v for k, v in item.items() if k not in _system_keys}
         return StoredDocument(
             id=doc_id,
             payload=copy.deepcopy(payload),
             partition_value=partition_value,
             etag=item.get(self._ETAG_FIELD),
+            root_metadata=root_metadata if root_metadata else None,
         )
 
     def get_record(
@@ -257,22 +278,15 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
             collection.name,
             sorted(filters.keys()),
         )
-        base_filters = [
-            f"c.{self._RECORD_KIND_FIELD} = @kind",
-            f"c.{self._RECORD_COLLECTION_FIELD} = @collection",
-        ]
         payload_filters = [
             f"c.payload.{field} = @p{i}" for i, field in enumerate(filters)
         ]
-        where = " AND ".join(base_filters + payload_filters)
-        sql = f"SELECT * FROM c WHERE {where}"
+        sql = "SELECT * FROM c" + (
+            f" WHERE {' AND '.join(payload_filters)}" if payload_filters else ""
+        )
         parameters = [
-            {"name": "@kind", "value": self._RECORD_KIND_VALUE},
-            {"name": "@collection", "value": collection.name},
-            *[
             {"name": f"@p{i}", "value": value}
             for i, value in enumerate(filters.values())
-            ],
         ]
         kwargs: dict = {"query": sql, "parameters": parameters}
         if limit is not None:
@@ -373,7 +387,7 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
 
         if not self._batch_response_is_successful(response):
             if self._batch_response_has_precondition_failure(response):
-                raise DbConcurrencyError("Cosmos transactional batch precondition failed")
+                raise DbConcurrencyError(_ERR_BATCH_PRECONDITION)
             raise DbConnectionError("Cosmos transactional batch failed")
 
         logger.info(
@@ -414,7 +428,7 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
     ) -> object:
         operations = []
         for item in items:
-            logical_id = item[self._RECORD_LOGICAL_ID_FIELD]
+            logical_id = item[FIELD_ID]
             kwargs = {}
             if precondition is not None and logical_id == precondition.logical_id:
                 kwargs["if_match_etag"] = precondition.expected_etag
@@ -426,7 +440,7 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
             )
         except self._batch_exception_types() as exc:
             if self._exception_has_precondition_failure(exc):
-                raise DbConcurrencyError("Cosmos transactional batch precondition failed") from exc
+                raise DbConcurrencyError(_ERR_BATCH_PRECONDITION) from exc
             raise DbConnectionError(
                 f"Cosmos transactional batch failed: {getattr(exc, 'status_code', 'unknown')}"
             ) from exc
@@ -441,7 +455,7 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         try:
             batch = self._container.create_transactional_batch(partition_key=partition_key)
             for item in items:
-                logical_id = item[self._RECORD_LOGICAL_ID_FIELD]
+                logical_id = item[FIELD_ID]
                 if precondition is not None and logical_id == precondition.logical_id:
                     batch.upsert_item(
                         item,
@@ -453,7 +467,7 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
             return batch.execute()
         except self._batch_exception_types() as exc:
             if self._exception_has_precondition_failure(exc):
-                raise DbConcurrencyError("Cosmos transactional batch precondition failed") from exc
+                raise DbConcurrencyError(_ERR_BATCH_PRECONDITION) from exc
             raise DbConnectionError(
                 f"Cosmos transactional batch failed: {getattr(exc, 'status_code', 'unknown')}"
             ) from exc
@@ -509,12 +523,15 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         partition_value: str | None = None,
     ) -> dict | None:
         logger.debug("[%s] get collection=%s id=%s", PROVIDER_COSMOS, collection.name, document_id)
+        resolved_partition = partition_value or collection.name
         try:
-            return dict(
+            raw = dict(
                 self._container.read_item(
-                    item=document_id, partition_key=partition_value
+                    item=document_id, partition_key=resolved_partition
                 )
             )
+            raw.pop(self._RECORD_PARTITION_FIELD, None)
+            return raw
         except self._cosmos_exceptions.CosmosResourceNotFoundError:
             return None
         except self._cosmos_exceptions.CosmosHttpResponseError as exc:
@@ -574,14 +591,17 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         document: dict,
     ) -> dict:
         doc_id, _ = self._validate_document(collection, document)
+        doc_to_store = {**document, self._RECORD_PARTITION_FIELD: collection.name}
         try:
-            stored = self._container.upsert_item(document)
+            stored = self._container.upsert_item(doc_to_store)
         except self._cosmos_exceptions.CosmosResourceExistsError as exc:
             raise DbConflictError(f"conflict upserting {doc_id!r}") from exc
         except self._cosmos_exceptions.CosmosHttpResponseError as exc:
             raise DbConnectionError(f"Cosmos upsert failed: {exc.status_code}") from exc
         logger.info("[%s] upsert collection=%s id=%s", PROVIDER_COSMOS, collection.name, doc_id)
-        return dict(stored)
+        stored_dict = dict(stored)
+        stored_dict.pop(self._RECORD_PARTITION_FIELD, None)
+        return stored_dict
 
     def delete(
         self,

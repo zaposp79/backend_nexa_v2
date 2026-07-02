@@ -166,7 +166,7 @@ class InfrastructureParametrizationRepository:
         for row in costo_fijo:
             row_loc = row.get("localidad", "")
             if _loc_matches(row_loc):
-                raw_servicio = row.get("servicio", "").lower().strip()
+                raw_servicio = (row.get("servicio_publico") or row.get("servicio", "")).lower().strip()
                 canonical    = self._SERVICIO_MAP.get(raw_servicio)
                 if canonical is None:
                     continue  # skip corrupted/unknown rows
@@ -230,7 +230,9 @@ class InfrastructureParametrizationRepository:
         ciudad_normalized = self._normalize_locality(ciudad, keep_compound=False)
 
         for row in med_seg:
-            row_ciudad = self._normalize_locality(row.get("localidad", ""), keep_compound=False)
+            row_ciudad = self._normalize_locality(
+                row.get("ciudad") or row.get("localidad", ""), keep_compound=False
+            )
             row_centro = row.get("centrocosto", "").lower()
 
             if row_ciudad == ciudad_normalized and "examen" in row_centro and "medico" in row_centro:

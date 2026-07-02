@@ -1,13 +1,30 @@
-fastapi>=0.100
-uvicorn>=0.24
-python-multipart>=0.0.6
-openpyxl>=3.1
-pydantic>=2.0
-python-dateutil>=2.8
-python-dotenv>=1.2.2
-PyYAML>=6.0
+# Core framework
+fastapi==0.136.3
+starlette==1.2.0
+uvicorn==0.48.0
+anyio==4.13.0
 
+# HTTP / ASGI
+python-multipart==0.0.32
+h11==0.16.0
+httpx==0.28.1
+httpcore==1.0.9
 
-# Persistence layer (FASE DB). Only imported when DB_PROVIDER=cosmos; the
-# default JSON backend works without it. Installed but lazily loaded.
+# Data validation
+pydantic==2.13.4
+
+# Excel parsing
+openpyxl==3.1.5
+xlrd==2.0.2
+olefile==0.47
+
+# Utilities
+python-dateutil==2.9.0.post0
+python-dotenv==1.2.2
+click==8.4.1
+
+# Swagger UI local (evita CDN bloqueada en redes corporativas; v5 requerido para OpenAPI 3.1.0)
+swagger-ui-bundle==1.1.0
+
+# Persistence layer — solo importado cuando DB_PROVIDER=cosmos; no se usa con el backend JSON por defecto.
 azure-cosmos>=4.5,<5

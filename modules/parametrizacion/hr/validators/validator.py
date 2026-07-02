@@ -26,15 +26,15 @@ REQUIRED_SHEETS = [
     "HR-SegSocial",
     "HR-Prestaciones",
     "HR-Ratios",
-]
-
-OPTIONAL_SHEETS = [
     "HR-Complejidad",
     "HR-Rentabilidad",
     "HR-Campana",
-    "HR-AutRot",
     "HR-CostoFijo",
     "HR-Med-Seg",
+]
+
+OPTIONAL_SHEETS = [
+    "HR-AutRot",
     "HR-EquipoHITL",
     "HR-EquipoSoporteMantenimiento",
 ]

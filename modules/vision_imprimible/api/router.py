@@ -5,7 +5,7 @@ Returns the screen-ready contract for the canonical printable deal view.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Path
 from fastapi.responses import JSONResponse
 
 from nexa_engine.db.dependencies import get_results_repository
@@ -40,7 +40,7 @@ def _not_found(simulation_id: str, exc: NotFoundError) -> JSONResponse:
     operation_id="getVisionImprimible",
 )
 def get_vision_imprimible(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     repo: ResultsRepository = Depends(get_results_repository),
 ):
     try:

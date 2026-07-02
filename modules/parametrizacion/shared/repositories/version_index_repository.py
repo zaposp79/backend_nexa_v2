@@ -62,6 +62,11 @@ class VersionIndexRepository:
             record_id=Path(VERSIONS_FILE).stem,
         )
 
+    @property
+    def index_store(self) -> object | None:
+        """Devuelve el store que usa este índice, o None si usa filesystem."""
+        return self._store
+
     # ------------------------------------------------------------------
     # Lectura
     # ------------------------------------------------------------------

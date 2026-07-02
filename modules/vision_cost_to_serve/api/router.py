@@ -12,7 +12,7 @@ No formula logic here — only wire protocol.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from nexa_engine.db.dependencies import get_results_repository
 from nexa_engine.modules.calculator.persistence.results_repository import ResultsRepository
@@ -37,7 +37,7 @@ CHARTS_VERSION = "1.0"
     response_model=VisionCostToServeApiResponseV1,
 )
 def get_cost_to_serve(
-    simulation_id: str,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     repo: ResultsRepository = Depends(get_results_repository),
 ) -> ApiResponse:
     """Return Cost To Serve data with charts.

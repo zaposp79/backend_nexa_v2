@@ -22,6 +22,7 @@ class StoredDocument:
     payload: JsonPayload
     partition_value: str | None = None
     etag: str | None = None
+    root_metadata: dict | None = None
 
 
 __all__ = ["JsonPayload", "StoredDocument"]

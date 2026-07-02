@@ -93,28 +93,20 @@ class PayrollStaffingMixin:
         return default_reglas
 
     def get_ratios_staff(self, linea: str) -> Dict[str, float]:
-        """Ratios de staff (cargo → agentes_por_cargo) para una línea de negocio.
+        """Ratios de staff (cargo → agentes_por_cargo) globales.
 
-        Fuente: HR-Ratios sheet.
-
-        Resolución: busca primero ratios específicos para la línea. Si no encuentra,
-        usa ratios por defecto (servicio="") que aplican globalmente a todas las líneas.
-
-        Duplicado handling: Si un cargo aparece múltiples veces, toma el primer
-        valor no nulo encontrado.
+        Fuente: HR-Ratios sheet (Cargo, CategoriaServicio, Tipo, Agentes).
+        Los ratios se devuelven globalmente sin filtrar por CategoriaServicio;
+        el primer valor no nulo por cargo gana si hay duplicados.
 
         Args:
-            linea: Línea de negocio.
+            linea: Línea de negocio (mantenido por compatibilidad de firma).
 
         Returns:
-            Dict {cargo_normalizado: agentes_por_cargo}. Claves normalizadas para
-            permitir búsqueda flexible (case-insensitive, sin acentos).
-            Float para preservar precisión de ratios fraccionarios
-            (ej. 24.76 para Especialista de Proyectos).
+            Dict {cargo_normalizado: agentes_por_cargo}.
 
         Raises:
-            ParametrizationError: si HR-Ratios está vacío o no hay ratios disponibles
-                                  (ni específicos ni por defecto).
+            ParametrizationError: si HR-Ratios está vacío.
         """
         self._ensure_hr_loaded()
         ratios_data = self._hr_data.get("ratios", [])
@@ -122,52 +114,23 @@ class PayrollStaffingMixin:
             raise ParametrizationError("HR-Ratios sheet is empty", module="hr")
 
         result: Dict[str, float] = {}
-        linea_norm = self._normalize(linea)
-
-        # FASE 1: Buscar ratios específicos para esta línea
         for row in ratios_data:
-            if self._normalize(row.get("servicio", "")) == linea_norm:
-                cargo = row.get("cargo", "")
-                agentes = row.get("agentes")
-                # Only set if not already set (first non-null value wins)
-                # Use normalized key to allow flexible access
-                if cargo and agentes is not None:
-                    cargo_norm = self._normalize(cargo)
-                    if cargo_norm not in result:
-                        result[cargo_norm] = float(agentes)
-
-        # FASE 2: Si no encontramos ratios específicos, usar ratios por defecto
-        # (donde servicio="") que aplican globalmente
-        if not result:
-            logger.debug(
-                "[PARAMETRIZATION] No line-specific ratios for '%s', "
-                "falling back to default ratios (servicio='')",
-                linea,
-            )
-            for row in ratios_data:
-                if row.get("servicio", "").strip() == "":  # Empty/default ratios
-                    cargo = row.get("cargo", "")
-                    agentes = row.get("agentes")
-                    # Only set if not already set (first non-null value wins)
-                    # Use normalized key to allow flexible access
-                    if cargo and agentes is not None:
-                        cargo_norm = self._normalize(cargo)
-                        if cargo_norm not in result:
-                            result[cargo_norm] = float(agentes)
+            cargo = row.get("cargo", "")
+            agentes = row.get("agentes")
+            if cargo and agentes is not None:
+                cargo_norm = self._normalize(cargo)
+                if cargo_norm not in result:
+                    result[cargo_norm] = float(agentes)
 
         logger.info(
-            "[PARAM_SOURCE] parameter=ratios_staff linea=%s source=HR-Ratios "
-            "roles=%d %s",
+            "[PARAM_SOURCE] parameter=ratios_staff linea=%s source=HR-Ratios roles=%d",
             linea,
             len(result),
-            "(line-specific)" if linea_norm != "" else "(defaults)",
         )
 
         if not result:
             raise ParametrizationError(
-                f"No ratios found for linea='{linea}' in HR-Ratios "
-                "(neither line-specific nor defaults). "
-                "Verifique que HR-Ratios contiene datos.",
+                "No ratios found in HR-Ratios. Verifique que HR-Ratios contiene datos.",
                 module="hr",
             )
 
