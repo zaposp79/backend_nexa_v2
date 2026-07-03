@@ -26,7 +26,7 @@ parametrizacion_router.include_router(op_router)
         "Fusiona los catálogos lv.catalogs de los 3 archivos y agrupa todas las hojas en payload."
     ),
     operation_id="getAllActiveParametrization",
-    tags=["Parametrization"],
+    tags=["parametrization-active"],
 )
 def get_all_active_parametrization(request: Request):
     service = request.app.state.container.active_parametrization_service

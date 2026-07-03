@@ -119,8 +119,20 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
                 "description": "Input, execution, and status of pricing simulations. The primary workflow: configure panel and chains → POST /calculate → poll status → GET screen results.",
             },
             {
-                "name": "Parametrization",
-                "description": "Upload, version, and activate HR / GN / OP Excel parametrization files. Used to configure business rules before running simulations.",
+                "name": "parametrization-active",
+                "description": "Consolidated active parametrization: merged HR + GN + OP payload in a single response.",
+            },
+            {
+                "name": "parametrization-hr",
+                "description": "Upload, version, and activate HR (Human Resources) Excel parametrization files.",
+            },
+            {
+                "name": "parametrization-gn",
+                "description": "Upload, version, and activate GN (Gastos de Negociación) Excel parametrization files.",
+            },
+            {
+                "name": "parametrization-op",
+                "description": "Upload, version, and activate OP (Gastos de Operación) Excel parametrization files.",
             },
             {
                 "name": "Vision Imprimible",

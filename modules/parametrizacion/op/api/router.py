@@ -11,10 +11,11 @@ from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
     sanitize_user_id,
 )
 from nexa_engine.modules.shared.config.config import MAX_EXCEL_UPLOAD_BYTES
+from nexa_engine.modules.shared.exceptions import NotFoundError
 from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry
 
-router = APIRouter(prefix="/parametrization/op", tags=["Parametrization"])
+router = APIRouter(prefix="/parametrization/op", tags=["parametrization-op"])
 _service: OPService | None = None
 
 
@@ -101,5 +102,14 @@ def delete_op(
     version_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
     service: OPService = Depends(_get_service),
 ):
-    service.delete(version_id)
+    try:
+        service.delete(version_id)
+    except NotFoundError as e:
+        return JSONResponse(
+            status_code=404,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="NOT_FOUND", message=str(e)),
+            ).model_dump(),
+        )
     return ApiResponse.ok(None)

@@ -75,6 +75,8 @@ class GNService:
             is_active=False,
             sheet_count=len(sheets),
             total_rows=total_rows,
+            display_version_id=colombia_version_id,
+            sheets_found=list(sheets.keys()),
         )
 
         # 8. Persist only after full validation
@@ -104,21 +106,22 @@ class GNService:
     def list_versions(self) -> List[GNVersionSummary]:
         return [
             GNVersionSummary(
-                version_id=s.version_id,
+                id=s.version_id,
+                version_id=s.display_version_id or s.version_id,
                 filename=s.filename,
                 uploaded_at=s.uploaded_at,
                 is_active=s.is_active,
                 sheet_count=s.sheet_count,
                 total_rows=s.total_rows,
+                sheets_found=s.sheets_found,
             )
             for s in self._repo.list_versions()
         ]
 
     def get_active(self) -> Optional[Dict[str, Any]]:
-        summary = self._repo.get_active()
-        if summary is None:
+        summary, data = self._repo.get_active_record()
+        if summary is None or data is None:
             return None
-        data = self._repo.get_version(summary.version_id)
         return {"summary": summary.to_dict(), "data": data}
 
     def get_active_previews(self) -> List[GNSheetPreview]:
@@ -167,12 +170,14 @@ class GNService:
     def activate(self, version_id: str) -> GNVersionSummary:
         s = self._repo.activate_version(version_id)
         return GNVersionSummary(
-            version_id=s.version_id,
+            id=s.version_id,
+            version_id=s.display_version_id or s.version_id,
             filename=s.filename,
             uploaded_at=s.uploaded_at,
             is_active=s.is_active,
             sheet_count=s.sheet_count,
             total_rows=s.total_rows,
+            sheets_found=s.sheets_found,
         )
 
     def delete(self, version_id: str) -> None:

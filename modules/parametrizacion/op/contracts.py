@@ -2,10 +2,14 @@
 
 Based on production file: OP_productiva_2026-05-11-10-35-25.xlsx
 
-Sheet inventory (all optional):
-  OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
+Sheet inventory:
+  Required: OP-ReglaNegocio.
+  Optional: OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
   OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo,
   OP-MargenObjetivo, OP-MargenBruto, OP-GraficoMargenBruto, OP-ICA.
+
+OP-ReglaNegocio.Minimo / OP-ReglaNegocio.Maximo
+    Numeric boundaries for each business rule. Stored as decimal values.
 
 Column-type decisions
 ---------------------
@@ -211,6 +215,18 @@ OP_ICA = SheetContract(
     allow_trailing_unnamed=False,
 )
 
+OP_REGLA_NEGOCIO = SheetContract(
+    excel_name="OP-ReglaNegocio",
+    required=True,
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("ReglaNegocio", _S),
+        ColumnContract("Minimo",       _DEC),
+        ColumnContract("Maximo",       _DEC),
+    ],
+    allow_trailing_unnamed=False,
+)
+
 
 OP_CONTRACT = ModuleContract(
     module="op",
@@ -229,5 +245,6 @@ OP_CONTRACT = ModuleContract(
         OP_MARGEN_BRUTO,
         OP_GRAFICO_MARGEN_BRUTO,
         OP_ICA,
+        OP_REGLA_NEGOCIO,
     ],
 )

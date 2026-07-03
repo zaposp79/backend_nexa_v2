@@ -15,12 +15,14 @@ class GNUploadResponse(BaseModel):
 
 
 class GNVersionSummary(BaseModel):
+    id: str
     version_id: str
     filename: str
     uploaded_at: str
     is_active: bool
     sheet_count: int
     total_rows: int
+    sheets_found: List[str]
 
 
 class GNSheetPreview(BaseModel):

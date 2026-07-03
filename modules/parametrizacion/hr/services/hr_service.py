@@ -108,6 +108,8 @@ class HRService:
             is_active=True,
             sheet_count=len(sheets_found),
             total_rows=total_rows,
+            display_version_id=display_version_id,
+            sheets_found=sheets_found,
         )
         metadata = {
             "pk": "hr",
@@ -191,22 +193,22 @@ class HRService:
         summaries = self._repo.list_versions()
         return [
             HRVersionSummary(
-                version_id=s.version_id,
+                id=s.version_id,
+                version_id=s.display_version_id or s.version_id,
                 filename=s.filename,
                 uploaded_at=s.uploaded_at,
                 is_active=s.is_active,
                 sheet_count=s.sheet_count,
                 total_rows=s.total_rows,
+                sheets_found=s.sheets_found,
             )
             for s in summaries
         ]
 
     def get_active(self):
-        summary = self._repo.get_active()
-        if summary is None:
+        summary, data = self._repo.get_active_record()
+        if summary is None or data is None:
             return None
-
-        data = self._repo.get_version(summary.version_id)
 
         row_counts = {}
         for section_name, section_data in data.items():
@@ -235,12 +237,14 @@ class HRService:
     def activate(self, version_id: str) -> HRVersionSummary:
         s = self._repo.activate_version(version_id)
         return HRVersionSummary(
-            version_id=s.version_id,
+            id=s.version_id,
+            version_id=s.display_version_id or s.version_id,
             filename=s.filename,
             uploaded_at=s.uploaded_at,
             is_active=s.is_active,
             sheet_count=s.sheet_count,
             total_rows=s.total_rows,
+            sheets_found=s.sheets_found,
         )
 
     def delete(self, version_id: str) -> None:
