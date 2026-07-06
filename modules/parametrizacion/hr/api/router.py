@@ -1,5 +1,7 @@
 """Endpoints de parametrización HR."""
 
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, Path, Query, Request, UploadFile, File
 from fastapi.responses import JSONResponse
 
@@ -11,7 +13,7 @@ from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
     sanitize_user_id,
 )
 from nexa_engine.modules.shared.config.config import MAX_EXCEL_UPLOAD_BYTES
-from nexa_engine.modules.shared.exceptions import NotFoundError
+from nexa_engine.modules.shared.exceptions import NotFoundError, ValidationError
 from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry
 
@@ -33,10 +35,18 @@ def _get_service(request: Request) -> HRService:
     status_code=201,
 )
 async def upload_hr(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(None),
     user_id: str = Query(default="anonymous"),
     service: HRService = Depends(_get_service),
 ):
+    if file is None or not file.filename:
+        return JSONResponse(
+            status_code=400,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="VALIDATION_ERROR", message="No se cargó ningún archivo, es necesario."),
+            ).model_dump(),
+        )
     filename = file.filename or ""
     check_filename_prefix(filename, "HR")
     check_file_extension(filename)
@@ -57,53 +67,109 @@ def list_hr_versions(service: HRService = Depends(_get_service)):
     return ApiResponse.ok([v.model_dump() for v in service.list_versions()])
 
 
+
 @router.get(
-    "/active",
-    summary="Obtener versión HR activa",
-    description="Retorna la versión activa actual de parametrización de Recursos Humanos.",
-    operation_id="getHrActiveVersion",
+    "/{id}",
+    summary="Obtener versión HR por ID",
+    description="Retorna el documento completo de una versión HR desde Cosmos, filtrando por domain='hr' y el UUID4 indicado.",
+    operation_id="getHrVersionById",
+    responses={
+        200: {"description": "Documento encontrado"},
+        404: {"description": "Versión no encontrada"},
+        422: {"description": "UUID inválido o no es versión 4"},
+    },
 )
-def get_hr_active(service: HRService = Depends(_get_service)):
-    active = service.get_active()
-    if active is None:
+def get_hr_by_id(
+    id: UUID = Path(..., description="UUID4 del documento HR a consultar"),
+    service: HRService = Depends(_get_service),
+):
+    if id.version != 4:
+        return JSONResponse(
+            status_code=422,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="VALIDATION_ERROR", message="El parámetro 'id' debe ser un UUID versión 4 válido."),
+            ).model_dump(),
+        )
+    try:
+        doc = service.get_by_id(str(id))
+    except NotFoundError as e:
         return JSONResponse(
             status_code=404,
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(code="NOT_FOUND", message="No hay versión HR activa."),
+                error=ErrorDetail(code="NOT_FOUND", message=str(e)),
             ).model_dump(),
         )
-    return ApiResponse.ok(active)
+    return ApiResponse.ok(doc)
 
 
-@router.get(
-    "/{version_id}/activate",
+@router.patch(
+    "/{id}/activate",
     summary="Activar versión HR",
-    description="Activa una versión específica de parametrización de Recursos Humanos.",
+    description="Activa una versión HR por UUID4 en Cosmos, desactivando las demás del mismo domain.",
     operation_id="activateHrVersion",
+    responses={
+        200: {"description": "Versión activada correctamente"},
+        404: {"description": "Versión no encontrada"},
+        422: {"description": "UUID inválido o no es versión 4"},
+    },
 )
 def activate_hr(
-    version_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+    id: UUID = Path(..., description="UUID4 del documento HR a activar"),
     service: HRService = Depends(_get_service),
 ):
-    summary = service.activate(version_id)
+    if id.version != 4:
+        return JSONResponse(
+            status_code=422,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="VALIDATION_ERROR", message="El parámetro 'id' debe ser un UUID versión 4 válido."),
+            ).model_dump(),
+        )
+    try:
+        summary = service.activate(str(id))
+    except ValidationError as e:
+        return JSONResponse(
+            status_code=422,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="VALIDATION_ERROR", message=str(e.message)),
+            ).model_dump(),
+        )
+    except NotFoundError as e:
+        return JSONResponse(
+            status_code=404,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="NOT_FOUND", message=str(e)),
+            ).model_dump(),
+        )
     _version_registry.invalidate_cache()
     return ApiResponse.ok(summary.model_dump())
 
 
 @router.delete(
-    "/{version_id}",
+    "/{id}",
     summary="Eliminar versión HR",
-    description="Elimina una versión específica de parametrización de Recursos Humanos.",
+    description="Elimina una versión específica de parametrización de Recursos Humanos por su UUID4.",
     operation_id="deleteHrVersion",
     status_code=200,
 )
 def delete_hr(
-    version_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+    id: UUID = Path(..., description="UUID4 del documento HR a eliminar"),
     service: HRService = Depends(_get_service),
 ):
+    if id.version != 4:
+        return JSONResponse(
+            status_code=422,
+            content=ApiResponse(
+                success=False,
+                error=ErrorDetail(code="VALIDATION_ERROR", message="El parámetro 'id' debe ser un UUID versión 4 válido."),
+            ).model_dump(),
+        )
     try:
-        service.delete(version_id)
+        service.delete(str(id))
     except NotFoundError as e:
         return JSONResponse(
             status_code=404,

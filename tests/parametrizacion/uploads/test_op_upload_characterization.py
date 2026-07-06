@@ -152,6 +152,19 @@ def test_op_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatc
     assert [entry["is_active"] for entry in versions] == [False, True]
 
 
+def test_op_upload_no_file_returns_400(monkeypatch, tmp_path, isolated_app):
+    _install_service(monkeypatch, tmp_path)
+    client = client_for_router(isolated_app, op_router_module.router)
+
+    response = client.post("/parametrization/op/upload")
+
+    assert response.status_code == 400
+    body = response.json()
+    assert body["success"] is False
+    assert body["error"]["code"] == "VALIDATION_ERROR"
+    assert "No se cargó ningún archivo" in body["error"]["message"]
+
+
 def test_op_upload_invalid_extension_and_invalid_workbook_are_characterized(monkeypatch, tmp_path, isolated_app):
     _install_service(monkeypatch, tmp_path)
     client = client_for_router(isolated_app, op_router_module.router)

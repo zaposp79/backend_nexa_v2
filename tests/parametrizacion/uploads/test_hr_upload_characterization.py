@@ -159,6 +159,19 @@ def test_hr_upload_second_version_deactivates_previous(monkeypatch, tmp_path, is
     assert second_doc["domain"] == "hr"
 
 
+def test_hr_upload_no_file_returns_400(monkeypatch, tmp_path, isolated_app):
+    _install_service(monkeypatch, tmp_path)
+    client = client_for_router(isolated_app, hr_router_module.router)
+
+    response = client.post("/parametrization/hr/upload")
+
+    assert response.status_code == 400
+    body = response.json()
+    assert body["success"] is False
+    assert body["error"]["code"] == "VALIDATION_ERROR"
+    assert "No se cargó ningún archivo" in body["error"]["message"]
+
+
 def test_hr_upload_invalid_extension_and_invalid_workbook_are_characterized(monkeypatch, tmp_path, isolated_app):
     _install_service(monkeypatch, tmp_path)
     client = client_for_router(isolated_app, hr_router_module.router)
