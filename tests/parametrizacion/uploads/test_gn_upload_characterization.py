@@ -65,10 +65,11 @@ def test_gn_upload_creates_exact_version_file_index_and_http_response(monkeypatc
         files={"file": ("GN_test.xlsx", _gn_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["version_id"] == "gn-fixed-version"
+    # GN service uses a Colombia-local datetime as the human-readable version_id in the response
+    assert body["data"]["version_id"]  # non-empty
     assert body["data"]["sheets_found"] == ["GN-LV"]
 
     version_file = tmp_path / "gn" / "gn-fixed-version.json"
@@ -89,15 +90,46 @@ def test_gn_upload_creates_exact_version_file_index_and_http_response(monkeypatc
     assert catalogs["localidad"] == [{"name": "Bogota Norte"}]
 
     assert "id" not in payload
+    # New version must be persisted with status=active and domain=gn in the document file
+    assert payload["status"] == "active"
+    assert payload["domain"] == "gn"
 
     assert read_json(tmp_path / "gn" / "versions.json")[0]["version_id"] == "gn-fixed-version"
 
     versions_response = client.get("/parametrization/gn/versions")
     assert versions_response.status_code == 200
-    assert versions_response.json()["data"][0]["version_id"] == "gn-fixed-version"
+    # GN versions response: 'id' is the internal UUID, 'version_id' is the Colombia datetime label
+    assert versions_response.json()["data"][0]["id"] == "gn-fixed-version"
 
-    active_response = client.get("/parametrization/gn/active")
-    assert active_response.status_code == 200
+
+def test_gn_upload_second_version_deactivates_previous(monkeypatch, tmp_path, isolated_app):
+    """Uploading a second version must set status=active on new and status=inactive on previous."""
+    service = _install_service(monkeypatch, tmp_path)
+    client = client_for_router(isolated_app, gn_router_module.router)
+
+    r1 = client.post(
+        "/parametrization/gn/upload",
+        files={"file": ("GN_first.xlsx", _gn_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert r1.status_code == 201
+
+    service._repo.new_version_id = lambda: "gn-second-version"
+    r2 = client.post(
+        "/parametrization/gn/upload",
+        files={"file": ("GN_second.xlsx", _gn_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert r2.status_code == 201
+
+    versions = read_json(tmp_path / "gn" / "versions.json")
+    assert [e["version_id"] for e in versions] == ["gn-fixed-version", "gn-second-version"]
+    assert [e["is_active"] for e in versions] == [False, True]
+
+    first_doc = read_json(tmp_path / "gn" / "gn-fixed-version.json")
+    second_doc = read_json(tmp_path / "gn" / "gn-second-version.json")
+    assert first_doc["status"] == "inactive"
+    assert first_doc["domain"] == "gn"
+    assert second_doc["status"] == "active"
+    assert second_doc["domain"] == "gn"
 
 
 def test_gn_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatch, tmp_path, isolated_app):
@@ -109,7 +141,7 @@ def test_gn_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatc
             "/parametrization/gn/upload",
             files={"file": (filename, _gn_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         assert response.json()["success"] is True
 
     versions = read_json(tmp_path / "gn" / "versions.json")

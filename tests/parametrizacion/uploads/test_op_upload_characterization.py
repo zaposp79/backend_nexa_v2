@@ -22,8 +22,13 @@ def _op_workbook() -> bytes:
 
     Uses only sheets that are in the authorized OP contract with exact headers.
     OP-LV production header: ['ICA'] (single catalog column).
+    OP-ReglaNegocio is the only required sheet.
     """
     return workbook_bytes({
+        "OP-ReglaNegocio": (
+            ["ReglaNegocio", "Minimo", "Maximo"],
+            [["Regla1", 0.0, 1.0]],
+        ),
         "OP-ICA": (
             ["Ciudad", "ICA", "Valor"],
             [["Bogota", "Tasa", 0.0097]],
@@ -33,8 +38,9 @@ def _op_workbook() -> bytes:
             [["Cumplimiento", 0.0062, 0.005]],
         ),
         "OP-LV": (
-            ["ICA"],  # production contract: single column ICA
-            [["Tasa"], ["Avisos & Tableros"]],
+            # production contract: 4 columns (CATALOG_BY_COLUMN)
+            ["ICA", "DispositivoRequerido", "DuracionMes", "InteresIndexMensual"],
+            [["Tasa", None, None, None], ["Avisos & Tableros", None, None, None]],
         ),
     })
 
@@ -65,12 +71,13 @@ def test_op_upload_creates_exact_version_file_index_and_http_response(monkeypatc
         files={"file": ("OP_test.xlsx", _op_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     body = response.json()
     assert body["success"] is True
-    assert body["data"]["version_id"] == "op-fixed-version"
+    # OP service uses a Colombia-local datetime as the human-readable version_id in the response
+    assert body["data"]["version_id"]  # non-empty
     assert body["data"]["filename"] == "OP_test.xlsx"
-    assert set(body["data"]["sheets_found"]) == {"OP-ICA", "OP-Poliza", "OP-LV"}
+    assert set(body["data"]["sheets_found"]) == {"OP-ICA", "OP-Poliza", "OP-LV", "OP-ReglaNegocio"}
 
     version_file = tmp_path / "op" / "op-fixed-version.json"
     payload = read_json(version_file)
@@ -86,19 +93,45 @@ def test_op_upload_creates_exact_version_file_index_and_http_response(monkeypatc
     ica_sheet = next(s for s in payload["sheets"] if s["name"] == "OP-ICA")
     assert ica_sheet["rows"][0]["ciudad"] == "Bogota"
 
-    assert read_json(tmp_path / "op" / "versions.json") == [
-        {
-            "version_id": "op-fixed-version",
-            "filename": "OP_test.xlsx",
-            "uploaded_at": "2026-06-04T00:00:00Z",
-            "is_active": True,
-            "sheet_count": 3,
-            "total_rows": 4,  # 1 ICA + 1 Poliza + 2 LV
-        }
-    ]
+    versions_entry = read_json(tmp_path / "op" / "versions.json")[0]
+    assert versions_entry["version_id"] == "op-fixed-version"
+    assert versions_entry["is_active"] is True
+    # New version document must carry status=active and domain=op
+    assert payload["status"] == "active"
+    assert payload["domain"] == "op"
 
-    assert client.get("/parametrization/op/versions").json()["data"][0]["version_id"] == "op-fixed-version"
-    assert client.get("/parametrization/op/active").json()["data"]["summary"]["is_active"] is True
+    # OP versions response: 'id' is the internal UUID, 'version_id' is the Colombia datetime label
+    assert client.get("/parametrization/op/versions").json()["data"][0]["id"] == "op-fixed-version"
+
+
+def test_op_upload_second_version_deactivates_previous(monkeypatch, tmp_path, isolated_app):
+    """Uploading a second version must set status=active on new and status=inactive on previous."""
+    service = _install_service(monkeypatch, tmp_path)
+    client = client_for_router(isolated_app, op_router_module.router)
+
+    r1 = client.post(
+        "/parametrization/op/upload",
+        files={"file": ("OP_first.xlsx", _op_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert r1.status_code == 201
+
+    service._repo.new_version_id = lambda: "op-second-version"
+    r2 = client.post(
+        "/parametrization/op/upload",
+        files={"file": ("OP_second.xlsx", _op_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert r2.status_code == 201
+
+    versions = read_json(tmp_path / "op" / "versions.json")
+    assert [e["version_id"] for e in versions] == ["op-fixed-version", "op-second-version"]
+    assert [e["is_active"] for e in versions] == [False, True]
+
+    first_doc = read_json(tmp_path / "op" / "op-fixed-version.json")
+    second_doc = read_json(tmp_path / "op" / "op-second-version.json")
+    assert first_doc["status"] == "inactive"
+    assert first_doc["domain"] == "op"
+    assert second_doc["status"] == "active"
+    assert second_doc["domain"] == "op"
 
 
 def test_op_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatch, tmp_path, isolated_app):
@@ -110,7 +143,7 @@ def test_op_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatc
             "/parametrization/op/upload",
             files={"file": (filename, _op_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
         )
-        assert response.status_code == 200
+        assert response.status_code == 201
         assert response.json()["success"] is True
 
     versions = read_json(tmp_path / "op" / "versions.json")

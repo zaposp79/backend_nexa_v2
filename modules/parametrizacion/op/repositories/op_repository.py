@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from nexa_engine.db.exceptions import DbNotFoundError
@@ -21,7 +21,7 @@ from nexa_engine.modules.parametrizacion.shared.repositories.version_index_repos
 from nexa_engine.modules.parametrizacion.shared.repositories.version_payload_persistence import (
     save_version_payload_and_index,
 )
-from nexa_engine.modules.shared.exceptions import NotFoundError
+from nexa_engine.modules.shared.exceptions import NotFoundError, ValidationError
 from nexa_engine.modules.parametrizacion.shared.models.version_summary import VersionSummary
 
 
@@ -39,9 +39,25 @@ class OPRepository:
         self._codec = codec
 
     def save_version(self, summary: VersionSummary, data: dict, metadata: dict | None = None) -> str:
-        """Guarda una versión OP y actualiza el índice con compensación."""
-        previously_active = self._version_index_repository.get_active()
-        record = self._codec.encode(data, doc_id=summary.version_id, root_metadata=metadata)
+        """Guarda una versión OP con status=active y desactiva la versión activa anterior.
+
+        La búsqueda de registros activos previos se hace via query directa al store
+        (domain=op, status=active) para que funcione tanto con Cosmos como con JSON store.
+        """
+        domain_name = OP_PARAMETRIZATION_COLLECTION.name  # "op"
+
+        # 1. Buscar IDs activos ANTES de guardar el nuevo (query directa al store)
+        previously_active_ids = self._query_active_ids(domain_name)
+
+        # 2. Embeber status y domain en el payload
+        status = (metadata or {}).get("status", "active")
+        data_to_store = {
+            **data,
+            "status": status,
+            "domain": domain_name,
+        } if isinstance(data, dict) else data
+
+        record = self._codec.encode(data_to_store, doc_id=summary.version_id, root_metadata=metadata)
         save_version_payload_and_index(
             store=self._store,
             collection=OP_PARAMETRIZATION_COLLECTION,
@@ -49,9 +65,39 @@ class OPRepository:
             payload_record=record,
             summary=summary,
         )
-        if previously_active and previously_active.version_id != summary.version_id:
-            self._deactivate_in_store(previously_active.version_id)
+
+        # 3. Desactivar todos los registros que estaban activos antes del nuevo
+        for vid in previously_active_ids:
+            if vid != summary.version_id:
+                self._deactivate_in_store(vid)
+
         return summary.version_id
+
+    def _query_active_ids(self, domain_name: str) -> list:
+        """Retorna IDs de versiones activas consultando el store directamente.
+
+        Estrategia:
+        1. query(domain=op, status=active) — funciona en Cosmos y JSON store (con domain en payload)
+        2. Fallback al índice filesystem — para registros legacy sin campo 'domain' en payload
+        """
+        try:
+            docs, _ = self._store.query(
+                OP_PARAMETRIZATION_COLLECTION,
+                {"domain": domain_name, "status": "active"},
+            )
+            ids = [str(d.get("id", "")) for d in (docs or []) if d.get("id")]
+            if ids:
+                return ids
+        except Exception:
+            pass
+        # Fallback: índice filesystem (registros sin campo 'domain' en payload)
+        try:
+            active = self._version_index_repository.get_active()
+            if active:
+                return [active.version_id]
+        except Exception:
+            pass
+        return []
 
     def list_versions(self) -> List[VersionSummary]:
         """Lista versiones consultando Cosmos por domain, con fallback a índice filesystem."""
@@ -91,16 +137,58 @@ class OPRepository:
             raise NotFoundError("version", version_id)
         return self._codec.decode(record)
 
+    def get_document_raw(self, version_id: str) -> dict:
+        """Obtiene el documento completo de Cosmos filtrando por domain='op' e id."""
+        domain_name = OP_PARAMETRIZATION_COLLECTION.name
+        _sys_keys = {"_rid", "_self", "_etag", "_attachments", "_ts"}
+        docs, _ = self._store.query(
+            OP_PARAMETRIZATION_COLLECTION, {"domain": domain_name, "id": version_id}
+        )
+        if not docs:
+            raise NotFoundError("version", version_id)
+        return {k: v for k, v in docs[0].items() if k not in _sys_keys}
+
     def get_summary(self, version_id: str) -> VersionSummary:
         return self._version_index_repository.get_version(version_id)
 
     def activate_version(self, version_id: str) -> VersionSummary:
-        currently_active = self._version_index_repository.get_active()
-        result = self._version_index_repository.activate(version_id)
-        if currently_active and currently_active.version_id != version_id:
-            self._deactivate_in_store(currently_active.version_id)
+        """Activa la versión indicada en Cosmos y desactiva todas las demás del mismo domain."""
+        try:
+            if uuid.UUID(version_id).version != 4:
+                raise ValueError
+        except (ValueError, AttributeError):
+            raise ValidationError("El parámetro 'id' debe ser un UUID versión 4 válido.")
+
+        domain_name = OP_PARAMETRIZATION_COLLECTION.name
+        _sys_keys = {"id", "domain", "payload", "_rid", "_self", "_etag", "_attachments", "_ts"}
+
+        docs, _ = self._store.query(OP_PARAMETRIZATION_COLLECTION, {"domain": domain_name})
+        target_doc = next((d for d in docs if str(d.get("id", "")) == version_id), None)
+        if target_doc is None:
+            raise NotFoundError("version", version_id)
+
         self._activate_in_store(version_id)
-        return result
+        for doc in docs:
+            other_id = str(doc.get("id", ""))
+            if other_id and other_id != version_id:
+                self._deactivate_in_store(other_id)
+
+        try:
+            self._version_index_repository.activate(version_id)
+        except Exception:
+            pass
+
+        meta = {k: v for k, v in target_doc.items() if k not in _sys_keys}
+        return VersionSummary(
+            version_id=version_id,
+            filename=meta.get("file_name", ""),
+            uploaded_at=meta.get("created_at", ""),
+            is_active=True,
+            sheet_count=meta.get("sheet_count", 0),
+            total_rows=meta.get("total_rows", 0),
+            display_version_id=meta.get("version_id"),
+            sheets_found=meta.get("sheets_found", []),
+        )
 
     def set_active(self, version_id: str) -> VersionSummary:
         return self.activate_version(version_id)
@@ -191,7 +279,7 @@ class OPRepository:
 
     @staticmethod
     def now_iso() -> str:
-        return datetime.utcnow().isoformat() + "Z"
+        return datetime.now(timezone.utc).isoformat()
 
     def _delete_record_if_present(self, version_id: str) -> None:
         try:
@@ -204,10 +292,16 @@ class OPRepository:
             record = self._store.get_record(OP_PARAMETRIZATION_COLLECTION, version_id)
             if record is None:
                 return
+            domain_name = OP_PARAMETRIZATION_COLLECTION.name
+            updated_payload = {
+                **record.payload,
+                "status": "inactive",
+                "domain": domain_name,
+            } if isinstance(record.payload, dict) else record.payload
             updated_meta = {**record.root_metadata, "status": "inactive"} if record.root_metadata else {"status": "inactive"}
             updated = StoredDocument(
                 id=record.id,
-                payload=record.payload,
+                payload=updated_payload,
                 partition_value=record.partition_value,
                 etag=record.etag,
                 root_metadata=updated_meta,
@@ -221,10 +315,16 @@ class OPRepository:
             record = self._store.get_record(OP_PARAMETRIZATION_COLLECTION, version_id)
             if record is None:
                 return
+            domain_name = OP_PARAMETRIZATION_COLLECTION.name
+            updated_payload = {
+                **record.payload,
+                "status": "active",
+                "domain": domain_name,
+            } if isinstance(record.payload, dict) else record.payload
             updated_meta = {**record.root_metadata, "status": "active"} if record.root_metadata else {"status": "active"}
             updated = StoredDocument(
                 id=record.id,
-                payload=record.payload,
+                payload=updated_payload,
                 partition_value=record.partition_value,
                 etag=record.etag,
                 root_metadata=updated_meta,

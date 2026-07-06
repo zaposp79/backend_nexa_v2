@@ -20,19 +20,26 @@ from .conftest import client_for_router, read_json, workbook_bytes
 def _hr_workbook() -> bytes:
     """Minimal HR workbook that satisfies the strict production contract."""
     return workbook_bytes({
-        # HR-LV: catalog-by-column — exact production headers
+        # HR-LV: 5 catalog columns (EquipoHITL and EquipoSoporteMantenimiento removed)
         "HR-LV": (
-            ["Tipo", "Rol", "Servicio", "Prestaciones", "SS&Parafiscales", "Recargo"],
-            [["Empleado", "Agente", "Cobranzas", "Cesantias", "Salud", "Recargo festivo"]],
+            ["TipoRecurso", "Cargo", "Prestaciones", "SS&Parafiscales", "Recargo"],
+            [["Operativo", "Agente Voz", "Cesantias", "Salud", "Nocturno"]],
         ),
-        "HR-SalarioBasico": (["Servicio", "Valor"], [["Cobranzas", 1423000]]),
-        # HR-Nomina: trailing None columns allowed by contract
-        "HR-Nomina": (["Tipo", "Rol", "Salario", None, None], [["Operativo", "Agente", 1423000, None, None]]),
+        "HR-SalarioBasico": (["Servicio", "Valor"], [["SAC", 1423000]]),
+        # HR-Nomina: 5 columns in production order
+        "HR-Nomina": (
+            ["Cargo", "TipoRecurso", "Cadena", "Salario", "Comision"],
+            [["Agente Voz", "Operativo", "A", 1423000, 0]],
+        ),
         "HR-Recargos": (["Recargo", "Valor"], [["Nocturno", 0.35]]),
         "HR-SegSocial": (["SS&Parafiscales", "Proporcion"], [["Salud", 0.085]]),
         "HR-Prestaciones": (["Prestaciones", "Valor"], [["Cesantias", 0.0833]]),
-        # HR-Ratios: "Cargo" (without trailing space) — reader strips whitespace
-        "HR-Ratios": (["Cargo", "CategoriaServicio", "Tipo", "Agentes"], [["Supervisor", "Cobranzas", "Operativo", 20]]),
+        "HR-Ratios": (["Cargo", "CategoriaServicio", "Tipo", "Agentes"], [["Agente Voz", "SAC", "Operativo", 20]]),
+        "HR-Complejidad": (["Complejidad", "Valor"], [["Alta", 0.9]]),
+        "HR-Rentabilidad": (["CategoriaServicio", "Minimo", "MargenObjetivo"], [["SAC", "17.00%", "18.00%"]]),
+        "HR-Campana": (["CategoriaServicio", "Mes", "Valor"], [["SAC", 1, 1.0]]),
+        "HR-CostoFijo": (["Ciudad", "Localidad", "ServicioPublico", "Valor"], [["Bogota", "Sur", "Agua", 100000]]),
+        "HR-Med-Seg": (["Ciudad", "CentroCosto", "Valor"], [["Bogota", "CC1", 50000]]),
     })
 
 
@@ -62,61 +69,94 @@ def test_hr_upload_creates_exact_version_file_index_and_http_response(monkeypatc
         files={"file": ("HR_test.xlsx", _hr_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 201
     body = response.json()
     assert body["success"] is True
     data = body["data"]
-    assert data["version_id"] == "hr-fixed-version"
-    assert data["filename"] == "HR_test.xlsx"
-    assert data["sheets_missing"] == []
-    assert set(data["sheets_found"]) == {
+    # HR response is nested: {summary: {...}, payload: {...}}
+    summary = data["summary"]
+    # 'id' is the internal UUID; 'version_id' is the Colombia datetime display label
+    assert summary["id"] == "hr-fixed-version"
+    assert summary["filename"] == "HR_test.xlsx"
+    assert summary["sheets_missing"] == []
+    assert set(summary["sheets_found"]) == {
         "HR-LV", "HR-SalarioBasico", "HR-Nomina", "HR-Recargos",
         "HR-SegSocial", "HR-Prestaciones", "HR-Ratios",
+        "HR-Complejidad", "HR-Rentabilidad", "HR-Campana",
+        "HR-CostoFijo", "HR-Med-Seg",
     }
 
     version_file = tmp_path / "hr" / "hr-fixed-version.json"
     assert version_file.exists()
     payload = read_json(version_file)
 
-    # HR-LV produces a catalog keyed by normalized header
-    catalogs = payload["niveles"]["catalogs"]
-    assert catalogs["tipo"] == [{"name": "Empleado"}]
-    assert catalogs["rol"] == [{"name": "Agente"}]
-    assert catalogs["servicio"] == [{"name": "Cobranzas"}]
+    # HR-LV produces a catalog keyed by normalized header (5 columns)
+    catalogs = payload["lv"]["catalogs"]
+    assert catalogs["tiporecurso"] == [{"name": "Operativo"}]
+    assert catalogs["cargo"] == [{"name": "Agente Voz"}]
     assert catalogs["prestaciones"] == [{"name": "Cesantias"}]
     assert catalogs["ssparafiscales"] == [{"name": "Salud"}]
-    assert catalogs["recargo"] == [{"name": "Recargo festivo"}]
+    assert catalogs["recargo"] == [{"name": "Nocturno"}]
+    assert "equipohitl" not in catalogs
+    assert "equiposoportemantenimiento" not in catalogs
 
-    assert payload["salarios"] == [{"servicio": "Cobranzas", "valor": 1423000.0}]
-    assert payload["nomina"] == [{"tipo": "Operativo", "rol": "Agente", "salario": 1423000.0}]
+    assert payload["salariobasico"] == [{"servicio": "SAC", "valor": 1423000.0}]
+    # HR-Nomina rows now include tiporecurso and cadena
+    assert payload["nomina"] == [{
+        "cargo": "Agente Voz",
+        "salario": 1423000.0,
+        "comision": 0.0,
+        "tiporecurso": "Operativo",
+        "cadena": "A",
+    }]
     assert payload["recargos"] == [{"recargo": "Nocturno", "valor": 0.35}]
-    assert payload["ratios"][0]["cargo"] == "Supervisor"
+    assert payload["ratios"][0]["cargo"] == "Agente Voz"
     assert "id" not in payload
+    # New version must be persisted with status=active and domain=hr in the document file
+    # so that query({"domain": "hr", "status": "active"}) works in both Cosmos and JSON store
+    assert payload["status"] == "active"
+    assert payload["domain"] == "hr"
 
     versions = read_json(tmp_path / "hr" / "versions.json")
     assert versions[0]["version_id"] == "hr-fixed-version"
     assert versions[0]["is_active"] is True
 
-    assert client.get("/parametrization/hr/versions").json()["data"][0]["version_id"] == "hr-fixed-version"
-    assert client.get("/parametrization/hr/active").json()["data"]["summary"]["is_active"] is True
+    # HR versions response: 'id' is the internal UUID, 'version_id' is the Colombia datetime label
+    assert client.get("/parametrization/hr/versions").json()["data"][0]["id"] == "hr-fixed-version"
 
 
-def test_hr_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatch, tmp_path, isolated_app):
-    _install_service(monkeypatch, tmp_path)
+def test_hr_upload_second_version_deactivates_previous(monkeypatch, tmp_path, isolated_app):
+    """Uploading a second version must set status=active on new and status=inactive on previous."""
+    service = _install_service(monkeypatch, tmp_path)
     client = client_for_router(isolated_app, hr_router_module.router)
 
-    for filename in ("HR_first.xlsx", "HR_second.xlsx"):
-        response = client.post(
-            "/parametrization/hr/upload",
-            files={"file": (filename, _hr_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
-        )
-        assert response.status_code == 200
-        assert response.json()["success"] is True
+    # First upload — version_id is deterministic ("hr-fixed-version")
+    r1 = client.post(
+        "/parametrization/hr/upload",
+        files={"file": ("HR_first.xlsx", _hr_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert r1.status_code == 201
 
+    # Give second upload a different version_id
+    service._repo.new_version_id = lambda: "hr-second-version"
+    r2 = client.post(
+        "/parametrization/hr/upload",
+        files={"file": ("HR_second.xlsx", _hr_workbook(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")},
+    )
+    assert r2.status_code == 201
+
+    # Index must reflect correct is_active flags
     versions = read_json(tmp_path / "hr" / "versions.json")
-    assert [e["version_id"] for e in versions] == ["hr-fixed-version", "hr-fixed-version"]
-    assert [e["filename"] for e in versions] == ["HR_first.xlsx", "HR_second.xlsx"]
+    assert [e["version_id"] for e in versions] == ["hr-fixed-version", "hr-second-version"]
     assert [e["is_active"] for e in versions] == [False, True]
+
+    # Individual document files must carry status field
+    first_doc = read_json(tmp_path / "hr" / "hr-fixed-version.json")
+    second_doc = read_json(tmp_path / "hr" / "hr-second-version.json")
+    assert first_doc["status"] == "inactive"
+    assert first_doc["domain"] == "hr"
+    assert second_doc["status"] == "active"
+    assert second_doc["domain"] == "hr"
 
 
 def test_hr_upload_invalid_extension_and_invalid_workbook_are_characterized(monkeypatch, tmp_path, isolated_app):
