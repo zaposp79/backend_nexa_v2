@@ -15,7 +15,7 @@ if str(REPO_ROOT) not in sys.path:
 if str(BACKEND_ROOT) not in sys.path:
     sys.path.insert(0, str(BACKEND_ROOT))
 
-import backend_nexa  # noqa: E402, F401  registers `nexa_engine` alias
+import backend_nexa_v2  # noqa: E402, F401  registers `nexa_engine` alias
 
 
 @pytest.fixture(scope="session")

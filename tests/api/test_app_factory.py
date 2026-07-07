@@ -1,8 +1,8 @@
 """Tests: application factory correctness.
 
 Verifica los criterios de aceptación del patrón factory:
-  1. Importar app.py no ejecuta load_app_settings().
-  2. Importar app.py no construye una instancia FastAPI.
+  1. Importar backend_nexa_v2.app no ejecuta load_app_settings().
+  2. Importar backend_nexa_v2.app no construye una instancia FastAPI.
   3. create_app(settings=...) usa exactamente los settings inyectados.
   4. create_app() sin args lee os.environ en el momento de la llamada.
   5. monkeypatch antes de create_app() tiene efecto.
@@ -69,9 +69,9 @@ def _prod(**overrides) -> AppSettings:
 # ---------------------------------------------------------------------------
 
 def test_importing_app_module_does_not_call_load_app_settings():
-    """Importing backend_nexa.app must NOT call load_app_settings() at module level.
+    """Importing backend_nexa_v2.app must NOT call load_app_settings() at module level.
 
-    Uses the canonical module path (backend_nexa.app), not the runtime alias,
+    Uses the canonical module path (backend_nexa_v2.app), not the runtime alias,
     because reload subprocesses start with an empty sys.modules and must be
     able to import the module without prior alias registration.
     """
@@ -87,25 +87,25 @@ def test_importing_app_module_does_not_call_load_app_settings():
     try:
         # Remove the canonical module to force a fresh import
         for key in list(sys.modules):
-            if key in ("backend_nexa.app", "nexa_engine.app"):
+            if key in ("backend_nexa_v2.app", "nexa_engine.app"):
                 del sys.modules[key]
 
-        import backend_nexa.app as _  # noqa: F401 — canonical import
+        import backend_nexa_v2.app as _  # noqa: F401 — canonical import
     finally:
         _settings_mod.load_app_settings = orig
 
     assert len(calls) == 0, (
         f"load_app_settings() was called {len(calls)} time(s) during import of "
-        "backend_nexa.app — module-level side effects detected."
+        "backend_nexa_v2.app — module-level side effects detected."
     )
 
 
 def test_importing_app_module_does_not_expose_global_app_instance():
-    """backend_nexa.app must not have a module-level 'app' variable."""
-    import backend_nexa.app as app_mod
+    """backend_nexa_v2.app must not have a module-level 'app' variable."""
+    import backend_nexa_v2.app as app_mod
 
     assert not hasattr(app_mod, "app"), (
-        "backend_nexa.app exposes a module-level 'app' instance. "
+        "backend_nexa_v2.app exposes a module-level 'app' instance. "
         "Importing should be side-effect free — call create_app() explicitly."
     )
 
