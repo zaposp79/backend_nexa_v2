@@ -1,4 +1,4 @@
-"""Excel parsing utilities using openpyxl.
+"""Excel parsing utilities — supports both .xlsx (openpyxl) and .xls (xlrd).
 
 Public API
 ----------
@@ -22,6 +22,12 @@ list_sheets(file_bytes)
 
 read_all_sheets(file_bytes)
     Reads every sheet without prefix filter.  Used in testing and diagnostics.
+
+Format detection
+----------------
+Both functions detect the file format by magic bytes:
+* ``PK\\x03\\x04`` (ZIP) → .xlsx path via openpyxl.
+* ``\\xD0\\xCF\\x11\\xE0`` (CFBF/OLE) → .xls path via xlrd.
 """
 
 from __future__ import annotations
@@ -32,6 +38,7 @@ import unicodedata
 from typing import Dict, List, Optional
 
 import openpyxl
+import xlrd
 
 from nexa_engine.modules.parametrizacion.shared.contracts.base import ModuleContract
 from nexa_engine.modules.shared.exceptions import UploadError, ValidationError
@@ -42,6 +49,15 @@ from nexa_engine.modules.shared.config.config import (
     MAX_EXCEL_ROWS_PER_SHEET,
     MAX_EXCEL_SHEETS,
 )
+
+# Magic bytes used to select the parser
+_XLSX_MAGIC = b"PK\x03\x04"
+_CFBF_MAGIC = b"\xD0\xCF\x11\xE0"
+
+
+def _is_xls(file_bytes: bytes) -> bool:
+    return len(file_bytes) >= 4 and file_bytes[:4] == _CFBF_MAGIC
+
 
 _ACCENT_RE = re.compile(r"[^\x00-\x7F]")
 
@@ -157,14 +173,142 @@ def _validate_contract(
 
 
 # ---------------------------------------------------------------------------
+# XLS (BIFF8/OLE) helpers
+# ---------------------------------------------------------------------------
+
+def _open_xls(file_bytes: bytes) -> xlrd.Book:
+    """Open XLS workbook from bytes, suppressing xlrd verbose logging."""
+    try:
+        return xlrd.open_workbook(file_contents=file_bytes, logfile=io.StringIO())
+    except Exception as exc:
+        raise UploadError(f"No se pudo abrir el archivo .xls: {exc}") from exc
+
+
+def _cell_value_xls(cell: xlrd.sheet.Cell, datemode: int) -> object:
+    """Convert an xlrd Cell to a Python value compatible with openpyxl data_only output."""
+    if cell.ctype in (xlrd.XL_CELL_EMPTY, xlrd.XL_CELL_BLANK):
+        return None
+    if cell.ctype == xlrd.XL_CELL_TEXT:
+        return cell.value
+    if cell.ctype == xlrd.XL_CELL_NUMBER:
+        v = cell.value
+        return int(v) if isinstance(v, float) and v.is_integer() else v
+    if cell.ctype == xlrd.XL_CELL_DATE:
+        try:
+            return xlrd.xldate_as_datetime(cell.value, datemode)
+        except Exception:
+            return cell.value
+    if cell.ctype == xlrd.XL_CELL_BOOLEAN:
+        return bool(cell.value)
+    return None  # XL_CELL_ERROR → treat as empty (same as openpyxl data_only=True)
+
+
+def _read_xls_sheets(
+    file_bytes: bytes,
+    sheet_prefix: str,
+    contract: Optional[ModuleContract],
+) -> Dict[str, List[dict]]:
+    """XLS (BIFF8/OLE) reader using xlrd.  Same output contract as the XLSX reader."""
+    book = _open_xls(file_bytes)
+    datemode = book.datemode
+    all_sheet_names = book.sheet_names()
+
+    if len(all_sheet_names) > MAX_EXCEL_SHEETS:
+        raise UploadError(
+            f"El archivo tiene {len(all_sheet_names)} hojas; "
+            f"el máximo permitido es {MAX_EXCEL_SHEETS}.",
+            code="EXCEL_LIMIT_EXCEEDED",
+        )
+
+    prefixed_names = [n for n in all_sheet_names if n.startswith(sheet_prefix)]
+    raw_headers_per_sheet: Dict[str, List[Optional[str]]] = {}
+    result: Dict[str, List[dict]] = {}
+    total_cells = 0
+
+    for sheet_name in all_sheet_names:
+        if not sheet_name.startswith(sheet_prefix):
+            continue
+
+        ws = book.sheet_by_name(sheet_name)
+
+        if ws.ncols > MAX_EXCEL_COLUMNS_PER_SHEET:
+            raise UploadError(
+                f"La hoja '{sheet_name}' tiene {ws.ncols} columnas; "
+                f"el máximo es {MAX_EXCEL_COLUMNS_PER_SHEET}.",
+                code="EXCEL_LIMIT_EXCEEDED",
+            )
+
+        if ws.nrows == 0:
+            raw_headers_per_sheet[sheet_name] = []
+            result[sheet_name] = []
+            continue
+
+        header_raw = [_cell_value_xls(ws.cell(0, c), datemode) for c in range(ws.ncols)]
+        raw_stripped = [_strip_header(h) for h in header_raw]
+        raw_headers_per_sheet[sheet_name] = raw_stripped
+
+        headers_norm = [
+            _normalize_column(h) if h is not None else f"col_{i}"
+            for i, h in enumerate(raw_stripped)
+        ]
+
+        sheet_rows: List[dict] = []
+        for r in range(1, ws.nrows):
+            if r > MAX_EXCEL_ROWS_PER_SHEET:
+                raise UploadError(
+                    f"La hoja '{sheet_name}' supera el límite de "
+                    f"{MAX_EXCEL_ROWS_PER_SHEET} filas.",
+                    code="EXCEL_LIMIT_EXCEEDED",
+                )
+
+            row = [_cell_value_xls(ws.cell(r, c), datemode) for c in range(ws.ncols)]
+            if all(v is None or str(v).strip() == "" for v in row):
+                continue
+
+            row_dict: dict = {}
+            for header, value in zip(headers_norm, row):
+                if isinstance(value, str) and len(value) > MAX_EXCEL_CELL_LENGTH:
+                    raise UploadError(
+                        f"La hoja '{sheet_name}' contiene una celda que supera "
+                        f"los {MAX_EXCEL_CELL_LENGTH} caracteres permitidos.",
+                        code="EXCEL_LIMIT_EXCEEDED",
+                    )
+                row_dict[header] = value
+                total_cells += 1
+
+            if total_cells > MAX_EXCEL_CELLS:
+                raise UploadError(
+                    f"El archivo supera el límite de {MAX_EXCEL_CELLS} celdas.",
+                    code="EXCEL_LIMIT_EXCEEDED",
+                )
+
+            sheet_rows.append(row_dict)
+
+        result[sheet_name] = sheet_rows
+
+    if contract is not None:
+        _validate_contract(
+            sheet_prefix=sheet_prefix,
+            module_contract=contract,
+            all_sheet_names=all_sheet_names,
+            prefixed_sheet_names=prefixed_names,
+            raw_headers_per_sheet=raw_headers_per_sheet,
+        )
+
+    return result
+
+
+# ---------------------------------------------------------------------------
 # Public functions
 # ---------------------------------------------------------------------------
 
 def list_sheets(file_bytes: bytes) -> List[str]:
-    """Return all sheet names present in the workbook.
+    """Return all sheet names present in the workbook (.xlsx or .xls).
 
     Raises :class:`UploadError` if the bytes cannot be parsed.
     """
+    if _is_xls(file_bytes):
+        return _open_xls(file_bytes).sheet_names()
     try:
         wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
         names = wb.sheetnames
@@ -181,8 +325,9 @@ def read_excel_sheets(
 ) -> Dict[str, List[dict]]:
     """Read sheets starting with *sheet_prefix* and return normalised row dicts.
 
-    When *contract* is provided, strict structural validation runs before
-    any data is returned.  See module docstring for the full validation matrix.
+    Format is detected from magic bytes — both .xlsx (OOXML/ZIP) and .xls
+    (BIFF8/OLE) are supported.  When *contract* is provided, strict structural
+    validation runs before any data is returned.
 
     Resource limits (from environment / :mod:`config`) are always enforced:
 
@@ -199,6 +344,9 @@ def read_excel_sheets(
     :class:`ValidationError`
         Contract violation (wrong sheets or headers).
     """
+    if _is_xls(file_bytes):
+        return _read_xls_sheets(file_bytes, sheet_prefix, contract)
+
     try:
         wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
     except Exception as exc:
@@ -311,7 +459,14 @@ def read_excel_sheets(
 
 
 def read_all_sheets(file_bytes: bytes) -> Dict[str, List[dict]]:
-    """Like :func:`read_excel_sheets` but reads every sheet (no prefix filter)."""
+    """Like :func:`read_excel_sheets` but reads every sheet (no prefix filter).
+
+    Supports both .xlsx and .xls — format detected from magic bytes.
+    """
+    if _is_xls(file_bytes):
+        # Empty prefix matches all sheet names (every string starts with "")
+        return _read_xls_sheets(file_bytes, "", None)
+
     try:
         wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
     except Exception as exc:
@@ -334,7 +489,7 @@ def read_all_sheets(file_bytes: bytes) -> Dict[str, List[dict]]:
             for row in rows[1:]:
                 if all(cell is None or str(cell).strip() == "" for cell in row):
                     continue
-                row_dict = {h: v for h, v in zip(headers, row)}
+                row_dict = dict(zip(headers, row))
                 sheet_rows.append(row_dict)
             result[sheet_name] = sheet_rows
         return result

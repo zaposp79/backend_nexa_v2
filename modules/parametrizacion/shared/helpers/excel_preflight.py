@@ -484,8 +484,10 @@ def _check_xls_safety(file_bytes: bytes) -> None:
         if idx == -1:
             break
         rec_size = int.from_bytes(file_bytes[idx + 2: idx + 4], "little")
-        if rec_size >= 5 and idx + 9 <= file_len:
-            if file_bytes[idx + 8: idx + 9] in _MACRO_TYPES:
+        # sheet type (bType) is the HIGH byte of the 2-byte grbit field (pos+9),
+        # not the low byte (pos+8 = visibility flags).
+        if rec_size >= 6 and idx + 10 <= file_len:
+            if file_bytes[idx + 9: idx + 10] in _MACRO_TYPES:
                 raise UploadError(
                     "El archivo .xls contiene hojas de macro (XLM).",
                     code="UNSAFE_EXCEL_CONTENT",

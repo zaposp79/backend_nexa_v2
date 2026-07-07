@@ -144,14 +144,17 @@ jobs:
           az webapp start --name '${{ env.AZURE_WEBAPP_NAME }}' --resource-group "$RG"
           sleep 20
 
-          # Zip and deploy with --clean to wipe wwwroot (removes stale output.tar.zst)
+          # Zip and deploy with --clean to wipe wwwroot (removes stale output.tar.zst).
+          # --async: no polling on startup (avoids 10-min wait if app crashes);
+          # the diagnostic step below captures the actual startup logs instead.
           cd deploy_pkg && zip -r /tmp/deploy.zip .
           az webapp deploy \
             --name '${{ env.AZURE_WEBAPP_NAME }}' \
             --resource-group "$RG" \
             --src-path /tmp/deploy.zip \
             --type zip \
-            --clean true
+            --clean true \
+            --async true
 
       - name: Diagnóstico de arranque (no bloqueante)
         if: always()
@@ -163,8 +166,9 @@ jobs:
           STATE=$(az webapp show -n "$APP" -g "$RG" --query state -o tsv)
           echo "Estado: $STATE  |  Hostname: $HOST"
 
-          echo "=== /health (espera 30s de cold start) ==="
-          sleep 30
+          # With --async deploy, Oryx still needs time to build + start the app.
+          echo "=== /health (espera 120s: Oryx build + cold start) ==="
+          sleep 120
           curl -sS -m 30 -w "\nHTTP %{http_code}\n" "https://$HOST/health" || true
 
           echo "=== Logs del contenedor (Oryx + uvicorn) ==="
