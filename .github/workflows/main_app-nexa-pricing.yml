@@ -89,11 +89,13 @@ jobs:
         run: |
           RG=$(az webapp list --query "[?name=='app-nexa-pricing'].resourceGroup | [0]" -o tsv)
           echo "Resource group: $RG"
-          # Enable Oryx so it builds antenv from requirements.txt after deployment
+          # Enable Oryx build to install packages during deployment.
+          # COMPRESS_ORYX_BUILD=false prevents output.tar.zst from being cached;
+          # without this, Oryx reuses a stale tarball at startup (cache poisoning).
           az webapp config appsettings set \
             --name 'app-nexa-pricing' \
             --resource-group "$RG" \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true COMPRESS_ORYX_BUILD=false
           # Start app so SCM/Kudu endpoint is available for OneDeploy (avoids 403 Site Disabled)
           az webapp start --name 'app-nexa-pricing' --resource-group "$RG"
           sleep 30
