@@ -14,28 +14,52 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v4
 
-      - name: Set up Python version
-        uses: actions/setup-python@v6
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Validate imports
-        run: pip install -r requirements.txt --quiet
-
-      - name: Build deployment artifact (nested layout)
-        # Layout:
-        #   deploy_artifact/
-        #     requirements.txt   <- Oryx detecta Python aquí
-        #     startup.sh
-        #     backend_nexa_v2/   <- paquete importable
-        #       __init__.py, app.py, modules/, db/, ...
+      # Guard: fail the build immediately if the critical import path is wrong.
+      - name: Verify app.py has correct import paths
         run: |
-          mkdir -p deploy_artifact/backend_nexa_v2
+          echo "=== app.py lines 88-95 ==="
+          sed -n '88,95p' app.py
+          if grep -q 'shared\.infrastructure\.' app.py; then
+            echo "FATAL: app.py still references the old 'infrastructure' module path!"
+            exit 1
+          fi
+          echo "OK: import paths are correct."
+
+      # Build the virtualenv that Azure will use at runtime.
+      # Named 'antenv' because Oryx automatically detects and activates it.
+      - name: Build Python virtualenv (antenv)
+        run: |
+          python -m venv antenv
+          ./antenv/bin/pip install --upgrade pip --quiet
+          ./antenv/bin/pip install -r requirements.txt --quiet
+          echo "=== Packages installed (last 20) ==="
+          ./antenv/bin/pip list --format=columns | tail -20
+
+      # Strategy: deploy the source BOTH as raw files in wwwroot AND pre-packed in
+      # output.tar.zst (Oryx's compressed output format).
+      #
+      # Why two copies?
+      #   - output.tar.zst OVERWRITES Azure's stale cached tarball, fixing the
+      #     root cause: Oryx keeps reusing an old tarball with wrong imports.
+      #   - Raw files in wwwroot are a fallback in case the manifest is ignored.
+      #   - SCM_DO_BUILD_DURING_DEPLOYMENT=false (set in deploy job) prevents Oryx
+      #     from replacing our tarball with a new one during deployment.
+      - name: Build output.tar.zst (pre-built Oryx tarball)
+        run: |
+          sudo apt-get install -y zstd --quiet
+
+          # Stage area: mirrors what Oryx would put inside the tarball.
+          mkdir -p build_src/backend_nexa_v2
           rsync -a \
             --exclude='.git' \
             --exclude='.github' \
@@ -50,13 +74,62 @@ jobs:
             --exclude='storage' \
             --exclude='.env' \
             --exclude='.env.*' \
+            --exclude='build_src' \
+            ./ build_src/backend_nexa_v2/
+
+          cp -r antenv/ build_src/
+          cp requirements.txt build_src/
+          cp startup.sh build_src/
+
+          echo "=== Verify build_src/backend_nexa_v2/app.py lines 88-95 ==="
+          sed -n '88,95p' build_src/backend_nexa_v2/app.py
+
+          # Create output.tar.zst (Oryx extracts this at container startup)
+          tar cf - -C build_src . | zstd -c > output.tar.zst
+          echo "=== Tarball size: $(du -sh output.tar.zst | cut -f1) ==="
+
+      - name: Assemble deployment artifact
+        run: |
+          mkdir -p deploy_artifact/backend_nexa_v2
+
+          # 1) Source at wwwroot root (fallback if Oryx ignores the tarball)
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='antenv' \
+            --exclude='venv' \
+            --exclude='.venv' \
+            --exclude='__pycache__' \
+            --exclude='*.pyc' \
+            --exclude='.pytest_cache' \
+            --exclude='tests' \
+            --exclude='docs' \
+            --exclude='storage' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='build_src' \
             --exclude='deploy_artifact' \
             ./ deploy_artifact/backend_nexa_v2/
+
+          # 2) Virtualenv at wwwroot root (Oryx detects 'antenv' by name)
+          cp -r antenv/ deploy_artifact/
+
+          # 3) Pre-built tarball (OVERWRITES old stale Oryx cache on Azure)
+          cp output.tar.zst deploy_artifact/
+
+          # 4) Manifest: tells Oryx at startup that output is compressed
+          printf 'CompressDestinationDir = "true"\nOperationId = "ci-prebuilt"\n' \
+            > deploy_artifact/oryx-manifest.toml
+
+          # 5) Root files Oryx reads from wwwroot
           cp requirements.txt deploy_artifact/
           cp startup.sh deploy_artifact/
 
+          echo "=== deploy_artifact/ top-level ==="
+          ls -lh deploy_artifact/
+
       - name: Upload artifact for deployment jobs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: deploy_artifact
@@ -65,12 +138,12 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v4
         with:
           name: python-app
 
@@ -81,29 +154,33 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0FA7C3E950074591BD038FEFD8F17A95 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_412BB608E0D342FA8EBCEB4FD50D2EE9 }}
 
-      - name: Clear Oryx build cache (force fresh source rebuild)
-        # Oryx reutiliza source files del output.tar.zst anterior cuando solo cambian
-        # los paquetes (requirements.txt). Al borrar el tarball y el manifiesto,
-        # Oryx hace un full-rebuild desde los archivos recién desplegados en wwwroot.
-        continue-on-error: true
+      # Disable Oryx build-during-deployment so it does not overwrite our
+      # pre-built tarball with a fresh (and potentially cache-poisoned) one.
+      - name: Disable Oryx build during deployment
         run: |
           RG=$(az webapp show --name app-nexa-pricing --query resourceGroup -o tsv)
-          PUBL=$(az webapp deployment list-publishing-credentials \
-            --name app-nexa-pricing --resource-group "$RG" \
-            --query "{u:publishingUserName,p:publishingPassword}" -o json)
-          KUSER=$(echo "$PUBL" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['u'])")
-          KPASS=$(echo "$PUBL" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['p'])")
-          for f in output.tar.zst oryx-manifest.toml; do
-            HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
-              -u "$KUSER:$KPASS" \
-              "https://app-nexa-pricing.scm.azurewebsites.net/api/vfs/site/wwwroot/$f")
-            echo "DELETE $f → HTTP $HTTP"
-          done
+          az webapp config appsettings set \
+            --name app-nexa-pricing \
+            --resource-group "$RG" \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false \
+            --output none
+          echo "SCM_DO_BUILD_DURING_DEPLOYMENT set to false"
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'app-nexa-pricing'
           slot-name: 'Production'
-          startup-command: 'export PYTHONPATH="$(pwd):${PYTHONPATH:-}" && exec python -m uvicorn backend_nexa_v2.app:create_app --factory --host 0.0.0.0 --port "${PORT:-${WEBSITES_PORT:-8000}}" --workers "${WEB_CONCURRENCY:-2}" --no-access-log'
+          # $(pwd) expands at runtime. With our tarball, CWD = /tmp/<guid>/ which
+          # contains backend_nexa_v2/ (correct source) and antenv/ (packages).
+          # If Oryx uses wwwroot directly (tarball fallback), CWD = /home/site/wwwroot/
+          # which also has backend_nexa_v2/ and antenv/ from our artifact.
+          startup-command: >-
+            export PYTHONPATH="$(pwd):${PYTHONPATH:-}" &&
+            exec python -m uvicorn backend_nexa_v2.app:create_app
+            --factory
+            --host 0.0.0.0
+            --port "${PORT:-${WEBSITES_PORT:-8000}}"
+            --workers "${WEB_CONCURRENCY:-2}"
+            --no-access-log

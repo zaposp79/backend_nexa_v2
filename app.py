@@ -190,13 +190,13 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
     # /docs se sirve mediante una ruta propia (más abajo) para forzar el orden
     # de métodos POST → GET → PATCH → DELETE en Swagger UI.
-    redoc_url = "/redoc" if resolved.docs_enabled else None
-    openapi_url = "/openapi.json" if resolved.docs_enabled else None
+    redoc_url = resolved.redoc_url if resolved.docs_enabled else None
+    openapi_url = resolved.openapi_url if resolved.docs_enabled else None
 
     fastapi_app = FastAPI(
-        title="NEXA Simulator API",
-        description="Motor de pricing + API de parametrización y simulación",
-        version="1.0.0",
+        title=resolved.app_title,
+        description=resolved.app_description,
+        version=resolved.app_version,
         lifespan=_make_lifespan(resolved),
         docs_url=None,
         redoc_url=redoc_url,
@@ -341,7 +341,10 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             ).model_dump(),
         )
 
-    fastapi_app.include_router(v1_router, prefix="/api/v1")
+    fastapi_app.include_router(
+        v1_router,
+        prefix=f"/{resolved.api_prefix}/{resolved.api_version}",
+    )
 
     if resolved.docs_enabled:
         # operationsSorter JS: ordena cada tag por método POST → GET → PATCH →
@@ -355,20 +358,25 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             "  return xa !== xb ? xa - xb : a.get('path').localeCompare(b.get('path'));"
             "}"
         )
+        _swagger_title = f"{resolved.app_title} - Swagger UI"
+        _docs_path = resolved.docs_url
 
-        @fastapi_app.get("/docs", include_in_schema=False)
+        @fastapi_app.get(_docs_path, include_in_schema=False)
         def custom_swagger_ui_html():
             html = get_swagger_ui_html(
                 openapi_url=openapi_url,
-                title="NEXA Simulator API - Swagger UI",
+                title=_swagger_title,
                 swagger_ui_parameters={"operationsSorter": "__NEXA_OPS_SORTER__"},
             ).body.decode("utf-8")
             html = html.replace('"__NEXA_OPS_SORTER__"', _ops_sorter)
             return HTMLResponse(html)
 
-    @fastapi_app.get("/health")
+    _health_path = resolved.health_path
+    _service_name = resolved.service_name
+
+    @fastapi_app.get(_health_path)
     def health():
-        return {"status": "ok", "service": "nexa-simulator-api"}
+        return {"status": "ok", "service": _service_name}
 
     return fastapi_app
 
