@@ -128,46 +128,43 @@ jobs:
 
       - name: Configure Azure Web App
         run: |
-          RG=$(az webapp list --query "[?name=='${{ env.AZURE_WEBAPP_NAME }}'].resourceGroup | [0]" -o tsv)
+          APP='${{ env.AZURE_WEBAPP_NAME }}'
+          RG=$(az webapp list --query "[?name=='${APP}'].resourceGroup | [0]" -o tsv)
           echo "Resource group: $RG"
 
           # Habilita Oryx para instalar paquetes desde requirements.txt tras el deploy.
           # Sin esto, antenv/ no se crea y el startup falla con ModuleNotFoundError.
           az webapp config appsettings set \
-            --name '${{ env.AZURE_WEBAPP_NAME }}' \
-            --resource-group "$RG" \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+            --name "$APP" --resource-group "$RG" \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+            --output none
 
           # Arrancar la app para que el endpoint Kudu/SCM esté disponible.
-          # Sin esto, el deploy falla con 403 Site Disabled si la app estaba parada.
-          az webapp start --name '${{ env.AZURE_WEBAPP_NAME }}' --resource-group "$RG"
+          az webapp start --name "$APP" --resource-group "$RG"
           sleep 20
 
-          # Limpiar wwwroot para eliminar el tarball stale de Oryx.
-          # Oryx extrae output.tar.zst al arrancar sin importar si los archivos
-          # en wwwroot son más recientes; un tarball de deploy anterior con código
-          # viejo hace que la app arranque con ese código viejo.
-          #
-          # az webapp deploy --clean true es la única forma confiable de borrar
-          # wwwroot con el token OIDC del workflow. Se ejecuta en background y se
-          # cancela tras 45s: solo necesitamos que el servidor complete el borrado
-          # (operación rápida, < 5s). El polling de arranque del CLI se cancela
-          # porque no nos importa que la app arranque con el placeholder.
-          printf 'placeholder' > /tmp/placeholder.txt
-          zip -j /tmp/clean.zip /tmp/placeholder.txt
-          az webapp deploy \
-            --name '${{ env.AZURE_WEBAPP_NAME }}' \
-            --resource-group "$RG" \
-            --src-path /tmp/clean.zip \
-            --type zip \
-            --clean true \
-            > /tmp/clean_log.txt 2>&1 &
-          CLEAN_PID=$!
-          sleep 45
-          kill $CLEAN_PID 2>/dev/null
-          wait $CLEAN_PID 2>/dev/null || true
-          echo "=== Log de limpieza wwwroot (primeras 30 líneas) ==="
-          head -30 /tmp/clean_log.txt || true
+          # Eliminar tarball stale de Oryx via Kudu VFS API con credenciales de publicación.
+          # El Bearer token OIDC no tiene acceso a la VFS API; las credenciales de
+          # publicación (Basic Auth) sí. Si falla, Oryx rebuild con
+          # SCM_DO_BUILD_DURING_DEPLOYMENT=true sobreescribe el tarball igualmente.
+          HOST=$(az webapp show -n "$APP" -g "$RG" --query defaultHostName -o tsv)
+          SCM_HOST=$(echo "$HOST" | sed 's/^\([^.]*\)\.\(.*\)$/\1.scm.\2/')
+          CREDS=$(az webapp deployment list-publishing-credentials \
+            --name "$APP" --resource-group "$RG" \
+            --query '{u:publishingUserName,p:publishingPassword}' \
+            --output json 2>/dev/null || echo '{}')
+          KU=$(echo "$CREDS" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('u',''))" 2>/dev/null || true)
+          KP=$(echo "$CREDS" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('p',''))" 2>/dev/null || true)
+          if [ -n "$KU" ] && [ -n "$KP" ]; then
+            for F in output.tar.zst oryx-manifest.toml; do
+              CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+                -X DELETE "https://${SCM_HOST}/api/vfs/site/wwwroot/${F}" \
+                -u "${KU}:${KP}")
+              echo "Delete $F → HTTP $CODE (200=borrado, 404=no existía)"
+            done
+          else
+            echo "⚠ Sin credenciales Kudu — tarball no borrado manualmente"
+          fi
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
