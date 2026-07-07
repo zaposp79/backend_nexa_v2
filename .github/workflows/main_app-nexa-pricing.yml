@@ -126,9 +126,17 @@ jobs:
           echo "AZURE_RG=$RG" >> "$GITHUB_ENV"
           echo "Resource group: $RG"
 
-      # Prevent Oryx from running a new build during deployment.
-      # Without this, Oryx may rebuild from an incomplete wwwroot state
-      # (race condition) and create a new stale tarball.
+      # Stop the app BEFORE the clean deploy so the app container is not running
+      # while wwwroot is wiped.  When the container is alive and --clean deletes
+      # its files, the container crashes and restarts Kudu (SCM), causing a 502
+      # mid-upload.  Kudu remains fully available while the app is stopped.
+      - name: Stop app before clean deploy
+        run: |
+          az webapp stop --name app-nexa-pricing --resource-group "$AZURE_RG"
+          echo "App stopped"
+
+      # Disable Oryx so it does not run a fresh build on startup and overwrite
+      # our pre-built antenv/ with a new tarball.
       - name: Disable Oryx build during deployment
         run: |
           az webapp config appsettings set \
@@ -142,6 +150,7 @@ jobs:
       # before extracting our zip.  This deletes the stale output.tar.zst and
       # oryx-manifest.toml that Oryx has been reusing across every deployment.
       # After this step wwwroot contains only our backend_nexa_v2/ and antenv/.
+      # The app is stopped so Kudu is stable throughout the upload.
       - name: Deploy zip to Azure (clean wwwroot)
         run: |
           az webapp deploy \
@@ -154,8 +163,8 @@ jobs:
           echo "Deployment complete"
 
       # Set the startup command AFTER the zip deploy so it is not overwritten.
-      # We use absolute /home/site/wwwroot/ paths so the command works whether
-      # Oryx extracts a tarball to /tmp/<guid>/ or runs directly from wwwroot.
+      # We use absolute /home/site/wwwroot/ paths because SCM_DO_BUILD_DURING_DEPLOYMENT=false
+      # keeps source files in place (no tarball extraction to /tmp/<guid>/).
       - name: Set startup command
         run: |
           az webapp config set \
@@ -165,7 +174,10 @@ jobs:
             --output none
           echo "Startup command updated"
 
-      - name: Restart app
+      # Always start the app — even if a previous step failed — so it is never
+      # left in a stopped state after a partial deployment.
+      - name: Start app
+        if: always()
         run: |
-          az webapp restart --name app-nexa-pricing --resource-group "$AZURE_RG"
-          echo "App restarted — check logs in ~30s"
+          az webapp start --name app-nexa-pricing --resource-group "$AZURE_RG"
+          echo "App started — check logs in ~30s"
