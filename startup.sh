@@ -1,35 +1,51 @@
 #!/bin/bash
-# Startup command para Azure App Service (Linux, Python).
+# Startup alternativo para Azure App Service (Linux, Python).
 #
-# Problema que resuelve: el repositorio ES el paquete `backend_nexa` (su
-# contenido queda directamente en /home/site/wwwroot). El código importa
-# `backend_nexa` / `nexa_engine`, lo que exige que exista un directorio LLAMADO
-# `backend_nexa` cuyo PADRE esté en PYTHONPATH. Aquí lo garantizamos.
+# NOTA: el método recomendado es el Startup Command INLINE (ver
+# docs/deploy/ENV_PRODUCCION.md), porque Oryx COMPRIME la salida del build y
+# /home/site/wwwroot no contiene archivos reales sino un artefacto comprimido
+# que Azure extrae a /tmp/<guid>. Por eso `bash /home/site/wwwroot/startup.sh`
+# puede no existir en runtime.
 #
-# Configúralo en: App Service → Configuration → General settings → Startup Command:
-#   bash /home/site/wwwroot/startup.sh
+# Este script SOLO es válido si la salida NO está comprimida (o si lo invocas
+# por su ruta real extraída). Es auto-localizable: descubre su propio directorio,
+# así funciona tanto en /home/site/wwwroot como en el /tmp/<guid> extraído.
+#
+# Layout esperado (anidado): este script vive junto a backend_nexa_v2/ y venv/.
 set -euo pipefail
 
-WWWROOT="${WWWROOT_OVERRIDE:-/home/site/wwwroot}"
+echo "[startup] ===== NEXA startup.sh ====="
 
-if [ -d "$WWWROOT/backend_nexa" ]; then
-    # El artefacto ya trae un subdirectorio backend_nexa/ (deploy anidado).
-    ROOT="$WWWROOT"
-else
-    # wwwroot ES el contenido de backend_nexa: exponerlo como paquete vía symlink.
-    ln -sfn "$WWWROOT" /home/site/backend_nexa
-    ROOT="/home/site"
+# Directorio real de la app (donde están backend_nexa_v2/ y venv/), sin rutas fijas.
+APP_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$APP_ROOT"
+echo "[startup] APP_ROOT=$APP_ROOT  PWD=$PWD"
+
+# Activar el virtualenv de Oryx (venv) si la plataforma no lo activó ya.
+if [ -z "${VIRTUAL_ENV:-}" ] && [ -f "$APP_ROOT/venv/bin/activate" ]; then
+    echo "[startup] Activando virtualenv: $APP_ROOT/venv"
+    # shellcheck disable=SC1091
+    source "$APP_ROOT/venv/bin/activate"
 fi
 
-cd "$ROOT"
-export PYTHONPATH="$ROOT:${PYTHONPATH:-}"
+# El paquete backend_nexa_v2/ está bajo APP_ROOT → su padre (APP_ROOT) en PYTHONPATH.
+export PYTHONPATH="$APP_ROOT:${PYTHONPATH:-}"
 
-# Puerto: Azure App Service inyecta WEBSITES_PORT; también se puede sobrescribir con APP_PORT.
-PORT="${APP_PORT:-${WEBSITES_PORT:-8000}}"
+# Puerto: App Service inyecta PORT. Orden: PORT > WEBSITES_PORT > APP_PORT > 8000.
+PORT="${PORT:-${WEBSITES_PORT:-${APP_PORT:-8000}}}"
 
-# Arranque ASGI con la application factory. APP_ENV/COSMOS_*/CORS_ALLOWED_ORIGINS
-# se leen desde las Application Settings del App Service (NO desde .env).
-exec python -m uvicorn backend_nexa.app:create_app \
+echo "[startup] python=$(command -v python)  ($(python --version 2>&1))  PORT=$PORT"
+python -c "import uvicorn, backend_nexa_v2; print('[startup] imports OK: uvicorn + backend_nexa_v2')"
+
+# Preflight de configuración: si APP_ENV/CORS/COSMOS_* están mal, falla aquí con
+# mensaje claro en lugar de que cada worker muera en silencio (causa de 503).
+python -c "import backend_nexa_v2; \
+from nexa_engine.modules.shared.infrastructure.app_settings import load_app_settings; \
+from nexa_engine.db.config import load_config; \
+s = load_app_settings(); c = load_config(); \
+print(f'[startup] config OK: env={s.app_env} provider={c.provider} cors={len(s.cors_allowed_origins)} origins')"
+
+exec python -m uvicorn backend_nexa_v2.app:create_app \
     --factory \
     --host 0.0.0.0 \
     --port "$PORT" \
