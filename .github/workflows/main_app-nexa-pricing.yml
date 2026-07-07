@@ -45,21 +45,15 @@ jobs:
           echo "=== Packages installed (last 20) ==="
           ./antenv/bin/pip list --format=columns | tail -20
 
-      # Strategy: deploy the source BOTH as raw files in wwwroot AND pre-packed in
-      # output.tar.zst (Oryx's compressed output format).
-      #
-      # Why two copies?
-      #   - output.tar.zst OVERWRITES Azure's stale cached tarball, fixing the
-      #     root cause: Oryx keeps reusing an old tarball with wrong imports.
-      #   - Raw files in wwwroot are a fallback in case the manifest is ignored.
-      #   - SCM_DO_BUILD_DURING_DEPLOYMENT=false (set in deploy job) prevents Oryx
-      #     from replacing our tarball with a new one during deployment.
-      - name: Build output.tar.zst (pre-built Oryx tarball)
+      - name: Assemble deployment zip
+        # Creates app.zip with the source package (backend_nexa_v2/) and the
+        # pre-built virtualenv (antenv/) at the top level.  The deploy job uses
+        # 'az webapp deploy --clean' which wipes the old Oryx-generated
+        # output.tar.zst and oryx-manifest.toml before extracting this zip.
+        # Without those two Oryx files, Oryx startup runs from /home/site/wwwroot/
+        # directly, so the absolute-path startup command below works correctly.
         run: |
-          sudo apt-get install -y zstd --quiet
-
-          # Stage area: mirrors what Oryx would put inside the tarball.
-          mkdir -p build_src/backend_nexa_v2
+          mkdir -p artifact/backend_nexa_v2
           rsync -a \
             --exclude='.git' \
             --exclude='.github' \
@@ -74,65 +68,26 @@ jobs:
             --exclude='storage' \
             --exclude='.env' \
             --exclude='.env.*' \
-            --exclude='build_src' \
-            ./ build_src/backend_nexa_v2/
+            --exclude='artifact' \
+            ./ artifact/backend_nexa_v2/
 
-          cp -r antenv/ build_src/
-          cp requirements.txt build_src/
-          cp startup.sh build_src/
+          cp -r antenv/ artifact/
+          cp requirements.txt artifact/
+          cp startup.sh artifact/
 
-          echo "=== Verify build_src/backend_nexa_v2/app.py lines 88-95 ==="
-          sed -n '88,95p' build_src/backend_nexa_v2/app.py
+          echo "=== Verify artifact/backend_nexa_v2/app.py lines 88-95 ==="
+          sed -n '88,95p' artifact/backend_nexa_v2/app.py
 
-          # Create output.tar.zst (Oryx extracts this at container startup)
-          tar cf - -C build_src . | zstd -c > output.tar.zst
-          echo "=== Tarball size: $(du -sh output.tar.zst | cut -f1) ==="
+          cd artifact
+          zip -r ../app.zip .
+          cd ..
+          echo "=== app.zip size: $(du -sh app.zip | cut -f1) ==="
 
-      - name: Assemble deployment artifact
-        run: |
-          mkdir -p deploy_artifact/backend_nexa_v2
-
-          # 1) Source at wwwroot root (fallback if Oryx ignores the tarball)
-          rsync -a \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='antenv' \
-            --exclude='venv' \
-            --exclude='.venv' \
-            --exclude='__pycache__' \
-            --exclude='*.pyc' \
-            --exclude='.pytest_cache' \
-            --exclude='tests' \
-            --exclude='docs' \
-            --exclude='storage' \
-            --exclude='.env' \
-            --exclude='.env.*' \
-            --exclude='build_src' \
-            --exclude='deploy_artifact' \
-            ./ deploy_artifact/backend_nexa_v2/
-
-          # 2) Virtualenv at wwwroot root (Oryx detects 'antenv' by name)
-          cp -r antenv/ deploy_artifact/
-
-          # 3) Pre-built tarball (OVERWRITES old stale Oryx cache on Azure)
-          cp output.tar.zst deploy_artifact/
-
-          # 4) Manifest: tells Oryx at startup that output is compressed
-          printf 'CompressDestinationDir = "true"\nOperationId = "ci-prebuilt"\n' \
-            > deploy_artifact/oryx-manifest.toml
-
-          # 5) Root files Oryx reads from wwwroot
-          cp requirements.txt deploy_artifact/
-          cp startup.sh deploy_artifact/
-
-          echo "=== deploy_artifact/ top-level ==="
-          ls -lh deploy_artifact/
-
-      - name: Upload artifact for deployment jobs
+      - name: Upload app.zip for deployment
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: deploy_artifact
+          path: app.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -142,7 +97,7 @@ jobs:
       contents: read
 
     steps:
-      - name: Download artifact from build job
+      - name: Download app.zip
         uses: actions/download-artifact@v4
         with:
           name: python-app
@@ -154,8 +109,9 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0FA7C3E950074591BD038FEFD8F17A95 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_412BB608E0D342FA8EBCEB4FD50D2EE9 }}
 
-      # Disable Oryx build-during-deployment so it does not overwrite our
-      # pre-built tarball with a fresh (and potentially cache-poisoned) one.
+      # Prevent Oryx from running a new build during deployment.
+      # Without this, Oryx may rebuild from an incomplete wwwroot state
+      # (race condition) and create a new stale tarball.
       - name: Disable Oryx build during deployment
         run: |
           RG=$(az webapp show --name app-nexa-pricing --query resourceGroup -o tsv)
@@ -164,23 +120,39 @@ jobs:
             --resource-group "$RG" \
             --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false \
             --output none
-          echo "SCM_DO_BUILD_DURING_DEPLOYMENT set to false"
+          echo "SCM_DO_BUILD_DURING_DEPLOYMENT=false"
 
-      - name: Deploy to Azure Web App
-        uses: azure/webapps-deploy@v3
-        id: deploy-to-webapp
-        with:
-          app-name: 'app-nexa-pricing'
-          slot-name: 'Production'
-          # $(pwd) expands at runtime. With our tarball, CWD = /tmp/<guid>/ which
-          # contains backend_nexa_v2/ (correct source) and antenv/ (packages).
-          # If Oryx uses wwwroot directly (tarball fallback), CWD = /home/site/wwwroot/
-          # which also has backend_nexa_v2/ and antenv/ from our artifact.
-          startup-command: >-
-            export PYTHONPATH="$(pwd):${PYTHONPATH:-}" &&
-            exec python -m uvicorn backend_nexa_v2.app:create_app
-            --factory
-            --host 0.0.0.0
-            --port "${PORT:-${WEBSITES_PORT:-8000}}"
-            --workers "${WEB_CONCURRENCY:-2}"
-            --no-access-log
+      # Deploy with --clean: removes ALL existing files from /home/site/wwwroot/
+      # before extracting our zip.  This deletes the stale output.tar.zst and
+      # oryx-manifest.toml that Oryx has been reusing across every deployment.
+      # After this step wwwroot contains only our backend_nexa_v2/ and antenv/.
+      - name: Deploy zip to Azure (clean wwwroot)
+        run: |
+          RG=$(az webapp show --name app-nexa-pricing --query resourceGroup -o tsv)
+          az webapp deploy \
+            --name app-nexa-pricing \
+            --resource-group "$RG" \
+            --type zip \
+            --src-path app.zip \
+            --clean true \
+            --async false
+          echo "Deployment complete"
+
+      # Set the startup command AFTER the zip deploy so it is not overwritten.
+      # We use absolute /home/site/wwwroot/ paths so the command works whether
+      # Oryx extracts a tarball to /tmp/<guid>/ or runs directly from wwwroot.
+      - name: Set startup command
+        run: |
+          RG=$(az webapp show --name app-nexa-pricing --query resourceGroup -o tsv)
+          az webapp config set \
+            --name app-nexa-pricing \
+            --resource-group "$RG" \
+            --startup-file 'cd /home/site/wwwroot && export PYTHONPATH="/home/site/wwwroot:/home/site/wwwroot/antenv/lib/python3.12/site-packages:${PYTHONPATH:-}" && exec python -m uvicorn backend_nexa_v2.app:create_app --factory --host 0.0.0.0 --port "${PORT:-${WEBSITES_PORT:-8000}}" --workers "${WEB_CONCURRENCY:-2}" --no-access-log' \
+            --output none
+          echo "Startup command updated"
+
+      - name: Restart app
+        run: |
+          RG=$(az webapp show --name app-nexa-pricing --query resourceGroup -o tsv)
+          az webapp restart --name app-nexa-pricing --resource-group "$RG"
+          echo "App restarted — check logs in ~30s"
