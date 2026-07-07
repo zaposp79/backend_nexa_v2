@@ -36,9 +36,9 @@ concurrency:
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Gate de calidad (deploy): el código importa 'backend_nexa', por lo que el
-  # checkout vive en un directorio LLAMADO backend_nexa con su padre en
-  # PYTHONPATH (convención CLAUDE.md: PYTHONPATH=<parent> pytest backend_nexa/tests).
+  # Gate de calidad (deploy): el código importa 'backend_nexa_v2', por lo que el
+  # checkout vive en un directorio LLAMADO backend_nexa_v2 con su padre en
+  # PYTHONPATH (convención CLAUDE.md: PYTHONPATH=<parent> pytest backend_nexa_v2/tests).
   #
   # Gate DELIBERADAMENTE mínimo y sin parametrización: valida el hardening de
   # config/seguridad de producción (incl. que producción exige DB_PROVIDER=cosmos
@@ -54,7 +54,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          path: backend_nexa
+          path: backend_nexa_v2
 
       - name: Setup Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v5
@@ -62,11 +62,11 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
           cache-dependency-path: |
-            backend_nexa/requirements.txt
-            backend_nexa/requirements-dev.txt
+            backend_nexa_v2/requirements.txt
+            backend_nexa_v2/requirements-dev.txt
 
       - name: Install dependencies
-        working-directory: backend_nexa
+        working-directory: backend_nexa_v2
         # requirements-dev.txt hace -r requirements.txt y añade pytest, httpx, etc.
         # httpx es obligatorio: fastapi.testclient.TestClient (tests/conftest.py) lo
         # requiere; sin él pytest falla al cargar conftest.
@@ -75,8 +75,8 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Run config & security gate (no parametrization)
-        # GITHUB_WORKSPACE contiene el dir backend_nexa/; en PYTHONPATH para que
-        # 'import backend_nexa' resuelva. APP_ENV=test no toca Cosmos. Estos tests
+        # GITHUB_WORKSPACE contiene el dir backend_nexa_v2/; en PYTHONPATH para que
+        # 'import backend_nexa_v2' resuelva. APP_ENV=test no toca Cosmos. Estos tests
         # NO requieren storage sembrado:
         #   - test_sec_p0_2_env_consistency: invariantes de config (production⇒cosmos,
         #     CORS obligatorio, sin fallback a JSON local, no fuga de rutas/keys).
@@ -87,22 +87,22 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest \
-            backend_nexa/tests/api/test_sec_p0_2_env_consistency.py \
-            backend_nexa/tests/api/test_sec_p0_1_production_hardening.py \
-            backend_nexa/tests/api/test_app_factory.py \
+            backend_nexa_v2/tests/api/test_sec_p0_2_env_consistency.py \
+            backend_nexa_v2/tests/api/test_sec_p0_1_production_hardening.py \
+            backend_nexa_v2/tests/api/test_app_factory.py \
             --tb=short
 
   # ---------------------------------------------------------------------------
   # Deploy: empaqueta en layout ANIDADO y publica vía OIDC.
   #
   # ¿Por qué anidado? app.py usa imports relativos (from .modules…, from .db…),
-  # que SOLO funcionan si el módulo se importa como `backend_nexa.app`. Eso exige
-  # un directorio backend_nexa/ con su padre en PYTHONPATH. Un deploy plano
+  # que SOLO funcionan si el módulo se importa como `backend_nexa_v2.app`. Eso exige
+  # un directorio backend_nexa_v2/ con su padre en PYTHONPATH. Un deploy plano
   # despliega pero la app NO arranca (ImportError: attempted relative import).
   #   deploy_pkg/
   #     requirements.txt   <- Oryx detecta Python aquí y construye antenv en la raíz
-  #     backend_nexa/      <- paquete importable (app.py, modules/, db/, __init__.py)
-  # run_api.sh fija PYTHONPATH=<raíz> y arranca `python -m backend_nexa.app`.
+  #     backend_nexa_v2/      <- paquete importable (app.py, modules/, db/, __init__.py)
+  # run_api.sh fija PYTHONPATH=<raíz> y arranca `python -m backend_nexa_v2.app`.
   # ---------------------------------------------------------------------------
   deploy:
     name: Deploy to Azure Web App
@@ -114,7 +114,7 @@ jobs:
 
       - name: Build deployment package (nested layout)
         run: |
-          mkdir -p deploy_pkg/backend_nexa
+          mkdir -p deploy_pkg/backend_nexa_v2
           rsync -a \
             --exclude='.git' \
             --exclude='.github' \
@@ -129,7 +129,7 @@ jobs:
             --exclude='.env' \
             --exclude='.env.*' \
             --exclude='deploy_pkg' \
-            ./ deploy_pkg/backend_nexa/
+            ./ deploy_pkg/backend_nexa_v2/
           # requirements.txt en la raíz del paquete para que Oryx detecte y construya Python.
           cp requirements.txt deploy_pkg/requirements.txt
 
@@ -149,8 +149,8 @@ jobs:
           # Startup Command fijado desde el workflow (no en el portal) para arranque
           # reproducible. Ruta RELATIVA al cwd (raíz de la app extraída), compresión-proof.
           # run_api.sh detecta el venv (antenv/bin en Azure, venv/bin en Linux,
-          # venv/Scripts en Windows), fija PYTHONPATH y arranca `python -m backend_nexa.app`.
-          startup-command: bash backend_nexa/run_api.sh
+          # venv/Scripts en Windows), fija PYTHONPATH y arranca `python -m backend_nexa_v2.app`.
+          startup-command: bash backend_nexa_v2/run_api.sh
 
       - name: Diagnóstico de arranque (no bloqueante)
         # Deja en el log de Actions si la app arrancó y, si no, por qué. NO falla el
