@@ -67,10 +67,19 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DB27FC9461254FF194E5E3AE633184EF }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C6D6F4F9A07846CD9BD6280315D24BB2 }}
 
+      - name: Ensure App Service is running before deployment
+        run: |
+          RG=$(az webapp list --query "[?name=='app-nexa-pricing'].resourceGroup | [0]" -o tsv)
+          echo "Resource group: $RG"
+          az webapp start --name 'app-nexa-pricing' --resource-group "$RG"
+          # Wait for SCM/Kudu endpoint to be ready after starting
+          sleep 30
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
           app-name: 'app-nexa-pricing'
           slot-name: 'Production'
+          package: .
           
