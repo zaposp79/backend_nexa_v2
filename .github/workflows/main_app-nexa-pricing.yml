@@ -143,6 +143,24 @@ jobs:
           az webapp start --name '${{ env.AZURE_WEBAPP_NAME }}' --resource-group "$RG"
           sleep 20
 
+          # Eliminar el tarball comprimido de Oryx de deploys anteriores.
+          # Al arrancar, Oryx extrae output.tar.zst si existe — sin importar si los
+          # archivos en wwwroot son más recientes. Si el tarball es stale (de un deploy
+          # anterior con código viejo), la app arranca con el código viejo.
+          # Solución: borrar via Kudu VFS API antes de cada deploy para forzar
+          # que el próximo build de Oryx genere un tarball fresco.
+          HOST=$(az webapp show -n '${{ env.AZURE_WEBAPP_NAME }}' -g "$RG" --query defaultHostName -o tsv)
+          SCM_HOST=$(echo "$HOST" | sed 's/^\([^.]*\)\.\(.*\)$/\1.scm.\2/')
+          TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv)
+          HTTP1=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X DELETE "https://${SCM_HOST}/api/vfs/site/wwwroot/output.tar.zst" \
+            -H "Authorization: Bearer $TOKEN")
+          echo "Borrar output.tar.zst  → HTTP $HTTP1 (200=borrado, 404=no existía)"
+          HTTP2=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X DELETE "https://${SCM_HOST}/api/vfs/site/wwwroot/oryx-manifest.toml" \
+            -H "Authorization: Bearer $TOKEN")
+          echo "Borrar oryx-manifest.toml → HTTP $HTTP2 (200=borrado, 404=no existía)"
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
