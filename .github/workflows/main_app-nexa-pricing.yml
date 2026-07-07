@@ -143,23 +143,31 @@ jobs:
           az webapp start --name '${{ env.AZURE_WEBAPP_NAME }}' --resource-group "$RG"
           sleep 20
 
-          # Eliminar el tarball comprimido de Oryx de deploys anteriores.
-          # Al arrancar, Oryx extrae output.tar.zst si existe — sin importar si los
-          # archivos en wwwroot son más recientes. Si el tarball es stale (de un deploy
-          # anterior con código viejo), la app arranca con el código viejo.
-          # Solución: borrar via Kudu VFS API antes de cada deploy para forzar
-          # que el próximo build de Oryx genere un tarball fresco.
-          HOST=$(az webapp show -n '${{ env.AZURE_WEBAPP_NAME }}' -g "$RG" --query defaultHostName -o tsv)
-          SCM_HOST=$(echo "$HOST" | sed 's/^\([^.]*\)\.\(.*\)$/\1.scm.\2/')
-          TOKEN=$(az account get-access-token --resource https://management.azure.com --query accessToken -o tsv)
-          HTTP1=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X DELETE "https://${SCM_HOST}/api/vfs/site/wwwroot/output.tar.zst" \
-            -H "Authorization: Bearer $TOKEN")
-          echo "Borrar output.tar.zst  → HTTP $HTTP1 (200=borrado, 404=no existía)"
-          HTTP2=$(curl -s -o /dev/null -w "%{http_code}" \
-            -X DELETE "https://${SCM_HOST}/api/vfs/site/wwwroot/oryx-manifest.toml" \
-            -H "Authorization: Bearer $TOKEN")
-          echo "Borrar oryx-manifest.toml → HTTP $HTTP2 (200=borrado, 404=no existía)"
+          # Limpiar wwwroot para eliminar el tarball stale de Oryx.
+          # Oryx extrae output.tar.zst al arrancar sin importar si los archivos
+          # en wwwroot son más recientes; un tarball de deploy anterior con código
+          # viejo hace que la app arranque con ese código viejo.
+          #
+          # az webapp deploy --clean true es la única forma confiable de borrar
+          # wwwroot con el token OIDC del workflow. Se ejecuta en background y se
+          # cancela tras 45s: solo necesitamos que el servidor complete el borrado
+          # (operación rápida, < 5s). El polling de arranque del CLI se cancela
+          # porque no nos importa que la app arranque con el placeholder.
+          printf 'placeholder' > /tmp/placeholder.txt
+          zip -j /tmp/clean.zip /tmp/placeholder.txt
+          az webapp deploy \
+            --name '${{ env.AZURE_WEBAPP_NAME }}' \
+            --resource-group "$RG" \
+            --src-path /tmp/clean.zip \
+            --type zip \
+            --clean true \
+            > /tmp/clean_log.txt 2>&1 &
+          CLEAN_PID=$!
+          sleep 45
+          kill $CLEAN_PID 2>/dev/null
+          wait $CLEAN_PID 2>/dev/null || true
+          echo "=== Log de limpieza wwwroot (primeras 30 líneas) ==="
+          head -30 /tmp/clean_log.txt || true
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
