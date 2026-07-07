@@ -88,8 +88,8 @@ from nexa_engine.modules.shared.exceptions import (
     NotFoundError,
     ValidationError as DomainValidationError,
 )
-from .modules.shared.infrastructure.app_settings import AppSettings, load_app_settings
-from .modules.shared.infrastructure.config import ensure_storage_dirs
+from .modules.shared.config.app_settings import AppSettings, load_app_settings
+from .modules.shared.config.config import ensure_storage_dirs
 from .modules.shared.responses import ApiResponse, ErrorDetail
 
 logger = logging.getLogger("nexa")
