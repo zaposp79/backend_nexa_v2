@@ -18,16 +18,19 @@ permissions:
   id-token: write
   contents: read
 
-# Prevent concurrent deploys to the same environment.
 concurrency:
   group: deploy-prod-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Build & validate: early dependency check.
-  # Checks out into a backend_nexa_v2/ subdirectory so that PYTHONPATH can be
-  # set to $GITHUB_WORKSPACE and `import backend_nexa_v2` resolves correctly.
+  # Gate de calidad (deploy): el código importa 'backend_nexa_v2', por lo que el
+  # checkout vive en un directorio LLAMADO backend_nexa_v2 con su padre en
+  # PYTHONPATH (convención CLAUDE.md: PYTHONPATH=<parent> pytest backend_nexa_v2/tests).
+  #
+  # Gate DELIBERADAMENTE mínimo y sin parametrización: valida el hardening de
+  # config/seguridad de producción. NO ejecuta parity/baseline porque esos
+  # leen storage/ en disco — incompatible con la arquitectura "solo Cosmos".
   # ---------------------------------------------------------------------------
   build-test:
     name: Build & test (config & security gate)
@@ -66,23 +69,23 @@ jobs:
             --tb=short
 
   # ---------------------------------------------------------------------------
-  # Deploy: builds the nested layout and publishes via OIDC.
+  # Deploy: empaqueta en layout ANIDADO y publica vía OIDC.
   #
-  # Why nested? app.py uses relative imports (from .modules…, from .db…), which
-  # only work when imported as `backend_nexa_v2.app`. That requires a
-  # backend_nexa_v2/ directory with its parent in PYTHONPATH.
+  # ¿Por qué anidado? app.py usa imports relativos (from .modules…, from .db…),
+  # que SOLO funcionan si el módulo se importa como `backend_nexa_v2.app`. Eso
+  # exige un directorio backend_nexa_v2/ con su padre en PYTHONPATH.
   #
   #   deploy_pkg/
-  #     requirements.txt      ← Oryx detects Python here and builds antenv/
-  #     backend_nexa_v2/      ← importable package (app.py, modules/, db/, …)
+  #     requirements.txt      ← Oryx detecta Python aquí y construye antenv/
+  #     backend_nexa_v2/      ← paquete importable (app.py, modules/, db/, …)
   #
-  # run_api.sh auto-discovers its own directory, sets PROJECT_ROOT to the parent
-  # of backend_nexa_v2/ and PYTHONPATH accordingly. Works whether Oryx extracts
-  # the app to /tmp/<guid>/ or uses wwwroot directly.
+  # run_api.sh fija PYTHONPATH=<raíz> y arranca `python -m backend_nexa_v2.app`.
   #
-  # --clean wipes wwwroot before deploying, removing the stale output.tar.zst
-  # that Oryx caches across deployments. Without --clean, Oryx extracts the old
-  # tarball at startup instead of the freshly deployed files.
+  # Se usa azure/webapps-deploy@v3 (Kudu zipdeploy) en lugar de az webapp deploy
+  # (OneDeploy) porque Kudu integra correctamente con Oryx: activa antenv ANTES
+  # de ejecutar el startup-command y reescribe el tarball en cada deploy (no hay
+  # problema de tarball stale). Con OneDeploy el startup-command no pasa por el
+  # wrapper de Oryx y la integración de antenv es inconsistente.
   # ---------------------------------------------------------------------------
   deploy:
     name: Deploy to Azure Web App
@@ -112,7 +115,8 @@ jobs:
             --exclude='deploy_pkg' \
             --exclude='backend_nexa_archive' \
             ./ deploy_pkg/backend_nexa_v2/
-          # requirements.txt at root so Oryx detects Python and builds antenv/
+          # requirements.txt en la raíz del paquete para que Oryx detecte Python
+          # y construya antenv/ con todos los paquetes instalados.
           cp requirements.txt deploy_pkg/requirements.txt
 
       - name: Login to Azure
@@ -122,41 +126,38 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_DB27FC9461254FF194E5E3AE633184EF }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C6D6F4F9A07846CD9BD6280315D24BB2 }}
 
-      - name: Configure and deploy to Azure Web App
+      - name: Configure Azure Web App
         run: |
           RG=$(az webapp list --query "[?name=='${{ env.AZURE_WEBAPP_NAME }}'].resourceGroup | [0]" -o tsv)
           echo "Resource group: $RG"
 
-          # Enable Oryx to install packages from requirements.txt after deployment
+          # Habilita Oryx para instalar paquetes desde requirements.txt tras el deploy.
+          # Sin esto, antenv/ no se crea y el startup falla con ModuleNotFoundError.
           az webapp config appsettings set \
             --name '${{ env.AZURE_WEBAPP_NAME }}' \
             --resource-group "$RG" \
             --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
-          # Set startup command: run_api.sh auto-discovers PROJECT_ROOT (parent of
-          # backend_nexa_v2/) and sets PYTHONPATH correctly for `import backend_nexa_v2`.
-          az webapp config set \
-            --name '${{ env.AZURE_WEBAPP_NAME }}' \
-            --resource-group "$RG" \
-            --startup-file 'bash backend_nexa_v2/run_api.sh'
-
-          # Ensure app is running so SCM/Kudu endpoint is available (avoids 403 Site Disabled)
+          # Arrancar la app para que el endpoint Kudu/SCM esté disponible.
+          # Sin esto, el deploy falla con 403 Site Disabled si la app estaba parada.
           az webapp start --name '${{ env.AZURE_WEBAPP_NAME }}' --resource-group "$RG"
           sleep 20
 
-          # Zip and deploy with --clean to wipe wwwroot (removes stale output.tar.zst).
-          # --async: no polling on startup (avoids 10-min wait if app crashes);
-          # the diagnostic step below captures the actual startup logs instead.
-          cd deploy_pkg && zip -r /tmp/deploy.zip .
-          az webapp deploy \
-            --name '${{ env.AZURE_WEBAPP_NAME }}' \
-            --resource-group "$RG" \
-            --src-path /tmp/deploy.zip \
-            --type zip \
-            --clean true \
-            --async true
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          slot-name: Production
+          package: deploy_pkg
+          # run_api.sh detecta VIRTUAL_ENV (antenv activado por Oryx), luego busca
+          # antenv/ en PROJECT_ROOT, luego venv/ local. Fija PYTHONPATH y arranca
+          # `python -m backend_nexa_v2.app` (módulo canónico, no nexa_engine.app).
+          startup-command: bash backend_nexa_v2/run_api.sh
 
       - name: Diagnóstico de arranque (no bloqueante)
+        # Corre siempre (if: always) para capturar el motivo de fallo incluso
+        # cuando el deploy o el arranque falla. NO falla el job (exit 0).
+        # Imprime: estado del sitio, respuesta /health, logs del contenedor.
         if: always()
         run: |
           set +e
@@ -166,19 +167,18 @@ jobs:
           STATE=$(az webapp show -n "$APP" -g "$RG" --query state -o tsv)
           echo "Estado: $STATE  |  Hostname: $HOST"
 
-          # With --async deploy, Oryx still needs time to build + start the app.
-          echo "=== /health (espera 120s: Oryx build + cold start) ==="
-          sleep 120
+          echo "=== /health (espera 60s: Oryx build + cold start) ==="
+          sleep 60
           curl -sS -m 30 -w "\nHTTP %{http_code}\n" "https://$HOST/health" || true
 
-          echo "=== Logs del contenedor (Oryx + uvicorn) ==="
+          echo "=== Logs del contenedor (Oryx + uvicorn + tracebacks de arranque) ==="
           az webapp log config -n "$APP" -g "$RG" --docker-container-logging filesystem >/dev/null 2>&1
           az webapp log download -n "$APP" -g "$RG" --log-file /tmp/applogs.zip >/dev/null 2>&1
           if [ -f /tmp/applogs.zip ]; then
             mkdir -p /tmp/applogs && unzip -o -q /tmp/applogs.zip -d /tmp/applogs
-            echo "--- últimas 300 líneas de docker logs ---"
-            find /tmp/applogs -iname '*docker*.log' -exec cat {} + 2>/dev/null | tail -n 300
+            echo "--- últimas 400 líneas de docker logs ---"
+            find /tmp/applogs -iname '*docker*.log' -exec cat {} + 2>/dev/null | tail -n 400
           else
-            echo "(no se pudo descargar el bundle de logs)"
+            echo "(no se pudo descargar el bundle de logs; revisa Log stream en el portal)"
           fi
           exit 0
