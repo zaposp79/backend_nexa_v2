@@ -94,5 +94,5 @@ jobs:
         with:
           app-name: 'app-nexa-pricing'
           slot-name: 'Production'
-          startup-command: 'export PYTHONPATH="$(pwd):${PYTHONPATH:-}" && exec python -m uvicorn backend_nexa_v2.app:create_app --factory --host 0.0.0.0 --port "${PORT:-${WEBSITES_PORT:-8000}}" --workers "${WEB_CONCURRENCY:-2}" --no-access-log'
+          startup-command: 'export PYTHONPATH="/home/site/wwwroot:${PYTHONPATH:-}" && exec python -m uvicorn backend_nexa_v2.app:create_app --factory --host 0.0.0.0 --port "${PORT:-${WEBSITES_PORT:-8000}}" --workers "${WEB_CONCURRENCY:-2}" --no-access-log'
           
