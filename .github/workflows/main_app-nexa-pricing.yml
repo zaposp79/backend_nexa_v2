@@ -89,13 +89,31 @@ jobs:
         run: |
           RG=$(az webapp list --query "[?name=='app-nexa-pricing'].resourceGroup | [0]" -o tsv)
           echo "Resource group: $RG"
-          # Enable Oryx build to install packages during deployment.
-          # COMPRESS_ORYX_BUILD=false prevents output.tar.zst from being cached;
-          # without this, Oryx reuses a stale tarball at startup (cache poisoning).
+
+          # Enable Oryx build so it installs packages from requirements.txt during deployment
           az webapp config appsettings set \
             --name 'app-nexa-pricing' \
             --resource-group "$RG" \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true COMPRESS_ORYX_BUILD=false
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
+
+          # Delete stale Oryx tarball + manifest via Kudu VFS API.
+          # Oryx caches the build output in output.tar.zst; at startup it extracts that
+          # tarball instead of using the freshly deployed files, causing stale code to run.
+          # Deleting both files before each deployment forces Oryx to rebuild from scratch.
+          KUDU_CREDS=$(az webapp deployment list-publishing-credentials \
+            --name 'app-nexa-pricing' --resource-group "$RG" -o json)
+          KUDU_USER=$(echo "$KUDU_CREDS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['publishingUserName'])")
+          KUDU_PASS=$(echo "$KUDU_CREDS" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['publishingPassword'])")
+          KUDU_BASE="https://app-nexa-pricing.scm.azurewebsites.net"
+
+          for f in output.tar.zst oryx-manifest.toml; do
+            HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE \
+              -u "$KUDU_USER:$KUDU_PASS" \
+              -H "If-Match: *" \
+              "$KUDU_BASE/api/vfs/site/wwwroot/$f")
+            echo "DELETE $f → HTTP $HTTP"
+          done
+
           # Start app so SCM/Kudu endpoint is available for OneDeploy (avoids 403 Site Disabled)
           az webapp start --name 'app-nexa-pricing' --resource-group "$RG"
           sleep 30
