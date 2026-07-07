@@ -40,7 +40,7 @@ python -c "import uvicorn, backend_nexa_v2; print('[startup] imports OK: uvicorn
 # Preflight de configuración: si APP_ENV/CORS/COSMOS_* están mal, falla aquí con
 # mensaje claro en lugar de que cada worker muera en silencio (causa de 503).
 python -c "import backend_nexa_v2; \
-from nexa_engine.modules.shared.infrastructure.app_settings import load_app_settings; \
+from nexa_engine.modules.shared.config.app_settings import load_app_settings; \
 from nexa_engine.db.config import load_config; \
 s = load_app_settings(); c = load_config(); \
 print(f'[startup] config OK: env={s.app_env} provider={c.provider} cors={len(s.cors_allowed_origins)} origins')"
