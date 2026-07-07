@@ -39,9 +39,8 @@ hr/
 |---|---|---|
 | POST | `/api/v1/parametrization/hr/upload` | Carga una versión HR. |
 | GET | `/api/v1/parametrization/hr/versions` | Lista versiones HR. |
-| GET | `/api/v1/parametrization/hr/active` | Devuelve la versión HR activa. |
-| GET | `/api/v1/parametrization/hr/{version_id}/activate` | Activa una versión HR. |
-| DELETE | `/api/v1/parametrization/hr/{version_id}` | Elimina una versión HR. |
+| PATCH | `/api/v1/parametrization/hr/{id}/activate` | Activa una versión HR. |
+| DELETE | `/api/v1/parametrization/hr/{id}` | Elimina una versión HR. |
 
 ## Entradas y salidas principales
 

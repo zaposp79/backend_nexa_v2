@@ -34,8 +34,10 @@ HR-Rentabilidad.Minimo / HR-Rentabilidad.MargenObjetivo
 HR-Campana.Mes / HR-AutRot.Mes / OP-Componente.Año / OP-HardSoft.CantidadMes
     Typed as ``int``.
 
-HR-LV columns
-    All catalog (string) — independent value lists per column.
+HR-LV columns (5)
+    All catalog (string) — independent value lists per column:
+    TipoRecurso, Cargo, Prestaciones, SS&Parafiscales, Recargo.
+    EquipoHITL and EquipoSoporteMantenimiento removed (now separate optional sheets).
 """
 
 from nexa_engine.modules.parametrizacion.shared.contracts.base import (
@@ -60,13 +62,11 @@ HR_LV = SheetContract(
     required=True,
     sheet_type=SheetType.CATALOG_BY_COLUMN,
     columns=[
-        ColumnContract("TipoRecurso",                _CAT),
-        ColumnContract("Cargo",                      _CAT),
-        ColumnContract("Prestaciones",               _CAT),
-        ColumnContract("SS&Parafiscales",            _CAT),
-        ColumnContract("Recargo",                    _CAT),
-        ColumnContract("EquipoHITL",                 _CAT),
-        ColumnContract("EquipoSoporteMantenimiento", _CAT),
+        ColumnContract("TipoRecurso",     _CAT),
+        ColumnContract("Cargo",           _CAT),
+        ColumnContract("Prestaciones",    _CAT),
+        ColumnContract("SS&Parafiscales", _CAT),
+        ColumnContract("Recargo",         _CAT),
     ],
     allow_trailing_unnamed=False,
 )
@@ -87,9 +87,11 @@ HR_NOMINA = SheetContract(
     required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
-        ColumnContract("Cargo",    _S),
-        ColumnContract("Salario",  _MON),
-        ColumnContract("Comision", _MON),
+        ColumnContract("Cargo",       _S),
+        ColumnContract("TipoRecurso", _S),
+        ColumnContract("Cadena",      _S),
+        ColumnContract("Salario",     _MON),
+        ColumnContract("Comision",    _MON),
     ],
     allow_trailing_unnamed=True,
 )

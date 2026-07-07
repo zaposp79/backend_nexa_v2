@@ -47,19 +47,16 @@ Los endpoints se publican bajo `/api/v1`:
 |---|---|---|---|
 | HR | POST | `/api/v1/parametrization/hr/upload` | Carga una versión HR. |
 | HR | GET | `/api/v1/parametrization/hr/versions` | Lista versiones HR. |
-| HR | GET | `/api/v1/parametrization/hr/active` | Consulta la versión HR activa. |
-| HR | GET | `/api/v1/parametrization/hr/{version_id}/activate` | Activa una versión HR. |
-| HR | DELETE | `/api/v1/parametrization/hr/{version_id}` | Elimina una versión HR. |
+| HR | PATCH | `/api/v1/parametrization/hr/{id}/activate` | Activa una versión HR. |
+| HR | DELETE | `/api/v1/parametrization/hr/{id}` | Elimina una versión HR. |
 | GN | POST | `/api/v1/parametrization/gn/upload` | Carga una versión GN. |
 | GN | GET | `/api/v1/parametrization/gn/versions` | Lista versiones GN. |
-| GN | GET | `/api/v1/parametrization/gn/active` | Consulta la versión GN activa. |
-| GN | GET | `/api/v1/parametrization/gn/{version_id}/activate` | Activa una versión GN. |
-| GN | DELETE | `/api/v1/parametrization/gn/{version_id}` | Elimina una versión GN. |
+| GN | PATCH | `/api/v1/parametrization/gn/{id}/activate` | Activa una versión GN. |
+| GN | DELETE | `/api/v1/parametrization/gn/{id}` | Elimina una versión GN. |
 | OP | POST | `/api/v1/parametrization/op/upload` | Carga una versión OP. |
 | OP | GET | `/api/v1/parametrization/op/versions` | Lista versiones OP. |
-| OP | GET | `/api/v1/parametrization/op/active` | Consulta la versión OP activa. |
-| OP | GET | `/api/v1/parametrization/op/{version_id}/activate` | Activa una versión OP. |
-| OP | DELETE | `/api/v1/parametrization/op/{version_id}` | Elimina una versión OP. |
+| OP | PATCH | `/api/v1/parametrization/op/{id}/activate` | Activa una versión OP. |
+| OP | DELETE | `/api/v1/parametrization/op/{id}` | Elimina una versión OP. |
 
 ## Entradas y salidas principales
 

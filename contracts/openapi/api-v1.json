@@ -2239,25 +2239,6 @@
         ]
       }
     },
-    "/api/v1/parametrization/gn/active": {
-      "get": {
-        "operationId": "get_gn_active_api_v1_parametrization_gn_active_get",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            },
-            "description": "Successful Response"
-          }
-        },
-        "summary": "Get Gn Active",
-        "tags": [
-          "parametrization-gn"
-        ]
-      }
-    },
     "/api/v1/parametrization/gn/upload": {
       "post": {
         "operationId": "upload_gn_api_v1_parametrization_gn_upload_post",
@@ -2316,18 +2297,69 @@
         ]
       }
     },
-    "/api/v1/parametrization/gn/{version_id}": {
+    "/api/v1/parametrization/gn/{id}": {
+      "get": {
+        "operationId": "getGnVersionById",
+        "summary": "Obtener versión GN por ID",
+        "description": "Retorna el documento completo de una versión GN filtrando por domain='gn' y el UUID4 indicado.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento GN a consultar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Documento encontrado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "UUID inválido o no es versión 4"
+          }
+        },
+        "tags": [
+          "parametrization-gn"
+        ]
+      },
       "delete": {
-        "operationId": "delete_gn_api_v1_parametrization_gn__version_id__delete",
+        "operationId": "deleteGnVersion",
+        "summary": "Eliminar versión GN",
+        "description": "Elimina una versión específica de parametrización de Gastos de Negociacion por su UUID4.",
         "parameters": [
           {
             "in": "path",
-            "name": "version_id",
+            "name": "id",
             "required": true,
             "schema": {
-              "title": "Version Id",
-              "type": "string"
-            }
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento GN a eliminar"
           }
         ],
         "responses": {
@@ -2337,37 +2369,46 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión eliminada correctamente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
           },
           "422": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
+                "schema": {}
               }
             },
-            "description": "Validation Error"
+            "description": "UUID inválido o no es versión 4"
           }
         },
-        "summary": "Delete Gn",
         "tags": [
           "parametrization-gn"
         ]
       }
     },
-    "/api/v1/parametrization/gn/{version_id}/activate": {
-      "get": {
-        "operationId": "activate_gn_api_v1_parametrization_gn__version_id__activate_get",
+    "/api/v1/parametrization/gn/{id}/activate": {
+      "patch": {
+        "operationId": "activateGnVersion",
+        "summary": "Activar versión GN",
+        "description": "Activa una versión GN por UUID4, desactivando las demas del mismo domain.",
         "parameters": [
           {
             "in": "path",
-            "name": "version_id",
+            "name": "id",
             "required": true,
             "schema": {
-              "title": "Version Id",
-              "type": "string"
-            }
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento GN a activar"
           }
         ],
         "responses": {
@@ -2377,41 +2418,27 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión activada correctamente"
           },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Activate Gn",
-        "tags": [
-          "parametrization-gn"
-        ]
-      }
-    },
-    "/api/v1/parametrization/hr/active": {
-      "get": {
-        "operationId": "get_hr_active_api_v1_parametrization_hr_active_get",
-        "responses": {
-          "200": {
+          "404": {
             "content": {
               "application/json": {
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión no encontrada"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "UUID inválido o no es versión 4"
           }
         },
-        "summary": "Get Hr Active",
         "tags": [
-          "parametrization-hr"
+          "parametrization-gn"
         ]
       }
     },
@@ -2474,18 +2501,69 @@
         ]
       }
     },
-    "/api/v1/parametrization/hr/{version_id}": {
+    "/api/v1/parametrization/hr/{id}": {
+      "get": {
+        "operationId": "getHrVersionById",
+        "summary": "Obtener versión HR por ID",
+        "description": "Retorna el documento completo de una versión HR filtrando por domain='hr' y el UUID4 indicado.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento HR a consultar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Documento encontrado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "UUID inválido o no es versión 4"
+          }
+        },
+        "tags": [
+          "parametrization-hr"
+        ]
+      },
       "delete": {
-        "operationId": "delete_hr_api_v1_parametrization_hr__version_id__delete",
+        "operationId": "deleteHrVersion",
+        "summary": "Eliminar versión HR",
+        "description": "Elimina una versión específica de parametrización de Recursos Humanos por su UUID4.",
         "parameters": [
           {
             "in": "path",
-            "name": "version_id",
+            "name": "id",
             "required": true,
             "schema": {
-              "title": "Version Id",
-              "type": "string"
-            }
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento HR a eliminar"
           }
         ],
         "responses": {
@@ -2495,37 +2573,46 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión eliminada correctamente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
           },
           "422": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
+                "schema": {}
               }
             },
-            "description": "Validation Error"
+            "description": "UUID inválido o no es versión 4"
           }
         },
-        "summary": "Delete Hr",
         "tags": [
           "parametrization-hr"
         ]
       }
     },
-    "/api/v1/parametrization/hr/{version_id}/activate": {
-      "get": {
-        "operationId": "activate_hr_api_v1_parametrization_hr__version_id__activate_get",
+    "/api/v1/parametrization/hr/{id}/activate": {
+      "patch": {
+        "operationId": "activateHrVersion",
+        "summary": "Activar versión HR",
+        "description": "Activa una versión HR por UUID4, desactivando las demas del mismo domain.",
         "parameters": [
           {
             "in": "path",
-            "name": "version_id",
+            "name": "id",
             "required": true,
             "schema": {
-              "title": "Version Id",
-              "type": "string"
-            }
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento HR a activar"
           }
         ],
         "responses": {
@@ -2535,41 +2622,27 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión activada correctamente"
           },
-          "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
-          }
-        },
-        "summary": "Activate Hr",
-        "tags": [
-          "parametrization-hr"
-        ]
-      }
-    },
-    "/api/v1/parametrization/op/active": {
-      "get": {
-        "operationId": "get_op_active_api_v1_parametrization_op_active_get",
-        "responses": {
-          "200": {
+          "404": {
             "content": {
               "application/json": {
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión no encontrada"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "UUID inválido o no es versión 4"
           }
         },
-        "summary": "Get Op Active",
         "tags": [
-          "parametrization-op"
+          "parametrization-hr"
         ]
       }
     },
@@ -2631,18 +2704,22 @@
         ]
       }
     },
-    "/api/v1/parametrization/op/{version_id}": {
-      "delete": {
-        "operationId": "delete_op_api_v1_parametrization_op__version_id__delete",
+    "/api/v1/parametrization/op/{id}": {
+      "get": {
+        "operationId": "getOpVersionById",
+        "summary": "Obtener versión OP por ID",
+        "description": "Retorna el documento completo de una versión OP filtrando por domain='op' y el UUID4 indicado.",
         "parameters": [
           {
             "in": "path",
-            "name": "version_id",
+            "name": "id",
             "required": true,
             "schema": {
-              "title": "Version Id",
-              "type": "string"
-            }
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento OP a consultar"
           }
         ],
         "responses": {
@@ -2652,37 +2729,93 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Documento encontrado"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
           },
           "422": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
+                "schema": {}
               }
             },
-            "description": "Validation Error"
+            "description": "UUID inválido o no es versión 4"
           }
         },
-        "summary": "Delete Op",
+        "tags": [
+          "parametrization-op"
+        ]
+      },
+      "delete": {
+        "operationId": "deleteOpVersion",
+        "summary": "Eliminar versión OP",
+        "description": "Elimina una versión específica de parametrización de Gastos de Operacion por su UUID4.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento OP a eliminar"
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión eliminada correctamente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "UUID inválido o no es versión 4"
+          }
+        },
         "tags": [
           "parametrization-op"
         ]
       }
     },
-    "/api/v1/parametrization/op/{version_id}/activate": {
-      "get": {
-        "operationId": "activate_op_api_v1_parametrization_op__version_id__activate_get",
+    "/api/v1/parametrization/op/{id}/activate": {
+      "patch": {
+        "operationId": "activateOpVersion",
+        "summary": "Activar versión OP",
+        "description": "Activa una versión OP por UUID4, desactivando las demas del mismo domain.",
         "parameters": [
           {
             "in": "path",
-            "name": "version_id",
+            "name": "id",
             "required": true,
             "schema": {
-              "title": "Version Id",
-              "type": "string"
-            }
+              "title": "Id",
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID4 del documento OP a activar"
           }
         ],
         "responses": {
@@ -2692,20 +2825,25 @@
                 "schema": {}
               }
             },
-            "description": "Successful Response"
+            "description": "Versión activada correctamente"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Versión no encontrada"
           },
           "422": {
             "content": {
               "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
+                "schema": {}
               }
             },
-            "description": "Validation Error"
+            "description": "UUID inválido o no es versión 4"
           }
         },
-        "summary": "Activate Op",
         "tags": [
           "parametrization-op"
         ]

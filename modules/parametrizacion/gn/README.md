@@ -39,9 +39,8 @@ gn/
 |---|---|---|
 | POST | `/api/v1/parametrization/gn/upload` | Carga una versión GN. |
 | GET | `/api/v1/parametrization/gn/versions` | Lista versiones GN. |
-| GET | `/api/v1/parametrization/gn/active` | Devuelve la versión GN activa. |
-| GET | `/api/v1/parametrization/gn/{version_id}/activate` | Activa una versión GN. |
-| DELETE | `/api/v1/parametrization/gn/{version_id}` | Elimina una versión GN. |
+| PATCH | `/api/v1/parametrization/gn/{id}/activate` | Activa una versión GN. |
+| DELETE | `/api/v1/parametrization/gn/{id}` | Elimina una versión GN. |
 
 ## Entradas y salidas principales
 

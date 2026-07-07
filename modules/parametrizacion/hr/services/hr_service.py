@@ -161,6 +161,8 @@ class HRService:
                 "cargo": n["cargo"],
                 "salario": n["salario"],
                 "comision": n.get("comision", 0.0),
+                "tiporecurso": n.get("tiporecurso", ""),
+                "cadena": n.get("cadena", ""),
             }
             for n in data_dict.get("nomina", [])
         ]
@@ -249,6 +251,9 @@ class HRService:
 
     def delete(self, version_id: str) -> None:
         self._repo.delete_version(version_id)
+
+    def get_by_id(self, version_id: str) -> dict:
+        return self._repo.get_document_raw(version_id)
 
     def get_version(self, version_id: str):
         summary = self._repo.get_summary(version_id)

@@ -29,9 +29,8 @@ _LV_KEY_MAP = {
     "cargo": "cargo",
     "prestaciones": "prestaciones",
     "ss&parafiscales": "ssparafiscales",
+    "ssparafiscales": "ssparafiscales",
     "recargo": "recargo",
-    "equipohitl": "equipohitl",
-    "equiposoportemantenimiento": "equiposoportemantenimiento",
 }
 
 
@@ -101,7 +100,7 @@ class HRMapper:
         )
 
     def _map_niveles(self, sheets: Dict[str, List[dict]]) -> NivelesLV:
-        """Build LV catalogs from HR-LV columns (includes EquipoHITL and EquipoSoporteMantenimiento)."""
+        """Build LV catalogs from HR-LV columns (TipoRecurso, Cargo, Prestaciones, SS&Parafiscales, Recargo)."""
         lv_rows = sheets.get("HR-LV", [])
         if not lv_rows:
             return NivelesLV()
@@ -138,6 +137,8 @@ class HRMapper:
                 cargo=_str(row.get("cargo")),
                 salario=_float(row.get("salario")),
                 comision=_float(row.get("comision")),
+                tiporecurso=_str(row.get("tiporecurso")),
+                cadena=_str(row.get("cadena")),
             ))
         return result
 

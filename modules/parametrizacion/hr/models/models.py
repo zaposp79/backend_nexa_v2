@@ -7,9 +7,10 @@ from typing import Any, Dict, List
 
 @dataclass
 class NivelesLV:
-    """Unique value catalogs extracted from HR-LV sheet (+ EquipoHITL, EquipoSoporteMantenimiento).
+    """Unique value catalogs extracted from HR-LV sheet.
 
-    Keys are normalized API names (tiporecurso, cargo, categoriaservicio, etc.).
+    Columns: TipoRecurso, Cargo, Prestaciones, SS&Parafiscales, Recargo.
+    Keys are normalized API names (tiporecurso, cargo, prestaciones, ssparafiscales, recargo).
     Each value is a list of {name: ...} dicts with distinct non-empty values.
     """
     catalogs: Dict[str, List[Dict[str, str]]] = field(default_factory=dict)
@@ -28,6 +29,8 @@ class NominaConfig:
     cargo: str
     salario: float
     comision: float = 0.0
+    tiporecurso: str = ""
+    cadena: str = ""
 
 
 @dataclass

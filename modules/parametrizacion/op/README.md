@@ -39,9 +39,8 @@ op/
 |---|---|---|
 | POST | `/api/v1/parametrization/op/upload` | Carga una versión OP. |
 | GET | `/api/v1/parametrization/op/versions` | Lista versiones OP. |
-| GET | `/api/v1/parametrization/op/active` | Devuelve la versión OP activa. |
-| GET | `/api/v1/parametrization/op/{version_id}/activate` | Activa una versión OP. |
-| DELETE | `/api/v1/parametrization/op/{version_id}` | Elimina una versión OP. |
+| PATCH | `/api/v1/parametrization/op/{id}/activate` | Activa una versión OP. |
+| DELETE | `/api/v1/parametrization/op/{id}` | Elimina una versión OP. |
 
 ## Entradas y salidas principales
 

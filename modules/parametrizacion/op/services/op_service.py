@@ -189,3 +189,6 @@ class OPService:
 
     def delete(self, version_id: str) -> None:
         self._repo.delete_version(version_id)
+
+    def get_by_id(self, version_id: str) -> dict:
+        return self._repo.get_document_raw(version_id)

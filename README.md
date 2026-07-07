@@ -176,19 +176,16 @@ Prefijo de versión: **`/api/v1`**. Los endpoints públicos usan el envelope
 | Inputs | `GET /api/v1/simulation/input/chain-c/parametros` | Catálogo de parámetros de Cadena C. |
 | Parametrization | `POST /api/v1/parametrization/hr/upload` | Carga archivo HR. |
 | Parametrization | `GET /api/v1/parametrization/hr/versions` | Lista versiones HR. |
-| Parametrization | `GET /api/v1/parametrization/hr/active` | Consulta versión HR activa. |
-| Parametrization | `GET /api/v1/parametrization/hr/{version_id}/activate` | Activa versión HR. |
-| Parametrization | `DELETE /api/v1/parametrization/hr/{version_id}` | Elimina versión HR. |
+| Parametrization | `PATCH /api/v1/parametrization/hr/{id}/activate` | Activa versión HR. |
+| Parametrization | `DELETE /api/v1/parametrization/hr/{id}` | Elimina versión HR. |
 | Parametrization | `POST /api/v1/parametrization/gn/upload` | Carga archivo GN. |
 | Parametrization | `GET /api/v1/parametrization/gn/versions` | Lista versiones GN. |
-| Parametrization | `GET /api/v1/parametrization/gn/active` | Consulta versión GN activa. |
-| Parametrization | `GET /api/v1/parametrization/gn/{version_id}/activate` | Activa versión GN. |
-| Parametrization | `DELETE /api/v1/parametrization/gn/{version_id}` | Elimina versión GN. |
+| Parametrization | `PATCH /api/v1/parametrization/gn/{id}/activate` | Activa versión GN. |
+| Parametrization | `DELETE /api/v1/parametrization/gn/{id}` | Elimina versión GN. |
 | Parametrization | `POST /api/v1/parametrization/op/upload` | Carga archivo OP. |
 | Parametrization | `GET /api/v1/parametrization/op/versions` | Lista versiones OP. |
-| Parametrization | `GET /api/v1/parametrization/op/active` | Consulta versión OP activa. |
-| Parametrization | `GET /api/v1/parametrization/op/{version_id}/activate` | Activa versión OP. |
-| Parametrization | `DELETE /api/v1/parametrization/op/{version_id}` | Elimina versión OP. |
+| Parametrization | `PATCH /api/v1/parametrization/op/{id}/activate` | Activa versión OP. |
+| Parametrization | `DELETE /api/v1/parametrization/op/{id}` | Elimina versión OP. |
 | Vision Imprimible | `GET /api/v1/simulation/{simulation_id}/results/vision-imprimible` | Contrato imprimible screen-ready. |
 | Vision PYG | `GET /api/v1/simulation/{simulation_id}/results/vision-pyg` | Contrato PYG screen-ready. |
 | Vision Cost To Serve | `GET /api/v1/simulation/{simulation_id}/results/cost-to-serve` | Contrato CTS screen-ready. |
