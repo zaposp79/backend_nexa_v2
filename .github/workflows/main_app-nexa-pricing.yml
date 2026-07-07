@@ -1,188 +1,76 @@
-name: Build and deploy Python app to Azure Web App - app-nexa-pricing
+# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
+# More GitHub Actions for Azure: https://github.com/Azure/actions
+# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-# Despliegue del backend NEXA a Azure App Service (Linux, Python).
-#
-# Autenticación: OIDC / federated credentials (sin secretos de larga vida).
-#   Usa los secrets que Azure generó al conectar el App Service con GitHub
-#   (Deployment Center). NO los renombres: deben coincidir con la federated
-#   credential del App Registration.
-#     AZUREAPPSERVICE_CLIENTID_C08BCAF904024ED2A5825DBDC0095113
-#     AZUREAPPSERVICE_TENANTID_5356F5BC081449ADB00AC4619B5C4B16
-#     AZUREAPPSERVICE_SUBSCRIPTIONID_08734115DBD94233AAC9D6D5E0D270AF
-#
-# Persistencia: Cosmos DB. Se configura vía Application Settings del App Service
-#   (DB_PROVIDER=cosmos, COSMOS_ENDPOINT/KEY/DATABASE/CONTAINER, APP_ENV=production),
-#   NO en este workflow ni en .env. En producción la app exige cosmos y falla al
-#   arrancar si DB_PROVIDER no es cosmos (sin fallback a JSON local).
+name: Build and deploy Python app to Azure Web App - app-nexa-pricing
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
-env:
-  # Nombre del App Service. Override opcional vía repo variable AZURE_WEBAPP_NAME.
-  AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'app-nexa-pricing' }}
-  PYTHON_VERSION: "3.12"
-
-# OIDC requiere id-token:write. contents:read para checkout.
-permissions:
-  id-token: write
-  contents: read
-
-concurrency:
-  group: deploy-prod-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
-  # ---------------------------------------------------------------------------
-  # Gate de calidad (deploy): el código importa 'backend_nexa_v2', por lo que el
-  # checkout vive en un directorio LLAMADO backend_nexa_v2 con su padre en
-  # PYTHONPATH (convención CLAUDE.md: PYTHONPATH=<parent> pytest backend_nexa_v2/tests).
-  #
-  # Gate DELIBERADAMENTE mínimo y sin parametrización: valida el hardening de
-  # config/seguridad de producción (incl. que producción exige DB_PROVIDER=cosmos
-  # y nunca cae al backend JSON local). NO ejecuta parity/baseline porque esos
-  # leen y mutan storage/parametrization en disco — incompatible con la
-  # arquitectura "solo Cosmos". La paridad de fórmulas es gate aparte de PR/local
-  # con storage sembrado (ver CLAUDE.md → "Tests": pytest -m "parity or baseline").
-  # ---------------------------------------------------------------------------
-  build-test:
-    name: Build & test (config & security gate)
+  build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          path: backend_nexa_v2
+    permissions:
+      contents: read #This is required for actions/checkout
 
-      - name: Setup Python ${{ env.PYTHON_VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-          cache-dependency-path: |
-            backend_nexa_v2/requirements.txt
-            backend_nexa_v2/requirements-dev.txt
+          python-version: '3.12'
 
-      - name: Install dependencies
-        working-directory: backend_nexa_v2
-        # requirements-dev.txt hace -r requirements.txt y añade pytest, httpx, etc.
-        # httpx es obligatorio: fastapi.testclient.TestClient (tests/conftest.py) lo
-        # requiere; sin él pytest falla al cargar conftest.
+      # 🛠️ Local Build Section (Optional)
+      # The following section in your workflow is designed to catch build issues early on the client side, before deployment. This can be helpful for debugging and validation. However, if this step significantly increases deployment time and early detection is not critical for your workflow, you may remove this section to streamline the deployment process.
+      - name: Create and Start virtual environment and Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          python -m venv antenv
+          source antenv/bin/activate
+          pip install -r requirements.txt
+                
+      # By default, when you enable GitHub CI/CD integration through the Azure portal, the platform automatically sets the SCM_DO_BUILD_DURING_DEPLOYMENT application setting to true. This triggers the use of Oryx, a build engine that handles application compilation and dependency installation (e.g., pip install) directly on the platform during deployment. Hence, we exclude the antenv virtual environment directory from the deployment artifact to reduce the payload size. 
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: |
+            .
+            !antenv/
 
-      - name: Run config & security gate (no parametrization)
-        # GITHUB_WORKSPACE contiene el dir backend_nexa_v2/; en PYTHONPATH para que
-        # 'import backend_nexa_v2' resuelva. APP_ENV=test no toca Cosmos. Estos tests
-        # NO requieren storage sembrado:
-        #   - test_sec_p0_2_env_consistency: invariantes de config (production⇒cosmos,
-        #     CORS obligatorio, sin fallback a JSON local, no fuga de rutas/keys).
-        #   - test_sec_p0_1_production_hardening: headers, /docs off en producción.
-        #   - test_app_factory: la app construye correctamente.
-        env:
-          APP_ENV: test
-          PYTHONPATH: ${{ github.workspace }}
-        run: |
-          pytest \
-            backend_nexa_v2/tests/api/test_sec_p0_2_env_consistency.py \
-            backend_nexa_v2/tests/api/test_sec_p0_1_production_hardening.py \
-            backend_nexa_v2/tests/api/test_app_factory.py \
-            --tb=short
+      # 🚫 Opting Out of Oryx Build
+      # If you prefer to disable the Oryx build process during deployment, follow these steps:
+      # 1. Remove the SCM_DO_BUILD_DURING_DEPLOYMENT app setting from your Azure App Service Environment variables.
+      # 2. Refer to sample workflows for alternative deployment strategies: https://github.com/Azure/actions-workflow-samples/tree/master/AppService
+      
 
-  # ---------------------------------------------------------------------------
-  # Deploy: empaqueta en layout ANIDADO y publica vía OIDC.
-  #
-  # ¿Por qué anidado? app.py usa imports relativos (from .modules…, from .db…),
-  # que SOLO funcionan si el módulo se importa como `backend_nexa_v2.app`. Eso exige
-  # un directorio backend_nexa_v2/ con su padre en PYTHONPATH. Un deploy plano
-  # despliega pero la app NO arranca (ImportError: attempted relative import).
-  #   deploy_pkg/
-  #     requirements.txt   <- Oryx detecta Python aquí y construye antenv en la raíz
-  #     backend_nexa_v2/      <- paquete importable (app.py, modules/, db/, __init__.py)
-  # run_api.sh fija PYTHONPATH=<raíz> y arranca `python -m backend_nexa_v2.app`.
-  # ---------------------------------------------------------------------------
   deploy:
-    name: Deploy to Azure Web App
-    needs: build-test
     runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write #This is required for requesting the JWT
+      contents: read #This is required for actions/checkout
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Build deployment package (nested layout)
-        run: |
-          mkdir -p deploy_pkg/backend_nexa_v2
-          rsync -a \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='venv' \
-            --exclude='.venv' \
-            --exclude='tests' \
-            --exclude='docs' \
-            --exclude='storage' \
-            --exclude='__pycache__' \
-            --exclude='.pytest_cache' \
-            --exclude='*.pyc' \
-            --exclude='.env' \
-            --exclude='.env.*' \
-            --exclude='deploy_pkg' \
-            ./ deploy_pkg/backend_nexa_v2/
-          # requirements.txt en la raíz del paquete para que Oryx detecte y construya Python.
-          cp requirements.txt deploy_pkg/requirements.txt
-
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_C08BCAF904024ED2A5825DBDC0095113 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_5356F5BC081449ADB00AC4619B5C4B16 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_08734115DBD94233AAC9D6D5E0D270AF }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_A14CF1FA3A9D48AE904FE60EF2165C04 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_0FA7C3E950074591BD038FEFD8F17A95 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_412BB608E0D342FA8EBCEB4FD50D2EE9 }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
+        id: deploy-to-webapp
         with:
-          app-name: ${{ env.AZURE_WEBAPP_NAME }}
-          slot-name: Production
-          package: deploy_pkg
-          # Startup Command fijado desde el workflow (no en el portal) para arranque
-          # reproducible. Ruta RELATIVA al cwd (raíz de la app extraída), compresión-proof.
-          # run_api.sh detecta el venv (antenv/bin en Azure, venv/bin en Linux,
-          # venv/Scripts en Windows), fija PYTHONPATH y arranca `python -m backend_nexa_v2.app`.
-          startup-command: bash backend_nexa_v2/run_api.sh
-
-      - name: Diagnóstico de arranque (no bloqueante)
-        # Deja en el log de Actions si la app arrancó y, si no, por qué. NO falla el
-        # job (exit 0): es informativo. Usa el Azure CLI ya autenticado por el login
-        # OIDC de arriba. Imprime: estado del sitio, hostname real, respuesta de
-        # /health y los logs del contenedor (Oryx + uvicorn + tracebacks de arranque).
-        if: always()
-        run: |
-          set +e
-          APP="${AZURE_WEBAPP_NAME}"
-          RG=$(az webapp list --query "[?name=='${APP}'].resourceGroup | [0]" -o tsv)
-          echo "App: $APP   Resource group: $RG"
-
-          HOST=$(az webapp show -n "$APP" -g "$RG" --query defaultHostName -o tsv)
-          STATE=$(az webapp show -n "$APP" -g "$RG" --query state -o tsv)
-          echo "Estado del App Service: $STATE"
-          echo "Hostname real: $HOST"
-
-          echo "=== Probe https://$HOST/health (espera 30s de cold start) ==="
-          sleep 30
-          curl -sS -m 30 -w "\nHTTP %{http_code}\n" "https://$HOST/health" || true
-
-          echo "=== Logs de arranque del contenedor (Oryx + uvicorn) ==="
-          # Asegura que el logging de contenedor a filesystem esté activo y descarga
-          # el bundle de LogFiles para ver el stdout/stderr del arranque.
-          az webapp log config -n "$APP" -g "$RG" --docker-container-logging filesystem >/dev/null 2>&1
-          az webapp log download -n "$APP" -g "$RG" --log-file /tmp/applogs.zip >/dev/null 2>&1
-          if [ -f /tmp/applogs.zip ]; then
-            mkdir -p /tmp/applogs && unzip -o -q /tmp/applogs.zip -d /tmp/applogs
-            echo "--- últimas 300 líneas de los docker logs ---"
-            find /tmp/applogs -iname '*docker*.log' -exec cat {} + 2>/dev/null | tail -n 300
-          else
-            echo "(no se pudo descargar el bundle de logs; revisa Log stream en el portal)"
-          fi
-          exit 0
+          app-name: 'app-nexa-pricing'
+          slot-name: 'Production'
+          
