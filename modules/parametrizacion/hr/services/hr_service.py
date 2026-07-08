@@ -93,7 +93,7 @@ class HRService:
         logger.info("[PARAMETRIZATION] → Mapping sheets to domain models")
         doc_id = self._repo.new_version_id()
         uploaded_at = self._repo.now_iso()
-        display_version_id = datetime.now(_COLOMBIA_TZ).strftime("%Y-%m-%d %H:%M:%S")
+        display_version_id = datetime.now(_COLOMBIA_TZ).strftime("%Y-%m-%d %H-%M-%S")
 
         master = self._mapper.map(sheets)
         data_dict = self._mapper.to_dict(master)
@@ -116,7 +116,7 @@ class HRService:
             "version_id": display_version_id,
             "type": "parametrization_version",
             "status": "active",
-            "created_at": datetime.now(_COLOMBIA_TZ).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "file_name": filename,
             "sheet_count": len(sheets_found),
             "total_rows": total_rows,

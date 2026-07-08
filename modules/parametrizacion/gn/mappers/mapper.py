@@ -52,6 +52,19 @@ class GNMapper:
         return GNMasterData(version_id=version_id, lv=lv_sheet, sheets=other_sheets)
 
     def to_dict(self, master: GNMasterData) -> dict:
-        import dataclasses
-        return dataclasses.asdict(master)
+        result: dict = {}
+        if master.lv is not None:
+            result[master.lv.key] = {
+                "catalogs": {
+                    col.lower(): items
+                    for col, items in master.lv.catalogs.items()
+                }
+            }
+        for sheet in master.sheets:
+            result[sheet.key] = [
+                {k.lower(): v for k, v in row.items()}
+                for row in sheet.rows
+            ]
+        result["extra_sheets"] = {}
+        return result
 

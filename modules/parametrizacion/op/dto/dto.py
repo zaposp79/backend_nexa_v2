@@ -1,16 +1,24 @@
 """OP Pydantic DTOs."""
 
 from __future__ import annotations
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 
 class OPUploadResponse(BaseModel):
+    id: str
+    domain: str
+    pk: str
     version_id: str
-    filename: str
-    uploaded_at: str
-    sheets_found: List[str]
+    type: str
+    status: str
+    created_at: str
+    file_name: str
+    sheet_count: int
     total_rows: int
+    user_id: Optional[str]
+    sheets_found: List[str]
+    payload: Dict[str, Any]
     warnings: List[str]
 
 

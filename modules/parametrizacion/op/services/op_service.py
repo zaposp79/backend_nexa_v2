@@ -62,21 +62,23 @@ class OPService:
         master = self._mapper.map(version_id, sheets)
         data_dict = self._mapper.to_dict(master)
 
-        colombia_version_id = datetime.now(_COLOMBIA_TZ).strftime("%Y-%m-%d %H:%M:%S")
-        data_dict["version_id"] = colombia_version_id
+        colombia_version_id = datetime.now(_COLOMBIA_TZ).strftime("%Y-%m-%d %H-%M-%S")
 
         total_rows = sum(len(r) for r in sheets.values())
         uploaded_at = self._repo.now_iso()
+        created_at_utc = datetime.now(timezone.utc).isoformat()
+        sheets_found = list(sheets.keys())
+        sheet_count = len(sheets)
 
         summary = VersionSummary(
             version_id=version_id,
             filename=filename,
             uploaded_at=uploaded_at,
             is_active=False,
-            sheet_count=len(sheets),
+            sheet_count=sheet_count,
             total_rows=total_rows,
             display_version_id=colombia_version_id,
-            sheets_found=list(sheets.keys()),
+            sheets_found=sheets_found,
         )
 
         # 8. Persist only after full validation
@@ -85,21 +87,31 @@ class OPService:
             "version_id": colombia_version_id,
             "type": "parametrization_version",
             "status": "active",
-            "created_at": datetime.now(_COLOMBIA_TZ).isoformat(),
+            "created_at": created_at_utc,
             "file_name": filename,
-            "sheet_count": len(sheets),
+            "sheet_count": sheet_count,
             "total_rows": total_rows,
             "user_id": user_id,
-            "sheets_found": list(sheets.keys()),
+            "sheets_found": sheets_found,
         }
         self._repo.save_version(summary, data_dict, metadata)
 
+        full_payload = {**data_dict, "status": "active", "domain": "op"}
+
         return OPUploadResponse(
+            id=version_id,
+            domain="op",
+            pk="op",
             version_id=colombia_version_id,
-            filename=filename,
-            uploaded_at=uploaded_at,
-            sheets_found=list(sheets.keys()),
+            type="parametrization_version",
+            status="active",
+            created_at=created_at_utc,
+            file_name=filename,
+            sheet_count=sheet_count,
             total_rows=total_rows,
+            user_id=user_id if user_id != "anonymous" else None,
+            sheets_found=sheets_found,
+            payload=full_payload,
             warnings=validation.warnings,
         )
 
@@ -143,26 +155,27 @@ class OPService:
             return []
         previews = []
         data = active["data"]
+        _skip = {"extra_sheets", "status", "domain"}
 
-        for sheet in data.get("sheets", []):
-            if "catalogs" in sheet:
-                catalogs = sheet.get("catalogs", {})
+        for key, value in data.items():
+            if key in _skip:
+                continue
+            if isinstance(value, dict) and "catalogs" in value:
+                catalogs = value["catalogs"]
                 previews.append(OPSheetPreview(
-                    name=sheet["name"],
+                    name=key,
                     row_count=sum(len(v) for v in catalogs.values()),
                     columns=list(catalogs.keys()),
                     sample_rows=[],
                 ))
-                continue
-
-            rows = sheet.get("rows", [])
-            columns = list(rows[0].keys()) if rows else []
-            previews.append(OPSheetPreview(
-                name=sheet["name"],
-                row_count=len(rows),
-                columns=columns,
-                sample_rows=rows[:3],
-            ))
+            elif isinstance(value, list):
+                columns = list(value[0].keys()) if value else []
+                previews.append(OPSheetPreview(
+                    name=key,
+                    row_count=len(value),
+                    columns=columns,
+                    sample_rows=value[:3],
+                ))
         return previews
 
     def get_sheet_rows(self, sheet_key: str) -> Any:
@@ -170,14 +183,12 @@ class OPService:
         if active is None:
             return []
         data = active["data"]
-
-        for sheet in data.get("sheets", []):
-            if sheet.get("key") != sheet_key:
-                continue
-            if "catalogs" in sheet:
-                return sheet.get("catalogs", {})
-            return sheet.get("rows", [])
-        return []
+        value = data.get(sheet_key)
+        if value is None:
+            return []
+        if isinstance(value, dict) and "catalogs" in value:
+            return value["catalogs"]
+        return value
 
     def activate(self, version_id: str) -> OPVersionSummary:
         s = self._repo.activate_version(version_id)

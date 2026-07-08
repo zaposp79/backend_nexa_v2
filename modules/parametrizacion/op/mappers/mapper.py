@@ -76,10 +76,20 @@ class OPMapper:
         return OPMasterData(version_id=version_id, sheets=all_sheets)
 
     def to_dict(self, master: OPMasterData) -> dict:
-        import dataclasses
-        
-        result = {"version_id": master.version_id, "sheets": []}
+        result: dict = {}
         for sheet in master.sheets:
-            result["sheets"].append(dataclasses.asdict(sheet))
+            if isinstance(sheet, OPCatalogSheet):
+                result[sheet.key] = {
+                    "catalogs": {
+                        col.lower(): items
+                        for col, items in sheet.catalogs.items()
+                    }
+                }
+            else:
+                result[sheet.key] = [
+                    {k.lower(): v for k, v in row.items()}
+                    for row in sheet.rows
+                ]
+        result["extra_sheets"] = {}
         return result
 
