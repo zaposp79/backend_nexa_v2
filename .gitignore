@@ -100,3 +100,7 @@ _tmp_baseline/
 # Claude Code worktrees
 .claude/
 excel/
+CLAUDE.md
+
+# Documentacion
+docs/

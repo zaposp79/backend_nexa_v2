@@ -104,6 +104,11 @@ class GNService:
         )
 
     def list_versions(self) -> List[GNVersionSummary]:
+        summaries = sorted(
+            self._repo.list_versions(),
+            key=lambda s: s.uploaded_at or "",
+            reverse=True,
+        )
         return [
             GNVersionSummary(
                 id=s.version_id,
@@ -115,7 +120,7 @@ class GNService:
                 total_rows=s.total_rows,
                 sheets_found=s.sheets_found,
             )
-            for s in self._repo.list_versions()
+            for s in summaries
         ]
 
     def get_active(self) -> Optional[Dict[str, Any]]:

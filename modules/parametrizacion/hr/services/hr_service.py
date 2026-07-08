@@ -192,7 +192,11 @@ class HRService:
         }
 
     def list_versions(self):
-        summaries = self._repo.list_versions()
+        summaries = sorted(
+            self._repo.list_versions(),
+            key=lambda s: s.uploaded_at or "",
+            reverse=True,
+        )
         return [
             HRVersionSummary(
                 id=s.version_id,
