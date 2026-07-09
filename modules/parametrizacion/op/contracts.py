@@ -103,8 +103,11 @@ OP_HARD_SOFT = SheetContract(
 OP_DISPOSITIVO_REQUERIDO = SheetContract(
     excel_name="OP-DispositivoRequerido",
     required=False,
-    sheet_type=SheetType.CATALOG_BY_COLUMN,
-    columns=[ColumnContract("DispositivoRequerido", _CAT)],
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("DispositivoRequerido", _S),
+        ColumnContract("PrecioMensual",        _MON),
+    ],
     allow_trailing_unnamed=False,
 )
 
