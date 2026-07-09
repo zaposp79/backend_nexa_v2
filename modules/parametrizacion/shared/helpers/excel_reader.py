@@ -266,7 +266,9 @@ def _read_xls_sheets(
                 continue
 
             row_dict: dict = {}
-            for header, value in zip(headers_norm, row):
+            for i, (header, value) in enumerate(zip(headers_norm, row)):
+                if raw_stripped[i] is None:
+                    continue
                 if isinstance(value, str) and len(value) > MAX_EXCEL_CELL_LENGTH:
                     raise UploadError(
                         f"La hoja '{sheet_name}' contiene una celda que supera "
@@ -420,7 +422,9 @@ def read_excel_sheets(
                     continue
 
                 row_dict: dict = {}
-                for header, value in zip(headers_norm, row):
+                for i, (header, value) in enumerate(zip(headers_norm, row)):
+                    if raw_stripped[i] is None:
+                        continue
                     # Limit: cell length
                     if isinstance(value, str) and len(value) > MAX_EXCEL_CELL_LENGTH:
                         raise UploadError(

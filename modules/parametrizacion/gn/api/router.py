@@ -134,7 +134,11 @@ def activate_gn(
             status_code=422,
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(code="VALIDATION_ERROR", message=str(e.message)),
+                error=ErrorDetail(
+                    code="VALIDATION_ERROR",
+                    message=str(e.message),
+                    details=e.errors if e.errors else None,
+                ),
             ).model_dump(),
         )
     except NotFoundError as e:

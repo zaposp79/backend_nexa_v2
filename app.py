@@ -248,7 +248,11 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             status_code=422,
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(code="VALIDATION_ERROR", message=str(exc)),
+                error=ErrorDetail(
+                    code="VALIDATION_ERROR",
+                    message=str(exc),
+                    details=exc.errors if exc.errors else None,
+                ),
             ).model_dump(),
         )
 
