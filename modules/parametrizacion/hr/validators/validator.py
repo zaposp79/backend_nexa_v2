@@ -31,6 +31,8 @@ REQUIRED_SHEETS = [
     "HR-Campana",
     "HR-CostoFijo",
     "HR-Med-Seg",
+    "HR-Ratios-HITL",
+    "HR-Hora-GTR",
 ]
 
 OPTIONAL_SHEETS = [
@@ -54,6 +56,8 @@ _NUMERIC_FIELDS: Dict[str, List[str]] = {
     "HR-AutRot": ["mes", "valor"],
     "HR-CostoFijo": ["valor"],
     "HR-Med-Seg": ["valor"],
+    "HR-Ratios-HITL": ["ratio"],
+    "HR-Hora-GTR": ["hora"],
 }
 
 

@@ -10,11 +10,13 @@ from nexa_engine.modules.parametrizacion.hr.models.models import (
     ComplejidadConfig,
     CostoFijoConfig,
     HRMasterData,
+    HoraGTRConfig,
     MedSegConfig,
     NivelesLV,
     NominaConfig,
     PrestacionesConfig,
     RatiosConfig,
+    RatiosHITLConfig,
     RentabilidadConfig,
     RecargosConfig,
     SalarioBasico,
@@ -66,6 +68,7 @@ class HRMapper:
             "HR-LV", "HR-SalarioBasico", "HR-Nomina", "HR-Recargos",
             "HR-SegSocial", "HR-Prestaciones", "HR-Ratios", "HR-Rentabilidad",
             "HR-Campana", "HR-CostoFijo", "HR-Med-Seg", "HR-Complejidad",
+            "HR-Ratios-HITL", "HR-Hora-GTR",
             # Legacy separate sheets — columns now live in HR-LV; kept here to
             # prevent them from appearing in extra_sheets if present in old files.
             "HR-EquipoHITL", "HR-EquipoSoporteMantenimiento",
@@ -96,6 +99,8 @@ class HRMapper:
             costo_fijo=self._map_costo_fijo(sheets.get("HR-CostoFijo", [])),
             med_seg=self._map_med_seg(sheets.get("HR-Med-Seg", [])),
             complejidad=self._map_complejidad(sheets.get("HR-Complejidad", [])),
+            ratios_hitl=self._map_ratios_hitl(sheets.get("HR-Ratios-HITL", [])),
+            hora_gtr=self._map_hora_gtr(sheets.get("HR-Hora-GTR", [])),
             extra_sheets=extra_sheets,
         )
 
@@ -251,6 +256,30 @@ class HRMapper:
                 except (ValueError, TypeError):
                     valor = 0.0
             result.append(MedSegConfig(ciudad=ciudad, centrocosto=centrocosto, valor=valor))
+        return result
+
+    def _map_ratios_hitl(self, rows: List[dict]) -> List[RatiosHITLConfig]:
+        result = []
+        for row in rows:
+            cargo = _str(row.get("cargo"))
+            if not cargo:
+                continue
+            result.append(RatiosHITLConfig(
+                cargo=cargo,
+                ratio=_float(row.get("ratio")),
+            ))
+        return result
+
+    def _map_hora_gtr(self, rows: List[dict]) -> List[HoraGTRConfig]:
+        result = []
+        for row in rows:
+            cargo = _str(row.get("cargo"))
+            if not cargo:
+                continue
+            result.append(HoraGTRConfig(
+                cargo=cargo,
+                hora=_float(row.get("hora")),
+            ))
         return result
 
     def to_dict(self, master: HRMasterData) -> dict:

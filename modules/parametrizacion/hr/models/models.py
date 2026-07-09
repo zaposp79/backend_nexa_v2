@@ -107,6 +107,20 @@ class ComplejidadConfig:
 
 
 @dataclass
+class RatiosHITLConfig:
+    """Row from HR-Ratios-HITL sheet."""
+    cargo: str
+    ratio: float
+
+
+@dataclass
+class HoraGTRConfig:
+    """Row from HR-Hora-GTR sheet."""
+    cargo: str
+    hora: float
+
+
+@dataclass
 class HRMasterData:
     """Full HR master data for one uploaded version."""
     lv: NivelesLV = field(default_factory=NivelesLV)
@@ -121,4 +135,6 @@ class HRMasterData:
     campana: List[CampanaConfig] = field(default_factory=list)
     costo_fijo: List[CostoFijoConfig] = field(default_factory=list)
     med_seg: List[MedSegConfig] = field(default_factory=list)
+    ratios_hitl: List[RatiosHITLConfig] = field(default_factory=list)
+    hora_gtr: List[HoraGTRConfig] = field(default_factory=list)
     extra_sheets: Dict[str, List[Dict[str, Any]]] = field(default_factory=dict)

@@ -3,10 +3,11 @@
 Based on production file: HR_productiva_2026-05-11-09-52-29.xlsx
 
 Sheet inventory:
-  Required (12): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
+  Required (14): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
                  HR-SegSocial, HR-Prestaciones, HR-Ratios,
                  HR-Complejidad, HR-Rentabilidad, HR-Campana,
-                 HR-CostoFijo, HR-Med-Seg
+                 HR-CostoFijo, HR-Med-Seg,
+                 HR-Ratios-HITL, HR-Hora-GTR
   Optional (3):  HR-AutRot, HR-EquipoHITL, HR-EquipoSoporteMantenimiento
 
 Column-type decisions
@@ -215,6 +216,28 @@ HR_MED_SEG = SheetContract(
     allow_trailing_unnamed=False,
 )
 
+HR_RATIOS_HITL = SheetContract(
+    excel_name="HR-Ratios-HITL",
+    required=True,
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("Cargo", _S),
+        ColumnContract("Ratio", _NUM),
+    ],
+    allow_trailing_unnamed=False,
+)
+
+HR_HORA_GTR = SheetContract(
+    excel_name="HR-Hora-GTR",
+    required=True,
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("Cargo", _S),
+        ColumnContract("Hora",  _NUM),
+    ],
+    allow_trailing_unnamed=False,
+)
+
 HR_EQUIPO_HITL = SheetContract(
     excel_name="HR-EquipoHITL",
     required=False,
@@ -254,5 +277,7 @@ HR_CONTRACT = ModuleContract(
         HR_MED_SEG,
         HR_EQUIPO_HITL,
         HR_EQUIPO_SOPORTE,
+        HR_RATIOS_HITL,
+        HR_HORA_GTR,
     ],
 )

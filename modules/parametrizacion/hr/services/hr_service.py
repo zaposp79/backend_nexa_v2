@@ -189,6 +189,8 @@ class HRService:
             "campana": data_dict.get("campana", []),
             "costo_fijo": data_dict.get("costo_fijo", []),
             "med_seg": data_dict.get("med_seg", []),
+            "ratios_hitl": data_dict.get("ratios_hitl", []),
+            "hora_gtr": data_dict.get("hora_gtr", []),
         }
 
     def list_versions(self):
