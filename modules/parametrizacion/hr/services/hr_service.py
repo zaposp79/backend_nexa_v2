@@ -17,7 +17,6 @@ from nexa_engine.modules.parametrizacion.hr.repositories.hr_repository import HR
 from nexa_engine.modules.parametrizacion.hr.validators.validator import (
     HRValidator,
     REQUIRED_SHEETS,
-    OPTIONAL_SHEETS,
 )
 from nexa_engine.modules.parametrizacion.shared.helpers.excel_preflight import check_excel_safety
 from nexa_engine.modules.parametrizacion.shared.helpers.excel_reader import read_excel_sheets
