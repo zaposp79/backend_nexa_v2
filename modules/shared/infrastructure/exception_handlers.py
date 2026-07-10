@@ -14,6 +14,7 @@ from nexa_engine.modules.shared.exceptions import (
     ValidationError as DomainValidationError,
 )
 from ...shared.responses import ApiResponse, ErrorDetail
+from ...shared.error_catalog import make_detail as _make_detail
 from .request_utils import CORRELATION_ID_HEADER, _safe_headers, _safe_path
 
 logger = logging.getLogger("nexa")
@@ -44,7 +45,7 @@ async def handle_upload_error(request: Request, exc: UploadError) -> JSONRespons
         status_code=status,
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(code=exc.code, message=exc.message),
+            error=_make_detail(getattr(exc, "sim_code", "SIM-00700"), message=exc.message),
         ).model_dump(),
     )
 
@@ -60,7 +61,7 @@ async def handle_not_found(request: Request, exc: NotFoundError) -> JSONResponse
         status_code=404,
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(code="NOT_FOUND", message=str(exc)),
+            error=_make_detail(getattr(exc, "sim_code", "SIM-00600"), message=str(exc)),
         ).model_dump(),
     )
 
@@ -79,11 +80,7 @@ async def handle_domain_validation_error(
         status_code=422,
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(
-                code="VALIDATION_ERROR",
-                message=exc.message,
-                details=exc.errors if exc.errors else None,
-            ),
+            error=_make_detail(getattr(exc, "sim_code", "SIM-00506"), message=exc.message, details=exc.errors if exc.errors else None),
         ).model_dump(),
     )
 
@@ -102,10 +99,7 @@ async def handle_storage_error(request: Request, exc: StorageError) -> JSONRespo
         headers={CORRELATION_ID_HEADER: correlation_id},
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(
-                code="STORAGE_ERROR",
-                message="Error de almacenamiento interno. Intenta de nuevo.",
-            ),
+            error=_make_detail("SIM-00900", message="Error de almacenamiento interno. Intenta de nuevo."),
             meta={"correlation_id": correlation_id},
         ).model_dump(),
     )
@@ -123,7 +117,7 @@ async def handle_domain_error(request: Request, exc: DomainError) -> JSONRespons
         status_code=400,
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(code="DOMAIN_ERROR", message=str(exc)),
+            error=_make_detail(getattr(exc, "sim_code", "SIM-00700"), message=str(exc)),
         ).model_dump(),
     )
 
@@ -142,10 +136,7 @@ async def handle_global_exception(request: Request, exc: Exception) -> JSONRespo
         headers={CORRELATION_ID_HEADER: correlation_id},
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(
-                code="INTERNAL_SERVER_ERROR",
-                message="Error inesperado en el servidor.",
-            ),
+            error=_make_detail("SIM-00900"),
             meta={"correlation_id": correlation_id},
         ).model_dump(),
     )

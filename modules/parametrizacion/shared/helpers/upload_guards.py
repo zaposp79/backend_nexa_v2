@@ -23,6 +23,7 @@ def check_filename_prefix(filename: str, expected_prefix: str) -> None:
             f"El nombre del archivo debe comenzar con '{expected_prefix.upper()}' "
             f"(recibido: '{filename}').",
             code="INVALID_FILENAME_PREFIX",
+            sim_code="SIM-00202",
         )
 
 
@@ -35,6 +36,7 @@ def check_file_extension(filename: str) -> None:
             f"Extensión de archivo no permitida ('{ext}'). "
             f"Solo se aceptan: {allowed}.",
             code="INVALID_FILE_EXTENSION",
+            sim_code="SIM-00201",
         )
 
 
@@ -45,6 +47,7 @@ def check_file_size(file_bytes: bytes) -> None:
             f"El archivo supera el tamaño máximo permitido de "
             f"{MAX_EXCEL_UPLOAD_BYTES // (1024 * 1024)} MB.",
             code="EXCEL_LIMIT_EXCEEDED",
+            sim_code="SIM-00200",
         )
 
 

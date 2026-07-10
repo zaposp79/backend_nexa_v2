@@ -94,15 +94,40 @@ _PE_SCAN_SKIP_EXTS = frozenset([
 _REQUIRED_ENTRIES = frozenset(["[Content_Types].xml", "_rels/.rels", "xl/workbook.xml"])
 
 # ---------------------------------------------------------------------------
-# Forbidden ZIP entry patterns (XLSX)
+# Forbidden ZIP entry patterns (XLSX) — (pattern, user-facing message)
 # ---------------------------------------------------------------------------
-_FORBIDDEN_ENTRY_PATTERNS: List[re.Pattern] = [
-    re.compile(r"xl/vbaProject\.bin", re.IGNORECASE),
-    re.compile(r"xl/macros/", re.IGNORECASE),
-    re.compile(r"xl/externalLinks/", re.IGNORECASE),
-    re.compile(r"xl/connections\.xml", re.IGNORECASE),
-    re.compile(r"xl/queries/", re.IGNORECASE),
-    re.compile(r"xl/activeX/", re.IGNORECASE),
+# Note: xl/externalLinks/ is NOT blocked here. Ghost/stale external-link
+# entries left by Excel after breaking links are harmless because:
+#   - _check_rel_files catches any real external URL (http, file, smb, UNC) in
+#     the .rels files inside xl/externalLinks/_rels/.
+#   - _check_xxe catches XXE injections in the .xml files.
+#   - openpyxl/xlrd never follows external-link references.
+_FORBIDDEN_ENTRIES: List[tuple] = [
+    (
+        re.compile(r"xl/vbaProject\.bin", re.IGNORECASE),
+        "El archivo contiene macros VBA. Guárdelo como .xlsx sin macros (.xlsm → Guardar como → .xlsx).",
+        "SIM-00300",
+    ),
+    (
+        re.compile(r"xl/macros/", re.IGNORECASE),
+        "El archivo contiene macros. Guárdelo como .xlsx sin macros.",
+        "SIM-00301",
+    ),
+    (
+        re.compile(r"xl/connections\.xml", re.IGNORECASE),
+        "El archivo contiene conexiones de datos externas. Elimínelas antes de subir.",
+        "SIM-00302",
+    ),
+    (
+        re.compile(r"xl/queries/", re.IGNORECASE),
+        "El archivo contiene consultas de Power Query. Elimínelas antes de subir.",
+        "SIM-00303",
+    ),
+    (
+        re.compile(r"xl/activeX/", re.IGNORECASE),
+        "El archivo contiene controles ActiveX. Elimínelos antes de subir.",
+        "SIM-00304",
+    ),
 ]
 
 # External URL target in relationship files
@@ -176,6 +201,7 @@ def _scan_with_clamav(file_bytes: bytes) -> None:
             raise UploadError(
                 f"El archivo contiene malware detectado por el antivirus: {virus_name}.",
                 code="VIRUS_DETECTED",
+                sim_code="SIM-00314",
             )
     except UploadError:
         raise
@@ -189,6 +215,7 @@ def _check_embedded_executables(file_bytes: bytes) -> None:
         raise UploadError(
             "El archivo contiene una firma de malware conocida (EICAR).",
             code="VIRUS_DETECTED",
+            sim_code="SIM-00313",
         )
 
     if file_bytes[:4] == _XLSX_ZIP_MAGIC:
@@ -205,6 +232,7 @@ def _check_embedded_executables(file_bytes: bytes) -> None:
             raise UploadError(
                 "El archivo contiene un ejecutable embebido (cabecera PE/MZ detectada).",
                 code="UNSAFE_EXCEL_CONTENT",
+                sim_code="SIM-00312",
             )
 
 
@@ -225,6 +253,7 @@ def _check_pe_in_zip_entries(file_bytes: bytes) -> None:
                         raise UploadError(
                             "El archivo contiene un ejecutable embebido (cabecera PE/MZ detectada).",
                             code="UNSAFE_EXCEL_CONTENT",
+                            sim_code="SIM-00312",
                         )
                 except UploadError:
                     raise
@@ -238,18 +267,20 @@ def _check_pe_in_zip_entries(file_bytes: bytes) -> None:
 
 def _check_magic_bytes_xlsx(file_bytes: bytes) -> None:
     if len(file_bytes) < 4:
-        raise UploadError("El archivo es demasiado pequeño para ser un Excel válido.", code="INVALID_EXCEL_FILE")
+        raise UploadError("El archivo es demasiado pequeño para ser un Excel válido.", code="INVALID_EXCEL_FILE", sim_code="SIM-00203")
     if file_bytes[:4] == _CFBF_MAGIC:
         raise UploadError(
             "El archivo está cifrado o es formato legado (.xls). Use .xlsx sin contraseña.",
             code="ENCRYPTED_EXCEL_FILE",
+            sim_code="SIM-00204",
         )
     if file_bytes[:4] == b"%PDF":
-        raise UploadError("El archivo es un PDF con extensión .xlsx.", code="INVALID_EXCEL_FILE")
+        raise UploadError("El archivo es un PDF con extensión .xlsx.", code="INVALID_EXCEL_FILE", sim_code="SIM-00205")
     if file_bytes[:4] != _XLSX_ZIP_MAGIC:
         raise UploadError(
             "El archivo no es un Excel OOXML válido (firma de archivo incorrecta).",
             code="INVALID_EXCEL_FILE",
+            sim_code="SIM-00206",
         )
 
 
@@ -260,6 +291,7 @@ def _check_zip_path_traversal(names_original: list) -> None:
             raise UploadError(
                 "El archivo contiene rutas no permitidas (path traversal).",
                 code="INVALID_EXCEL_FILE",
+                sim_code="SIM-00207",
             )
 
 
@@ -269,22 +301,25 @@ def _check_required_entries(names_lower: set) -> None:
             raise UploadError(
                 f"El archivo no tiene la estructura OOXML requerida (falta '{required}').",
                 code="INVALID_EXCEL_FILE",
+                sim_code="SIM-00208",
             )
 
 
 def _check_forbidden_entries(names_original: list) -> None:
     for name in names_original:
-        for pattern in _FORBIDDEN_ENTRY_PATTERNS:
+        for pattern, message, sim_code in _FORBIDDEN_ENTRIES:
             if pattern.search(name):
-                raise UploadError(
-                    f"El archivo contiene contenido no permitido: '{name}'.",
-                    code="UNSAFE_EXCEL_CONTENT",
-                )
+                raise UploadError(message, code="UNSAFE_EXCEL_CONTENT", sim_code=sim_code)
 
 
 def _check_rel_files(zf: zipfile.ZipFile, names_original: list) -> None:
     for name in names_original:
         if not name.lower().endswith(".rels"):
+            continue
+        # xl/externalLinks/_rels/ naturally contains file:// or local paths pointing
+        # to the linked workbook — those references are never followed by the parser.
+        # Skip URL check for this subfolder; XXE is still caught by _check_xxe.
+        if name.lower().startswith("xl/externallinks/"):
             continue
         try:
             data = zf.read(name).decode("utf-8", errors="replace")
@@ -294,11 +329,13 @@ def _check_rel_files(zf: zipfile.ZipFile, names_original: list) -> None:
             raise UploadError(
                 "El archivo contiene referencias URL externas en sus relaciones.",
                 code="UNSAFE_EXCEL_CONTENT",
+                sim_code="SIM-00305",
             )
         if _OLE_RE.search(data):
             raise UploadError(
                 "El archivo contiene objetos OLE o contenido ActiveX.",
                 code="UNSAFE_EXCEL_CONTENT",
+                sim_code="SIM-00306",
             )
 
 
@@ -313,11 +350,13 @@ def _check_content_types(zf: zipfile.ZipFile, names_lower: set) -> None:
         raise UploadError(
             "El archivo declara un tipo de contenido con macros habilitadas.",
             code="UNSAFE_EXCEL_CONTENT",
+            sim_code="SIM-00307",
         )
     if _OLE_RE.search(ct):
         raise UploadError(
             "El archivo contiene objetos OLE o contenido ActiveX.",
             code="UNSAFE_EXCEL_CONTENT",
+            sim_code="SIM-00306",
         )
 
 
@@ -334,6 +373,7 @@ def _check_xxe(zf: zipfile.ZipFile, names_original: list) -> None:
             raise UploadError(
                 f"El archivo contiene declaraciones XML externas peligrosas ({name}).",
                 code="UNSAFE_EXCEL_CONTENT",
+                sim_code="SIM-00308",
             )
 
 
@@ -349,6 +389,7 @@ def _check_dde_in_shared_strings(zf: zipfile.ZipFile, names_lower: set) -> None:
         raise UploadError(
             "El archivo contiene patrones de inyección DDE en las cadenas compartidas.",
             code="UNSAFE_EXCEL_CONTENT",
+            sim_code="SIM-00309",
         )
 
 
@@ -364,11 +405,13 @@ def _check_sheet_xmls(zf: zipfile.ZipFile, names_original: list) -> None:
             raise UploadError(
                 "El archivo contiene fórmulas. Solo se permiten valores de datos.",
                 code="UNSAFE_EXCEL_CONTENT",
+                sim_code="SIM-00310",
             )
         if _SUSPICIOUS_SHEET_RE.search(data):
             raise UploadError(
                 "El archivo contiene patrones sospechosos en las hojas (DDEAUTO, shell).",
                 code="UNSAFE_EXCEL_CONTENT",
+                sim_code="SIM-00311",
             )
 
 
@@ -379,6 +422,7 @@ def _check_zip_bomb(zf: zipfile.ZipFile) -> None:
             raise UploadError(
                 "El archivo supera el tamaño descomprimido máximo permitido.",
                 code="EXCEL_LIMIT_EXCEEDED",
+                sim_code="SIM-00400",
             )
         if info.compress_size > 0:
             ratio = info.file_size / info.compress_size
@@ -386,12 +430,14 @@ def _check_zip_bomb(zf: zipfile.ZipFile) -> None:
                 raise UploadError(
                     "El archivo tiene una ratio de compresión excesiva (posible ZIP bomb).",
                     code="EXCEL_LIMIT_EXCEEDED",
+                    sim_code="SIM-00401",
                 )
         total += info.file_size
         if total > MAX_EXCEL_UNCOMPRESSED_BYTES:
             raise UploadError(
                 "El tamaño total descomprimido supera el límite permitido.",
                 code="EXCEL_LIMIT_EXCEEDED",
+                sim_code="SIM-00402",
             )
 
 
@@ -417,7 +463,7 @@ def _check_xlsx_safety(file_bytes: bytes) -> None:
     try:
         zf = zipfile.ZipFile(BytesIO(file_bytes))
     except zipfile.BadZipFile:
-        raise UploadError("El archivo ZIP está corrupto o no es un Excel válido.", code="INVALID_EXCEL_FILE")
+        raise UploadError("El archivo ZIP está corrupto o no es un Excel válido.", code="INVALID_EXCEL_FILE", sim_code="SIM-00210")
 
     with zf:
         names_original = zf.namelist()
@@ -427,7 +473,7 @@ def _check_xlsx_safety(file_bytes: bytes) -> None:
         _check_required_entries(names_lower)
 
         if _ENCRYPTION_ENTRY.lower() in names_lower:
-            raise UploadError("El archivo está protegido con contraseña.", code="ENCRYPTED_EXCEL_FILE")
+            raise UploadError("El archivo está protegido con contraseña.", code="ENCRYPTED_EXCEL_FILE", sim_code="SIM-00209")
 
         _check_content_types(zf, names_lower)
         _check_forbidden_entries(names_original)
@@ -447,26 +493,29 @@ def _check_xls_safety(file_bytes: bytes) -> None:
         raise UploadError(
             "El archivo .xls es demasiado pequeño para ser un Excel válido.",
             code="INVALID_EXCEL_FILE",
+            sim_code="SIM-00203",
         )
     if file_bytes[:4] == _XLSX_ZIP_MAGIC:
         raise UploadError(
             "El archivo tiene extensión .xls pero es realmente un ZIP/XLSX.",
             code="INVALID_EXCEL_FILE",
+            sim_code="SIM-00210",
         )
     if file_bytes[:4] != _CFBF_MAGIC:
         raise UploadError(
             "El archivo no es un Excel .xls válido (firma OLE incorrecta).",
             code="INVALID_EXCEL_FILE",
+            sim_code="SIM-00206",
         )
 
     _check_embedded_executables(file_bytes)
     _scan_with_clamav(file_bytes)
 
     if _XLS_VBA_MARKER in file_bytes:
-        raise UploadError("El archivo .xls contiene macros VBA.", code="UNSAFE_EXCEL_CONTENT")
+        raise UploadError("El archivo .xls contiene macros VBA.", code="UNSAFE_EXCEL_CONTENT", sim_code="SIM-00300")
 
     if _XLS_DDE_RE.search(file_bytes):
-        raise UploadError("El archivo .xls contiene patrones DDE peligrosos.", code="UNSAFE_EXCEL_CONTENT")
+        raise UploadError("El archivo .xls contiene patrones DDE peligrosos.", code="UNSAFE_EXCEL_CONTENT", sim_code="SIM-00309")
 
     # BIFF8 BOUNDSHEET record layout (from record start):
     #   pos+0..1  record type (0x85 0x00)
@@ -491,6 +540,7 @@ def _check_xls_safety(file_bytes: bytes) -> None:
                 raise UploadError(
                     "El archivo .xls contiene hojas de macro (XLM).",
                     code="UNSAFE_EXCEL_CONTENT",
+                    sim_code="SIM-00301",
                 )
         start = idx + 2  # skip past the 2-byte marker
 

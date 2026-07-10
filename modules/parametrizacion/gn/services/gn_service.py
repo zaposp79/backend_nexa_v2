@@ -55,7 +55,7 @@ class GNService:
         # 6. Business value validation
         validation = self._validator.validate(sheets)
         if not validation.is_valid:
-            raise ValidationError("GN Excel validation failed", errors=validation.errors)
+            raise ValidationError("GN Excel validation failed", errors=validation.errors, sim_code="SIM-00504")
 
         # 7. Map to domain model
         version_id = self._repo.new_version_id()

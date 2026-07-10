@@ -55,7 +55,7 @@ class OPService:
         # 6. Business validation
         validation = self._validator.validate(sheets)
         if not validation.is_valid:
-            raise ValidationError("OP Excel validation failed", errors=validation.errors)
+            raise ValidationError("OP Excel validation failed", errors=validation.errors, sim_code="SIM-00505")
 
         # 7. Map to domain model
         version_id = self._repo.new_version_id()

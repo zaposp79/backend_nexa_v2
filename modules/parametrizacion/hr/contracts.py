@@ -3,12 +3,12 @@
 Based on production file: HR_productiva_2026-05-11-09-52-29.xlsx
 
 Sheet inventory:
-  Required (14): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
-                 HR-SegSocial, HR-Prestaciones, HR-Ratios,
-                 HR-Complejidad, HR-Rentabilidad, HR-Campana,
-                 HR-CostoFijo, HR-Med-Seg,
-                 HR-Ratios-HITL, HR-Hora-GTR
-  Optional (3):  HR-AutRot, HR-EquipoHITL, HR-EquipoSoporteMantenimiento
+  Required (17, all): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
+                      HR-SegSocial, HR-Prestaciones, HR-Ratios,
+                      HR-Complejidad, HR-Rentabilidad, HR-Campana,
+                      HR-AutRot, HR-CostoFijo, HR-Med-Seg,
+                      HR-Ratios-HITL, HR-Hora-GTR,
+                      HR-EquipoHITL, HR-EquipoSoporteMantenimiento
 
 Column-type decisions
 ---------------------
@@ -180,7 +180,7 @@ HR_CAMPANA = SheetContract(
 
 HR_AUT_ROT = SheetContract(
     excel_name="HR-AutRot",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Tipo",    _S),
@@ -240,7 +240,7 @@ HR_HORA_GTR = SheetContract(
 
 HR_EQUIPO_HITL = SheetContract(
     excel_name="HR-EquipoHITL",
-    required=False,
+    required=True,
     sheet_type=SheetType.CATALOG_BY_COLUMN,
     columns=[
         ColumnContract("EquipoHITL", _CAT),
@@ -250,7 +250,7 @@ HR_EQUIPO_HITL = SheetContract(
 
 HR_EQUIPO_SOPORTE = SheetContract(
     excel_name="HR-EquipoSoporteMantenimiento",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("EquipoSoporteMantenimiento", _S),

@@ -80,12 +80,17 @@ class CadenaAParametersQueryService:
             for r in _get_sheet_rows(op, "hardsoft")
         ]
 
+        # canal was split into canalinbound + canaloutbound; merge and deduplicate
+        canales = list(dict.fromkeys(
+            _gn_catalog(gn, "canalinbound") + _gn_catalog(gn, "canaloutbound")
+        ))
+
         return ParametrosCadenaA(
             ratios=ratios,
             opex_fijo=opex_fijo,
             hardware_software=hardware_software,
             modalidades=_gn_catalog(gn, "modalidad"),
-            canales=_gn_catalog(gn, "canal"),
+            canales=canales,
         )
 
 

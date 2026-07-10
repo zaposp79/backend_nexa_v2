@@ -11,11 +11,40 @@ from nexa_engine.modules.parametrizacion.gn.api.router import router as gn_route
 from nexa_engine.modules.parametrizacion.hr.api.router import router as hr_router
 from nexa_engine.modules.parametrizacion.op.api.router import router as op_router
 from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
+from nexa_engine.modules.shared.error_catalog import make_detail as _make_detail
 
 parametrizacion_router = APIRouter()
 parametrizacion_router.include_router(hr_router)
 parametrizacion_router.include_router(gn_router)
 parametrizacion_router.include_router(op_router)
+
+
+@parametrizacion_router.get(
+    "/parametrization/versions/all",
+    summary="Listar todas las versiones (HR + GN + OP)",
+    description=(
+        "Retorna el listado unificado de versiones subidas de HR, GN y OP, "
+        "ordenadas por fecha de carga descendente. "
+        "Cada entrada incluye el campo 'domain' para identificar a qué módulo pertenece."
+    ),
+    operation_id="listAllParametrizationVersions",
+    tags=["parametrization-active"],
+)
+def list_all_versions(request: Request):
+    container = request.app.state.container
+    entries = []
+    for domain, service in (
+        ("hr", container.hr_upload_service),
+        ("gn", container.gn_upload_service),
+        ("op", container.op_upload_service),
+    ):
+        for v in service.list_versions():
+            d = v.model_dump()
+            d["domain"] = domain
+            entries.append(d)
+    entries.sort(key=lambda e: e.get("uploaded_at") or "", reverse=True)
+    entries.sort(key=lambda e: e["domain"])
+    return ApiResponse.ok(entries)
 
 
 @parametrizacion_router.get(
@@ -34,10 +63,7 @@ def get_all_active_parametrization(request: Request):
     if data is None:
         return JSONResponse(
             status_code=404,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="NOT_FOUND", message="No hay parametrización activa."),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00601")).model_dump(),
         )
     return ApiResponse.ok(data)
 

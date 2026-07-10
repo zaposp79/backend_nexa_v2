@@ -34,6 +34,6 @@ def get_parametros(
         return JSONResponse(
             status_code=500,
             content=jsonable_encoder(
-                ApiResponse.fail("PARAMETRIZATION_ERROR", str(exc))
+                ApiResponse.fail("SIM-00701", message=str(exc))
             ),
         )

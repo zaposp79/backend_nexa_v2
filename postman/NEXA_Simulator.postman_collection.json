@@ -431,6 +431,33 @@
 			"name": "Parametrization - Active (Consolidated)",
 			"item": [
 				{
+					"name": "GET /api/v1/parametrization/versions/all",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/parametrization/versions/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"parametrization",
+								"versions",
+								"all"
+							]
+						},
+						"description": "Retorna el listado unificado de todas las versiones subidas de HR, GN y OP, ordenadas por `domain` (ascendente: gn → hr → op) y dentro de cada dominio por `uploaded_at` descendente (más reciente primero).\n\nCada entrada incluye el campo `domain` para identificar a qué módulo pertenece.\n\n**Respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"b31035ff-0d25-4bd3-87dc-b431c417fb45\",\n      \"version_id\": \"2026-07-10 02-28-47\",\n      \"filename\": \"GN_productiva_2026-06-25-12-00-00_OK.xlsx\",\n      \"uploaded_at\": \"2026-07-10T07:28:47.490549+00:00\",\n      \"domain\": \"gn\",\n      \"is_active\": true,\n      \"sheet_count\": 2,\n      \"total_rows\": 50,\n      \"sheets_found\": [\"GN-LV\", \"GN-Localidad\"]\n    }\n  ],\n  \"error\": null,\n  \"meta\": null\n}\n```"
+					},
+					"response": []
+				},
+				{
 					"name": "GET /api/v1/parametrization/active",
 					"request": {
 						"method": "GET",
@@ -496,7 +523,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload and process an HR Excel parametrization file. Body MUST be multipart/form-data with a single field `file`."
+						"description": "Upload and process an HR Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (17):** HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos, HR-SegSocial, HR-Prestaciones, HR-Ratios, HR-Complejidad, HR-Rentabilidad, HR-Campana, HR-AutRot, HR-CostoFijo, HR-Med-Seg, HR-Ratios-HITL, HR-Hora-GTR, HR-EquipoHITL, HR-EquipoSoporteMantenimiento."
 					},
 					"response": []
 				},
@@ -629,7 +656,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload and process an OP Excel parametrization file. Body MUST be multipart/form-data with a single field `file`."
+						"description": "Upload and process an OP Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (14):** OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido, OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo, OP-MargenObjetivo, OP-MargenBruto, OP-GraficoMargenBruto, OP-ICA, OP-ReglaNegocio."
 					},
 					"response": []
 				},
@@ -762,7 +789,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload and process a GN Excel parametrization file. Body MUST be multipart/form-data with a single field `file`."
+						"description": "Upload and process a GN Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (2):**\n- `GN-LV` — catálogo por columna, 23 columnas: Ciudad, ServicioPublico, CategoriaServicio, CentroCosto, Componente, Poliza, ComponenteFijo, HardwareSoftware, PeriodoPago, Cadena, ComponenteVariable, ModeloCobro, Modalidad, ReglaNegocio, CanalInbound, CanalOutbound, Metrica, Cliente, TipoCobro, TipoCliente, Rubro, UnidadMedida, Divisa.\n- `GN-Localidad` — tabla de filas, 2 columnas: Ciudad, Localidad."
 					},
 					"response": []
 				},

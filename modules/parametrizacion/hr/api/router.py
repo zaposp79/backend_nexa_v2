@@ -15,6 +15,7 @@ from nexa_engine.modules.parametrizacion.shared.helpers.upload_guards import (
 from nexa_engine.modules.shared.config.config import MAX_EXCEL_UPLOAD_BYTES
 from nexa_engine.modules.shared.exceptions import NotFoundError, ValidationError
 from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
+from nexa_engine.modules.shared.error_catalog import make_detail as _make_detail
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry
 
 router = APIRouter(prefix="/parametrization/hr", tags=["parametrization-hr"])
@@ -42,10 +43,7 @@ async def upload_hr(
     if file is None or not file.filename:
         return JSONResponse(
             status_code=400,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="VALIDATION_ERROR", message="No se cargó ningún archivo, es necesario."),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00501")).model_dump(),
         )
     filename = file.filename or ""
     check_filename_prefix(filename, "HR")
@@ -86,20 +84,14 @@ def get_hr_by_id(
     if id.version != 4:
         return JSONResponse(
             status_code=422,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="VALIDATION_ERROR", message="El parámetro 'id' debe ser un UUID versión 4 válido."),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00502")).model_dump(),
         )
     try:
         doc = service.get_by_id(str(id))
     except NotFoundError as e:
         return JSONResponse(
             status_code=404,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="NOT_FOUND", message=str(e)),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00600", message=str(e))).model_dump(),
         )
     return ApiResponse.ok(doc)
 
@@ -122,10 +114,7 @@ def activate_hr(
     if id.version != 4:
         return JSONResponse(
             status_code=422,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="VALIDATION_ERROR", message="El parámetro 'id' debe ser un UUID versión 4 válido."),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00502")).model_dump(),
         )
     try:
         summary = service.activate(str(id))
@@ -134,20 +123,13 @@ def activate_hr(
             status_code=422,
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(
-                    code="VALIDATION_ERROR",
-                    message=str(e.message),
-                    details=e.errors if e.errors else None,
-                ),
+                error=_make_detail(getattr(e, "sim_code", "SIM-00506"), message=str(e.message), details=e.errors if e.errors else None),
             ).model_dump(),
         )
     except NotFoundError as e:
         return JSONResponse(
             status_code=404,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="NOT_FOUND", message=str(e)),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00600", message=str(e))).model_dump(),
         )
     _version_registry.invalidate_cache()
     return ApiResponse.ok(summary.model_dump())
@@ -167,19 +149,13 @@ def delete_hr(
     if id.version != 4:
         return JSONResponse(
             status_code=422,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="VALIDATION_ERROR", message="El parámetro 'id' debe ser un UUID versión 4 válido."),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00502")).model_dump(),
         )
     try:
         service.delete(str(id))
     except NotFoundError as e:
         return JSONResponse(
             status_code=404,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="NOT_FOUND", message=str(e)),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail("SIM-00600", message=str(e))).model_dump(),
         )
     return ApiResponse.ok(None)

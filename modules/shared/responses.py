@@ -7,7 +7,8 @@ T = TypeVar("T")
 
 
 class ErrorDetail(BaseModel):
-    code: str
+    code: str           # SIM-XXXXX
+    type: str           # VALIDATION_ERROR, DOMAIN_ERROR, etc.
     message: str
     field: Optional[str] = None
     details: Optional[Union[Dict[str, Any], list]] = None
@@ -26,8 +27,12 @@ class ApiResponse(BaseModel, Generic[T]):
         return cls(success=True, data=data, meta=meta)
 
     @classmethod
-    def fail(cls, code: str, message: str, field: Optional[str] = None, details: Optional[list] = None) -> "ApiResponse":
-        return cls(
-            success=False,
-            error=ErrorDetail(code=code, message=message, field=field, details=details),
-        )
+    def fail(
+        cls,
+        sim_code: str,
+        message: str | None = None,
+        field: Optional[str] = None,
+        details: Optional[list] = None,
+    ) -> "ApiResponse":
+        from nexa_engine.modules.shared.error_catalog import make_detail
+        return cls(success=False, error=make_detail(sim_code, message=message, field=field, details=details))

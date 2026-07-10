@@ -2,11 +2,11 @@
 
 Based on production file: OP_productiva_2026-05-11-10-35-25.xlsx
 
-Sheet inventory:
-  Required: OP-ReglaNegocio.
-  Optional: OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
+Sheet inventory (all required):
+  OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
   OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo,
-  OP-MargenObjetivo, OP-MargenBruto, OP-GraficoMargenBruto, OP-ICA.
+  OP-MargenObjetivo, OP-MargenBruto, OP-GraficoMargenBruto, OP-ICA,
+  OP-ReglaNegocio.
 
 OP-ReglaNegocio.Minimo / OP-ReglaNegocio.Maximo
     Numeric boundaries for each business rule. Stored as decimal values.
@@ -65,7 +65,7 @@ _INT = ColumnType.INT
 
 OP_LV = SheetContract(
     excel_name="OP-LV",
-    required=False,
+    required=True,
     sheet_type=SheetType.CATALOG_BY_COLUMN,
     columns=[
         ColumnContract("ICA",                  _CAT),
@@ -78,7 +78,7 @@ OP_LV = SheetContract(
 
 OP_OPEX_FIJO = SheetContract(
     excel_name="OP-OPEXFijo",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("OPEXItem", _S),
@@ -89,7 +89,7 @@ OP_OPEX_FIJO = SheetContract(
 
 OP_HARD_SOFT = SheetContract(
     excel_name="OP-HardSoft",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("HardwareSoftware", _S),
@@ -102,7 +102,7 @@ OP_HARD_SOFT = SheetContract(
 
 OP_DISPOSITIVO_REQUERIDO = SheetContract(
     excel_name="OP-DispositivoRequerido",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("DispositivoRequerido", _S),
@@ -113,7 +113,7 @@ OP_DISPOSITIVO_REQUERIDO = SheetContract(
 
 OP_COMPONENTE = SheetContract(
     excel_name="OP-Componente",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Componente", _S),
@@ -125,7 +125,7 @@ OP_COMPONENTE = SheetContract(
 
 OP_COMPONENTE_ACUMULADO = SheetContract(
     excel_name="OP-ComponenteAcumulado",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Componente", _S),
@@ -137,7 +137,7 @@ OP_COMPONENTE_ACUMULADO = SheetContract(
 
 OP_POLIZA = SheetContract(
     excel_name="OP-Poliza",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Poliza",               _S),
@@ -149,7 +149,7 @@ OP_POLIZA = SheetContract(
 
 OP_POLIZA_FIJA = SheetContract(
     excel_name="OP-PolizaFija",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Poliza",      _S),
@@ -160,7 +160,7 @@ OP_POLIZA_FIJA = SheetContract(
 
 OP_COSTO = SheetContract(
     excel_name="OP-Costo",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("CostoOperativo", _S),
@@ -171,7 +171,7 @@ OP_COSTO = SheetContract(
 
 OP_MARGEN_OBJETIVO = SheetContract(
     excel_name="OP-MargenObjetivo",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Cadena",       _S),
@@ -183,7 +183,7 @@ OP_MARGEN_OBJETIVO = SheetContract(
 
 OP_MARGEN_BRUTO = SheetContract(
     excel_name="OP-MargenBruto",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Servicio",    _S),
@@ -196,7 +196,7 @@ OP_MARGEN_BRUTO = SheetContract(
 
 OP_GRAFICO_MARGEN_BRUTO = SheetContract(
     excel_name="OP-GraficoMargenBruto",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Servicios",   _S),
@@ -208,7 +208,7 @@ OP_GRAFICO_MARGEN_BRUTO = SheetContract(
 
 OP_ICA = SheetContract(
     excel_name="OP-ICA",
-    required=False,
+    required=True,
     sheet_type=SheetType.TABLE_ROWS,
     columns=[
         ColumnContract("Ciudad", _S),

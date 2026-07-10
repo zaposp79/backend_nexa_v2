@@ -90,7 +90,8 @@ from nexa_engine.modules.shared.exceptions import (
 )
 from .modules.shared.config.app_settings import AppSettings, load_app_settings
 from .modules.shared.config.config import ensure_storage_dirs
-from .modules.shared.responses import ApiResponse, ErrorDetail
+from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
+from nexa_engine.modules.shared.error_catalog import make_detail as _make_detail
 
 logger = logging.getLogger("nexa")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -234,25 +235,20 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
 
     @fastapi_app.exception_handler(NotFoundError)
     async def not_found_handler(request, exc):
+        sim_code = getattr(exc, "sim_code", "SIM-00600")
         return JSONResponse(
             status_code=404,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="NOT_FOUND", message=str(exc)),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail(sim_code, message=str(exc))).model_dump(),
         )
 
     @fastapi_app.exception_handler(DomainValidationError)
     async def validation_error_handler(request, exc):
+        sim_code = getattr(exc, "sim_code", "SIM-00506")
         return JSONResponse(
             status_code=422,
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(
-                    code="VALIDATION_ERROR",
-                    message=str(exc),
-                    details=exc.errors if exc.errors else None,
-                ),
+                error=_make_detail(sim_code, message=str(exc), details=exc.errors if exc.errors else None),
             ).model_dump(),
         )
 
@@ -265,12 +261,10 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             _safe_path(request),
             _safe_headers(request),
         )
+        sim_code = getattr(exc, "sim_code", "SIM-00700")
         return JSONResponse(
             status_code=400,
-            content=ApiResponse(
-                success=False,
-                error=ErrorDetail(code="DOMAIN_ERROR", message=str(exc)),
-            ).model_dump(),
+            content=ApiResponse(success=False, error=_make_detail(sim_code, message=str(exc))).model_dump(),
         )
 
     @fastapi_app.exception_handler(Exception)
@@ -288,10 +282,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
             headers={CORRELATION_ID_HEADER: correlation_id},
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(
-                    code="INTERNAL_SERVER_ERROR",
-                    message="Error inesperado en el servidor.",
-                ),
+                error=_make_detail("SIM-00900"),
                 meta={"correlation_id": correlation_id},
             ).model_dump(),
         )
@@ -305,30 +296,27 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         `.../upload`): Starlette levanta un 404 que de otro modo devolvería el
         cuerpo por defecto `{"detail": "Not Found"}`, fuera del contrato.
         """
-        status_to_code = {
-            400: "BAD_REQUEST",
-            401: "UNAUTHORIZED",
-            403: "FORBIDDEN",
-            404: "NOT_FOUND",
-            405: "METHOD_NOT_ALLOWED",
-            415: "UNSUPPORTED_MEDIA_TYPE",
+        status_to_sim = {
+            400: "SIM-00800",
+            401: "SIM-00801",
+            403: "SIM-00802",
+            404: "SIM-00803",
+            405: "SIM-00804",
+            415: "SIM-00805",
         }
-        code = status_to_code.get(exc.status_code, "HTTP_ERROR")
+        sim_code = status_to_sim.get(exc.status_code, "SIM-00806")
         if exc.status_code == 404:
             message = (
                 f"Ruta no encontrada: '{request.method} {request.url.path}'. "
                 "Revisa la URL del endpoint (método y segmentos de la ruta)."
             )
         elif exc.status_code == 405:
-            message = (
-                f"Método '{request.method}' no permitido para "
-                f"'{request.url.path}'."
-            )
+            message = f"Método '{request.method}' no permitido para '{request.url.path}'."
         else:
             message = exc.detail if isinstance(exc.detail, str) else str(exc.detail)
         return JSONResponse(
             status_code=exc.status_code,
-            content=ApiResponse.fail(code, message).model_dump(),
+            content=ApiResponse.fail(sim_code, message=message).model_dump(),
             headers=getattr(exc, "headers", None),
         )
 
@@ -339,8 +327,7 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
         return JSONResponse(
             status_code=422,
             content=ApiResponse.fail(
-                "VALIDATION_ERROR",
-                "Parámetros o cuerpo de la solicitud inválidos.",
+                "SIM-00500",
                 details=jsonable_encoder(exc.errors()),
             ).model_dump(),
         )

@@ -88,7 +88,7 @@ class HRService:
 
         validation = self._validator.validate(sheets)
         if not validation.is_valid:
-            raise ValidationError("HR Excel validation failed", errors=validation.errors)
+            raise ValidationError("HR Excel validation failed", errors=validation.errors, sim_code="SIM-00503")
 
         logger.info("[PARAMETRIZATION] → Mapping sheets to domain models")
         doc_id = self._repo.new_version_id()

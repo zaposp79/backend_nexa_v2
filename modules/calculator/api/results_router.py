@@ -16,6 +16,7 @@ from nexa_engine.db.dependencies import get_results_repository
 from nexa_engine.modules.calculator.persistence.results_repository import ResultsRepository
 from nexa_engine.modules.shared.exceptions import NotFoundError
 from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
+from nexa_engine.modules.shared.error_catalog import make_detail as _make_detail
 from nexa_engine.modules.audit.registry import FieldTraceabilityRegistry
 from nexa_engine.modules.vision_imprimible.api.public_mapper import build_public_vision_imprimible
 from nexa_engine.modules.vision_imprimible.api.response_models import VisionImprimibleApiResponseV1
@@ -28,7 +29,7 @@ def _not_found_response(simulation_id: str, exc: NotFoundError) -> JSONResponse:
         status_code=404,
         content=ApiResponse(
             success=False,
-            error=ErrorDetail(code="NOT_FOUND", message=exc.message),
+            error=_make_detail(getattr(exc, "sim_code", "SIM-00600"), message=exc.message),
         ).model_dump(),
     )
 

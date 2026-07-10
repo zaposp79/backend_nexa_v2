@@ -6,6 +6,7 @@ from nexa_engine.db.dependencies import get_results_repository
 from nexa_engine.modules.calculator.persistence.results_repository import ResultsRepository
 from nexa_engine.modules.shared.exceptions import NotFoundError
 from nexa_engine.modules.shared.responses import ApiResponse, ErrorDetail
+from nexa_engine.modules.shared.error_catalog import make_detail as _make_detail
 from nexa_engine.modules.vision_tarifas.api.schemas import (
     ModeloCobroApiResponseV1,
     ModeloCobroRecalculateRequest,
@@ -119,17 +120,13 @@ def post_vision_tarifas_modelo_cobro_recalculate(
                 status_code=400,
                 content=ApiResponse(
                     success=False,
-                    error=ErrorDetail(code="FULL_RECALCULATION_REQUIRED", message=exc.message),
+                    error=_make_detail("SIM-00700", message=exc.message),
                 ).model_dump(),
             )
         return JSONResponse(
             status_code=422,
             content=ApiResponse(
                 success=False,
-                error=ErrorDetail(
-                    code="VALIDATION_ERROR",
-                    message="Invalid modelo_cobro override",
-                    details=exc.details if exc.details else None,
-                ),
+                error=_make_detail("SIM-00506", message="Invalid modelo_cobro override", details=exc.details if exc.details else None),
             ).model_dump(),
         )

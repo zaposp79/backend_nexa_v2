@@ -70,6 +70,8 @@ class PanelService:
             return Rango(minimo=p.get("min", 0.0), maximo=p.get("max", 0.0))
 
         gn_lv = gn.get("lv", {}).get("catalogs", {})
+        # GN-Localidad is a separate table sheet (rows with ciudad+localidad)
+        gn_localidad_rows = gn.get("localidad", [])
 
         return ParametrosPanel(
             datos_operativos=DatosOperativos(
@@ -101,7 +103,9 @@ class PanelService:
                 )
             ),
             ciudades=[c["name"] for c in gn_lv.get("ciudad", [])],
-            localidades=[l["name"] for l in gn_lv.get("localidad", [])],
+            localidades=list(dict.fromkeys(
+                r["localidad"] for r in gn_localidad_rows if r.get("localidad")
+            )),
             servicios=[s["name"] for s in gn_lv.get("categoriaservicio", [])],
             clientes=[c["name"] for c in gn_lv.get("cliente", [])],
             tipos_cliente=[t["name"] for t in gn_lv.get("tipocliente", [])],
