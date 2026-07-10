@@ -79,8 +79,9 @@ def test_500_response_does_not_expose_internal_details():
     body = response.json()
 
     assert response.status_code == 500
-    assert body["error"]["code"] == "INTERNAL_SERVER_ERROR"
-    assert body["error"]["message"] == "Error inesperado en el servidor."
+    assert body["error"]["code"] == "SIM-00900"
+    assert body["error"]["type"] == "INTERNAL_SERVER_ERROR"
+    assert body["error"]["message"] == "Se produjo un error inesperado en el servidor que no pudo ser manejado."
     rendered = str(body)
     assert "internal-secret-path" not in rendered
     assert "RuntimeError" not in rendered
