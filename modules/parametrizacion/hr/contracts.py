@@ -3,12 +3,11 @@
 Based on production file: HR_productiva_2026-05-11-09-52-29.xlsx
 
 Sheet inventory:
-  Required (17, all): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
+  Required (14, all): HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos,
                       HR-SegSocial, HR-Prestaciones, HR-Ratios,
                       HR-Complejidad, HR-Rentabilidad, HR-Campana,
-                      HR-AutRot, HR-CostoFijo, HR-Med-Seg,
-                      HR-Ratios-HITL, HR-Hora-GTR,
-                      HR-EquipoHITL, HR-EquipoSoporteMantenimiento
+                      HR-CostoFijo, HR-Med-Seg,
+                      HR-Ratios-HITL, HR-Hora-GTR
 
 Column-type decisions
 ---------------------
@@ -20,7 +19,7 @@ HR-SalarioBasico.Valor
     the same result for ``0.7`` (no ``%`` suffix → no division) but is
     semantically misleading for the monetary rows.
 
-HR-Recargos.Valor / HR-SegSocial.Proporcion / HR-Prestaciones.Valor / HR-AutRot.Valor
+HR-Recargos.Valor / HR-SegSocial.Proporcion / HR-Prestaciones.Valor
     All arrive as decimal strings (``"0.35"``, ``"0.085"``, ``"0.0833"``).
     Typed as ``percentage_decimal``.  Since there is no ``%`` suffix the
     conversion is identical to ``decimal``, but the contract documents the
@@ -32,13 +31,12 @@ HR-Rentabilidad.Minimo / HR-Rentabilidad.MargenObjetivo
     The downstream repository (``profitability_parametrization_repository``)
     NO LONGER divides by 100 after this fix.
 
-HR-Campana.Mes / HR-AutRot.Mes / OP-Componente.Año / OP-HardSoft.CantidadMes
+HR-Campana.Mes / OP-Componente.Año / OP-HardSoft.CantidadMes
     Typed as ``int``.
 
 HR-LV columns (5)
     All catalog (string) — independent value lists per column:
     TipoRecurso, Cargo, Prestaciones, SS&Parafiscales, Recargo.
-    EquipoHITL and EquipoSoporteMantenimiento removed (now separate optional sheets).
 """
 
 from nexa_engine.modules.parametrizacion.shared.contracts.base import (
@@ -178,19 +176,6 @@ HR_CAMPANA = SheetContract(
     allow_trailing_unnamed=False,
 )
 
-HR_AUT_ROT = SheetContract(
-    excel_name="HR-AutRot",
-    required=True,
-    sheet_type=SheetType.TABLE_ROWS,
-    columns=[
-        ColumnContract("Tipo",    _S),
-        ColumnContract("Servicio", _S),
-        ColumnContract("Mes",      _INT),
-        ColumnContract("Valor",    _PCT),  # 0.0735 = 7.35% — decimal
-    ],
-    allow_trailing_unnamed=False,
-)
-
 HR_COSTO_FIJO = SheetContract(
     excel_name="HR-CostoFijo",
     required=True,
@@ -238,26 +223,6 @@ HR_HORA_GTR = SheetContract(
     allow_trailing_unnamed=False,
 )
 
-HR_EQUIPO_HITL = SheetContract(
-    excel_name="HR-EquipoHITL",
-    required=True,
-    sheet_type=SheetType.CATALOG_BY_COLUMN,
-    columns=[
-        ColumnContract("EquipoHITL", _CAT),
-    ],
-    allow_trailing_unnamed=False,
-)
-
-HR_EQUIPO_SOPORTE = SheetContract(
-    excel_name="HR-EquipoSoporteMantenimiento",
-    required=True,
-    sheet_type=SheetType.TABLE_ROWS,
-    columns=[
-        ColumnContract("EquipoSoporteMantenimiento", _S),
-    ],
-    allow_trailing_unnamed=False,
-)
-
 HR_CONTRACT = ModuleContract(
     module="hr",
     sheet_prefix="HR-",
@@ -272,11 +237,8 @@ HR_CONTRACT = ModuleContract(
         HR_COMPLEJIDAD,
         HR_RENTABILIDAD,
         HR_CAMPANA,
-        HR_AUT_ROT,
         HR_COSTO_FIJO,
         HR_MED_SEG,
-        HR_EQUIPO_HITL,
-        HR_EQUIPO_SOPORTE,
         HR_RATIOS_HITL,
         HR_HORA_GTR,
     ],

@@ -395,70 +395,12 @@ class FinancialParametrizationRepository:
         return 1.0
 
     def get_portfolio_margen_bruto_rows(self) -> List[Dict[str, Any]]:
-        """Return normalized rows from OP-MargenBruto sheet.
-
-        Excel V2-8 · OP-MargenBruto — sheet key: "margenbruto"
-        Row fields input: {servicio, cliente, margenbruto}
-        Row fields output: {categoria: str, cliente: str, margen_bruto: float}
-        Returns [] when sheet is missing (OP_CONTRACT_GAP).
-        """
-        try:
-            self._ensure_op_loaded()
-        except Exception:
-            return []
-
-        sheet = self._get_sheet(self._op_data, "margenbruto")
-        if not sheet or "rows" not in sheet:
-            logger.warning(
-                "[PARAM_SOURCE] get_portfolio_margen_bruto_rows: OP_CONTRACT_GAP — margenbruto sheet missing"
-            )
-            return []
-
-        result = []
-        for row in sheet["rows"]:
-            categoria = row.get("servicio", "")
-            cliente = row.get("cliente", "")
-            margen = row.get("margenbruto")
-            if margen is None or not isinstance(margen, (int, float)):
-                continue
-            result.append({
-                "categoria": str(categoria),
-                "cliente": str(cliente),
-                "margen_bruto": float(margen),
-            })
-        return result
+        """OP-MargenBruto removed from upload contract — returns [] always."""
+        return []
 
     def get_grafico_margen_bruto_rows(self) -> List[Dict[str, Any]]:
-        """Return normalized rows from OP-GraficoMargenBruto sheet.
-
-        Excel V2-8 · OP-GraficoMargenBruto — sheet key: "graficomargenbruto"
-        Row fields input: {servicios, margenbruto}
-        Row fields output: {servicios: str, margen_bruto: float}
-        Returns [] when sheet is missing.
-        """
-        try:
-            self._ensure_op_loaded()
-        except Exception:
-            return []
-
-        sheet = self._get_sheet(self._op_data, "graficomargenbruto")
-        if not sheet or "rows" not in sheet:
-            logger.warning(
-                "[PARAM_SOURCE] get_grafico_margen_bruto_rows: graficomargenbruto sheet missing"
-            )
-            return []
-
-        result = []
-        for row in sheet["rows"]:
-            servicios = row.get("servicios", "")
-            margen = row.get("margenbruto")
-            if margen is None or not isinstance(margen, (int, float)):
-                continue
-            result.append({
-                "servicios": str(servicios),
-                "margen_bruto": float(margen),
-            })
-        return result
+        """OP-GraficoMargenBruto removed from upload contract — returns [] always."""
+        return []
 
     # -----------------------------------------------------------------------
     # Private helpers

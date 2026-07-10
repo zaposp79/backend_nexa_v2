@@ -148,18 +148,6 @@ def test_op_poliza_uses_definitive_headers() -> None:
     assert poliza.headers == ["Poliza", "Porcentaje", "PorcentajeExigido"]
 
 
-def test_hr_equipo_hitl_does_not_require_ratio() -> None:
-    """HR-EquipoHITL must not require a 'ratio' column — removed in Excel V2-8."""
-    from nexa_engine.modules.parametrizacion.hr.contracts import HR_CONTRACT
-
-    equipo_hitl = next(
-        (s for s in HR_CONTRACT.sheets if s.excel_name == "HR-EquipoHITL"), None
-    )
-    assert equipo_hitl is not None
-    headers = equipo_hitl.headers
-    assert "ratio" not in headers
-    assert headers == ["EquipoHITL"]
-
 
 def test_gn_lv_includes_divisa_column() -> None:
     """GN-LV must include 'Divisa' as the last column — added in Excel V2-8."""
@@ -173,12 +161,10 @@ def test_gn_lv_includes_divisa_column() -> None:
 
 
 def test_op_new_sheets_registered_in_contract() -> None:
-    """OP-PolizaFija, OP-Costo, OP-MargenObjetivo and margin sheets must exist in OP_CONTRACT."""
+    """OP-PolizaFija, OP-Costo and OP-MargenObjetivo must exist in OP_CONTRACT."""
     from nexa_engine.modules.parametrizacion.op.contracts import OP_CONTRACT
 
     sheet_names = {s.excel_name for s in OP_CONTRACT.sheets}
     assert "OP-PolizaFija" in sheet_names
     assert "OP-Costo" in sheet_names
     assert "OP-MargenObjetivo" in sheet_names
-    assert "OP-MargenBruto" in sheet_names
-    assert "OP-GraficoMargenBruto" in sheet_names

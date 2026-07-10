@@ -326,13 +326,6 @@ class TestProductionCharacterization:
         assert result[3]["minimo"] == pytest.approx(0.105)
         assert result[3]["margenobjetivo"] == pytest.approx(0.105)
 
-    def test_hr_autrot_valor_decimal(self):
-        """HR-AutRot 'Valor'='0.0735' stays as 0.0735 — not divided."""
-        from nexa_engine.modules.parametrizacion.hr.contracts import HR_CONTRACT
-        rows = [{"tipo": "Ausentismo", "servicio": "Cobranzas", "mes": 1, "valor": "0.0735"}]
-        result = self._norm_sheet("HR-AutRot", rows, HR_CONTRACT)
-        assert result[0]["valor"] == pytest.approx(0.0735)
-
     def test_hr_campana_valor_factor(self):
         """HR-Campana 'Valor'=0.85 stays as 0.85 (ramp-up factor, no division)."""
         from nexa_engine.modules.parametrizacion.hr.contracts import HR_CONTRACT

@@ -5,8 +5,7 @@ Based on production file: OP_productiva_2026-05-11-10-35-25.xlsx
 Sheet inventory (all required):
   OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
   OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo,
-  OP-MargenObjetivo, OP-MargenBruto, OP-GraficoMargenBruto, OP-ICA,
-  OP-ReglaNegocio.
+  OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio.
 
 OP-ReglaNegocio.Minimo / OP-ReglaNegocio.Maximo
     Numeric boundaries for each business rule. Stored as decimal values.
@@ -32,13 +31,6 @@ OP-ICA.Valor
     Typed ``decimal`` (store as-is) pending explicit business approval to
     normalize to the standard decimal fraction.  Range warnings are generated
     by :class:`~op.validators.validator.OPValidator`.
-
-OP-MargenBruto / OP-GraficoMargenBruto
-    Report-style sheets from the workbook with margin data by service/client.
-    OP-MargenBruto: detailed breakdown by Servicio + Cliente + MargenBruto (3 cols).
-    OP-GraficoMargenBruto: summary by Servicios + MargenBruto (2 cols).
-    The ``MargenBruto`` column is typed as ``percentage_decimal``: decimal
-    fractions like ``0.13`` (13%), ``-0.22`` (-22%), ``null`` for #DIV/0! errors.
 
 OP-HardSoft.Tipo
     Multi-value string like ``"Operativo;Agente"`` — typed ``raw_text`` to
@@ -181,31 +173,6 @@ OP_MARGEN_OBJETIVO = SheetContract(
 )
 
 
-OP_MARGEN_BRUTO = SheetContract(
-    excel_name="OP-MargenBruto",
-    required=True,
-    sheet_type=SheetType.TABLE_ROWS,
-    columns=[
-        ColumnContract("Servicio",    _S),
-        ColumnContract("Cliente",     _S),
-        ColumnContract("MargenBruto", _PCT),
-    ],
-    allow_trailing_unnamed=False,
-)
-
-
-OP_GRAFICO_MARGEN_BRUTO = SheetContract(
-    excel_name="OP-GraficoMargenBruto",
-    required=True,
-    sheet_type=SheetType.TABLE_ROWS,
-    columns=[
-        ColumnContract("Servicios",   _S),
-        ColumnContract("MargenBruto", _PCT),
-    ],
-    allow_trailing_unnamed=False,
-)
-
-
 OP_ICA = SheetContract(
     excel_name="OP-ICA",
     required=True,
@@ -245,8 +212,6 @@ OP_CONTRACT = ModuleContract(
         OP_POLIZA_FIJA,
         OP_COSTO,
         OP_MARGEN_OBJETIVO,
-        OP_MARGEN_BRUTO,
-        OP_GRAFICO_MARGEN_BRUTO,
         OP_ICA,
         OP_REGLA_NEGOCIO,
     ],

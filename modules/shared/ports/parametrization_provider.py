@@ -250,14 +250,7 @@ class IParametrizationProvider(Protocol):
     def get_portfolio_clientes(self) -> Optional[Dict[str, Any]]:
         """Portfolio reference data for graph band calculations.
 
-        Fuente: active OP parametrization — OP-MargenBruto sheet (key="margenbruto").
-        Excel V2-8 · Graficos!A5:C93 / OP-MargenBruto
-
-        Returns:
-            Dict with keys:
-              - clientes: List[Dict] with keys categoria, cliente, margen_bruto
-              - promedios_por_categoria: Dict[str, float]
-            Returns None if portfolio data is not available.
+        OP-MargenBruto removed from upload contract — always returns None.
         """
         ...
 

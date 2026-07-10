@@ -35,12 +35,6 @@ REQUIRED_SHEETS = [
     "HR-Hora-GTR",
 ]
 
-OPTIONAL_SHEETS = [
-    "HR-AutRot",
-    "HR-EquipoHITL",
-    "HR-EquipoSoporteMantenimiento",
-]
-
 # Normalised column names expected in each sheet (post-_normalize_column).
 # Used for value-level checks only — existence is guaranteed by the reader
 # contract layer.
@@ -53,7 +47,6 @@ _NUMERIC_FIELDS: Dict[str, List[str]] = {
     "HR-Ratios": ["agentes"],
     "HR-Complejidad": ["valor"],
     "HR-Campana": ["mes", "valor"],
-    "HR-AutRot": ["mes", "valor"],
     "HR-CostoFijo": ["valor"],
     "HR-Med-Seg": ["valor"],
     "HR-Ratios-HITL": ["ratio"],
@@ -66,12 +59,6 @@ class HRValidator:
 
     def validate(self, sheets: Dict[str, List[dict]]) -> ValidationResult:
         result = ValidationResult()
-
-        found_optional = [s for s in OPTIONAL_SHEETS if s in sheets]
-        if found_optional:
-            result.warnings.append(
-                f"Hojas opcionales presentes y cargadas: {found_optional}"
-            )
 
         for sheet_name, rows in sheets.items():
             if not rows:

@@ -69,9 +69,6 @@ class HRMapper:
             "HR-SegSocial", "HR-Prestaciones", "HR-Ratios", "HR-Rentabilidad",
             "HR-Campana", "HR-CostoFijo", "HR-Med-Seg", "HR-Complejidad",
             "HR-Ratios-HITL", "HR-Hora-GTR",
-            # Legacy separate sheets — columns now live in HR-LV; kept here to
-            # prevent them from appearing in extra_sheets if present in old files.
-            "HR-EquipoHITL", "HR-EquipoSoporteMantenimiento",
         }
 
         extra_sheets = {

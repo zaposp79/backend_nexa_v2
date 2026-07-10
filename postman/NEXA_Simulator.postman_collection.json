@@ -523,7 +523,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload and process an HR Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (17):** HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos, HR-SegSocial, HR-Prestaciones, HR-Ratios, HR-Complejidad, HR-Rentabilidad, HR-Campana, HR-AutRot, HR-CostoFijo, HR-Med-Seg, HR-Ratios-HITL, HR-Hora-GTR, HR-EquipoHITL, HR-EquipoSoporteMantenimiento."
+						"description": "Upload and process an HR Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (14):** HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos, HR-SegSocial, HR-Prestaciones, HR-Ratios, HR-Complejidad, HR-Rentabilidad, HR-Campana, HR-CostoFijo, HR-Med-Seg, HR-Ratios-HITL, HR-Hora-GTR."
 					},
 					"response": []
 				},
@@ -656,7 +656,7 @@
 								"upload"
 							]
 						},
-						"description": "Upload and process an OP Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (14):** OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido, OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo, OP-MargenObjetivo, OP-MargenBruto, OP-GraficoMargenBruto, OP-ICA, OP-ReglaNegocio."
+						"description": "Upload and process an OP Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (12):** OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido, OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo, OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio."
 					},
 					"response": []
 				},
