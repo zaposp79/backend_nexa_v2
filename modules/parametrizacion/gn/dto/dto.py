@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 
-class GNUploadResponse(BaseModel):
+class GNUploadSummary(BaseModel):
     id: str
     domain: str
     pk: str
@@ -18,6 +18,10 @@ class GNUploadResponse(BaseModel):
     total_rows: int
     user_id: Optional[str]
     sheets_found: List[str]
+
+
+class GNUploadResponse(BaseModel):
+    summary: GNUploadSummary
     payload: Dict[str, Any]
     warnings: List[str]
 

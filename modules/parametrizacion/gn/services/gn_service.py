@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 from nexa_engine.modules.parametrizacion.gn.contracts import GN_CONTRACT
-from nexa_engine.modules.parametrizacion.gn.dto.dto import GNSheetPreview, GNUploadResponse, GNVersionSummary
+from nexa_engine.modules.parametrizacion.gn.dto.dto import GNSheetPreview, GNUploadResponse, GNUploadSummary, GNVersionSummary
 from nexa_engine.modules.parametrizacion.gn.mappers.mapper import GNMapper
 from nexa_engine.modules.parametrizacion.gn.repositories.gn_repository import GNRepository
 from nexa_engine.modules.parametrizacion.gn.validators.validator import GNValidator
@@ -99,18 +99,20 @@ class GNService:
         full_payload = {**data_dict, "status": "active", "domain": "gn"}
 
         return GNUploadResponse(
-            id=version_id,
-            domain="gn",
-            pk="gn",
-            version_id=colombia_version_id,
-            type="parametrization_version",
-            status="active",
-            created_at=created_at_utc,
-            file_name=filename,
-            sheet_count=sheet_count,
-            total_rows=total_rows,
-            user_id=user_id if user_id != "anonymous" else None,
-            sheets_found=sheets_found,
+            summary=GNUploadSummary(
+                id=version_id,
+                domain="gn",
+                pk="gn",
+                version_id=colombia_version_id,
+                type="parametrization_version",
+                status="active",
+                created_at=created_at_utc,
+                file_name=filename,
+                sheet_count=sheet_count,
+                total_rows=total_rows,
+                user_id=user_id if user_id != "anonymous" else None,
+                sheets_found=sheets_found,
+            ),
             payload=full_payload,
             warnings=validation.warnings,
         )

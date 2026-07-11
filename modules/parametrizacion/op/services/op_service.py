@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 
 from nexa_engine.modules.parametrizacion.op.contracts import OP_CONTRACT
-from nexa_engine.modules.parametrizacion.op.dto.dto import OPUploadResponse, OPVersionSummary, OPSheetPreview
+from nexa_engine.modules.parametrizacion.op.dto.dto import OPUploadResponse, OPUploadSummary, OPVersionSummary, OPSheetPreview
 from nexa_engine.modules.parametrizacion.op.mappers.mapper import OPMapper
 from nexa_engine.modules.parametrizacion.op.repositories.op_repository import OPRepository
 from nexa_engine.modules.parametrizacion.op.validators.validator import OPValidator
@@ -99,18 +99,20 @@ class OPService:
         full_payload = {**data_dict, "status": "active", "domain": "op"}
 
         return OPUploadResponse(
-            id=version_id,
-            domain="op",
-            pk="op",
-            version_id=colombia_version_id,
-            type="parametrization_version",
-            status="active",
-            created_at=created_at_utc,
-            file_name=filename,
-            sheet_count=sheet_count,
-            total_rows=total_rows,
-            user_id=user_id if user_id != "anonymous" else None,
-            sheets_found=sheets_found,
+            summary=OPUploadSummary(
+                id=version_id,
+                domain="op",
+                pk="op",
+                version_id=colombia_version_id,
+                type="parametrization_version",
+                status="active",
+                created_at=created_at_utc,
+                file_name=filename,
+                sheet_count=sheet_count,
+                total_rows=total_rows,
+                user_id=user_id if user_id != "anonymous" else None,
+                sheets_found=sheets_found,
+            ),
             payload=full_payload,
             warnings=validation.warnings,
         )

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel
 
 
-class OPUploadResponse(BaseModel):
+class OPUploadSummary(BaseModel):
     id: str
     domain: str
     pk: str
@@ -18,6 +18,10 @@ class OPUploadResponse(BaseModel):
     total_rows: int
     user_id: Optional[str]
     sheets_found: List[str]
+
+
+class OPUploadResponse(BaseModel):
+    summary: OPUploadSummary
     payload: Dict[str, Any]
     warnings: List[str]
 
