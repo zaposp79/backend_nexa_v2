@@ -10,20 +10,19 @@ class GNUploadSummary(BaseModel):
     domain: str
     pk: str
     version_id: str
-    type: str
-    status: str
-    created_at: str
-    file_name: str
+    uploaded_at: str
+    filename: str
     sheet_count: int
     total_rows: int
     user_id: Optional[str]
+    is_active: bool
     sheets_found: List[str]
+    warnings: List[str]
 
 
 class GNUploadResponse(BaseModel):
     summary: GNUploadSummary
     payload: Dict[str, Any]
-    warnings: List[str]
 
 
 class GNVersionSummary(BaseModel):

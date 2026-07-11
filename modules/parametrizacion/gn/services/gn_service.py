@@ -104,17 +104,16 @@ class GNService:
                 domain="gn",
                 pk="gn",
                 version_id=colombia_version_id,
-                type="parametrization_version",
-                status="active",
-                created_at=created_at_utc,
-                file_name=filename,
+                uploaded_at=uploaded_at,
+                filename=filename,
                 sheet_count=sheet_count,
                 total_rows=total_rows,
                 user_id=user_id if user_id != "anonymous" else None,
+                is_active=True,
                 sheets_found=sheets_found,
+                warnings=validation.warnings,
             ),
             payload=full_payload,
-            warnings=validation.warnings,
         )
 
     def list_versions(self) -> List[GNVersionSummary]:
