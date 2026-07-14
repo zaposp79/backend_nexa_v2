@@ -18,6 +18,7 @@ ENV_COSMOS_ENDPOINT = "COSMOS_ENDPOINT"
 ENV_COSMOS_KEY = "COSMOS_KEY"
 ENV_COSMOS_DATABASE = "COSMOS_DATABASE"
 ENV_COSMOS_CONTAINER = "COSMOS_CONTAINER"
+ENV_COSMOS_CONTAINER_CONFIGURATION = "COSMOS_CONTAINER_CONFIGURATION"
 
 # --- Reserved document fields ---------------------------------------------
 # Every persisted document must carry an ``id``. The JSON provider also stamps
@@ -35,5 +36,6 @@ __all__ = [
     "ENV_COSMOS_KEY",
     "ENV_COSMOS_DATABASE",
     "ENV_COSMOS_CONTAINER",
+    "ENV_COSMOS_CONTAINER_CONFIGURATION",
     "FIELD_ID",
 ]

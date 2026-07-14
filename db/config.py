@@ -12,6 +12,7 @@ _logger = logging.getLogger("nexa.db.config")
 from nexa_engine.db.constants.provider_constants import (
     DEFAULT_PROVIDER,
     ENV_COSMOS_CONTAINER,
+    ENV_COSMOS_CONTAINER_CONFIGURATION,
     ENV_COSMOS_DATABASE,
     ENV_COSMOS_ENDPOINT,
     ENV_COSMOS_KEY,
@@ -36,6 +37,9 @@ class CosmosSettings:
     key: str
     database: str
     container: str
+    # Container separado para la colección "configuration" (simulation drafts).
+    # Si está vacío, el factory usa `container` como fallback.
+    container_configuration: str = ""
 
 
 @dataclass(frozen=True)
@@ -87,6 +91,8 @@ def _resolve_cosmos(env: dict[str, str]) -> CosmosSettings:
     key = env.get(ENV_COSMOS_KEY, "").strip()
     database = env.get(ENV_COSMOS_DATABASE, "").strip()
     container = env.get(ENV_COSMOS_CONTAINER, "").strip()
+    # Opcional: container separado para "configuration". Vacío = usa `container`.
+    container_configuration = env.get(ENV_COSMOS_CONTAINER_CONFIGURATION, "").strip()
     missing = [
         name
         for name, value in (
@@ -104,7 +110,11 @@ def _resolve_cosmos(env: dict[str, str]) -> CosmosSettings:
             + ", ".join(missing)
         )
     return CosmosSettings(
-        endpoint=endpoint, key=key, database=database, container=container
+        endpoint=endpoint,
+        key=key,
+        database=database,
+        container=container,
+        container_configuration=container_configuration,
     )
 
 

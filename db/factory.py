@@ -60,6 +60,42 @@ def build_parametrization_document_store(settings: DbConfig) -> DocumentStore:
     raise DbConfigurationError(f"unknown parametrization provider: {settings.provider!r}")
 
 
+def build_configuration_document_store(config: DbConfig) -> DocumentStore:
+    """Construir el DocumentStore para la colección 'configuration' (simulation drafts).
+
+    En JSON usa la misma raíz que el store principal (crea storage/configuration/).
+    En Cosmos conecta al container indicado por COSMOS_CONTAINER_CONFIGURATION;
+    si no está definida, usa COSMOS_CONTAINER como fallback.
+    """
+    if config.provider == PROVIDER_JSON:
+        from nexa_engine.db.providers.json_document_store import JsonDocumentStore
+
+        logger.info("[db.factory] configuration_store=json path=%s", config.json_storage_path)
+        return JsonDocumentStore(config.json_storage_path)
+
+    if config.provider == PROVIDER_COSMOS:
+        if config.cosmos is None:  # pragma: no cover - load_config guarantees this
+            raise DbConfigurationError(
+                "Cosmos configuration store selected but settings are unresolved"
+            )
+        from nexa_engine.db.providers.cosmos_document_store import CosmosDocumentStore
+        from nexa_engine.db.config import CosmosSettings
+
+        container_name = config.cosmos.container_configuration or config.cosmos.container
+        cfg = CosmosSettings(
+            endpoint=config.cosmos.endpoint,
+            key=config.cosmos.key,
+            database=config.cosmos.database,
+            container=container_name,
+        )
+        logger.info(
+            "[db.factory] configuration_store=cosmos container=%s", container_name
+        )
+        return CosmosDocumentStore(cfg)
+
+    raise DbConfigurationError(f"unknown provider for configuration store: {config.provider!r}")
+
+
 def get_provider() -> DocumentStore:
     """Obtener el DocumentStore a nivel de proceso."""
     global _cached_provider
@@ -86,6 +122,7 @@ def get_parametrization_store() -> DocumentStore:
 __all__ = [
     "build_provider",
     "build_parametrization_document_store",
+    "build_configuration_document_store",
     "get_provider",
     "get_parametrization_store",
     "reset_provider",

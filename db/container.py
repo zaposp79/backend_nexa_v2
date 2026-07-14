@@ -5,7 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from nexa_engine.db.config import load_config
-from nexa_engine.db.factory import build_parametrization_document_store, build_provider
+from nexa_engine.db.factory import (
+    build_configuration_document_store,
+    build_parametrization_document_store,
+    build_provider,
+)
 from nexa_engine.db.ports.document_store import DocumentStore
 from nexa_engine.modules.calculator.persistence.results_repository import (
     ResultsRepository,
@@ -108,6 +112,7 @@ class ApplicationContainer:
     cadena_c_parameters_service: CadenaCParametersQueryService
     panel_service: PanelService
     active_parametrization_service: ActiveParametrizationService
+    configuration_store: DocumentStore
     draft_repository: SimulationDraftRepository
     draft_service: SimulationDraftService
 
@@ -152,6 +157,7 @@ def build_container() -> ApplicationContainer:
     """Crea el contenedor de la aplicación a partir de la configuración del entorno."""
     db_config = load_config()
     store = build_provider(db_config)
+    configuration_store = build_configuration_document_store(db_config)
     param_repos = _build_parametrization_repos(db_config)
 
     param_store = param_repos["param_store"]
@@ -205,8 +211,9 @@ def build_container() -> ApplicationContainer:
             gn_service=gn_upload_service,
             op_service=op_upload_service,
         ),
-        draft_repository=SimulationDraftRepository(store),
-        draft_service=SimulationDraftService(SimulationDraftRepository(store)),
+        configuration_store=configuration_store,
+        draft_repository=SimulationDraftRepository(configuration_store),
+        draft_service=SimulationDraftService(SimulationDraftRepository(configuration_store)),
     )
 
 
