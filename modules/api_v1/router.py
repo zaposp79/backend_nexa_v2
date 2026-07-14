@@ -27,6 +27,7 @@ from nexa_engine.modules.vision_tarifas.api.router import (
     router as vision_tarifas_router,
 )
 from nexa_engine.modules.audit.api.audit_router import router as audit_router
+from nexa_engine.modules.simulation_draft.api.draft_router import router as draft_router
 
 router = APIRouter()
 
@@ -41,6 +42,7 @@ router.include_router(vision_imprimible_router)
 router.include_router(pyg_router)
 router.include_router(vision_tarifas_router)
 router.include_router(cost_to_serve_router)
+router.include_router(draft_router)
 
 # Hidden from schema but functional at runtime (used by internal tools / debugging)
 router.include_router(audit_router, include_in_schema=False)

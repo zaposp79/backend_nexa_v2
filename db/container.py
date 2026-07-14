@@ -74,6 +74,12 @@ from nexa_engine.modules.cadena_c.services.parameters_query_service import (
     CadenaCParametersQueryService,
 )
 from nexa_engine.modules.panel.services.panel_service import PanelService
+from nexa_engine.modules.simulation_draft.persistence.draft_repository import (
+    SimulationDraftRepository,
+)
+from nexa_engine.modules.simulation_draft.services.draft_service import (
+    SimulationDraftService,
+)
 
 
 @dataclass
@@ -102,6 +108,8 @@ class ApplicationContainer:
     cadena_c_parameters_service: CadenaCParametersQueryService
     panel_service: PanelService
     active_parametrization_service: ActiveParametrizationService
+    draft_repository: SimulationDraftRepository
+    draft_service: SimulationDraftService
 
     def close(self) -> None:
         """Cerrar recursos (sin efecto para el backend JSON)."""
@@ -197,6 +205,8 @@ def build_container() -> ApplicationContainer:
             gn_service=gn_upload_service,
             op_service=op_upload_service,
         ),
+        draft_repository=SimulationDraftRepository(store),
+        draft_service=SimulationDraftService(SimulationDraftRepository(store)),
     )
 
 

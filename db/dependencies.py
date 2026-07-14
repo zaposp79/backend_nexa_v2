@@ -32,6 +32,7 @@ from nexa_engine.modules.parametrizacion.gn.services.gn_service import GNService
 from nexa_engine.modules.parametrizacion.op.services.op_service import OPService
 from nexa_engine.modules.audit.use_cases.audit_simulation import AuditSimulationUseCase
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry
+from nexa_engine.modules.simulation_draft.services.draft_service import SimulationDraftService
 
 
 def get_container(request: Request) -> ApplicationContainer:
@@ -104,6 +105,12 @@ def get_op_upload_service(
     return container.op_upload_service
 
 
+def get_draft_service(
+    container: ApplicationContainer = Depends(get_container),
+) -> SimulationDraftService:
+    return container.draft_service
+
+
 def get_audit_use_case(
     lineage_repo: LineageSnapshotRepository = Depends(get_lineage_repository),
 ) -> AuditSimulationUseCase:
@@ -124,5 +131,6 @@ __all__ = [
     "get_hr_upload_service",
     "get_op_upload_service",
     "get_audit_use_case",
+    "get_draft_service",
     "_lineage_repo",
 ]
