@@ -21,6 +21,13 @@ class SimulationDraftService:
 
     def create(self, request: SimulationDraftRequest) -> SimulationDraftResponse:
         now = datetime.now(timezone.utc).isoformat()
+
+        # Desactivar todos los borradores activos antes de crear el nuevo
+        for active_doc in self._repo.find_by_status("active"):
+            active_doc["status"] = "inactive"
+            active_doc["updated_at"] = now
+            self._repo.save(active_doc)
+
         document = {
             "id": str(uuid.uuid4()),
             "user_id": request.user_id,
@@ -54,6 +61,7 @@ class SimulationDraftService:
 
     def update(self, draft_id: str, request: SimulationDraftUpdateRequest) -> SimulationDraftResponse:
         existing = self._repo.get(draft_id, request.client_id)
+        old_client_id = existing["client_id"]
         now = datetime.now(timezone.utc).isoformat()
 
         # Preserva todos los campos existentes y sobreescribe solo los enviados
@@ -79,7 +87,19 @@ class SimulationDraftService:
         if request.condiciones_cadena_c is not None:
             document["condiciones_cadena_c"] = request.condiciones_cadena_c.model_dump(exclude_none=True)
 
-        saved = self._repo.save(document)
+        # client_id se sincroniza con panel_de_control.cliente (si existe)
+        panel = document.get("panel_de_control") or {}
+        cliente = panel.get("cliente")
+        if cliente:
+            document["client_id"] = cliente
+
+        new_client_id = document["client_id"]
+        if new_client_id != old_client_id:
+            # La clave de partición cambió: delete + insert en CosmosDB
+            saved = self._repo.relocate(old_client_id, document)
+        else:
+            saved = self._repo.save(document)
+
         return _to_response(saved)
 
     def get(self, draft_id: str, client_id: str) -> SimulationDraftResponse:

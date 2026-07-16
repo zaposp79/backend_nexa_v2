@@ -90,7 +90,7 @@
 								"draft"
 							]
 						},
-						"description": "Crea un nuevo borrador de simulación con id UUID4 automático.\n\nGuarda Panel de Control y/o Cadenas A, B, C (todos opcionales). Retorna el documento con `id`, `version=1`, `status=active` y timestamps.\n\nEl script de test extrae automáticamente el `id` y lo guarda en la variable de colección `draft_id`.\n\n**Campos obligatorios:** `client_id` (clave de partición en CosmosDB).\n**Campos opcionales:** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`."
+						"description": "Crea un nuevo borrador de simulación con `status=active` e `id` UUID4 autogenerado.\n\n**Regla de unicidad:** antes de guardar el nuevo borrador, todos los borradores con `status=active` existentes en el container se actualizan automáticamente a `status=inactive`. Solo el borrador recién creado queda activo.\n\nEl script de test extrae automáticamente el `id` del response y lo guarda en la variable de colección `draft_id`.\n\n**Campos obligatorios:** `client_id` (clave de partición en CosmosDB).\n**Campos opcionales:** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`.\n\nRetorna el documento con `version=1`, `status=active` y timestamps `created_at` / `updated_at`."
 					},
 					"response": []
 				},
@@ -152,7 +152,7 @@
 								"{{draft_id}}"
 							]
 						},
-						"description": "Actualiza un borrador existente con merge parcial por sección.\n\nSolo las secciones enviadas con valor distinto de `null` reemplazan las almacenadas. Las secciones `null` o ausentes se conservan sin cambios. Incrementa `version` en cada llamada exitosa.\n\n**Campos obligatorios:** `client_id` (clave de partición en CosmosDB).\n**Campos opcionales (merge parcial):** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`."
+						"description": "Actualiza un borrador existente con merge parcial por sección. Incrementa `version` en cada llamada exitosa.\n\nSolo las secciones enviadas con valor distinto de `null` reemplazan las almacenadas. Las secciones `null` o ausentes se conservan sin cambios.\n\n**Sincronización automática de `client_id`:** si `panel_de_control.cliente` está presente en el documento resultante (del request o del doc almacenado), el campo `client_id` se actualiza automáticamente con ese valor. Si el `client_id` cambia respecto al anterior, el documento se reubica en la nueva partición de CosmosDB (delete + insert transparente).\n\n⚠️ Después de un PUT donde `panel_de_control.cliente` cambió, usar el nuevo `client_id` del response en todas las llamadas siguientes a GET, PUT y DELETE.\n\n**Campos obligatorios:** `client_id` (partición actual del doc en CosmosDB, para buscarlo).\n**Campos opcionales (merge parcial):** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`."
 					},
 					"response": []
 				},

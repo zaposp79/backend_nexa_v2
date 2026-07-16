@@ -36,10 +36,18 @@ def create_draft(
     body: SimulationDraftRequest,
     service: SimulationDraftService = Depends(get_draft_service),
 ) -> ApiResponse[SimulationDraftResponse]:
-    """Crea un nuevo borrador con id UUID4 automático.
+    """Crea un nuevo borrador de simulación con `status=active`.
 
-    Incluye panel de control y/o condiciones de cadenas A, B, C (todos opcionales).
-    Retorna el documento completo con id, version=1, status=active y timestamps.
+    **Regla de unicidad:** antes de guardar el nuevo borrador, todos los borradores
+    con `status=active` existentes en el container se actualizan automáticamente
+    a `status=inactive`. Solo el borrador recién creado queda activo.
+
+    Campos obligatorios: `client_id` (clave de partición en CosmosDB).
+    Campos opcionales: `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`,
+    `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`.
+
+    Retorna el documento con `id` UUID4 autogenerado, `version=1`, `status=active`
+    y timestamps `created_at` / `updated_at`.
     """
     draft = service.create(body)
     return ApiResponse.ok(draft)
@@ -75,9 +83,19 @@ def update_draft(
 ) -> ApiResponse[SimulationDraftResponse]:
     """Actualiza un borrador existente (merge parcial por sección).
 
-    Solo las secciones enviadas en el body reemplazan las almacenadas.
-    Las secciones ausentes o null se conservan sin cambios.
+    Solo las secciones enviadas con valor distinto de `null` reemplazan las
+    almacenadas. Las secciones ausentes o `null` se conservan sin cambios.
     Incrementa `version` en cada llamada exitosa.
+
+    **Sincronización automática de `client_id`:** si `panel_de_control.cliente`
+    está presente en el documento resultante (del request o del doc almacenado),
+    el campo `client_id` se actualiza automáticamente con ese valor. Si el
+    `client_id` cambia respecto al anterior, el documento se reubica en la nueva
+    partición de CosmosDB (delete + insert transparente).
+
+    **Importante:** después de un PUT donde `panel_de_control.cliente` cambió,
+    usar el nuevo `client_id` del response en todas las llamadas siguientes
+    a GET, PUT y DELETE.
     """
     draft = service.update(draft_id, body)
     return ApiResponse.ok(draft)

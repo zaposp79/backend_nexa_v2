@@ -37,6 +37,24 @@ class SimulationDraftRepository:
         docs, _ = self._store.list(_COLLECTION)
         return docs
 
+    def find_by_status(self, status: str) -> list[dict]:
+        """Retorna todos los borradores que tengan el status indicado."""
+        docs, _ = self._store.query(_COLLECTION, {"status": status})
+        return docs
+
+    def relocate(self, old_client_id: str, document: dict) -> dict:
+        """Elimina el doc con la partición antigua y lo re-guarda con la nueva.
+
+        Necesario cuando client_id cambia, porque en CosmosDB la clave de
+        partición es inmutable — no se puede hacer upsert sobre una partición
+        distinta a la original.
+        """
+        try:
+            self._store.delete(_COLLECTION, document["id"], partition_value=old_client_id)
+        except DbNotFoundError:
+            pass  # si ya no existe con la partición vieja, continúa igual
+        return self._store.upsert(_COLLECTION, document)
+
     def delete(self, draft_id: str, client_id: str) -> None:
         """Elimina el borrador. Lanza NotFoundError si no existe."""
         try:
