@@ -34,9 +34,137 @@
 			"value": "00000000-0000-4000-8000-000000000001",
 			"type": "string",
 			"description": "UUID4 of a parametrization version (HR/GN/OP). Replace with a real ID from GET /versions."
+		},
+		{
+			"key": "draft_id",
+			"value": "00000000-0000-4000-8000-000000000002",
+			"type": "string",
+			"description": "UUID4 del borrador de simulación. Se obtiene del response de POST /simulation/draft."
 		}
 	],
 	"item": [
+		{
+			"name": "Simulation - Draft",
+			"item": [
+				{
+					"name": "POST /api/v1/simulation/draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.success && json.data && json.data.id) {",
+									"    pm.collectionVariables.set('draft_id', json.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"user_id\": \"anonymous\",\n  \"client_id\": \"bancamia\",\n  \"id_hr\": \"00000000-0000-4000-8000-000000000011\",\n  \"id_gn\": \"00000000-0000-4000-8000-000000000012\",\n  \"id_op\": \"00000000-0000-4000-8000-000000000013\",\n  \"panel_de_control\": {\n    \"cliente\": \"Bancamia\",\n    \"tipo_cliente\": \"No Grupo Aval\",\n    \"linea_negocio\": \"Cobranzas\",\n    \"ciudad\": \"Bogotá\",\n    \"sede\": \"Medellín\",\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 12,\n    \"margen\": 0.1339,\n    \"op_cont\": 0.02,\n    \"com_cont\": 0.0,\n    \"markup\": 0.0,\n    \"descuento\": 0.0,\n    \"periodo_pago_dias\": 30,\n    \"activa_financiacion\": true,\n    \"antiguedad_cliente\": \"Cliente Nuevo\",\n    \"componente_indexacion_humano\": \"IPC\",\n    \"componente_indexacion_tecnologico\": \"IPC\",\n    \"tasa_ica\": 0.0097,\n    \"tasa_gmf\": 0.004,\n    \"tasa_mensual_financ\": 0.0153,\n    \"pct_rotacion\": 0.085,\n    \"pct_ausentismo\": 0.065,\n    \"aplica_ley_1819\": true,\n    \"cadenas_activas\": {\n      \"cadena_a\": true,\n      \"cadena_b\": true,\n      \"cadena_c\": false\n    }\n  },\n  \"condiciones_cadena_a\": {\n    \"perfiles\": [\n      {\n        \"nombre\": \"WA Inbound Cobranzas\",\n        \"rol\": \"Agente Basico\",\n        \"canal\": \"WhatsApp\",\n        \"modalidad\": \"Inbound\",\n        \"fte\": 6,\n        \"pct_presencia\": 1.0,\n        \"comision_pct\": 0.0,\n        \"salario_base\": 1750905,\n        \"incluye_examenes\": true,\n        \"incluye_seguridad\": false,\n        \"incluye_crucero\": false,\n        \"dias_cap_inicial\": 10,\n        \"dias_cap_rotacion\": 10,\n        \"modelo_cobro\": \"Fijo FTE\",\n        \"pct_fijo\": 1.0,\n        \"no_payroll_mensual\": 0.0,\n        \"vol_cadena_a_mensual\": 4516.89\n      }\n    ]\n  },\n  \"condiciones_cadena_b\": {\n    \"canales\": [\n      {\n        \"nombre\": \"WhatsApp Inbound\",\n        \"modalidad\": \"Inbound\",\n        \"producto\": \"WhatsApp\",\n        \"volumen_mensual\": 1000.0,\n        \"tarifa_unitaria\": 43545.0,\n        \"pct_escalamiento\": 0.0,\n        \"costo_escalamiento\": 0.0,\n        \"opex_fijo\": 0.0,\n        \"activo\": true\n      }\n    ],\n    \"fte_equipo_sm\": 1.0,\n    \"amortizar_dispositivos_sm\": true\n  },\n  \"condiciones_cadena_c\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/draft",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"draft"
+							]
+						},
+						"description": "Crea un nuevo borrador de simulación con id UUID4 automático.\n\nGuarda Panel de Control y/o Cadenas A, B, C (todos opcionales). Retorna el documento con `id`, `version=1`, `status=active` y timestamps.\n\nEl script de test extrae automáticamente el `id` y lo guarda en la variable de colección `draft_id`.\n\n**Campos obligatorios:** `client_id` (clave de partición en CosmosDB).\n**Campos opcionales:** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT /api/v1/simulation/draft/{draft_id}",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"client_id\": \"bancamia\",\n  \"id_hr\": \"00000000-0000-4000-8000-000000000011\",\n  \"id_gn\": \"00000000-0000-4000-8000-000000000012\",\n  \"id_op\": \"00000000-0000-4000-8000-000000000013\",\n  \"panel_de_control\": {\n    \"cliente\": \"Bancamia\",\n    \"tipo_cliente\": \"No Grupo Aval\",\n    \"linea_negocio\": \"Cobranzas\",\n    \"ciudad\": \"Bogotá\",\n    \"sede\": \"Medellín\",\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 24,\n    \"margen\": 0.15,\n    \"op_cont\": 0.02,\n    \"com_cont\": 0.0,\n    \"markup\": 0.0,\n    \"descuento\": 0.0,\n    \"periodo_pago_dias\": 30,\n    \"activa_financiacion\": true,\n    \"antiguedad_cliente\": \"Cliente Recurrente\",\n    \"componente_indexacion_humano\": \"IPC\",\n    \"componente_indexacion_tecnologico\": \"IPC\",\n    \"tasa_ica\": 0.0097,\n    \"tasa_gmf\": 0.004,\n    \"tasa_mensual_financ\": 0.0153,\n    \"pct_rotacion\": 0.085,\n    \"pct_ausentismo\": 0.065,\n    \"aplica_ley_1819\": true,\n    \"cadenas_activas\": {\n      \"cadena_a\": true,\n      \"cadena_b\": true,\n      \"cadena_c\": false\n    }\n  },\n  \"condiciones_cadena_a\": null,\n  \"condiciones_cadena_b\": null,\n  \"condiciones_cadena_c\": null\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"draft",
+								"{{draft_id}}"
+							]
+						},
+						"description": "Actualiza un borrador existente con merge parcial por sección.\n\nSolo las secciones enviadas con valor distinto de `null` reemplazan las almacenadas. Las secciones `null` o ausentes se conservan sin cambios. Incrementa `version` en cada llamada exitosa.\n\n**Campos obligatorios:** `client_id` (clave de partición en CosmosDB).\n**Campos opcionales (merge parcial):** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/simulation/draft/{draft_id}",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}?client_id=bancamia",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"simulation",
+								"draft",
+								"{{draft_id}}"
+							],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "bancamia",
+									"description": "Clave de partición del borrador en CosmosDB. Debe coincidir con el client_id usado al crear."
+								}
+							]
+						},
+						"description": "Recupera un borrador de simulación por su id.\n\nRetorna el documento completo incluyendo `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a/b/c`, `version`, `status` y timestamps.\n\n**Query param obligatorio:** `client_id` (clave de partición en CosmosDB)."
+					},
+					"response": []
+				}
+			]
+		},
 		{
 			"name": "Simulation - Calculate",
 			"item": [

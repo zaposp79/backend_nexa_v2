@@ -112,9 +112,11 @@ class CondicionesCadenaC(BaseModel):
 class SimulationDraftRequest(BaseModel):
     """Body para POST /simulation/draft — crea un nuevo borrador."""
 
-    dataset_id: Optional[str] = None
     user_id: str = "anonymous"
     client_id: str
+    id_hr: Optional[str] = None
+    id_gn: Optional[str] = None
+    id_op: Optional[str] = None
     panel_de_control: Optional[PanelDeControlInput] = None
     condiciones_cadena_a: Optional[CondicionesCadenaA] = None
     condiciones_cadena_b: Optional[CondicionesCadenaB] = None
@@ -128,9 +130,11 @@ class SimulationDraftUpdateRequest(BaseModel):
     Las secciones ausentes o None se conservan tal como estaban.
     """
 
-    dataset_id: Optional[str] = None
     user_id: Optional[str] = None
     client_id: str
+    id_hr: Optional[str] = None
+    id_gn: Optional[str] = None
+    id_op: Optional[str] = None
     panel_de_control: Optional[PanelDeControlInput] = None
     condiciones_cadena_a: Optional[CondicionesCadenaA] = None
     condiciones_cadena_b: Optional[CondicionesCadenaB] = None
@@ -139,9 +143,11 @@ class SimulationDraftUpdateRequest(BaseModel):
 
 class SimulationDraftResponse(BaseModel):
     id: str
-    dataset_id: Optional[str] = None
     user_id: str
     client_id: str
+    id_hr: Optional[str] = None
+    id_gn: Optional[str] = None
+    id_op: Optional[str] = None
     version: int
     status: str
     created_at: str

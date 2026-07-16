@@ -23,9 +23,11 @@ class SimulationDraftService:
         now = datetime.now(timezone.utc).isoformat()
         document = {
             "id": str(uuid.uuid4()),
-            "dataset_id": request.dataset_id,
             "user_id": request.user_id,
             "client_id": request.client_id,
+            "id_hr": request.id_hr,
+            "id_gn": request.id_gn,
+            "id_op": request.id_op,
             "version": 1,
             "status": "active",
             "created_at": now,
@@ -60,10 +62,14 @@ class SimulationDraftService:
             "updated_at": now,
             "version": existing.get("version", 1) + 1,
         }
-        if request.dataset_id is not None:
-            document["dataset_id"] = request.dataset_id
         if request.user_id is not None:
             document["user_id"] = request.user_id
+        if request.id_hr is not None:
+            document["id_hr"] = request.id_hr
+        if request.id_gn is not None:
+            document["id_gn"] = request.id_gn
+        if request.id_op is not None:
+            document["id_op"] = request.id_op
         if request.panel_de_control is not None:
             document["panel_de_control"] = request.panel_de_control.model_dump(exclude_none=True)
         if request.condiciones_cadena_a is not None:
@@ -84,9 +90,11 @@ class SimulationDraftService:
 def _to_response(doc: dict) -> SimulationDraftResponse:
     return SimulationDraftResponse.model_validate({
         "id": doc["id"],
-        "dataset_id": doc.get("dataset_id"),
         "user_id": doc.get("user_id", "anonymous"),
         "client_id": doc["client_id"],
+        "id_hr": doc.get("id_hr"),
+        "id_gn": doc.get("id_gn"),
+        "id_op": doc.get("id_op"),
         "version": doc.get("version", 1),
         "status": doc.get("status", "active"),
         "created_at": doc.get("created_at", ""),
