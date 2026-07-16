@@ -32,6 +32,18 @@ class SimulationDraftRepository:
             raise NotFoundError("SimulationDraft", draft_id)
         return doc
 
+    def list_all(self) -> list[dict]:
+        """Retorna todos los borradores del container (sin filtro de partición)."""
+        docs, _ = self._store.list(_COLLECTION)
+        return docs
+
+    def delete(self, draft_id: str, client_id: str) -> None:
+        """Elimina el borrador. Lanza NotFoundError si no existe."""
+        try:
+            self._store.delete(_COLLECTION, draft_id, partition_value=client_id)
+        except DbNotFoundError as exc:
+            raise NotFoundError("SimulationDraft", draft_id) from exc
+
     def exists(self, draft_id: str, client_id: str) -> bool:
         try:
             return self._store.get(_COLLECTION, draft_id, partition_value=client_id) is not None

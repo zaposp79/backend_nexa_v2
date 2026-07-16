@@ -86,6 +86,15 @@ class SimulationDraftService:
         doc = self._repo.get(draft_id, client_id)
         return _to_response(doc)
 
+    def list_all(self) -> list[SimulationDraftResponse]:
+        """Retorna todos los borradores almacenados en el container."""
+        docs = self._repo.list_all()
+        return [_to_response(doc) for doc in docs]
+
+    def delete(self, draft_id: str, client_id: str) -> None:
+        """Elimina el borrador. Lanza NotFoundError si no existe."""
+        self._repo.delete(draft_id, client_id)
+
 
 def _to_response(doc: dict) -> SimulationDraftResponse:
     return SimulationDraftResponse.model_validate({
