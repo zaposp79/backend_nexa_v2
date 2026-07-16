@@ -167,7 +167,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}?client_id=bancamia",
+							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -177,16 +177,9 @@
 								"simulation",
 								"draft",
 								"{{draft_id}}"
-							],
-							"query": [
-								{
-									"key": "client_id",
-									"value": "bancamia",
-									"description": "Clave de partición del borrador en CosmosDB. Debe coincidir con el client_id usado al crear."
-								}
 							]
 						},
-						"description": "Recupera un borrador de simulación por su id.\n\nRetorna el documento completo incluyendo `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a/b/c`, `version`, `status` y timestamps.\n\n**Query param obligatorio:** `client_id` (clave de partición en CosmosDB)."
+						"description": "Recupera un borrador por su id.\n\nNo requiere `client_id` — la partition key del container es `/domain` (fijo = \"configuration\"), no `/client_id`.\n\nRetorna el documento completo incluyendo `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a/b/c`, `version`, `status` y timestamps."
 					},
 					"response": []
 				},
@@ -201,7 +194,7 @@
 							}
 						],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}?client_id=bancamia",
+							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -211,16 +204,9 @@
 								"simulation",
 								"draft",
 								"{{draft_id}}"
-							],
-							"query": [
-								{
-									"key": "client_id",
-									"value": "bancamia",
-									"description": "Clave de partición del borrador en CosmosDB. Debe coincidir con el client_id usado al crear."
-								}
 							]
 						},
-						"description": "Elimina un borrador del container 'configuration' en CosmosDB.\n\nRetorna `{ deleted: true, id: \"<draft_id>\" }` si se eliminó correctamente.\nRetorna 404 si el borrador no existe.\n\n**Query param obligatorio:** `client_id` (clave de partición en CosmosDB)."
+						"description": "Elimina un borrador del container 'configuration'.\n\nNo requiere `client_id` — la partition key del container es `/domain` (fijo = \"configuration\").\n\nRetorna `{ deleted: true, id: \"<draft_id>\" }` si se eliminó correctamente.\nRetorna 404 si el borrador no existe."
 					},
 					"response": []
 				}

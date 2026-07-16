@@ -3,8 +3,8 @@
 POST   /simulation/draft          → crea borrador, devuelve id UUID4
 GET    /simulation/draft/all      → lista todos los borradores del container
 PUT    /simulation/draft/{id}     → actualiza secciones del borrador (merge parcial)
-GET    /simulation/draft/{id}     → recupera borrador por id + client_id
-DELETE /simulation/draft/{id}     → elimina borrador por id + client_id
+GET    /simulation/draft/{id}     → recupera borrador por id
+DELETE /simulation/draft/{id}     → elimina borrador por id
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ def create_draft(
     con `status=active` existentes en el container se actualizan automáticamente
     a `status=inactive`. Solo el borrador recién creado queda activo.
 
-    Campos obligatorios: `client_id` (clave de partición en CosmosDB).
+    Campos obligatorios: `client_id`.
     Campos opcionales: `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`,
     `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`.
 
@@ -62,10 +62,7 @@ def create_draft(
 def list_all_drafts(
     service: SimulationDraftService = Depends(get_draft_service),
 ) -> ApiResponse[List[SimulationDraftResponse]]:
-    """Retorna todos los borradores almacenados en el container 'configuration'.
-
-    No requiere filtros. Realiza un scan completo del container en CosmosDB.
-    """
+    """Retorna todos los borradores almacenados en el container 'configuration'."""
     drafts = service.list_all()
     return ApiResponse.ok(drafts)
 
@@ -87,15 +84,8 @@ def update_draft(
     almacenadas. Las secciones ausentes o `null` se conservan sin cambios.
     Incrementa `version` en cada llamada exitosa.
 
-    **Sincronización automática de `client_id`:** si `panel_de_control.cliente`
-    está presente en el documento resultante (del request o del doc almacenado),
-    el campo `client_id` se actualiza automáticamente con ese valor. Si el
-    `client_id` cambia respecto al anterior, el documento se reubica en la nueva
-    partición de CosmosDB (delete + insert transparente).
-
-    **Importante:** después de un PUT donde `panel_de_control.cliente` cambió,
-    usar el nuevo `client_id` del response en todas las llamadas siguientes
-    a GET, PUT y DELETE.
+    `client_id` se sincroniza automáticamente con `panel_de_control.cliente`
+    si ese campo está presente en el documento resultante.
     """
     draft = service.update(draft_id, body)
     return ApiResponse.ok(draft)
@@ -109,14 +99,10 @@ def update_draft(
 )
 def get_draft(
     draft_id: str,
-    client_id: str,
     service: SimulationDraftService = Depends(get_draft_service),
 ) -> ApiResponse[SimulationDraftResponse]:
-    """Recupera un borrador por su id.
-
-    `client_id` es requerido como query param (clave de partición en CosmosDB).
-    """
-    draft = service.get(draft_id, client_id)
+    """Recupera un borrador por su id."""
+    draft = service.get(draft_id)
     return ApiResponse.ok(draft)
 
 
@@ -129,15 +115,13 @@ def get_draft(
 )
 def delete_draft(
     draft_id: str,
-    client_id: str,
     service: SimulationDraftService = Depends(get_draft_service),
 ) -> ApiResponse[dict]:
-    """Elimina un borrador del container 'configuration' en CosmosDB.
+    """Elimina un borrador del container 'configuration'.
 
-    `client_id` es requerido como query param (clave de partición en CosmosDB).
     Retorna 404 si el borrador no existe.
     """
-    service.delete(draft_id, client_id)
+    service.delete(draft_id)
     return ApiResponse.ok({"deleted": True, "id": draft_id})
 
 

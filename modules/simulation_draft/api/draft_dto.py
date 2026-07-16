@@ -128,10 +128,13 @@ class SimulationDraftUpdateRequest(BaseModel):
 
     Solo las secciones presentes (no-None) reemplazan la versión almacenada.
     Las secciones ausentes o None se conservan tal como estaban.
+
+    client_id es opcional: si se envía, permite cambiar la partición del documento.
+    El client_id final siempre se sincroniza con panel_de_control.cliente si existe.
     """
 
     user_id: Optional[str] = None
-    client_id: str
+    client_id: Optional[str] = None
     id_hr: Optional[str] = None
     id_gn: Optional[str] = None
     id_op: Optional[str] = None
