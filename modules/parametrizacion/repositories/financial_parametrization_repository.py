@@ -439,15 +439,22 @@ class FinancialParametrizationRepository:
         if not data:
             return None
 
-        # For sheets array
+        # Format 1: sheets array (legacy serialized format)
         sheets = data.get("sheets", [])
         for sheet in sheets:
             if sheet.get("key") == key:
                 return sheet
 
-        # For lv field (HR-style)
+        # Format 2: lv field (HR-style)
         if key == "lv" and "lv" in data:
             return data["lv"]
+
+        # Format 3: flat dict (OP mapper to_dict() format — data[key] is list or dict)
+        flat_val = data.get(key)
+        if isinstance(flat_val, list):
+            return {"key": key, "rows": flat_val}
+        if isinstance(flat_val, dict):
+            return flat_val
 
         return None
 

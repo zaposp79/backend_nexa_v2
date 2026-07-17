@@ -127,9 +127,9 @@ def _build_parametrization_repos(db_config) -> dict:
     internamente; no es necesario ramificar aquí por tipo de backend.
     """
     param_store = build_parametrization_document_store(db_config)
-    hr_version_index = VersionIndexRepository(store=None, collection=HR_PARAMETRIZATION_COLLECTION)
-    gn_version_index = VersionIndexRepository(store=None, collection=GN_PARAMETRIZATION_COLLECTION)
-    op_version_index = VersionIndexRepository(store=None, collection=OP_PARAMETRIZATION_COLLECTION)
+    hr_version_index = VersionIndexRepository(store=param_store, collection=HR_PARAMETRIZATION_COLLECTION)
+    gn_version_index = VersionIndexRepository(store=param_store, collection=GN_PARAMETRIZATION_COLLECTION)
+    op_version_index = VersionIndexRepository(store=param_store, collection=OP_PARAMETRIZATION_COLLECTION)
     return {
         "param_store": param_store,
         "hr_repo": HRActiveParametrizationRepository(param_store, hr_version_index),
@@ -179,7 +179,7 @@ def build_container() -> ApplicationContainer:
     return ApplicationContainer(
         store=store,
         parametrization_store=param_store,
-        results_repository=ResultsRepository(store),
+        results_repository=ResultsRepository(configuration_store),
         snapshots_repository=SnapshotRepository(store=store),
         certificate_repository=CertificateRepository(store=store),
         lineage_repository=LineageSnapshotRepository(store=store),

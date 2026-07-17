@@ -5,6 +5,7 @@ and are kept in a separate file for readability. Behaviour is unchanged.
 """
 from __future__ import annotations
 
+import logging
 from typing import List, Optional
 
 from nexa_engine.modules.shared.models import (
@@ -87,8 +88,30 @@ def _calcular_reglas_negocio(
         "imprevistos":             panel.imprevistos,   # campo real (PanelDeControl.imprevistos)
     }
 
+    _helpers_logger = logging.getLogger(__name__)
+
     if parametrizacion is not None:
         politicas_config = parametrizacion.get_politicas_comerciales()
+        # Defensive: get_politicas_comerciales() must return List[Dict].
+        # If _parse_yaml_simple fallback was used (no PyYAML), it returns a dict
+        # with keys like "- nombre". Normalize to list to prevent TypeError.
+        if isinstance(politicas_config, dict):
+            _helpers_logger.error(
+                "[BUG] get_politicas_comerciales() devolvio dict en lugar de list. "
+                "Claves: %s. Verifica que PyYAML este instalado en el entorno del servidor.",
+                list(politicas_config.keys()),
+            )
+            politicas_config = [
+                {"nombre": k, **v} if isinstance(v, dict)
+                else {"nombre": k, "label": k, "min": None, "max": None}
+                for k, v in politicas_config.items()
+            ]
+        elif not isinstance(politicas_config, list):
+            _helpers_logger.error(
+                "[BUG] get_politicas_comerciales() devolvio tipo inesperado: %s",
+                type(politicas_config).__name__,
+            )
+            politicas_config = []
     else:
         politicas_config = [
             {"nombre": "margen_objetivo",        "label": "Margen objetivo",        "min": None, "max": None},

@@ -11,8 +11,8 @@ _logger = logging.getLogger("nexa.db.config")
 
 from nexa_engine.db.constants.provider_constants import (
     DEFAULT_PROVIDER,
-    ENV_COSMOS_CONTAINER,
-    ENV_COSMOS_CONTAINER_CONFIGURATION,
+    ENV_COSMOS_CONTAINER_SIMULATION,
+    ENV_COSMOS_CONTAINER_PARAMETRIZATION,
     ENV_COSMOS_DATABASE,
     ENV_COSMOS_ENDPOINT,
     ENV_COSMOS_KEY,
@@ -36,10 +36,12 @@ class CosmosSettings:
     endpoint: str
     key: str
     database: str
-    container: str
-    # Container separado para la colección "configuration" (simulation drafts).
-    # Si está vacío, el factory usa `container` como fallback.
-    container_configuration: str = ""
+    # container: nombre del container al que conecta este settings.
+    # Siempre se establece al construir settings específicos por store en factory.py.
+    # El base settings (de _resolve_cosmos) lo deja vacío; no se lee de env.
+    container: str = ""
+    container_parametrization: str = ""
+    container_simulation: str = ""
 
 
 @dataclass(frozen=True)
@@ -90,16 +92,14 @@ def _resolve_cosmos(env: dict[str, str]) -> CosmosSettings:
     endpoint = env.get(ENV_COSMOS_ENDPOINT, "").strip()
     key = env.get(ENV_COSMOS_KEY, "").strip()
     database = env.get(ENV_COSMOS_DATABASE, "").strip()
-    container = env.get(ENV_COSMOS_CONTAINER, "").strip()
-    # Opcional: container separado para "configuration". Vacío = usa `container`.
-    container_configuration = env.get(ENV_COSMOS_CONTAINER_CONFIGURATION, "").strip()
+    container_parametrization = env.get(ENV_COSMOS_CONTAINER_PARAMETRIZATION, "").strip()
+    container_simulation = env.get(ENV_COSMOS_CONTAINER_SIMULATION, "").strip()
     missing = [
         name
         for name, value in (
             (ENV_COSMOS_ENDPOINT, endpoint),
             (ENV_COSMOS_KEY, key),
             (ENV_COSMOS_DATABASE, database),
-            (ENV_COSMOS_CONTAINER, container),
         )
         if not value
     ]
@@ -113,8 +113,8 @@ def _resolve_cosmos(env: dict[str, str]) -> CosmosSettings:
         endpoint=endpoint,
         key=key,
         database=database,
-        container=container,
-        container_configuration=container_configuration,
+        container_parametrization=container_parametrization,
+        container_simulation=container_simulation,
     )
 
 

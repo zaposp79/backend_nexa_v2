@@ -16,7 +16,6 @@ from nexa_engine.modules.simulation_draft.persistence.draft_repository import (
 )
 
 # Campos de sistema que CosmosDB agrega a los documentos al leerlos.
-# Deben eliminarse antes de hacer upsert para evitar errores al reubicar particiones.
 _COSMOS_SYSTEM_FIELDS = {"_rid", "_self", "_etag", "_attachments", "_ts", "domain"}
 
 
@@ -25,14 +24,18 @@ def _clean(doc: dict) -> dict:
     return {k: v for k, v in doc.items() if k not in _COSMOS_SYSTEM_FIELDS}
 
 
+def _dump(model) -> dict | None:
+    """Serializa un modelo Pydantic a dict excluyendo None, o retorna None."""
+    if model is None:
+        return None
+    return model.model_dump(exclude_none=True)
+
+
 class SimulationDraftService:
     def __init__(self, repository: SimulationDraftRepository) -> None:
         self._repo = repository
 
     def _get_by_id(self, draft_id: str) -> dict:
-        """Busca un borrador usando list_all() + filtro Python.
-        Mismo path que GET /all — garantizado que funciona si el doc existe.
-        """
         all_docs = self._repo.list_all()
         for doc in all_docs:
             if doc.get("id") == draft_id:
@@ -49,41 +52,42 @@ class SimulationDraftService:
             clean_active["updated_at"] = now
             self._repo.save(clean_active)
 
+        client_id = request.client_id or ""
+
         document = {
             "id": str(uuid.uuid4()),
-            "user_id": request.user_id,
-            "client_id": request.client_id,
+            "client_id": client_id,
             "id_hr": request.id_hr,
             "id_gn": request.id_gn,
             "id_op": request.id_op,
-            "version": 1,
             "status": "active",
+            "tipo": request.tipo,
+            "user_id": request.user_id,
+            "version": 1,
             "created_at": now,
             "updated_at": now,
-            "panel_de_control": (
-                request.panel_de_control.model_dump(exclude_none=True)
-                if request.panel_de_control else None
+            "datos_operativos": _dump(request.datos_operativos),
+            "polizas": (
+                [_dump(p) for p in request.polizas]
+                if request.polizas is not None else None
             ),
-            "condiciones_cadena_a": (
-                request.condiciones_cadena_a.model_dump(exclude_none=True)
-                if request.condiciones_cadena_a else None
+            "reglas_negocio": _dump(request.reglas_negocio),
+            "volumetria": _dump(request.volumetria),
+            "escenarios_comerciales": (
+                [_dump(e) for e in request.escenarios_comerciales]
+                if request.escenarios_comerciales is not None else None
             ),
-            "condiciones_cadena_b": (
-                request.condiciones_cadena_b.model_dump(exclude_none=True)
-                if request.condiciones_cadena_b else None
-            ),
-            "condiciones_cadena_c": (
-                request.condiciones_cadena_c.model_dump(exclude_none=True)
-                if request.condiciones_cadena_c else None
-            ),
+            "condiciones_cadena_a": _dump(request.condiciones_cadena_a),
+            "condiciones_cadena_b": _dump(request.condiciones_cadena_b),
+            "condiciones_cadena_c": _dump(request.condiciones_cadena_c),
         }
         saved = self._repo.save(document)
         return _to_response(saved)
 
     def update(self, draft_id: str, request: SimulationDraftUpdateRequest) -> SimulationDraftResponse:
         existing_raw = self._get_by_id(draft_id)
-        existing = _clean(existing_raw)  # elimina campos de sistema antes de operar
-        old_client_id = existing["client_id"]
+        existing = _clean(existing_raw)
+        old_client_id = existing.get("client_id", "")
         now = datetime.now(timezone.utc).isoformat()
 
         document = {
@@ -91,6 +95,7 @@ class SimulationDraftService:
             "updated_at": now,
             "version": existing.get("version", 1) + 1,
         }
+
         if request.user_id is not None:
             document["user_id"] = request.user_id
         if request.client_id is not None:
@@ -101,22 +106,32 @@ class SimulationDraftService:
             document["id_gn"] = request.id_gn
         if request.id_op is not None:
             document["id_op"] = request.id_op
-        if request.panel_de_control is not None:
-            document["panel_de_control"] = request.panel_de_control.model_dump(exclude_none=True)
+        if request.tipo is not None:
+            document["tipo"] = request.tipo
+        if request.datos_operativos is not None:
+            document["datos_operativos"] = _dump(request.datos_operativos)
+        if request.polizas is not None:
+            document["polizas"] = [_dump(p) for p in request.polizas]
+        if request.reglas_negocio is not None:
+            document["reglas_negocio"] = _dump(request.reglas_negocio)
+        if request.volumetria is not None:
+            document["volumetria"] = _dump(request.volumetria)
+        if request.escenarios_comerciales is not None:
+            document["escenarios_comerciales"] = [_dump(e) for e in request.escenarios_comerciales]
         if request.condiciones_cadena_a is not None:
-            document["condiciones_cadena_a"] = request.condiciones_cadena_a.model_dump(exclude_none=True)
+            document["condiciones_cadena_a"] = _dump(request.condiciones_cadena_a)
         if request.condiciones_cadena_b is not None:
-            document["condiciones_cadena_b"] = request.condiciones_cadena_b.model_dump(exclude_none=True)
+            document["condiciones_cadena_b"] = _dump(request.condiciones_cadena_b)
         if request.condiciones_cadena_c is not None:
-            document["condiciones_cadena_c"] = request.condiciones_cadena_c.model_dump(exclude_none=True)
+            document["condiciones_cadena_c"] = _dump(request.condiciones_cadena_c)
 
-        # client_id se sincroniza con panel_de_control.cliente (máxima prioridad)
-        panel = document.get("panel_de_control") or {}
-        cliente = panel.get("cliente")
+        # client_id se sincroniza con datos_operativos.cliente si está presente
+        datos_op = document.get("datos_operativos") or {}
+        cliente = datos_op.get("cliente")
         if cliente:
             document["client_id"] = cliente
 
-        new_client_id = document["client_id"]
+        new_client_id = document.get("client_id", "")
         if new_client_id != old_client_id:
             saved = self._repo.relocate(old_client_id, document)
         else:
@@ -134,23 +149,28 @@ class SimulationDraftService:
 
     def delete(self, draft_id: str) -> None:
         doc = self._get_by_id(draft_id)
-        client_id = doc["client_id"]
+        client_id = doc.get("client_id", "")
         self._repo.delete_by_partition(draft_id, client_id)
 
 
 def _to_response(doc: dict) -> SimulationDraftResponse:
     return SimulationDraftResponse.model_validate({
         "id": doc["id"],
-        "user_id": doc.get("user_id", "anonymous"),
-        "client_id": doc.get("client_id", ""),
+        "client_id": doc.get("client_id"),
         "id_hr": doc.get("id_hr"),
         "id_gn": doc.get("id_gn"),
         "id_op": doc.get("id_op"),
-        "version": doc.get("version", 1),
         "status": doc.get("status", "active"),
+        "tipo": doc.get("tipo"),
+        "user_id": doc.get("user_id", "anonymous"),
+        "version": doc.get("version", 1),
         "created_at": doc.get("created_at", ""),
         "updated_at": doc.get("updated_at", ""),
-        "panel_de_control": doc.get("panel_de_control"),
+        "datos_operativos": doc.get("datos_operativos"),
+        "polizas": doc.get("polizas"),
+        "reglas_negocio": doc.get("reglas_negocio"),
+        "volumetria": doc.get("volumetria"),
+        "escenarios_comerciales": doc.get("escenarios_comerciales"),
         "condiciones_cadena_a": doc.get("condiciones_cadena_a"),
         "condiciones_cadena_b": doc.get("condiciones_cadena_b"),
         "condiciones_cadena_c": doc.get("condiciones_cadena_c"),

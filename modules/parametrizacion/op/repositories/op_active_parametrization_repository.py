@@ -29,15 +29,35 @@ class OPActiveParametrizationRepository:
 
     def get_active_data(self) -> Dict[str, Any]:
         active = self._version_index.get_active()
-        if active is None:
-            raise ParametrizationNotFoundError("op", None)
-        record = self._store.get_record(OP_PARAMETRIZATION_COLLECTION, active.version_id)
-        if record is not None:
-            return self._codec.decode(record)
-        if not active.path:
-            raise ParametrizationNotFoundError("op", active.version_id)
-        data_path = (OP_DIR / active.path).resolve()
-        return read_json(data_path)  # type: ignore[return-value]
+        if active is not None:
+            record = self._store.get_record(OP_PARAMETRIZATION_COLLECTION, active.version_id)
+            if record is not None:
+                data = self._codec.decode(record)
+                if "version_id" not in data:
+                    data = {**data, "version_id": active.version_id}
+                return data
+            if not active.path:
+                raise ParametrizationNotFoundError("op", active.version_id)
+            data_path = (OP_DIR / active.path).resolve()
+            return read_json(data_path)  # type: ignore[return-value]
+
+        # Fallback: query directa cuando el índice 'versions' no existe en Cosmos
+        try:
+            docs, _ = self._store.query(
+                OP_PARAMETRIZATION_COLLECTION,
+                {"domain": "op", "status": "active"},
+            )
+            if docs:
+                doc = docs[0]
+                payload = doc.get("payload")
+                if isinstance(payload, dict):
+                    if "version_id" not in payload:
+                        payload = {**payload, "version_id": doc.get("id", "unknown")}
+                    return payload
+        except Exception:
+            pass
+
+        raise ParametrizationNotFoundError("op", None)
 
 
 __all__ = ["OPActiveParametrizationRepository"]

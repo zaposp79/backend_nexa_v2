@@ -20,26 +20,23 @@ _cached_parametrization_provider: DocumentStore | None = None
 
 
 def build_provider(config: DbConfig) -> DocumentStore:
-    """Construir un proveedor fresco para la configuración."""
-    if config.provider == PROVIDER_JSON:
-        from nexa_engine.db.providers.json_document_store import JsonDocumentStore
+    """Construir el DocumentStore para snapshots, lineage y certificados (siempre JSON local).
 
-        logger.info("[db.factory] provider=json path=%s", config.json_storage_path)
-        return JsonDocumentStore(config.json_storage_path)
+    Los resultados de simulación van a COSMOS_CONTAINER_SIMULATION via
+    build_configuration_document_store(). Los borradores draft también usan ese store.
+    La parametrización usa COSMOS_CONTAINER_PARAMETRIZATION via build_parametrization_document_store().
+    """
+    from nexa_engine.db.providers.json_document_store import JsonDocumentStore
 
-    if config.provider == PROVIDER_COSMOS:
-        if config.cosmos is None:  # pragma: no cover - load_config guarantees this
-            raise DbConfigurationError("Cosmos provider selected but settings are unresolved")
-        from nexa_engine.db.providers.cosmos_document_store import CosmosDocumentStore
-
-        logger.info("[db.factory] provider=cosmos")
-        return CosmosDocumentStore(config.cosmos)
-
-    raise DbConfigurationError(f"unknown provider: {config.provider!r}")
+    logger.info("[db.factory] main store=json path=%s", config.json_storage_path)
+    return JsonDocumentStore(config.json_storage_path)
 
 
 def build_parametrization_document_store(settings: DbConfig) -> DocumentStore:
-    """Construir el DocumentStore de parametrización para la configuración."""
+    """Construir el DocumentStore de parametrización (HR/GN/OP).
+
+    En Cosmos usa exclusivamente COSMOS_CONTAINER_PARAMETRIZATION.
+    """
     if settings.provider == PROVIDER_JSON:
         from nexa_engine.db.providers.json_document_store import JsonDocumentStore
         from nexa_engine.modules.shared.config.config import PARAMETRIZATION_DIR
@@ -53,9 +50,21 @@ def build_parametrization_document_store(settings: DbConfig) -> DocumentStore:
                 "Cosmos parametrization store selected but settings are unresolved"
             )
         from nexa_engine.db.providers.cosmos_document_store import CosmosDocumentStore
+        from nexa_engine.db.config import CosmosSettings
 
-        logger.info("[db.factory] parametrization_store=cosmos")
-        return CosmosDocumentStore(settings.cosmos)
+        container_name = settings.cosmos.container_parametrization
+        if not container_name:
+            raise DbConfigurationError(
+                "COSMOS_CONTAINER_PARAMETRIZATION es obligatorio cuando DB_PROVIDER=cosmos"
+            )
+        cfg = CosmosSettings(
+            endpoint=settings.cosmos.endpoint,
+            key=settings.cosmos.key,
+            database=settings.cosmos.database,
+            container=container_name,
+        )
+        logger.info("[db.factory] parametrization_store=cosmos container=%s", container_name)
+        return CosmosDocumentStore(cfg)
 
     raise DbConfigurationError(f"unknown parametrization provider: {settings.provider!r}")
 
@@ -63,9 +72,7 @@ def build_parametrization_document_store(settings: DbConfig) -> DocumentStore:
 def build_configuration_document_store(config: DbConfig) -> DocumentStore:
     """Construir el DocumentStore para la colección 'configuration' (simulation drafts).
 
-    En JSON usa la misma raíz que el store principal (crea storage/configuration/).
-    En Cosmos conecta al container indicado por COSMOS_CONTAINER_CONFIGURATION;
-    si no está definida, usa COSMOS_CONTAINER como fallback.
+    En Cosmos usa exclusivamente COSMOS_CONTAINER_SIMULATION.
     """
     if config.provider == PROVIDER_JSON:
         from nexa_engine.db.providers.json_document_store import JsonDocumentStore
@@ -81,7 +88,11 @@ def build_configuration_document_store(config: DbConfig) -> DocumentStore:
         from nexa_engine.db.providers.cosmos_document_store import CosmosDocumentStore
         from nexa_engine.db.config import CosmosSettings
 
-        container_name = config.cosmos.container_configuration or config.cosmos.container
+        container_name = config.cosmos.container_simulation
+        if not container_name:
+            raise DbConfigurationError(
+                "COSMOS_CONTAINER_SIMULATION es obligatorio cuando DB_PROVIDER=cosmos"
+            )
         cfg = CosmosSettings(
             endpoint=config.cosmos.endpoint,
             key=config.cosmos.key,

@@ -7,7 +7,7 @@ import pytest
 
 from nexa_engine.db.config import load_config
 from nexa_engine.db.constants.provider_constants import (
-    ENV_COSMOS_CONTAINER,
+    ENV_COSMOS_CONTAINER_PARAMETRIZATION,
     ENV_COSMOS_DATABASE,
     ENV_COSMOS_ENDPOINT,
     ENV_COSMOS_KEY,
@@ -64,12 +64,13 @@ def test_cosmos_settings_resolved():
             ENV_COSMOS_ENDPOINT: "https://acct.documents.azure.com:443/",
             ENV_COSMOS_KEY: "secret-key",
             ENV_COSMOS_DATABASE: "nexa_pricing_db",
-            ENV_COSMOS_CONTAINER: "results",
+            ENV_COSMOS_CONTAINER_PARAMETRIZATION: "parametrization",
         }
     )
     assert cfg.provider == PROVIDER_COSMOS
     assert cfg.cosmos is not None
     assert cfg.cosmos.database == "nexa_pricing_db"
+    assert cfg.cosmos.container_parametrization == "parametrization"
 
 
 # --- factory ----------------------------------------------------------------
@@ -119,7 +120,7 @@ def test_build_parametrization_store_cosmos_constructs_from_settings(monkeypatch
             ENV_COSMOS_ENDPOINT: "https://acct.documents.azure.com:443/",
             ENV_COSMOS_KEY: "secret-key",
             ENV_COSMOS_DATABASE: "nexa_pricing",
-            ENV_COSMOS_CONTAINER: "parametrization",
+            ENV_COSMOS_CONTAINER_PARAMETRIZATION: "parametrization",
         }
     )
 
@@ -138,7 +139,10 @@ def test_build_parametrization_store_cosmos_constructs_from_settings(monkeypatch
     provider = build_parametrization_document_store(cfg)
 
     assert isinstance(provider, FakeCosmosDocumentStore)
-    assert constructed["settings"] == cfg.cosmos
+    # factory builds a specific CosmosSettings with container=container_parametrization
+    assert constructed["settings"].container == "parametrization"
+    assert constructed["settings"].endpoint == cfg.cosmos.endpoint
+    assert constructed["settings"].database == cfg.cosmos.database
 
 
 def test_container_does_not_hardcode_parametrization_json_store():

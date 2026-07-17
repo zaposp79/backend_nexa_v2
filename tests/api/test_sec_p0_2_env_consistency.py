@@ -81,14 +81,14 @@ def test_production_fails_with_wildcard_cors():
 
 def test_cosmos_without_endpoint_fails():
     with pytest.raises(DbConfigurationError) as exc_info:
-        load_config({"DB_PROVIDER": "cosmos", "COSMOS_KEY": "k", "COSMOS_DATABASE": "db", "COSMOS_CONTAINER": "c"})
+        load_config({"DB_PROVIDER": "cosmos", "COSMOS_KEY": "k", "COSMOS_DATABASE": "db"})
     assert "COSMOS_ENDPOINT" in str(exc_info.value)
     assert "super-secret" not in str(exc_info.value)  # secret value not in error
 
 
 def test_cosmos_without_key_fails():
     with pytest.raises(DbConfigurationError) as exc_info:
-        load_config({"DB_PROVIDER": "cosmos", "COSMOS_ENDPOINT": "https://ep.azure.com", "COSMOS_DATABASE": "db", "COSMOS_CONTAINER": "c"})
+        load_config({"DB_PROVIDER": "cosmos", "COSMOS_ENDPOINT": "https://ep.azure.com", "COSMOS_DATABASE": "db"})
     assert "COSMOS_KEY" in str(exc_info.value)
 
 
@@ -167,7 +167,7 @@ def test_get_cosmos_database_reflects_env_at_call_time(monkeypatch):
 
 def test_get_cosmos_container_reflects_env_at_call_time(monkeypatch):
     from nexa_engine.modules.parametrizacion.shared.constants import storage_constants
-    monkeypatch.setenv("COSMOS_CONTAINER", "patched_container")
+    monkeypatch.setenv("COSMOS_CONTAINER_PARAMETRIZATION", "patched_container")
     assert storage_constants.get_cosmos_container() == "patched_container"
 
 

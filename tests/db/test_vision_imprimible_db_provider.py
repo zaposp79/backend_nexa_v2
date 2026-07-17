@@ -400,7 +400,7 @@ def test_p9_cosmos_skip_si_no_configurado():
             "P9: Cosmos no configurado (COSMOS_ENDPOINT ausente). "
             "Solo el provider JSON/local está certificado en este entorno. "
             "Para certificar Cosmos, configurar COSMOS_ENDPOINT, COSMOS_KEY, "
-            "COSMOS_DATABASE, COSMOS_CONTAINER y re-ejecutar con -m cosmos_integration."
+            "COSMOS_DATABASE, COSMOS_CONTAINER_PARAMETRIZATION y re-ejecutar con -m cosmos_integration."
         )
 
     # Si llegamos aquí, hay credenciales — smoke test de round-trip
@@ -411,7 +411,7 @@ def test_p9_cosmos_skip_si_no_configurado():
         endpoint=os.environ["COSMOS_ENDPOINT"],
         key=os.environ["COSMOS_KEY"],
         database=os.environ.get("COSMOS_DATABASE", "nexa_pricing_db"),
-        container=os.environ.get("COSMOS_CONTAINER", "simulation_results"),
+        container=os.environ.get("COSMOS_CONTAINER_PARAMETRIZATION", "simulation_results"),
     )
     cosmos_store = CosmosDocumentStore(settings)
     repo = ResultsRepository(cosmos_store)

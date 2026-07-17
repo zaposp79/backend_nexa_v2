@@ -15,7 +15,7 @@ from nexa_engine.db.models.collection_config import CollectionConfig
 from nexa_engine.db.ports.document_store import DocumentStore
 from nexa_engine.modules.shared.exceptions import NotFoundError
 
-_COLLECTION = CollectionConfig(name="configuration", partition_key_field="client_id")
+_COLLECTION = CollectionConfig(name="simulation", partition_key_field="client_id")
 
 
 class SimulationDraftRepository:

@@ -158,8 +158,23 @@ def _calculate_normal(body: CalculationRequest):
         # carried metadata.simulation_id). Falls back to a fresh UUID.
         simulation_id = getattr(resultado, "simulation_id", None) or _results_repo.new_id()
         full_dict     = pricing_result_to_dict(resultado, simulation_id)
-        _results_repo.save(full_dict)
-        logger.info("[calculate] ✓ Resultados guardados: %s", simulation_id)
+
+        # client_id = partition key del container 'simulation' en Cosmos.
+        client_id = (
+            body.user_input.get("datos_operativos", {}).get("cliente")
+            or body.user_input.get("panel_de_control", {}).get("cliente")
+            or ""
+        )
+        full_dict["client_id"] = client_id
+
+        # Campos de auditoría/lineage que no consumen las visiones y que
+        # hacen el documento demasiado grande para el límite de 2 MB de Cosmos.
+        # El SimulationSnapshot (JSON local, PHASE 9) ya preserva estos datos.
+        _COSMOS_EXCLUDED = {"audit_trace", "datasets_vision", "panel"}
+        cosmos_dict = {k: v for k, v in full_dict.items() if k not in _COSMOS_EXCLUDED}
+
+        _results_repo.save(cosmos_dict)
+        logger.info("[calculate] ✓ Resultados guardados: %s (client_id=%r)", simulation_id, client_id)
 
         # ═══════════════════════════════════════════════════════════════════════
         # PHASE 8: Persistencia de traceabilidad (FASE G)
@@ -264,6 +279,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="PYDANTIC_VALIDATION_ERROR",
+                    type="VALIDATION_ERROR",
                     message=f"Error de validación en el payload: {len(validation_errors)} error(es)",
                     details={
                         "errors": validation_errors,
@@ -287,6 +303,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="VISION_INCOMPLETE",
+                    type="INTERNAL_SERVER_ERROR",
                     message="Error interno: resultado de cálculo incompleto.",
                 ),
             ).model_dump(),
@@ -317,6 +334,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="INPUT_ERROR",
+                    type="VALIDATION_ERROR",
                     message="Error en datos de entrada.",
                     details={
                         "payload_keys": list(body.user_input.keys()),
@@ -363,6 +381,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="PARAMETRIZATION_ERROR",
+                    type="PARAMETRIZATION_ERROR",
                     message=exc.message,
                     details={
                         "module": getattr(exc, 'module', None),
@@ -386,6 +405,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="AUDIT_INTEGRITY_ERROR",
+                    type="INTERNAL_SERVER_ERROR",
                     message="Error de integridad de auditoría.",
                 ),
             ).model_dump(),
@@ -417,6 +437,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="DOMAIN_ERROR",
+                    type="DOMAIN_ERROR",
                     message=exc.message,
                     details=extra_details if extra_details else None,
                 ),
@@ -446,6 +467,7 @@ def _calculate_normal(body: CalculationRequest):
                 success=False,
                 error=ErrorDetail(
                     code="INTERNAL_ERROR",
+                    type="INTERNAL_SERVER_ERROR",
                     message="Error inesperado en el servidor.",
                     details={
                         "payload_keys": list(body.user_input.keys()),

@@ -45,16 +45,21 @@ _RULES_DIR = os.path.dirname(__file__)
 
 def _parse_yaml_simple(path: str) -> dict:
     """
-    Parser YAML mínimo para archivos sin anclajes ni secuencias complejas.
-    Solo soporta: comentarios (#), claves escalares y valores numéricos/bool/string.
+    Parser YAML mínimo para archivos sin anclajes complejos.
+    Soporta: comentarios (#), claves escalares, valores numéricos/bool/string y listas de dicts.
     Usado como fallback cuando pyyaml no está instalado.
     """
     result: dict = {}
     current_root: Optional[str] = None
+    # List tracking: when a top-level key contains a YAML sequence (list of dicts)
+    current_list: Optional[list] = None
+    current_list_item: Optional[dict] = None
+    list_base_indent: Optional[int] = None
+
     with open(path, encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.rstrip()
-            # Strip comments
+            # Strip inline comments (avoid stripping '#' inside quoted strings — good enough for our YAMLs)
             if "#" in line:
                 line = line[:line.index("#")]
             line = line.rstrip()
@@ -62,21 +67,74 @@ def _parse_yaml_simple(path: str) -> dict:
                 continue
             stripped = line.lstrip()
             indent = len(line) - len(stripped)
+
+            # ── Root-level key (no indentation) ─────────────────────────────
+            if indent == 0:
+                if ":" not in stripped:
+                    continue
+                key_raw, _, val_raw = stripped.partition(":")
+                key = key_raw.strip()
+                val = val_raw.strip()
+                if val == "":
+                    current_root = key
+                    result[key] = {}
+                    current_list = None
+                    current_list_item = None
+                    list_base_indent = None
+                else:
+                    current_root = None
+                    current_list = None
+                    current_list_item = None
+                    list_base_indent = None
+                    result[key] = _coerce(val)
+                continue
+
+            # ── Indented content ─────────────────────────────────────────────
+            if current_root is None:
+                continue
+
+            # List item marker: line begins with "- "
+            if stripped.startswith("- "):
+                item_content = stripped[2:].strip()  # content after "- "
+                if current_list is None:
+                    # First list item — convert current_root value from {} to []
+                    current_list = []
+                    result[current_root] = current_list
+                    list_base_indent = indent
+
+                # Start a new dict item (each "- " at the list indent level = new entry)
+                if indent == list_base_indent:
+                    current_list_item = {}
+                    current_list.append(current_list_item)
+
+                # Parse the inline key:value on the same line as "- "
+                if ":" in item_content:
+                    key_raw, _, val_raw = item_content.partition(":")
+                    k = key_raw.strip()
+                    v = val_raw.strip()
+                    if current_list_item is not None and k:
+                        current_list_item[k] = _coerce(v)
+                elif item_content and current_list_item is not None:
+                    # Plain scalar list item (e.g. "- some string")
+                    # Store as a simple string directly in the list
+                    current_list[-1] = _coerce(item_content)
+                    current_list_item = None
+                continue
+
+            # Regular key: value line inside an indented block
             if ":" not in stripped:
                 continue
             key_raw, _, val_raw = stripped.partition(":")
             key = key_raw.strip()
             val = val_raw.strip()
-            if indent == 0:
-                if val == "":
-                    current_root = key
-                    result[key] = {}
-                else:
-                    current_root = None
-                    result[key] = _coerce(val)
-            else:
-                if current_root is not None and isinstance(result.get(current_root), dict):
-                    result[current_root][key] = _coerce(val)
+
+            if current_list_item is not None:
+                # We're inside a list item dict — add attribute
+                current_list_item[key] = _coerce(val)
+            elif isinstance(result.get(current_root), dict):
+                # We're inside a plain nested dict
+                result[current_root][key] = _coerce(val)
+
     return result
 
 

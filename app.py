@@ -162,6 +162,42 @@ def _make_lifespan(
             "[NEXA] Persistence container ready (provider=%s)",
             app.state.container.store.__class__.__name__,
         )
+
+        # ── Pre-calentamiento del singleton de parametrización ──────────────
+        # SimulationContextBuilder usa get_provider() (módulo-level singleton),
+        # no el container. Sin este pre-calentamiento, el primer request a
+        # /calculate paga: init CosmosClient (TLS) + 6 round-trips Cosmos.
+        # Aquí compartimos el store ya construido del container (evita crear un
+        # segundo CosmosDocumentStore) y forzamos las 6 lecturas al startup.
+        try:
+            import nexa_engine.db.factory as _db_factory
+            from nexa_engine.modules.parametrizacion.services.provider import (
+                get_provider as _get_param_provider,
+            )
+            # Inyectar el store del container en el cache del factory.
+            # Así get_parametrization_store() retorna la misma instancia y no
+            # crea un segundo CosmosClient.
+            _db_factory._cached_parametrization_provider = (
+                app.state.container.parametrization_store
+            )
+            # Disparar la carga de las 3 parametrizaciones (HR, GN, OP).
+            # Después de esto _PROVIDER_INSTANCE queda cacheado y todos los
+            # requests a /calculate encontrarán cache hit (0 llamadas Cosmos).
+            _get_param_provider()
+            logger.info(
+                "[NEXA] Parametrización pre-cargada desde Cosmos "
+                "(store=%s)",
+                app.state.container.parametrization_store.__class__.__name__,
+            )
+        except Exception as _warm_err:  # pragma: no cover
+            # No bloquear el arranque si Cosmos no responde; el error se
+            # manifestará en el primer request en lugar de en startup.
+            logger.warning(
+                "[NEXA] Pre-calentamiento de parametrización falló "
+                "(no crítico, se reintentará en el primer request): %s",
+                _warm_err,
+            )
+
         logger.info(
             "[NEXA] Starting in %r mode (docs=%s, reload=%s)",
             resolved_settings.app_env,

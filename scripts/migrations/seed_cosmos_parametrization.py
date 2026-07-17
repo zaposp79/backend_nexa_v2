@@ -5,7 +5,7 @@ Apunta al esquema CANÓNICO de Cosmos definido por
 ``CosmosParametrizationRepository``:
 
   Database:      nexa_pricing_db         (COSMOS_DATABASE)
-  Container:     parametrization         (COSMOS_CONTAINER)
+  Container:     parametrization         (COSMOS_CONTAINER_PARAMETRIZATION)
   Partition key: /domain
 
 Documentos generados por dominio (gn, hr, op):
@@ -53,7 +53,7 @@ python-dotenv instalado):
   COSMOS_ENDPOINT   https://<cuenta>.documents.azure.com:443/
   COSMOS_KEY        <primary o secondary key>
   COSMOS_DATABASE   nexa_pricing_db      (default si vacío)
-  COSMOS_CONTAINER  parametrization   (default si vacío)
+  COSMOS_CONTAINER_PARAMETRIZATION  parametrization   (default si vacío)
 """
 
 from __future__ import annotations
@@ -227,7 +227,7 @@ def _cosmos_settings() -> Tuple[str, str, str, str]:
     endpoint = os.getenv("COSMOS_ENDPOINT", "").strip()
     key = os.getenv("COSMOS_KEY", "").strip()
     database = os.getenv("COSMOS_DATABASE", "").strip() or COSMOS_DATABASE_DEFAULT
-    container = os.getenv("COSMOS_CONTAINER", "").strip() or COSMOS_CONTAINER_DEFAULT
+    container = os.getenv("COSMOS_CONTAINER_PARAMETRIZATION", "").strip() or COSMOS_CONTAINER_DEFAULT
     print(f"[cosmos] endpoint={endpoint}  database={database}  container={container}")
     if not endpoint or not key:
         print(

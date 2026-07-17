@@ -27,6 +27,10 @@ def _get_sheet_rows(op_data: Dict[str, Any], key: str) -> List[Dict[str, Any]]:
     for sheet in op_data.get("sheets", []):
         if sheet.get("key") == key:
             return sheet.get("rows", [])
+    # Flat format (OP mapper to_dict): data[key] is a list directly
+    flat = op_data.get(key)
+    if isinstance(flat, list):
+        return flat
     return []
 
 

@@ -136,6 +136,7 @@ class InfrastructureParametrizationRepository:
             1. Exact normalized (full name including compound)
             2. Base city name match (only when the query is a bare city, e.g. "Bogota")
             3. Suffix match (only when the query is a bare locality part, e.g. "Toberin")
+            4. Compound query against non-compound row suffix (e.g. "Bogota - Toberin" → "Toberin")
             """
             row_norm_full = self._normalize_locality(row_localidad, keep_compound=True)
             row_norm_base = self._normalize_locality(row_localidad, keep_compound=False)
@@ -144,9 +145,13 @@ class InfrastructureParametrizationRepository:
             if row_norm_full == localidad_norm_full:
                 return True
 
-            # Fallbacks 2 & 3 only apply when the query is NOT compound; otherwise an
-            # exact match is required so sibling sub-localities don't collide.
             if query_is_compound:
+                # Case 4: Compound query, non-compound row — data stores only the locality
+                # suffix (e.g. HR-CostoFijo has "Toberin", query is "Bogota - Toberin")
+                if " - " not in row_norm_full:
+                    query_suffix = localidad_norm_full.split(" - ", 1)[1].strip()
+                    if query_suffix == row_norm_full:
+                        return True
                 return False
 
             # Case 2: Base city match (e.g., user passes "Bogota", matches "Bogota - Toberin")

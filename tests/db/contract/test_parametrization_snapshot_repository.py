@@ -44,7 +44,7 @@ def _make_json_repo(tmp_path: Path) -> ParametrizationSnapshotRepository:
 def _make_cosmos_repo() -> ParametrizationSnapshotRepository:
     from nexa_engine.db.config import CosmosSettings
     from nexa_engine.db.constants.provider_constants import (
-        ENV_COSMOS_CONTAINER,
+        ENV_COSMOS_CONTAINER_PARAMETRIZATION,
         ENV_COSMOS_DATABASE,
         ENV_COSMOS_ENDPOINT,
         ENV_COSMOS_KEY,
@@ -57,7 +57,7 @@ def _make_cosmos_repo() -> ParametrizationSnapshotRepository:
         endpoint=os.environ[ENV_COSMOS_ENDPOINT],
         key=os.environ[ENV_COSMOS_KEY],
         database=os.environ.get(ENV_COSMOS_DATABASE, "nexa_pricing_db"),
-        container=os.environ.get(ENV_COSMOS_CONTAINER, "parametrization_snapshots"),
+        container=os.environ.get(ENV_COSMOS_CONTAINER_PARAMETRIZATION, "parametrization_snapshots"),
     )
     return ParametrizationSnapshotRepository(CosmosDocumentStore(settings))
 

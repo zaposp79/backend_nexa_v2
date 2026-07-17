@@ -93,7 +93,16 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
 
         self._cosmos_exceptions = cosmos_exceptions
         try:
-            self._client = CosmosClient(settings.endpoint, credential=settings.key)
+            # connection_timeout: TCP connect timeout (segundos).
+            # retry_total: reintentos ante errores transitorios (default SDK = 9, muy alto).
+            # Sin timeout el thread puede colgarse indefinidamente si Cosmos no responde.
+            self._client = CosmosClient(
+                settings.endpoint,
+                credential=settings.key,
+                connection_timeout=15,
+                retry_total=3,
+                retry_backoff_max=8,
+            )
             database = self._client.get_database_client(settings.database)
             self._container = database.get_container_client(settings.container)
         except cosmos_exceptions.CosmosHttpResponseError as exc:  # pragma: no cover
@@ -238,9 +247,12 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         *,
         partition_value: str | None = None,
     ) -> StoredDocument | None:
-        logger.debug("[%s] get_record collection=%s id=%s", PROVIDER_COSMOS, collection.name, document_id)
         item_id = self._record_item_id(collection, document_id)
         resolved_partition = partition_value or collection.name
+        logger.info(
+            "[%s] get_record collection=%s id=%s partition=%s",
+            PROVIDER_COSMOS, collection.name, item_id, resolved_partition,
+        )
         try:
             item = dict(
                 self._container.read_item(
@@ -248,9 +260,11 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
                 )
             )
         except self._cosmos_exceptions.CosmosResourceNotFoundError:
+            logger.info("[%s] get_record NOT FOUND collection=%s id=%s", PROVIDER_COSMOS, collection.name, item_id)
             return None
         except self._cosmos_exceptions.CosmosHttpResponseError as exc:
             raise DbConnectionError(f"Cosmos get_record failed: {exc.status_code}") from exc
+        logger.info("[%s] get_record OK collection=%s id=%s", PROVIDER_COSMOS, collection.name, item_id)
         return self._item_to_record(collection, item)
 
     def list_records(
@@ -556,12 +570,6 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         limit: int | None = None,
         continuation_token: str | None = None,
     ) -> tuple[list[dict], str | None]:
-        logger.debug(
-            "[%s] query collection=%s fields=%s",
-            PROVIDER_COSMOS,
-            collection.name,
-            sorted(filters.keys()),
-        )
         where = " AND ".join(f"c.{field} = @p{i}" for i, field in enumerate(filters))
         sql = "SELECT * FROM c" + (f" WHERE {where}" if where else "")
         parameters = [
@@ -571,16 +579,41 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         kwargs: dict = {"query": sql, "parameters": parameters}
         if limit is not None:
             kwargs["max_item_count"] = limit
+
+        # Si el filtro incluye la partition key (domain), enrutar a una sola
+        # partición: es mucho más rápido que enable_cross_partition_query=True
+        # que hace un fan-out a todas las particiones.
+        partition_key_in_filter = filters.get(self._RECORD_PARTITION_FIELD)
+
+        logger.info(
+            "[%s] query collection=%s sql=%r partition_routed=%s",
+            PROVIDER_COSMOS,
+            collection.name,
+            sql,
+            partition_key_in_filter is not None,
+        )
         try:
-            iterator = self._container.query_items(
-                enable_cross_partition_query=True, **kwargs
-            )
+            if partition_key_in_filter is not None:
+                iterator = self._container.query_items(
+                    partition_key=str(partition_key_in_filter), **kwargs
+                )
+            else:
+                iterator = self._container.query_items(
+                    enable_cross_partition_query=True, **kwargs
+                )
             pager = iterator.by_page(continuation_token)
             page = next(pager)
             docs = [dict(item) for item in page]
             next_token = pager.continuation_token
+            logger.info(
+                "[%s] query OK collection=%s count=%d",
+                PROVIDER_COSMOS,
+                collection.name,
+                len(docs),
+            )
             return docs, next_token
         except StopIteration:
+            logger.info("[%s] query collection=%s → 0 docs", PROVIDER_COSMOS, collection.name)
             return [], None
         except self._cosmos_exceptions.CosmosHttpResponseError as exc:
             raise DbConnectionError(f"Cosmos query failed: {exc.status_code}") from exc

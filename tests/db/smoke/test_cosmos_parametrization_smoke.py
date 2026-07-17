@@ -8,7 +8,7 @@ To run:
     export COSMOS_ENDPOINT=https://<account>.documents.azure.com:443/
     export COSMOS_KEY=<your-key>
     export COSMOS_DATABASE=nexa_pricing_smoke_test   # use an isolated database!
-    export COSMOS_CONTAINER=parametrization_smoke
+    export COSMOS_CONTAINER_PARAMETRIZATION=parametrization_smoke
     pytest tests/db/smoke/ -v
 
 IMPORTANT:
@@ -64,26 +64,26 @@ def _build_cosmos_store():
     from nexa_engine.db.config import load_config
     from nexa_engine.db.constants.provider_constants import (
         ENV_COSMOS_DATABASE,
-        ENV_COSMOS_CONTAINER,
+        ENV_COSMOS_CONTAINER_PARAMETRIZATION,
         ENV_COSMOS_ENDPOINT,
         ENV_COSMOS_KEY,
         PROVIDER_COSMOS,
         ENV_DB_PROVIDER,
     )
-    from nexa_engine.db.factory import build_provider
+    from nexa_engine.db.factory import build_parametrization_document_store
 
     # Use smoke-specific database/container if configured
     smoke_db = os.getenv("COSMOS_DATABASE", "nexa_pricing_smoke")
-    smoke_container = os.getenv("COSMOS_CONTAINER", "parametrization_smoke")
+    smoke_container = os.getenv("COSMOS_CONTAINER_PARAMETRIZATION", "parametrization_smoke")
 
     config = load_config({
         ENV_DB_PROVIDER: PROVIDER_COSMOS,
         ENV_COSMOS_ENDPOINT: _COSMOS_ENDPOINT,
         ENV_COSMOS_KEY: _COSMOS_KEY,
         ENV_COSMOS_DATABASE: smoke_db,
-        ENV_COSMOS_CONTAINER: smoke_container,
+        ENV_COSMOS_CONTAINER_PARAMETRIZATION: smoke_container,
     })
-    return build_provider(config)
+    return build_parametrization_document_store(config)
 
 
 # ---------------------------------------------------------------------------

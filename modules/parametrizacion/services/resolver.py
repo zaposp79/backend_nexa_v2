@@ -57,15 +57,15 @@ class ParametrizationResolver:
             ps = get_parametrization_store()
             hr_repo = hr_repo or HRActiveParametrizationRepository(
                 ps,
-                VersionIndexRepository(store=None, collection=HR_PARAMETRIZATION_COLLECTION),
+                VersionIndexRepository(store=ps, collection=HR_PARAMETRIZATION_COLLECTION),
             )
             gn_repo = gn_repo or GNActiveParametrizationRepository(
                 ps,
-                VersionIndexRepository(store=None, collection=GN_PARAMETRIZATION_COLLECTION),
+                VersionIndexRepository(store=ps, collection=GN_PARAMETRIZATION_COLLECTION),
             )
             op_repo = op_repo or OPActiveParametrizationRepository(
                 ps,
-                VersionIndexRepository(store=None, collection=OP_PARAMETRIZATION_COLLECTION),
+                VersionIndexRepository(store=ps, collection=OP_PARAMETRIZATION_COLLECTION),
             )
 
         self._hr_repo = hr_repo
