@@ -38,7 +38,7 @@ class SimulationDraftService:
     def _get_by_id(self, draft_id: str) -> dict:
         all_docs = self._repo.list_all()
         for doc in all_docs:
-            if doc.get("id") == draft_id:
+            if doc.get("id") == draft_id and doc.get("type") == "draft":
                 return doc
         raise NotFoundError("SimulationDraft", draft_id)
 
@@ -60,6 +60,7 @@ class SimulationDraftService:
             "id_hr": request.id_hr,
             "id_gn": request.id_gn,
             "id_op": request.id_op,
+            "type": "draft",
             "status": "active",
             "tipo": request.tipo,
             "user_id": request.user_id,
@@ -139,8 +140,8 @@ class SimulationDraftService:
 
         return _to_response(saved)
 
-    def get(self, draft_id: str) -> SimulationDraftResponse:
-        doc = self._get_by_id(draft_id)
+    def get(self, draft_id: str, client_id: str | None = None) -> SimulationDraftResponse:
+        doc = self._repo.find_by_id(draft_id, client_id=client_id)
         return _to_response(_clean(doc))
 
     def list_all(self) -> list[SimulationDraftResponse]:

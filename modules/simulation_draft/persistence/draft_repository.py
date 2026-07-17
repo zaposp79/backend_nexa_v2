@@ -26,26 +26,28 @@ class SimulationDraftRepository:
         """Crea o reemplaza un borrador. El doc debe tener 'id' y 'client_id'."""
         return self._store.upsert(_COLLECTION, document)
 
-    def find_by_id(self, draft_id: str) -> dict:
-        """Busca un borrador por id sin conocer su client_id (partición).
+    def find_by_id(self, draft_id: str, *, client_id: str | None = None) -> dict:
+        """Busca un borrador por id filtrando siempre por type='draft'.
 
-        Hace un scan cross-partition (igual que list_all) y filtra en Python.
-        Esto funciona porque CosmosDB soporta enable_cross_partition_query=True.
+        Si se provee client_id, se agrega al filtro SQL para acotar la búsqueda.
         """
-        docs, _ = self._store.list(_COLLECTION)
+        filters: dict = {"type": "draft"}
+        if client_id:
+            filters["client_id"] = client_id
+        docs, _ = self._store.query(_COLLECTION, filters)
         for doc in docs:
             if doc.get("id") == draft_id:
                 return doc
         raise NotFoundError("SimulationDraft", draft_id)
 
     def list_all(self) -> list[dict]:
-        """Retorna todos los borradores del container."""
-        docs, _ = self._store.list(_COLLECTION)
+        """Retorna solo documentos type='draft' del container simulation."""
+        docs, _ = self._store.query(_COLLECTION, {"type": "draft"})
         return docs
 
     def find_by_status(self, status: str) -> list[dict]:
-        """Retorna todos los borradores con el status indicado (cross-partition)."""
-        docs, _ = self._store.query(_COLLECTION, {"status": status})
+        """Retorna borradores con el status indicado filtrando por type='draft'."""
+        docs, _ = self._store.query(_COLLECTION, {"type": "draft", "status": status})
         return docs
 
     def relocate(self, old_client_id: str, document: dict) -> dict:

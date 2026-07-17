@@ -173,6 +173,8 @@ def _calculate_normal(body: CalculationRequest):
         _COSMOS_EXCLUDED = {"audit_trace", "datasets_vision", "panel"}
         cosmos_dict = {k: v for k, v in full_dict.items() if k not in _COSMOS_EXCLUDED}
         cosmos_dict["type"] = "results"
+        if body.id is not None:
+            cosmos_dict["id_draft"] = body.id
 
         _results_repo.save(cosmos_dict)
         logger.info("[calculate] ✓ Resultados guardados: %s (client_id=%r)", simulation_id, client_id)

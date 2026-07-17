@@ -1,8 +1,8 @@
 {
 	"info": {
 		"_postman_id": "nexa-simulator-api-collection",
-		"name": "NEXA Simulator API v2-7",
-		"description": "Postman collection for the NEXA Simulator API v2-7. Base URL is configurable via the `baseUrl` collection variable (default: http://localhost:8000). All v1 routes live under `/api/v1`.",
+		"name": "NEXA Simulator API v2-8",
+		"description": "Postman collection for the NEXA Simulator API v2-8. Base URL is configurable via the `baseUrl` collection variable (default: http://localhost:8000). All v1 routes live under `/api/v1`.\n\n**Persistencia:** todos los drafts y resultados de cálculo se guardan en Azure Cosmos DB container `simulation` (COSMOS_CONTAINER_SIMULATION).\n- Documentos de borrador: `type = \"draft\"`, partition key = `client_id`.\n- Documentos de resultado: `type = \"results\"`, partition key = `client_id`.",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"variable": [
@@ -15,7 +15,13 @@
 			"key": "simulation_id",
 			"value": "550e8400-e29b-41d4-a716-446655440000",
 			"type": "string",
-			"description": "Simulation ID returned from POST /simulate/calculate"
+			"description": "Simulation ID returned from POST /simulation/calculate"
+		},
+		{
+			"key": "client_id",
+			"value": "bancamia",
+			"type": "string",
+			"description": "Client ID (partition key en Cosmos DB). Se obtiene del response de POST /simulation/draft o POST /simulation/calculate."
 		},
 		{
 			"key": "certificate_id",
@@ -56,6 +62,9 @@
 									"var json = pm.response.json();",
 									"if (json.success && json.data && json.data.id) {",
 									"    pm.collectionVariables.set('draft_id', json.data.id);",
+									"}",
+									"if (json.success && json.data && json.data.client_id) {",
+									"    pm.collectionVariables.set('client_id', json.data.client_id);",
 									"}"
 								],
 								"type": "text/javascript"
@@ -65,32 +74,20 @@
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"user_id\": \"anonymous\",\n  \"client_id\": \"bancamia\",\n  \"id_hr\": \"00000000-0000-4000-8000-000000000011\",\n  \"id_gn\": \"00000000-0000-4000-8000-000000000012\",\n  \"id_op\": \"00000000-0000-4000-8000-000000000013\",\n  \"panel_de_control\": {\n    \"cliente\": \"Bancamia\",\n    \"tipo_cliente\": \"No Grupo Aval\",\n    \"linea_negocio\": \"Cobranzas\",\n    \"ciudad\": \"Bogotá\",\n    \"sede\": \"Medellín\",\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 12,\n    \"margen\": 0.1339,\n    \"op_cont\": 0.02,\n    \"com_cont\": 0.0,\n    \"markup\": 0.0,\n    \"descuento\": 0.0,\n    \"periodo_pago_dias\": 30,\n    \"activa_financiacion\": true,\n    \"antiguedad_cliente\": \"Cliente Nuevo\",\n    \"componente_indexacion_humano\": \"IPC\",\n    \"componente_indexacion_tecnologico\": \"IPC\",\n    \"tasa_ica\": 0.0097,\n    \"tasa_gmf\": 0.004,\n    \"tasa_mensual_financ\": 0.0153,\n    \"pct_rotacion\": 0.085,\n    \"pct_ausentismo\": 0.065,\n    \"aplica_ley_1819\": true,\n    \"cadenas_activas\": {\n      \"cadena_a\": true,\n      \"cadena_b\": true,\n      \"cadena_c\": false\n    }\n  },\n  \"condiciones_cadena_a\": {\n    \"perfiles\": [\n      {\n        \"nombre\": \"WA Inbound Cobranzas\",\n        \"rol\": \"Agente Basico\",\n        \"canal\": \"WhatsApp\",\n        \"modalidad\": \"Inbound\",\n        \"fte\": 6,\n        \"pct_presencia\": 1.0,\n        \"comision_pct\": 0.0,\n        \"salario_base\": 1750905,\n        \"incluye_examenes\": true,\n        \"incluye_seguridad\": false,\n        \"incluye_crucero\": false,\n        \"dias_cap_inicial\": 10,\n        \"dias_cap_rotacion\": 10,\n        \"modelo_cobro\": \"Fijo FTE\",\n        \"pct_fijo\": 1.0,\n        \"no_payroll_mensual\": 0.0,\n        \"vol_cadena_a_mensual\": 4516.89\n      }\n    ]\n  },\n  \"condiciones_cadena_b\": {\n    \"canales\": [\n      {\n        \"nombre\": \"WhatsApp Inbound\",\n        \"modalidad\": \"Inbound\",\n        \"producto\": \"WhatsApp\",\n        \"volumen_mensual\": 1000.0,\n        \"tarifa_unitaria\": 43545.0,\n        \"pct_escalamiento\": 0.0,\n        \"costo_escalamiento\": 0.0,\n        \"opex_fijo\": 0.0,\n        \"activo\": true\n      }\n    ],\n    \"fte_equipo_sm\": 1.0,\n    \"amortizar_dispositivos_sm\": true\n  },\n  \"condiciones_cadena_c\": null\n}"
+							"raw": "{\n  \"user_id\": \"anonymous\",\n  \"client_id\": \"bancamia\",\n  \"id_hr\": \"00000000-0000-4000-8000-000000000011\",\n  \"id_gn\": \"00000000-0000-4000-8000-000000000012\",\n  \"id_op\": \"00000000-0000-4000-8000-000000000013\",\n  \"tipo\": \"completo\",\n  \"datos_operativos\": {\n    \"servicio\": \"Cobranzas\",\n    \"cliente\": \"bancamia\",\n    \"tipo_cliente\": \"No Grupo Aval\",\n    \"antiguedad\": \"Cliente Nuevo\",\n    \"periodo_pago\": \"30\",\n    \"fecha_inicio\": \"2026-01-01\",\n    \"duracion_meses\": 12,\n    \"ciudad\": \"Bogotá\",\n    \"sede\": \"Medellín\",\n    \"tarifa_diaria_capacitacion\": 150000,\n    \"crucero\": false,\n    \"horas_formacion_mes\": 8,\n    \"pct_ausentismo\": 0.065,\n    \"pct_rotacion\": 0.085,\n    \"cons_costo_de_financiacion\": true,\n    \"sede_combinada_costo_formacion\": false,\n    \"ciudades_recurso\": [\n      { \"ciudad\": \"Bogotá\", \"proporcion\": 0.7 },\n      { \"ciudad\": \"Medellín\", \"proporcion\": 0.3 }\n    ],\n    \"tasa_ica\": 0.0097,\n    \"tasa_gmf\": 0.004,\n    \"interacciones_gestionadas_por_fte_promedio\": 4516\n  },\n  \"polizas\": [\n    {\n      \"nombre\": \"Cumplimiento\",\n      \"activa\": true,\n      \"pct_poliza\": 0.005,\n      \"pct_atribuible\": 1.0,\n      \"aplica_extension\": false,\n      \"meses_extension\": 0\n    }\n  ],\n  \"reglas_negocio\": {\n    \"margen_objetivo\": 0.1339,\n    \"margen_objetivo_cadena_b\": 0.15,\n    \"contingencia_operativa\": { \"valor\": 0.02, \"minimo\": 0.0, \"maximo\": 0.05 },\n    \"contingencia_comercial\": { \"valor\": 0.0, \"minimo\": 0.0, \"maximo\": 0.05 },\n    \"markup\": { \"valor\": 0.0, \"minimo\": 0.0, \"maximo\": 0.1 },\n    \"descuento_volumen\": 0.0,\n    \"imprevistos\": 0.01,\n    \"porcentaje_acumulado\": { \"actual\": 0.0, \"minimo\": 0.0, \"maximo\": 0.15 },\n    \"margen_objetivo_cadena_c\": 0.15,\n    \"descuento_volumen_minimo\": 0.0,\n    \"descuento_volumen_maximo\": 0.05\n  },\n  \"volumetria\": {\n    \"indexacion\": {\n      \"componente_humano\": \"IPC\",\n      \"componente_tecnologico\": \"IPC\",\n      \"frecuencia\": \"Anual\"\n    },\n    \"inbound\": {\n      \"volumen_base_mensual\": 4516,\n      \"variacion_mensual_pct\": 0.0\n    },\n    \"outbound\": {\n      \"volumen_base_mensual\": 0,\n      \"variacion_mensual_pct\": 0.0\n    }\n  },\n  \"escenarios_comerciales\": [\n    {\n      \"escenario\": \"Escenario 1\",\n      \"modalidad\": \"Inbound\",\n      \"canal\": \"Voz\",\n      \"modelo_cobro\": \"Fijo FTE\",\n      \"componente_fijo\": 1.0,\n      \"proporcion_componente_fijo\": 1.0,\n      \"componente_variable\": 0.0,\n      \"proporcion_componente_variable\": 0.0\n    }\n  ],\n  \"condiciones_cadena_a\": {\n    \"Calculo_conversion_fte_interacciones\": {\n      \"tipo\": \"automatico\",\n      \"value\": null\n    },\n    \"perfiles\": [\n      {\n        \"nombre\": \"Agente Voz Inbound\",\n        \"rol\": \"Agente Basico\",\n        \"canal\": \"Voz\",\n        \"modalidad\": \"Inbound\",\n        \"fte\": 6,\n        \"pct_presencia\": 1.0,\n        \"salario_base\": 1750905,\n        \"incluye_examenes\": true,\n        \"incluye_seguridad\": false,\n        \"incluye_crucero\": false,\n        \"modelo_cobro\": \"Fijo FTE\",\n        \"pct_fijo\": 1.0,\n        \"capacitacion\": {\n          \"dias_cap_inicial\": 10,\n          \"dias_cap_rotacion\": 10\n        },\n        \"opex_fijo\": {\n          \"workstation\": 150000,\n          \"internet\": 80000,\n          \"otros\": 0\n        },\n        \"inversiones\": []\n      }\n    ],\n    \"detalles_recursos_humanos\": []\n  },\n  \"condiciones_cadena_b\": {\n    \"opex\": {\n      \"fte_equipo_sm\": 1.0,\n      \"amortizar_dispositivos\": true,\n      \"costo_fijo_mensual\": 0\n    },\n    \"inversiones_capex\": [],\n    \"equipo_soporte_mantenimiento\": [],\n    \"costo_variable\": {\n      \"canales\": [\n        {\n          \"nombre\": \"WhatsApp Inbound\",\n          \"modalidad\": \"Inbound\",\n          \"producto\": \"WhatsApp\",\n          \"volumen_mensual\": 1000,\n          \"tarifa_unitaria\": 43545,\n          \"pct_escalamiento\": 0.0,\n          \"activo\": true\n        }\n      ]\n    },\n    \"hitl\": {\n      \"activo\": false,\n      \"pct_interacciones\": 0.0\n    }\n  },\n  \"condiciones_cadena_c\": null\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/draft",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"draft"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "draft"]
 						},
-						"description": "Crea un nuevo borrador de simulación con `status=active` e `id` UUID4 autogenerado.\n\n**Regla de unicidad:** antes de guardar el nuevo borrador, todos los borradores con `status=active` existentes en el container se actualizan automáticamente a `status=inactive`. Solo el borrador recién creado queda activo.\n\nEl script de test extrae automáticamente el `id` del response y lo guarda en la variable de colección `draft_id`.\n\n**Campos obligatorios:** `client_id` (clave de partición en CosmosDB).\n**Campos opcionales:** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`.\n\nRetorna el documento con `version=1`, `status=active` y timestamps `created_at` / `updated_at`."
+						"description": "Crea un nuevo borrador de simulación con `status=active`, `type=draft` e `id` UUID4 autogenerado.\n\n**Regla de unicidad:** antes de guardar el nuevo borrador, todos los borradores con `status=active` existentes se actualizan automáticamente a `status=inactive`.\n\nEl script de test extrae automáticamente `id` → `draft_id` y `client_id` → `client_id` como variables de colección.\n\n**Persistencia:** Cosmos DB container `simulation`, partition key = `client_id`, `type = \"draft\"`."
 					},
 					"response": []
 				},
@@ -98,26 +95,13 @@
 					"name": "GET /api/v1/simulation/draft/all",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/draft/all",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"draft",
-								"all"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "draft", "all"]
 						},
-						"description": "Retorna todos los borradores almacenados en el container 'configuration' de CosmosDB.\n\nNo requiere filtros ni parámetros. Realiza un scan completo del container.\n\nCada item del array incluye: `id`, `client_id`, `user_id`, `id_hr`, `id_gn`, `id_op`, `version`, `status`, `created_at`, `updated_at`, `panel_de_control`, `condiciones_cadena_a/b/c`."
+						"description": "Retorna todos los borradores (`type='draft'`) del container `simulation` de Cosmos DB.\n\nFiltra internamente por `type='draft'`, por lo que los documentos de resultado (`type='results'`) nunca aparecen en este listado."
 					},
 					"response": []
 				},
@@ -126,33 +110,20 @@
 					"request": {
 						"method": "PUT",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"client_id\": \"bancamia\",\n  \"id_hr\": \"00000000-0000-4000-8000-000000000011\",\n  \"id_gn\": \"00000000-0000-4000-8000-000000000012\",\n  \"id_op\": \"00000000-0000-4000-8000-000000000013\",\n  \"panel_de_control\": {\n    \"cliente\": \"Bancamia\",\n    \"tipo_cliente\": \"No Grupo Aval\",\n    \"linea_negocio\": \"Cobranzas\",\n    \"ciudad\": \"Bogotá\",\n    \"sede\": \"Medellín\",\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 24,\n    \"margen\": 0.15,\n    \"op_cont\": 0.02,\n    \"com_cont\": 0.0,\n    \"markup\": 0.0,\n    \"descuento\": 0.0,\n    \"periodo_pago_dias\": 30,\n    \"activa_financiacion\": true,\n    \"antiguedad_cliente\": \"Cliente Recurrente\",\n    \"componente_indexacion_humano\": \"IPC\",\n    \"componente_indexacion_tecnologico\": \"IPC\",\n    \"tasa_ica\": 0.0097,\n    \"tasa_gmf\": 0.004,\n    \"tasa_mensual_financ\": 0.0153,\n    \"pct_rotacion\": 0.085,\n    \"pct_ausentismo\": 0.065,\n    \"aplica_ley_1819\": true,\n    \"cadenas_activas\": {\n      \"cadena_a\": true,\n      \"cadena_b\": true,\n      \"cadena_c\": false\n    }\n  },\n  \"condiciones_cadena_a\": null,\n  \"condiciones_cadena_b\": null,\n  \"condiciones_cadena_c\": null\n}"
+							"raw": "{\n  \"client_id\": \"bancamia\",\n  \"id_hr\": \"00000000-0000-4000-8000-000000000011\",\n  \"id_gn\": \"00000000-0000-4000-8000-000000000012\",\n  \"id_op\": \"00000000-0000-4000-8000-000000000013\",\n  \"tipo\": \"completo\",\n  \"datos_operativos\": {\n    \"servicio\": \"Cobranzas\",\n    \"cliente\": \"bancamia\",\n    \"tipo_cliente\": \"No Grupo Aval\",\n    \"antiguedad\": \"Cliente Recurrente\",\n    \"periodo_pago\": \"30\",\n    \"fecha_inicio\": \"2026-01-01\",\n    \"duracion_meses\": 24,\n    \"ciudad\": \"Bogotá\",\n    \"sede\": \"Medellín\",\n    \"tarifa_diaria_capacitacion\": 150000,\n    \"crucero\": false,\n    \"horas_formacion_mes\": 8,\n    \"pct_ausentismo\": 0.065,\n    \"pct_rotacion\": 0.085,\n    \"cons_costo_de_financiacion\": true,\n    \"sede_combinada_costo_formacion\": false,\n    \"ciudades_recurso\": [\n      { \"ciudad\": \"Bogotá\", \"proporcion\": 0.7 },\n      { \"ciudad\": \"Medellín\", \"proporcion\": 0.3 }\n    ],\n    \"tasa_ica\": 0.0097,\n    \"tasa_gmf\": 0.004,\n    \"interacciones_gestionadas_por_fte_promedio\": 4516\n  },\n  \"polizas\": null,\n  \"reglas_negocio\": {\n    \"margen_objetivo\": 0.15,\n    \"margen_objetivo_cadena_b\": 0.15,\n    \"contingencia_operativa\": { \"valor\": 0.02, \"minimo\": 0.0, \"maximo\": 0.05 },\n    \"contingencia_comercial\": { \"valor\": 0.0, \"minimo\": 0.0, \"maximo\": 0.05 },\n    \"markup\": { \"valor\": 0.0, \"minimo\": 0.0, \"maximo\": 0.1 },\n    \"descuento_volumen\": 0.0,\n    \"imprevistos\": 0.01,\n    \"porcentaje_acumulado\": { \"actual\": 0.0, \"minimo\": 0.0, \"maximo\": 0.15 },\n    \"margen_objetivo_cadena_c\": 0.15,\n    \"descuento_volumen_minimo\": 0.0,\n    \"descuento_volumen_maximo\": 0.05\n  },\n  \"volumetria\": null,\n  \"escenarios_comerciales\": null,\n  \"condiciones_cadena_a\": null,\n  \"condiciones_cadena_b\": null,\n  \"condiciones_cadena_c\": null\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"draft",
-								"{{draft_id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "draft", "{{draft_id}}"]
 						},
-						"description": "Actualiza un borrador existente con merge parcial por sección. Incrementa `version` en cada llamada exitosa.\n\nSolo las secciones enviadas con valor distinto de `null` reemplazan las almacenadas. Las secciones `null` o ausentes se conservan sin cambios.\n\n**Sincronización automática de `client_id`:** si `panel_de_control.cliente` está presente en el documento resultante (del request o del doc almacenado), el campo `client_id` se actualiza automáticamente con ese valor. Si el `client_id` cambia respecto al anterior, el documento se reubica en la nueva partición de CosmosDB (delete + insert transparente).\n\n⚠️ Después de un PUT donde `panel_de_control.cliente` cambió, usar el nuevo `client_id` del response en todas las llamadas siguientes a GET, PUT y DELETE.\n\n**Campos obligatorios:** `client_id` (partición actual del doc en CosmosDB, para buscarlo).\n**Campos opcionales (merge parcial):** `user_id`, `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a`, `condiciones_cadena_b`, `condiciones_cadena_c`."
+						"description": "Actualiza un borrador existente (merge parcial por sección). Solo busca documentos con `type='draft'`.\n\nSolo las secciones con valor distinto de `null` reemplazan las almacenadas. Las secciones `null` o ausentes se conservan sin cambios. Incrementa `version` en cada llamada exitosa.\n\n**Sincronización automática de `client_id`:** si `datos_operativos.cliente` está presente en el documento resultante, el campo `client_id` se actualiza con ese valor. Si cambia, el documento se reubica en la nueva partición de Cosmos DB (delete + insert transparente).\n\n⚠️ Después de un PUT donde `datos_operativos.cliente` cambió, usar el nuevo `client_id` del response."
 					},
 					"response": []
 				},
@@ -160,26 +131,20 @@
 					"name": "GET /api/v1/simulation/draft/{draft_id}",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"draft",
-								"{{draft_id}}"
+							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}?client_id={{client_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "draft", "{{draft_id}}"],
+							"query": [
+								{
+									"key": "client_id",
+									"value": "{{client_id}}",
+									"description": "Opcional. Partition key del documento en Cosmos DB. Cuando se provee, se agrega al filtro SQL (type='draft' AND client_id=?) para acotar la búsqueda."
+								}
 							]
 						},
-						"description": "Recupera un borrador por su id.\n\nNo requiere `client_id` — la partition key del container es `/domain` (fijo = \"configuration\"), no `/client_id`.\n\nRetorna el documento completo incluyendo `id_hr`, `id_gn`, `id_op`, `panel_de_control`, `condiciones_cadena_a/b/c`, `version`, `status` y timestamps."
+						"description": "Recupera un borrador por su id. Filtra internamente por `type='draft'`.\n\n`client_id` es opcional. Si se envía, se incluye en el filtro de Cosmos DB para una búsqueda más eficiente. Se obtiene del response de POST /simulation/draft."
 					},
 					"response": []
 				},
@@ -187,26 +152,13 @@
 					"name": "DELETE /api/v1/simulation/draft/{draft_id}",
 					"request": {
 						"method": "DELETE",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/draft/{{draft_id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"draft",
-								"{{draft_id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "draft", "{{draft_id}}"]
 						},
-						"description": "Elimina un borrador del container 'configuration'.\n\nNo requiere `client_id` — la partition key del container es `/domain` (fijo = \"configuration\").\n\nRetorna `{ deleted: true, id: \"<draft_id>\" }` si se eliminó correctamente.\nRetorna 404 si el borrador no existe."
+						"description": "Elimina un borrador del container `simulation` de Cosmos DB.\n\nRetorna `{ deleted: true, id: \"<draft_id>\" }` si se eliminó correctamente. Retorna 404 si el borrador no existe."
 					},
 					"response": []
 				}
@@ -217,33 +169,35 @@
 			"item": [
 				{
 					"name": "POST /api/v1/simulation/calculate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.success && json.data && json.data.simulation_id) {",
+									"    pm.collectionVariables.set('simulation_id', json.data.simulation_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							},
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"user_input\": {\n    \"cliente\": \"Bancamia\",\n    \"linea_negocio\": \"SAC\",\n    \"ciudad\": \"Bogota\",\n    \"sede\": \"Principal\",\n    \"tipo_cliente\": \"Financiera\",\n    \"antiguedad_cliente_meses\": 24,\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 24,\n    \"margen\": 0.18,\n    \"periodo_pago_dias\": 30,\n    \"ajuste_precio_tipo\": \"Indexado\",\n    \"ajuste_precio_frecuencia\": \"Anual\",\n    \"perfiles_cadena_a\": [\n      {\n        \"nombre\": \"Agente Voz\",\n        \"modalidad\": \"Inbound\",\n        \"canal\": \"Voz\",\n        \"fte\": 5.0,\n        \"salario_base\": 1200000,\n        \"es_soporte\": false\n      }\n    ],\n    \"canales_b\": [],\n    \"canales_c\": []\n  }\n}"
+							"raw": "{\n  \"id\": \"{{draft_id}}\",\n  \"user_input\": {\n    \"cliente\": \"Bancamia\",\n    \"linea_negocio\": \"SAC\",\n    \"ciudad\": \"Bogota\",\n    \"sede\": \"Principal\",\n    \"tipo_cliente\": \"Financiera\",\n    \"antiguedad_cliente_meses\": 24,\n    \"fecha_inicio\": \"2026-01-01\",\n    \"meses_contrato\": 24,\n    \"margen\": 0.18,\n    \"periodo_pago_dias\": 30,\n    \"ajuste_precio_tipo\": \"Indexado\",\n    \"ajuste_precio_frecuencia\": \"Anual\",\n    \"perfiles_cadena_a\": [\n      {\n        \"nombre\": \"Agente Voz\",\n        \"modalidad\": \"Inbound\",\n        \"canal\": \"Voz\",\n        \"fte\": 5.0,\n        \"salario_base\": 1200000,\n        \"es_soporte\": false\n      }\n    ],\n    \"canales_b\": [],\n    \"canales_c\": []\n  }\n}",
+							"options": { "raw": { "language": "json" } }
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/calculate",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"calculate"
-							],
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "calculate"],
 							"query": [
 								{
 									"key": "mode",
@@ -253,7 +207,7 @@
 								}
 							]
 						},
-						"description": "Execute the NEXA pricing engine. Returns simulation_id and calculates all 10 layers of the pricing model (nomina, no-payroll, cadena-b/c, costos-financieros, pyg, kpis, vision-tarifas, cost-to-serve, vision-pyg, vision-imprimible)."
+						"description": "Ejecuta el motor NEXA y persiste el resultado en Cosmos DB container `simulation` con `type='results'` y partition key `client_id` (extraído de `datos_operativos.cliente` o `panel_de_control.cliente`).\n\n**Campo `id` (opcional):** UUID4 del borrador de origen. Si se envía, se guarda como `id_draft` en el documento Cosmos para vincular el resultado con el draft que le dio origen.\n\nRetorna `simulation_id` para consultar las visiones. El script de test guarda automáticamente `simulation_id` como variable de colección."
 					},
 					"response": []
 				}
@@ -263,47 +217,16 @@
 			"name": "Simulation - Results",
 			"item": [
 				{
-					"name": "GET /api/v1/simulation/{simulation_id}/results",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"{{simulation_id}}",
-								"results"
-							]
-						},
-						"description": "Get the complete simulation result document with all sections (kpis, pyg_por_mes, cost_to_serve, vision_tarifas, vision_pyg, etc.) and metadata."
-					},
-					"response": []
-				},
-				{
 					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-imprimible",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-imprimible",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"{{simulation_id}}",
-								"results",
-								"vision-imprimible"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "{{simulation_id}}", "results", "vision-imprimible"]
 						},
-						"description": "Get the Visión Imprimible (Printable Vision) - the 9 official sections of the deal data (ficha, kpis, configuracion_comercial, waterfall, vision_pyg, riesgo, reglas_negocio, cost_to_serve, vision_tarifas)."
+						"description": "Retorna la Visión Imprimible (9 secciones: ficha, kpis, configuracion_comercial, waterfall, vision_pyg, riesgo, reglas_negocio, cost_to_serve, vision_tarifas).\n\nLee de Cosmos DB container `simulation` filtrando por `type='results'` y `simulation_id`."
 					},
 					"response": []
 				},
@@ -311,45 +234,49 @@
 					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-pyg",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-pyg",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"{{simulation_id}}",
-								"results",
-								"vision-pyg"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "{{simulation_id}}", "results", "vision-pyg"]
 						},
-						"description": "Get Vision P&G (Income Statement) for the contract duration. Equivalent to 'Visión P&G' sheet in Excel V2-7."
+						"description": "Retorna la Visión P&G (Estado de Resultados) para la duración del contrato.\n\nLee de Cosmos DB container `simulation` filtrando por `type='results'` y `simulation_id`."
 					},
 					"response": []
 				},
 				{
-					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-tarifas",
+					"name": "GET /api/v1/simulation/{simulation_id}/results/vision-tarifas/modelo-cobro",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-tarifas",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"{{simulation_id}}",
-								"results",
-								"vision-tarifas"
-							]
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-tarifas/modelo-cobro",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "{{simulation_id}}", "results", "vision-tarifas", "modelo-cobro"]
 						},
-						"description": "Get Vision Tarifas (Charging Model) - tariff rates by channel. Equivalent to 'Vision Tarifas_Modelo_Cobro' sheet in Excel V2-7."
+						"description": "Retorna el contrato público Modelo de Cobro (tarifas por canal, sin recalcular).\n\nLee de Cosmos DB container `simulation` filtrando por `type='results'` y `simulation_id`."
+					},
+					"response": []
+				},
+				{
+					"name": "POST /api/v1/simulation/{simulation_id}/results/vision-tarifas/modelo-cobro/recalculate",
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"view_id\": \"escenario_1\",\n  \"overrides\": {}\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/vision-tarifas/modelo-cobro/recalculate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "{{simulation_id}}", "results", "vision-tarifas", "modelo-cobro", "recalculate"]
+						},
+						"description": "Preview stateless: aplica overrides del usuario y retorna el modelo_cobro recalculado sin persistir.\n\nLee de Cosmos DB container `simulation` filtrando por `type='results'` y `simulation_id`."
 					},
 					"response": []
 				},
@@ -357,22 +284,13 @@
 					"name": "GET /api/v1/simulation/{simulation_id}/results/cost-to-serve",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/results/cost-to-serve",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"{{simulation_id}}",
-								"results",
-								"cost-to-serve"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "{{simulation_id}}", "results", "cost-to-serve"]
 						},
-						"description": "Get Cost To Serve (CTS) per cadena with breakdowns, channels and team structure. Equivalent to 'Vision CTS' sheet in Excel V2-7."
+						"description": "Retorna el Cost To Serve (CTS) por cadena con desgloses, canales y estructura del equipo.\n\nLee de Cosmos DB container `simulation` filtrando por `type='results'` y `simulation_id`."
 					},
 					"response": []
 				}
@@ -385,21 +303,13 @@
 					"name": "GET /api/v1/simulation/{simulation_id}/traceability",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/simulation/{{simulation_id}}/traceability",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"simulation",
-								"{{simulation_id}}",
-								"traceability"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "simulation", "{{simulation_id}}", "traceability"]
 						},
-						"description": "Get the contractual traceability persisted for a simulation (field-level traceability to Excel references)."
+						"description": "Retorna la trazabilidad contractual persistida para una simulación (field-level traceability to Excel references)."
 					},
 					"response": []
 				}
@@ -412,27 +322,16 @@
 					"name": "GET /api/v1/audit/simulations",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/audit/simulations?limit=50",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"audit",
-								"simulations"
-							],
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "audit", "simulations"],
 							"query": [
-								{
-									"key": "limit",
-									"value": "50",
-									"description": "Maximum number of simulations to return (1-500)"
-								}
+								{ "key": "limit", "value": "50", "description": "Maximum number of simulations to return (1-500)" }
 							]
 						},
-						"description": "List simulations that have a persisted lineage graph."
+						"description": "Lista simulaciones que tienen un grafo de lineage persistido."
 					},
 					"response": []
 				},
@@ -440,21 +339,13 @@
 					"name": "GET /api/v1/audit/simulation/{simulation_id}",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/audit/simulation/{{simulation_id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"audit",
-								"simulation",
-								"{{simulation_id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "audit", "simulation", "{{simulation_id}}"]
 						},
-						"description": "Get full audit envelope for a simulation: formulas, parameters used, lineage summary. Requires the simulation to have been run with lineage tracking enabled."
+						"description": "Retorna el envelope completo de auditoría: fórmulas, parámetros usados, resumen de lineage."
 					},
 					"response": []
 				},
@@ -462,29 +353,16 @@
 					"name": "GET /api/v1/audit/simulation/{simulation_id}/explain",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/audit/simulation/{{simulation_id}}/explain?value_name=kpis.ingreso_mensual",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"audit",
-								"simulation",
-								"{{simulation_id}}",
-								"explain"
-							],
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "audit", "simulation", "{{simulation_id}}", "explain"],
 							"query": [
-								{
-									"key": "value_name",
-									"value": "kpis.ingreso_mensual",
-									"description": "Canonical value name in the lineage graph (e.g., 'kpis.ingreso_mensual')"
-								}
+								{ "key": "value_name", "value": "kpis.ingreso_mensual", "description": "Canonical value name in the lineage graph" }
 							]
 						},
-						"description": "Get the lineage chain and human-readable explanation for a specific value in the simulation."
+						"description": "Retorna la cadena de lineage y explicación legible para un valor específico de la simulación."
 					},
 					"response": []
 				},
@@ -492,34 +370,17 @@
 					"name": "GET /api/v1/audit/simulation/{simulation_id}/baseline-diff",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/audit/simulation/{{simulation_id}}/baseline-diff?baseline_id={{baseline_id}}&baseline_version=v2-7-certified",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"audit",
-								"simulation",
-								"{{simulation_id}}",
-								"baseline-diff"
-							],
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "audit", "simulation", "{{simulation_id}}", "baseline-diff"],
 							"query": [
-								{
-									"key": "baseline_id",
-									"value": "{{baseline_id}}",
-									"description": "Certified baseline id"
-								},
-								{
-									"key": "baseline_version",
-									"value": "v2-7-certified",
-									"description": "Baseline collection version under storage/baselines/"
-								}
+								{ "key": "baseline_id", "value": "{{baseline_id}}", "description": "Certified baseline id" },
+								{ "key": "baseline_version", "value": "v2-7-certified", "description": "Baseline collection version" }
 							]
 						},
-						"description": "Compare a simulation's KPIs vs a certified baseline."
+						"description": "Compara los KPIs de una simulación contra un baseline certificado."
 					},
 					"response": []
 				}
@@ -532,27 +393,14 @@
 					"name": "GET /api/v1/certification/certificates",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/certification/certificates?limit=50",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certification",
-								"certificates"
-							],
-							"query": [
-								{
-									"key": "limit",
-									"value": "50",
-									"description": "Maximum number of certificates to return"
-								}
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "certification", "certificates"],
+							"query": [{ "key": "limit", "value": "50", "description": "Maximum number of certificates to return" }]
 						},
-						"description": "List most recent certificates (descending by modification time)."
+						"description": "Lista los certificados más recientes (descendente por fecha de modificación)."
 					},
 					"response": []
 				},
@@ -560,21 +408,13 @@
 					"name": "GET /api/v1/certification/certificate/{certificate_id}",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/certification/certificate/{{certificate_id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certification",
-								"certificate",
-								"{{certificate_id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "certification", "certificate", "{{certificate_id}}"]
 						},
-						"description": "Get a specific certificate by ID."
+						"description": "Retorna un certificado específico por ID."
 					},
 					"response": []
 				},
@@ -582,21 +422,13 @@
 					"name": "POST /api/v1/certification/verify/{certificate_id}",
 					"request": {
 						"method": "POST",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/certification/verify/{{certificate_id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"certification",
-								"verify",
-								"{{certificate_id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "certification", "verify", "{{certificate_id}}"]
 						},
-						"description": "Re-validate a certificate against the live parametrization hashes. Returns whether the certificate is still valid and any detected drift."
+						"description": "Re-valida un certificado contra los hashes de parametrización activa. Retorna si el certificado sigue vigente y cualquier drift detectado."
 					},
 					"response": []
 				}
@@ -609,26 +441,13 @@
 					"name": "GET /api/v1/parametrization/versions/all",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/versions/all",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"versions",
-								"all"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "versions", "all"]
 						},
-						"description": "Retorna el listado unificado de todas las versiones subidas de HR, GN y OP, ordenadas por `domain` (ascendente: gn → hr → op) y dentro de cada dominio por `uploaded_at` descendente (más reciente primero).\n\nCada entrada incluye el campo `domain` para identificar a qué módulo pertenece.\n\n**Respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"b31035ff-0d25-4bd3-87dc-b431c417fb45\",\n      \"version_id\": \"2026-07-10 02-28-47\",\n      \"filename\": \"GN_productiva_2026-06-25-12-00-00_OK.xlsx\",\n      \"uploaded_at\": \"2026-07-10T07:28:47.490549+00:00\",\n      \"domain\": \"gn\",\n      \"is_active\": true,\n      \"sheet_count\": 2,\n      \"total_rows\": 50,\n      \"sheets_found\": [\"GN-LV\", \"GN-Localidad\"]\n    }\n  ],\n  \"error\": null,\n  \"meta\": null\n}\n```"
+						"description": "Retorna el listado unificado de todas las versiones subidas de HR, GN y OP, ordenadas por `domain` y `uploaded_at` descendente."
 					},
 					"response": []
 				},
@@ -636,25 +455,13 @@
 					"name": "GET /api/v1/parametrization/active",
 					"request": {
 						"method": "GET",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/active",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"active"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "active"]
 						},
-						"description": "Retorna la parametrización activa consolidada de HR, GN y OP en un solo objeto.\n\nFusiona los catálogos `lv.catalogs` de los 3 archivos y agrupa todas las hojas en `payload`.\n\n**Respuesta:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"id_hr\": \"<version_id_hr>\",\n    \"id_gn\": \"<version_id_gn>\",\n    \"id_op\": \"<version_id_op>\",\n    \"user_id\": null,\n    \"payload\": {\n      \"lv\": { \"catalogs\": { ... } },\n      \"salariobasico\": [...],\n      \"nomina\": [...],\n      \"recargos\": [...],\n      \"seg_social\": [...],\n      \"prestaciones\": [...],\n      \"ratios\": [...],\n      \"complejidad\": [...],\n      \"rentabilidad\": [...],\n      \"campana\": [...],\n      \"costo_fijo\": [...],\n      \"med_seg\": [...],\n      \"opexfijo\": [...],\n      \"hardsoft\": [...],\n      \"componente\": [...],\n      \"componenteacumulado\": [...],\n      \"poliza\": [...],\n      \"polizafija\": [...],\n      \"ica\": [...],\n      \"costo\": [...],\n      \"margenobjetivo\": [...]\n    }\n  },\n  \"error\": null,\n  \"meta\": null\n}\n```\n\nRetorna 404 si ningún archivo tiene versión activa."
+						"description": "Retorna la parametrización activa consolidada de HR, GN y OP en un solo objeto. Retorna 404 si ningún archivo tiene versión activa."
 					},
 					"response": []
 				}
@@ -667,12 +474,7 @@
 					"name": "POST /api/v1/parametrization/hr/upload",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
@@ -681,24 +483,16 @@
 									"type": "file",
 									"src": "",
 									"contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-									"description": "HR parametrization Excel file (.xlsx / .xls). Sent as multipart/form-data."
+									"description": "HR parametrization Excel file (.xlsx / .xls). Multipart/form-data."
 								}
 							]
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/hr/upload",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"hr",
-								"upload"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "hr", "upload"]
 						},
-						"description": "Upload and process an HR Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (14):** HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos, HR-SegSocial, HR-Prestaciones, HR-Ratios, HR-Complejidad, HR-Rentabilidad, HR-Campana, HR-CostoFijo, HR-Med-Seg, HR-Ratios-HITL, HR-Hora-GTR."
+						"description": "Sube y procesa un archivo Excel de parametrización HR. Si no se envía archivo retorna HTTP 400.\n\nAl subir exitosamente: el nuevo registro queda `status=active` y el anterior pasa a `status=inactive`.\n\n**Hojas obligatorias (14):** HR-LV, HR-SalarioBasico, HR-Nomina, HR-Recargos, HR-SegSocial, HR-Prestaciones, HR-Ratios, HR-Complejidad, HR-Rentabilidad, HR-Campana, HR-CostoFijo, HR-Med-Seg, HR-Ratios-HITL, HR-Hora-GTR."
 					},
 					"response": []
 				},
@@ -706,21 +500,13 @@
 					"name": "GET /api/v1/parametrization/hr/versions",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/hr/versions",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"hr",
-								"versions"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "hr", "versions"]
 						},
-						"description": "List all HR parametrization versions."
+						"description": "Lista todas las versiones de parametrización HR."
 					},
 					"response": []
 				},
@@ -728,21 +514,13 @@
 					"name": "GET /api/v1/parametrization/hr/{{id}}",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/hr/{{id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"hr",
-								"{{id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "hr", "{{id}}"]
 						},
-						"description": "Get a specific HR parametrization version by its UUID4. Returns the full document including the parsed Excel payload."
+						"description": "Retorna una versión específica de parametrización HR por UUID4."
 					},
 					"response": []
 				},
@@ -750,22 +528,13 @@
 					"name": "PATCH /api/v1/parametrization/hr/{id}/activate",
 					"request": {
 						"method": "PATCH",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/hr/{{id}}/activate",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"hr",
-								"{{id}}",
-								"activate"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "hr", "{{id}}", "activate"]
 						},
-						"description": "Activate a specific HR parametrization version by UUID4. Sets all others of the same domain to inactive."
+						"description": "Activa una versión específica de HR por UUID4. Pone todas las demás del mismo dominio en `inactive`."
 					},
 					"response": []
 				},
@@ -773,21 +542,13 @@
 					"name": "DELETE /api/v1/parametrization/hr/{id}",
 					"request": {
 						"method": "DELETE",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/hr/{{id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"hr",
-								"{{id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "hr", "{{id}}"]
 						},
-						"description": "Delete a specific HR parametrization version by its UUID4."
+						"description": "Elimina una versión específica de parametrización HR por UUID4."
 					},
 					"response": []
 				}
@@ -800,12 +561,7 @@
 					"name": "POST /api/v1/parametrization/op/upload",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
@@ -814,24 +570,16 @@
 									"type": "file",
 									"src": "",
 									"contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-									"description": "OP (Operations) parametrization Excel file (.xlsx / .xls). Sent as multipart/form-data."
+									"description": "OP parametrization Excel file (.xlsx / .xls). Multipart/form-data."
 								}
 							]
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/op/upload",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"op",
-								"upload"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "op", "upload"]
 						},
-						"description": "Upload and process an OP Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (12):** OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido, OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo, OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio."
+						"description": "Sube y procesa un archivo Excel de parametrización OP. Si no se envía archivo retorna HTTP 400.\n\nAl subir exitosamente: el nuevo registro queda `status=active` y el anterior pasa a `status=inactive`.\n\n**Hojas obligatorias (12):** OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido, OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo, OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio."
 					},
 					"response": []
 				},
@@ -839,21 +587,13 @@
 					"name": "GET /api/v1/parametrization/op/versions",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/op/versions",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"op",
-								"versions"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "op", "versions"]
 						},
-						"description": "List all OP parametrization versions."
+						"description": "Lista todas las versiones de parametrización OP."
 					},
 					"response": []
 				},
@@ -861,21 +601,13 @@
 					"name": "GET /api/v1/parametrization/op/{{id}}",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/op/{{id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"op",
-								"{{id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "op", "{{id}}"]
 						},
-						"description": "Get a specific OP parametrization version by its UUID4. Returns the full document including the parsed Excel payload."
+						"description": "Retorna una versión específica de parametrización OP por UUID4."
 					},
 					"response": []
 				},
@@ -883,22 +615,13 @@
 					"name": "PATCH /api/v1/parametrization/op/{id}/activate",
 					"request": {
 						"method": "PATCH",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/op/{{id}}/activate",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"op",
-								"{{id}}",
-								"activate"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "op", "{{id}}", "activate"]
 						},
-						"description": "Activate a specific OP parametrization version by UUID4. Sets all others of the same domain to inactive."
+						"description": "Activa una versión específica de OP por UUID4. Pone todas las demás del mismo dominio en `inactive`."
 					},
 					"response": []
 				},
@@ -906,21 +629,13 @@
 					"name": "DELETE /api/v1/parametrization/op/{id}",
 					"request": {
 						"method": "DELETE",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/op/{{id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"op",
-								"{{id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "op", "{{id}}"]
 						},
-						"description": "Delete a specific OP parametrization version by its UUID4."
+						"description": "Elimina una versión específica de parametrización OP por UUID4."
 					},
 					"response": []
 				}
@@ -933,12 +648,7 @@
 					"name": "POST /api/v1/parametrization/gn/upload",
 					"request": {
 						"method": "POST",
-						"header": [
-							{
-								"key": "Accept",
-								"value": "application/json"
-							}
-						],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"body": {
 							"mode": "formdata",
 							"formdata": [
@@ -947,24 +657,16 @@
 									"type": "file",
 									"src": "",
 									"contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-									"description": "GN (General) parametrization Excel file (.xlsx / .xls). Sent as multipart/form-data."
+									"description": "GN parametrization Excel file (.xlsx / .xls). Multipart/form-data."
 								}
 							]
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/gn/upload",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"gn",
-								"upload"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "gn", "upload"]
 						},
-						"description": "Upload and process a GN Excel parametrization file. Body MUST be multipart/form-data with a single field `file`.\n\n**Todas las hojas son obligatorias (2):**\n- `GN-LV` — catálogo por columna, 23 columnas: Ciudad, ServicioPublico, CategoriaServicio, CentroCosto, Componente, Poliza, ComponenteFijo, HardwareSoftware, PeriodoPago, Cadena, ComponenteVariable, ModeloCobro, Modalidad, ReglaNegocio, CanalInbound, CanalOutbound, Metrica, Cliente, TipoCobro, TipoCliente, Rubro, UnidadMedida, Divisa.\n- `GN-Localidad` — tabla de filas, 2 columnas: Ciudad, Localidad."
+						"description": "Sube y procesa un archivo Excel de parametrización GN. Si no se envía archivo retorna HTTP 400.\n\nAl subir exitosamente: el nuevo registro queda `status=active` y el anterior pasa a `status=inactive`.\n\n**Hojas obligatorias (2):** GN-LV (23 columnas de catálogo), GN-Localidad (Ciudad + Localidad)."
 					},
 					"response": []
 				},
@@ -972,21 +674,13 @@
 					"name": "GET /api/v1/parametrization/gn/versions",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/gn/versions",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"gn",
-								"versions"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "gn", "versions"]
 						},
-						"description": "List all GN parametrization versions."
+						"description": "Lista todas las versiones de parametrización GN."
 					},
 					"response": []
 				},
@@ -994,21 +688,13 @@
 					"name": "GET /api/v1/parametrization/gn/{{id}}",
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/gn/{{id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"gn",
-								"{{id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "gn", "{{id}}"]
 						},
-						"description": "Get a specific GN parametrization version by its UUID4. Returns the full document including the parsed Excel payload."
+						"description": "Retorna una versión específica de parametrización GN por UUID4."
 					},
 					"response": []
 				},
@@ -1016,22 +702,13 @@
 					"name": "PATCH /api/v1/parametrization/gn/{id}/activate",
 					"request": {
 						"method": "PATCH",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/gn/{{id}}/activate",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"gn",
-								"{{id}}",
-								"activate"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "gn", "{{id}}", "activate"]
 						},
-						"description": "Activate a specific GN parametrization version by UUID4. Sets all others of the same domain to inactive."
+						"description": "Activa una versión específica de GN por UUID4. Pone todas las demás del mismo dominio en `inactive`."
 					},
 					"response": []
 				},
@@ -1039,21 +716,13 @@
 					"name": "DELETE /api/v1/parametrization/gn/{id}",
 					"request": {
 						"method": "DELETE",
-						"header": [],
+						"header": [{ "key": "Accept", "value": "application/json" }],
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/parametrization/gn/{{id}}",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"parametrization",
-								"gn",
-								"{{id}}"
-							]
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "parametrization", "gn", "{{id}}"]
 						},
-						"description": "Delete a specific GN parametrization version by its UUID4."
+						"description": "Elimina una versión específica de parametrización GN por UUID4."
 					},
 					"response": []
 				}

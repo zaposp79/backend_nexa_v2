@@ -58,15 +58,18 @@ class ResultsRepository:
     def get(self, result_id: str) -> Dict[str, Any]:
         """Retorna el resultado o lanza NotFoundError.
 
-        Usa query cross-partition por simulation_id: las visiones solo conocen
-        el simulation_id, no el client_id (partition key).
+        Filtra por type='results' y simulation_id (cross-partition).
         """
-        docs, _ = self._store.query(_COLLECTION, {"simulation_id": result_id})
+        docs, _ = self._store.query(
+            _COLLECTION, {"type": "results", "simulation_id": result_id}
+        )
         if not docs:
             raise NotFoundError("PricingResult", result_id)
         doc = docs[0]
         return {k: v for k, v in doc.items() if k not in _INTERNAL_FIELDS}
 
     def exists(self, result_id: str) -> bool:
-        docs, _ = self._store.query(_COLLECTION, {"simulation_id": result_id})
+        docs, _ = self._store.query(
+            _COLLECTION, {"type": "results", "simulation_id": result_id}
+        )
         return bool(docs)

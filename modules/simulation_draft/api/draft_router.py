@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from nexa_engine.db.dependencies import get_draft_service
 from nexa_engine.modules.shared.responses import ApiResponse
@@ -99,10 +99,11 @@ def update_draft(
 )
 def get_draft(
     draft_id: str,
+    client_id: str | None = Query(default=None),
     service: SimulationDraftService = Depends(get_draft_service),
 ) -> ApiResponse[SimulationDraftResponse]:
-    """Recupera un borrador por su id."""
-    draft = service.get(draft_id)
+    """Recupera un borrador por su id (type='draft'). client_id opcional para filtro adicional."""
+    draft = service.get(draft_id, client_id=client_id)
     return ApiResponse.ok(draft)
 
 
