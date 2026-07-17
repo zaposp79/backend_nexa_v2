@@ -172,6 +172,7 @@ def _calculate_normal(body: CalculationRequest):
         # El SimulationSnapshot (JSON local, PHASE 9) ya preserva estos datos.
         _COSMOS_EXCLUDED = {"audit_trace", "datasets_vision", "panel"}
         cosmos_dict = {k: v for k, v in full_dict.items() if k not in _COSMOS_EXCLUDED}
+        cosmos_dict["type"] = "results"
 
         _results_repo.save(cosmos_dict)
         logger.info("[calculate] ✓ Resultados guardados: %s (client_id=%r)", simulation_id, client_id)
