@@ -392,7 +392,7 @@ components:
           title: Aplicado
         concepto:
           enum:
-          - margen_objetivo
+          - margen_objetivo_cadena_a
           - contingencia_operativa
           - contingencia_comercial
           - markup
@@ -1050,12 +1050,12 @@ components:
           $ref: '#/components/schemas/Rango'
         descuento:
           $ref: '#/components/schemas/Rango'
-        margen_objetivo:
+        margen_objetivo_cadena_a:
           $ref: '#/components/schemas/MargenObjetivo'
         markup:
           $ref: '#/components/schemas/Rango'
       required:
-      - margen_objetivo
+      - margen_objetivo_cadena_a
       - contingencia_operativa
       - contingencia_comercial
       - markup
@@ -1136,7 +1136,7 @@ components:
                 tarifa_variable: 10000
             contingencias_ajustes:
             - aplicado: 0.21
-              concepto: margen_objetivo
+              concepto: margen_objetivo_cadena_a
               estado: dentro_rango
               minimo: 0.17
             - aplicado: 0.05

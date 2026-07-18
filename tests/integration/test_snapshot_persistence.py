@@ -56,7 +56,7 @@ def json_oficial():
             "pct_rotacion": 0.085,
         },
         "reglas_negocio": {
-            "margen_objetivo": 0.18,
+            "margen_objetivo_cadena_a": 0.18,
             "contingencia_operativa": {"valor": 0.025},
             "contingencia_comercial": {"valor": 0.04},
             "markup": {"valor": 0.0},

@@ -300,7 +300,7 @@ class UserInputLoader(
             "sede":                ops.get("sede", ""),
             "fecha_inicio":        UserInputLoader._requerir(ops, "fecha_inicio", "datos_operativos"),
             "meses_contrato":      UserInputLoader._requerir_int(ops, "duracion_meses", "datos_operativos"),
-            "margen":              UserInputLoader._requerir_float(reg, "margen_objetivo", "reglas_negocio"),
+            "margen":              UserInputLoader._requerir_float(reg, "margen_objetivo_cadena_a", "reglas_negocio"),
             "op_cont":             reg.get("contingencia_operativa", {}).get("valor", 0.05),
             "com_cont":            com_cont_val,
             "markup":              reg.get("markup", {}).get("valor", 0.0),

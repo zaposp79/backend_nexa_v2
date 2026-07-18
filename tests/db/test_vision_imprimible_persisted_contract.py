@@ -182,7 +182,7 @@ def _make_full_vi_document(simulation_id: str) -> Dict[str, Any]:
             "tarifa_fija": 50_000_000.0,
             "tarifa_variable": 0.0,
             "descuento": 0.0,
-            "margen_objetivo": 0.21,
+            "margen_objetivo_cadena_a": 0.21,
             "volumen_base_mensual": 0.0,
             "ingreso_mensual": 50_000_000.0,
             "costo_mensual_total": 40_000_000.0,
@@ -361,7 +361,7 @@ def test_c5_configuracion_comercial_campos_propios_vi():
     """C5: configuracion_comercial tiene los 11 campos generados por el helper VI."""
     _EXPECTED_CC = [
         "modelo_cobro_principal", "pct_fijo_global", "pct_variable_global",
-        "tarifa_fija", "tarifa_variable", "descuento", "margen_objetivo",
+        "tarifa_fija", "tarifa_variable", "descuento", "margen_objetivo_cadena_a",
         "volumen_base_mensual", "ingreso_mensual", "costo_mensual_total",
         "valor_total_deal",
     ]

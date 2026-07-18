@@ -106,7 +106,7 @@ def test_contract_validator_exige_cadenas_activas():
             "duracion_meses": 12,
         },
         "reglas_negocio": {
-            "margen_objetivo": 0.18,
+            "margen_objetivo_cadena_a": 0.18,
             "contingencia_operativa": {"valor": 0.025},
             "contingencia_comercial": {"valor": 0.04},
             "markup": {"valor": 0.02},

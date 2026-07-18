@@ -419,9 +419,9 @@ def _resolve_componente_label(meta: dict, channel: dict) -> Any:
 def _build_reglas_negocio(reglas: dict, root_rules: dict) -> dict:
     return {
         "total_regla_negocio": _safe_float(_coalesce(
-            root_rules.get("margen_objetivo"),
+            root_rules.get("margen_objetivo_cadena_a"),
             root_rules.get("margen"),
-            reglas.get("margen_objetivo"),
+            reglas.get("margen_objetivo_cadena_a"),
         )),
         "descuento_volumen": _safe_float(_coalesce(
             reglas.get("descuento_volumen"), reglas.get("descuento")

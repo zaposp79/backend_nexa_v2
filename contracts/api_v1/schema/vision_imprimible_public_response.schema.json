@@ -176,7 +176,7 @@
         },
         "concepto": {
           "enum": [
-            "margen_objetivo",
+            "margen_objetivo_cadena_a",
             "contingencia_operativa",
             "contingencia_comercial",
             "markup",
@@ -729,7 +729,7 @@
           "contingencias_ajustes": [
             {
               "aplicado": 0.21,
-              "concepto": "margen_objetivo",
+              "concepto": "margen_objetivo_cadena_a",
               "estado": "dentro_rango",
               "maximo": null,
               "minimo": 0.17

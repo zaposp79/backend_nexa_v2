@@ -89,7 +89,7 @@ class PanelService:
             ),
             polizas=polizas,
             reglas_negocio=ReglasNegocio(
-                margen_objetivo=MargenObjetivo(
+                margen_objetivo_cadena_a=MargenObjetivo(
                     cadena_a=margen_obj.get("cadena_a", 0.0),
                     cadena_b=margen_obj.get("cadena_b", 0.0),
                     cadena_c=margen_obj.get("cadena_c", 0.0),

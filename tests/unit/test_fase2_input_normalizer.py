@@ -40,7 +40,7 @@ def json_oficial_minimo():
             "pct_rotacion": 0.085,
         },
         "reglas_negocio": {
-            "margen_objetivo": 0.18,
+            "margen_objetivo_cadena_a": 0.18,
             "contingencia_operativa": {"valor": 0.025, "minimo": 0.025, "maximo": 0.12},
             "contingencia_comercial": {"valor": 0.0, "minimo": 0.0, "maximo": 0.07},
             "markup": {"valor": 0.0, "minimo": 0.0, "maximo": 0.08},
@@ -129,9 +129,9 @@ class TestModoStrict:
 
     def test_margen_objetivo_faltante_raise(self, json_oficial_minimo):
         data = copy.deepcopy(json_oficial_minimo)
-        del data["reglas_negocio"]["margen_objetivo"]
+        del data["reglas_negocio"]["margen_objetivo_cadena_a"]
         normalizer = InputNormalizer()
-        with pytest.raises(ValueError, match="margen_objetivo"):
+        with pytest.raises(ValueError, match="margen_objetivo_cadena_a"):
             normalizer.normalize(data, NormalizationMode.STRICT)
 
     def test_ciudad_vacia_raise(self, json_oficial_minimo):
@@ -158,7 +158,7 @@ class TestModoValidation:
         data = copy.deepcopy(json_oficial_minimo)
         del data["datos_operativos"]["ciudad"]
         del data["datos_operativos"]["fecha_inicio"]
-        del data["reglas_negocio"]["margen_objetivo"]
+        del data["reglas_negocio"]["margen_objetivo_cadena_a"]
 
         normalizer = InputNormalizer()
         with pytest.raises(ValueError) as exc_info:
@@ -167,7 +167,7 @@ class TestModoValidation:
         msg = str(exc_info.value)
         assert "ciudad" in msg
         assert "fecha_inicio" in msg
-        assert "margen_objetivo" in msg
+        assert "margen_objetivo_cadena_a" in msg
         # Todos los errores en un solo ValueError
         assert "3 errores" in msg
 

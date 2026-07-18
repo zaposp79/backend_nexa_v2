@@ -113,23 +113,23 @@ class InputNormalizerValidationMixin:
         Valida campos requeridos en reglas_negocio.
 
         Campos requeridos (FASE 1 — H9):
-          margen_objetivo
+          margen_objetivo_cadena_a
         """
         reg = data.get("reglas_negocio", {})
-        margen = reg.get("margen_objetivo")
+        margen = reg.get("margen_objetivo_cadena_a")
         if margen is None:
             self._registrar_error(
-                "Campo 'margen_objetivo' es requerido en reglas_negocio. "
+                "Campo 'margen_objetivo_cadena_a' es requerido en reglas_negocio. "
                 "Afecta todos los cálculos de pricing (FASE 1 — H9).",
-                "reglas_negocio.margen_objetivo",
+                "reglas_negocio.margen_objetivo_cadena_a",
                 margen,
                 mode,
                 log,
             )
         elif not isinstance(margen, (int, float)) or float(margen) < 0:
             self._registrar_error(
-                f"'margen_objetivo' debe ser un número >= 0, se recibió: {margen!r}.",
-                "reglas_negocio.margen_objetivo",
+                f"'margen_objetivo_cadena_a' debe ser un número >= 0, se recibió: {margen!r}.",
+                "reglas_negocio.margen_objetivo_cadena_a",
                 margen,
                 mode,
                 log,

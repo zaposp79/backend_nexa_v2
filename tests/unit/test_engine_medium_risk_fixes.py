@@ -151,7 +151,7 @@ def _volumetry_data_without_salario(canal: str = "Chat") -> dict:
             # salario_base_default intentionally absent
         },
         "reglas_negocio": {
-            "margen_objetivo": 0.21,
+            "margen_objetivo_cadena_a": 0.21,
         },
         "volumetria": {
             "inbound": {

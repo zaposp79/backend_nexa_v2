@@ -189,7 +189,7 @@ class TestConfiguracionComercial:
     CAMPOS_REQUERIDOS = [
         "modelo_cobro_principal", "pct_fijo_global", "pct_variable_global",
         "tarifa_fija", "tarifa_variable", "descuento", "volumen_base_mensual",
-        "margen_objetivo", "ingreso_mensual", "costo_mensual_total", "valor_total_deal",
+        "margen_objetivo_cadena_a", "ingreso_mensual", "costo_mensual_total", "valor_total_deal",
     ]
 
     def test_seccion_presente(self, result_dict):
@@ -212,7 +212,7 @@ class TestConfiguracionComercial:
 
 class TestReglasNegocio:
     NOMBRES_ESPERADOS = [
-        "margen_objetivo",
+        "margen_objetivo_cadena_a",
         "contingencia_operativa",
         "contingencia_comercial",
         "markup",
@@ -389,7 +389,7 @@ class TestParidadMatematica:
         panel = result_dict["panel"]
         reglas = {r["nombre"]: r["aplicado"] for r in result_dict["reglas_negocio"]}
 
-        assert abs(reglas["margen_objetivo"] - panel["margen"]) < 0.00001
+        assert abs(reglas["margen_objetivo_cadena_a"] - panel["margen"]) < 0.00001
         assert abs(reglas["contingencia_operativa"] - panel["op_cont"]) < 0.00001
         assert abs(reglas["contingencia_comercial"] - panel["com_cont"]) < 0.00001
         assert abs(reglas["markup"] - panel["markup"]) < 0.00001

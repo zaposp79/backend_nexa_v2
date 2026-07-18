@@ -51,8 +51,8 @@ class ContractValidator:
 
     @staticmethod
     def _validate_reglas(reg: Dict[str, Any], result: ContractValidationResult) -> None:
-        if reg.get("margen_objetivo") is None:
-            result.errors.append("reglas_negocio.margen_objetivo is required")
+        if reg.get("margen_objetivo_cadena_a") is None:
+            result.errors.append("reglas_negocio.margen_objetivo_cadena_a is required")
         for name in ("contingencia_operativa", "contingencia_comercial", "markup"):
             block = reg.get(name)
             if not isinstance(block, dict) or block.get("valor") is None:

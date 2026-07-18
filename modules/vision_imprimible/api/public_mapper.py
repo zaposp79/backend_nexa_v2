@@ -18,7 +18,7 @@ _APPROVAL_ACTOR_KEYS = [
 ]
 
 _ADJUSTMENT_NAMES = (
-    "margen_objetivo",
+    "margen_objetivo_cadena_a",
     "contingencia_operativa",
     "contingencia_comercial",
     "markup",
@@ -173,7 +173,7 @@ def _build_economics_section(document: dict[str, Any]) -> dict[str, Any] | None:
         _item("ingreso_mensual", config.get("ingreso_mensual", kpis.get("ingreso_mensual")), "Ingreso mensual"),
         _item("escenario_seleccionado", scenarios[0]["escenario"] if scenarios else config.get("escenario_seleccionado"), "Escenario seleccionado"),
         _item("costo_mensual", config.get("costo_mensual_total", kpis.get("costo_mensual_promedio")), "Costo mensual"),
-        _item("margen_deal", config.get("margen_objetivo", kpis.get("pct_utilidad_neta_total")), "Margen deal"),
+        _item("margen_deal", config.get("margen_objetivo_cadena_a", kpis.get("pct_utilidad_neta_total")), "Margen deal"),
         _item("estado_margen", _margin_status(kpis), "Estado margen"),
         _item("valor_total_contrato", config.get("valor_total_deal", kpis.get("valor_total_deal")), "Valor total contrato"),
         _item("moneda", ficha.get("divisa") or "COP", "Moneda"),
@@ -310,11 +310,11 @@ def _build_contingencias_section(document: dict[str, Any]) -> dict[str, Any] | N
     kpis = deepcopy(_section(document, "kpis") or {})
     items = []
     for name in _ADJUSTMENT_NAMES:
-        if name == "margen_objetivo":
+        if name == "margen_objetivo_cadena_a":
             items.append(
                 {
                     "concepto": name,
-                    "aplicado": kpis.get("margen_objetivo") or (_section(document, "configuracion_comercial") or {}).get("margen_objetivo"),
+                    "aplicado": kpis.get("margen_objetivo_cadena_a") or (_section(document, "configuracion_comercial") or {}).get("margen_objetivo_cadena_a"),
                     "minimo": kpis.get("margen_minimo_requerido"),
                     "maximo": None,
                     "estado": _margin_status(kpis),

@@ -127,7 +127,7 @@ def persisted_result() -> dict:
             "valor_total_deal": 6000000.0,
             "reglas": [
                 {
-                    "nombre": "margen_objetivo",
+                    "nombre": "margen_objetivo_cadena_a",
                     "label": "Margen objetivo",
                     "aplicado": 0.25,
                     "min_valor": 0.2,

@@ -182,7 +182,7 @@ class SimulationContextBuilder(ContextBuilderMethodsMixin):
         provenance.record_user_input("panel.ciudad", panel.ciudad, "datos_operativos.ciudad")
         provenance.record_user_input("panel.fecha_inicio", panel.fecha_inicio, "datos_operativos.fecha_inicio")
         provenance.record_user_input("panel.meses_contrato", panel.meses_contrato, "datos_operativos.duracion_meses")
-        provenance.record_user_input("panel.margen", panel.margen, "reglas_negocio.margen_objetivo")
+        provenance.record_user_input("panel.margen", panel.margen, "reglas_negocio.margen_objetivo_cadena_a")
         # tasa_ica: puede ser override del usuario o parametrización
         _src_ica = DataSource.USER_OVERRIDE_PARAMETRIZATION if panel.tasa_ica is not None else DataSource.PARAMETRIZATION
         provenance.record("panel.tasa_ica", panel.tasa_ica or self._prov.get_ica(ciudad), _src_ica, f"OP-ICA[ciudad={ciudad}]")

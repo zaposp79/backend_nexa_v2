@@ -109,7 +109,7 @@
     }
   ],
   "reglas_negocio": {
-    "margen_objetivo": 0.21,
+    "margen_objetivo_cadena_a": 0.21,
     "margen_objetivo_cadena_b": 0.3,
     "contingencia_operativa": {
       "valor": 0,

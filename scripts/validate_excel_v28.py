@@ -102,7 +102,7 @@ def check_input_alignment(
     indexacion   = request.get("volumetria", {}).get("indexacion", {})
     req_comp_tec = str(indexacion.get("componente_tecnologico", "")).strip()
     req_comp_hum = str(indexacion.get("componente_humano", "")).strip()
-    req_margen   = request.get("reglas_negocio", {}).get("margen_objetivo")
+    req_margen   = request.get("reglas_negocio", {}).get("margen_objetivo_cadena_a")
     req_duracion = request.get("datos_operativos", {}).get("duracion_meses")
 
     mismatches: list[str] = []
@@ -123,7 +123,7 @@ def check_input_alignment(
     if excel_margen is not None and req_margen is not None:
         if abs(float(excel_margen) - float(req_margen)) > 0.0001:
             mismatches.append(
-                f"margen_objetivo: Excel={excel_margen} req={req_margen}"
+                f"margen_objetivo_cadena_a: Excel={excel_margen} req={req_margen}"
             )
 
     if excel_duracion is not None and req_duracion is not None:

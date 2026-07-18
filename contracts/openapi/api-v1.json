@@ -549,7 +549,7 @@
           },
           "concepto": {
             "enum": [
-              "margen_objetivo",
+              "margen_objetivo_cadena_a",
               "contingencia_operativa",
               "contingencia_comercial",
               "markup",
@@ -1490,7 +1490,7 @@
           "descuento": {
             "$ref": "#/components/schemas/Rango"
           },
-          "margen_objetivo": {
+          "margen_objetivo_cadena_a": {
             "$ref": "#/components/schemas/MargenObjetivo"
           },
           "markup": {
@@ -1498,7 +1498,7 @@
           }
         },
         "required": [
-          "margen_objetivo",
+          "margen_objetivo_cadena_a",
           "contingencia_operativa",
           "contingencia_comercial",
           "markup",
@@ -1614,7 +1614,7 @@
                 "contingencias_ajustes": [
                   {
                     "aplicado": 0.21,
-                    "concepto": "margen_objetivo",
+                    "concepto": "margen_objetivo_cadena_a",
                     "estado": "dentro_rango",
                     "minimo": 0.17
                   },

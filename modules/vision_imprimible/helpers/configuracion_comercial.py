@@ -46,7 +46,7 @@ def configuracion_comercial_to_dict(resultado: PricingResult) -> Dict[str, Any]:
             "tarifa_fija":            0.0,
             "tarifa_variable":        0.0,
             "descuento":              panel.descuento,
-            "margen_objetivo":        panel.margen,
+            "margen_objetivo_cadena_a": panel.margen,
             "volumen_base_mensual":   resultado.cost_to_serve.vol_cadena_b if resultado.cost_to_serve else 0.0,
             "ingreso_mensual":        kpis.ingreso_mensual,
             "costo_mensual_total":    kpis.costo_mensual_promedio,
@@ -64,7 +64,7 @@ def configuracion_comercial_to_dict(resultado: PricingResult) -> Dict[str, Any]:
         "tarifa_fija":            tarifa_fija,
         "tarifa_variable":        canal_principal.tarifa_variable,
         "descuento":              panel.descuento,
-        "margen_objetivo":        panel.margen,
+        "margen_objetivo_cadena_a": panel.margen,
         "volumen_base_mensual":   resultado.cost_to_serve.vol_cadena_b if resultado.cost_to_serve else 0.0,
         "ingreso_mensual":        (
             resultado.vision_tarifas.ingreso_mensual

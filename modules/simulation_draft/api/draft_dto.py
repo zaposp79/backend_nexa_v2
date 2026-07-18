@@ -91,7 +91,7 @@ class Poliza(BaseModel):
 
 class ReglasNegocio(BaseModel):
     model_config = {"extra": "allow"}
-    margen_objetivo: Optional[float] = None
+    margen_objetivo_cadena_a: Optional[float] = None
     margen_objetivo_cadena_b: Optional[float] = None
     contingencia_operativa: Optional[ValorMinMax] = None
     contingencia_comercial: Optional[ValorMinMax] = None

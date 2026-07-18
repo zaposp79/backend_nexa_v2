@@ -41,7 +41,7 @@ def json_oficial_bancamia():
             "pct_rotacion": 0.085,
         },
         "reglas_negocio": {
-            "margen_objetivo": 0.18,
+            "margen_objetivo_cadena_a": 0.18,
             "contingencia_operativa": {"valor": 0.025},
             "contingencia_comercial": {"valor": 0.04},
             "markup": {"valor": 0.0},
@@ -130,7 +130,7 @@ class TestDataProvenance:
 
     def test_record_user_input(self):
         prov = DataProvenance()
-        prov.record_user_input("panel.margen", 0.18, "reglas_negocio.margen_objetivo")
+        prov.record_user_input("panel.margen", 0.18, "reglas_negocio.margen_objetivo_cadena_a")
         entry = prov.get("panel.margen")
         assert entry.source == DataSource.USER_INPUT
 

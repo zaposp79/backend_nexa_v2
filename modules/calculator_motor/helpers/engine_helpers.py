@@ -80,7 +80,7 @@ def _calcular_reglas_negocio(
     # BUSINESS_RULES_FIX_3: cada clave aquí debe tener fuente real en PanelDeControl.
     # Si una política del JSON no aparece aquí, se lanza ValueError (guard abajo).
     _PANEL_FIELDS = {
-        "margen_objetivo":         panel.margen,
+        "margen_objetivo_cadena_a": panel.margen,
         "contingencia_operativa":  panel.op_cont,
         "contingencia_comercial":  panel.com_cont,
         "markup":                  panel.markup,
@@ -114,7 +114,7 @@ def _calcular_reglas_negocio(
             politicas_config = []
     else:
         politicas_config = [
-            {"nombre": "margen_objetivo",        "label": "Margen objetivo",        "min": None, "max": None},
+            {"nombre": "margen_objetivo_cadena_a", "label": "Margen objetivo",        "min": None, "max": None},
             {"nombre": "contingencia_operativa", "label": "Contingencia Operativa", "min": 0.05, "max": 0.08},
             {"nombre": "contingencia_comercial", "label": "Contingencia Comercial", "min": 0.04, "max": 0.07},
             {"nombre": "markup",                 "label": "Mark up (complejidad, horarios)", "min": 0.02, "max": 0.08},

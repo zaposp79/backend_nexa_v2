@@ -58,7 +58,7 @@ _DATOS_OPERATIVOS = {
 }
 
 _REGLAS_NEGOCIO = {
-    "margen_objetivo": 0.18,
+    "margen_objetivo_cadena_a": 0.18,
     "contingencia_operativa": {"valor": 0.025, "minimo": 0.025, "maximo": 0.12},
     "contingencia_comercial": {"valor": 0.04, "minimo": 0.04, "maximo": 0.07},
     "markup": {"valor": 0.0, "minimo": 0.02, "maximo": 0.08},

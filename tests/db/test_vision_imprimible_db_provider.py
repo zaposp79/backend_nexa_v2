@@ -148,7 +148,7 @@ def _make_minimal_vi_document(simulation_id: str) -> Dict[str, Any]:
         "waterfall_promedio":      {"payroll_a": 0.0},
         "configuracion_comercial": {
             "modelo_cobro_principal": "Fijo FTE", "valor_total_deal": 100_000.0,
-            "margen_objetivo": 0.21, "pct_fijo_global": 1.0, "pct_variable_global": 0.0,
+            "margen_objetivo_cadena_a": 0.21, "pct_fijo_global": 1.0, "pct_variable_global": 0.0,
             "tarifa_fija": 100_000.0, "tarifa_variable": 0.0, "descuento": 0.0,
             "volumen_base_mensual": 0.0,
         },

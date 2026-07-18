@@ -42,14 +42,14 @@ class TestEntryDataRequiredFields:
             "ciudad": "Medellin",
             "fecha_inicio": "2026-03-01",
             "duracion_meses": 12,
-            "margen_objetivo": 0.20,
+            "margen_objetivo_cadena_a": 0.20,
             "cliente": "TestCo",
             "tipo_cliente": "Nuevo",
             "servicio": "SAC",
         }
 
     @pytest.mark.parametrize("campo", [
-        "ciudad", "fecha_inicio", "duracion_meses", "margen_objetivo",
+        "ciudad", "fecha_inicio", "duracion_meses", "margen_objetivo_cadena_a",
     ])
     def test_campo_requerido_faltante_raises(self, base_entry_data, campo):
         entry = {**base_entry_data}

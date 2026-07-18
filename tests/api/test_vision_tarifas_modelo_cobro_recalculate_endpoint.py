@@ -20,7 +20,7 @@ from nexa_engine.modules.vision_tarifas.api.schemas import ModeloCobroOverride, 
 def persisted_pricing_result() -> dict:
     return {
         "simulation_id": "sim_recalc_01",
-        "panel": {"margen": 0.21, "margen_objetivo": 0.21},
+        "panel": {"margen": 0.21, "margen_objetivo_cadena_a": 0.21},
         "ficha_deal": {
             "cliente": "Banco de Bogotá",
             "linea_negocio": "Atención al cliente",

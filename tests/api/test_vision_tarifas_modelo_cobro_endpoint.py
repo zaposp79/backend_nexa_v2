@@ -20,7 +20,7 @@ def persisted_pricing_result() -> dict:
         "simulation_id": "sim_endpoint_01",
         "panel": {
             "margen": 0.21,
-            "margen_objetivo": 0.21,
+            "margen_objetivo_cadena_a": 0.21,
         },
         "ficha_deal": {
             "cliente": "Banco de Bogotá",

@@ -38,7 +38,7 @@ class ReglasNegocio(BaseModel):
         en v2-7.json y con PanelDeControl.descuento). Ver FIX_1 para historial.
         porcentaje_acumulado eliminado: era DEAD_FIELD_LEGACY sin fuente Panel.
     """
-    margen_objetivo: MargenObjetivo
+    margen_objetivo_cadena_a: MargenObjetivo
     contingencia_operativa: Rango
     contingencia_comercial: Rango
     markup: Rango

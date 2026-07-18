@@ -45,7 +45,7 @@ def persisted_result() -> dict:
                 "tarifa_fija": 0.0,
                 "tarifa_variable": 10.0,
                 "descuento": 0.0,
-                "margen_objetivo": 0.21,
+                "margen_objetivo_cadena_a": 0.21,
                 "volumen_base_mensual": 1000.0,
                 "ingreso_mensual": 100000.0,
                 "costo_mensual_total": 75000.0,

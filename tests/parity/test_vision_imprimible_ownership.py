@@ -253,10 +253,10 @@ def test_configuracion_comercial_serializer_tiene_mas_campos(run_engine, canonic
     assert vi is not None
 
     # ConfiguracionComercial del builder tiene 4 campos: modelo_cobro, tarifa_fija, tarifa_variable, canales
-    # El serializer produce 12+ campos incluyendo descuento, margen_objetivo, volumen_base_mensual, etc.
+    # El serializer produce 12+ campos incluyendo descuento, margen_objetivo_cadena_a, volumen_base_mensual, etc.
     doc_cc = doc["configuracion_comercial"]
     assert "descuento" in doc_cc, "configuracion_comercial serializado debe tener 'descuento'"
-    assert "margen_objetivo" in doc_cc, "configuracion_comercial serializado debe tener 'margen_objetivo'"
+    assert "margen_objetivo_cadena_a" in doc_cc, "configuracion_comercial serializado debe tener 'margen_objetivo_cadena_a'"
     assert "volumen_base_mensual" in doc_cc, "configuracion_comercial serializado debe tener 'volumen_base_mensual'"
     # Estos campos NO existen en ConfiguracionComercial del builder
     assert len(doc_cc) > 4, (
@@ -438,7 +438,7 @@ def test_formula_ownership_3_configuracion_comercial_vive_en_vision_imprimible(
     # 2. Los 12 campos canónicos de VI sección 03
     campos_esperados = [
         "modelo_cobro_principal", "pct_fijo_global", "pct_variable_global",
-        "tarifa_fija", "tarifa_variable", "descuento", "margen_objetivo",
+        "tarifa_fija", "tarifa_variable", "descuento", "margen_objetivo_cadena_a",
         "volumen_base_mensual", "ingreso_mensual", "costo_mensual_total",
         "valor_total_deal",
     ]

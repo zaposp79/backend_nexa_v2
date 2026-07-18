@@ -52,7 +52,7 @@ def _fake_persisted_result(include_approval_actors: bool = False) -> dict:
                 "tarifa_fija": 0.0,
                 "tarifa_variable": 15.0,
                 "descuento": 0.0,
-                "margen_objetivo": 0.22,
+                "margen_objetivo_cadena_a": 0.22,
                 "volumen_base_mensual": 5000.0,
                 "ingreso_mensual": 120000.0,
                 "costo_mensual_total": 90000.0,

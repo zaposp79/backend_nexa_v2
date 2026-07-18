@@ -92,11 +92,11 @@ PANEL_MAP: list[dict] = [
                   "Panel=0.01; req=0.0097 — NINGUNO coincide exactamente"),
     },
     {"cell": "C35", "label": "GMF",                      "req": "datos_operativos.tasa_gmf"},
-    {"cell": "C63", "label": "Margen obj Cadena A",      "req": "reglas_negocio.margen_objetivo"},
+    {"cell": "C63", "label": "Margen obj Cadena A",      "req": "reglas_negocio.margen_objetivo_cadena_a"},
     {
         "cell": "D63", "label": "Margen obj Cadena B", "req": None,
         "tag": STRUCT_EXT,
-        "notes": "Nueva key reglas_negocio.margen_objetivo_cadena_b=0.30; req solo tiene un margen_objetivo",
+        "notes": "Nueva key reglas_negocio.margen_objetivo_cadena_b=0.30; req tiene margen_objetivo_cadena_a para cadena A",
     },
     {"cell": "C67", "label": "Contingencia Operativa",   "req": "reglas_negocio.contingencia_operativa.valor"},
     {"cell": "C68", "label": "Contingencia Comercial",   "req": "reglas_negocio.contingencia_comercial.valor"},

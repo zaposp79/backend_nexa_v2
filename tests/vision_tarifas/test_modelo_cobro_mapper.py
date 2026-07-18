@@ -16,7 +16,7 @@ def _base_result() -> dict:
         "simulation_id": "sim_tarifas_001",
         "panel": {
             "margen": 0.21,
-            "margen_objetivo": 0.21,
+            "margen_objetivo_cadena_a": 0.21,
         },
         "vision_tarifas": {
             "selected_scenario_id": "escenario_2",
