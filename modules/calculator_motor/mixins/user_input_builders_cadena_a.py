@@ -76,6 +76,25 @@ _CAMPOS_ENTRY_DATA_NUEVO_VALIDOS = {
 }
 
 
+def _resolver_comision_pct(d: dict) -> float:
+    """Devuelve comision_pct explícito; si no se proveyó, lo deriva de comision_mensual / salario_base."""
+    pct = float(d.get("comision_pct", 0.0) or 0.0)
+    if pct == 0.0:
+        mensual = float(d.get("comision_mensual", 0.0) or 0.0)
+        salario = float(d.get("salario_base", 0.0) or 0.0)
+        if mensual > 0 and salario > 0:
+            pct = mensual / salario
+    return pct
+
+
+def _resolver_incluye_crucero(d: dict) -> bool:
+    """Activa incluye_crucero si el perfil lo declara explícitamente o tiene crucero_mensual > 0."""
+    if bool(d.get("incluye_crucero", False)):
+        return True
+    cap = d.get("capacitacion") or {}
+    return float(cap.get("crucero_mensual", 0.0) or 0.0) > 0
+
+
 def _aplicar_escenarios_a_perfiles(
     condiciones_a: dict,
     escenarios: list,
@@ -195,11 +214,11 @@ class UserInputBuildersCadenaAMixin:
             fte_soporte_overrides = fte_soporte_overrides,
             roles_excluidos_deal = roles_excluidos_deal,
             pct_presencia     = float(d.get("pct_presencia", 1.0)),
-            comision_pct      = float(d.get("comision_pct", 0.0)),
+            comision_pct      = _resolver_comision_pct(d),
             salario_base      = float(d["salario_base"]) if "salario_base" in d else None,
             incluye_examenes  = bool(d.get("incluye_examenes", True)),
             incluye_seguridad = bool(d.get("incluye_seguridad", False)),
-            incluye_crucero   = bool(d.get("incluye_crucero", False)),
+            incluye_crucero   = _resolver_incluye_crucero(d),
             dias_cap_inicial  = int(d.get("dias_cap_inicial", 10)),
             dias_cap_rotacion = int(d.get("dias_cap_rotacion", 10)),
             tmo_segundos      = float(d.get("tmo_segundos", 0.0)),

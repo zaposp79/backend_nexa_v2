@@ -31,25 +31,25 @@ _logger = logging.getLogger("nexa_engine.context_builder")
 def _build_amortizable_item(inversion: dict, factor: float, meses_contrato: int) -> dict:
     """Construye un ítem de CAPEX amortizable desde una inversión del request.
 
-    EXCEL V2-8 · 'No payroll'!E167 = SUMPRODUCT($D$134:$D$162 ["Precio mensual"], FILTER(qty)) × (1+Panel!L11).
-    Traducción: la columna "Precio mensual" (precio_total / meses_a_diferir) se cobra PLANA durante todos
-    los meses del contrato (row 167 cols L..AI = valor constante; 0 fuera del contrato). `meses_a_diferir`
-    NO interviene en la fórmula Excel salvo para derivar precio_mensual; el horizonte de cobro es el
-    contrato completo, no el plazo de diferimiento. Por eso `meses` = meses_contrato (no meses_a_diferir).
+    precio_mensual = precio_total / meses_a_diferir.
+    El ítem aporta solo durante los primeros min(meses_a_diferir, meses_contrato) meses,
+    por eso meses=meses_diferir (no meses_contrato). Esto produce el salto no_payroll
+    mes1 vs mes2+ cuando meses_a_diferir=1 (equipos de una sola cuota).
     """
+    meses_diferir = int(inversion.get('meses_a_diferir',
+                                      inversion.get('meses_amortizacion', 1)) or 1)
+    if meses_diferir <= 0:
+        meses_diferir = 1
+
     precio_mensual = inversion.get('precio_mensual')
     if precio_mensual is None:
-        meses_diferir = int(inversion.get('meses_a_diferir',
-                                          inversion.get('meses_amortizacion', 1)) or 1)
-        if meses_diferir <= 0:
-            meses_diferir = 1
         precio_mensual = float(inversion.get('precio', 0.0)) / meses_diferir
     else:
         precio_mensual = float(precio_mensual)
     return {
         "precio_mensual": precio_mensual,
         "cantidad": float(inversion.get('cantidad') or 0.0),
-        "meses": int(meses_contrato),
+        "meses": min(meses_diferir, meses_contrato),
         "factor": factor,
     }
 
@@ -456,12 +456,10 @@ class ContextBuilderPerfilesSoporteMixin:
         """
         Construye los ítems de CAPEX amortizable desde inversiones[] (Excel V2-8).
 
-        Cada ítem del request lleva: precio (precio total de compra), meses_a_diferir
-        (plazo de amortización), precio_mensual (= precio / meses_a_diferir) y cantidad.
-        Réplica de 'No payroll'!E167 (SUMPRODUCT de la columna "Precio mensual" × cantidades):
-            cuota(mes) = precio_mensual × cantidad × (1 + Panel!L11)
-        El ítem se cobra PLANO durante TODOS los meses del contrato (row 167 cols L..AI =
-        valor constante; 0 fuera del contrato). Las cuotas de todos los perfiles se acumulan.
+        Cada ítem lleva: precio (total), meses_a_diferir (plazo), cantidad.
+        cuota(mes) = precio_mensual × cantidad × factor, solo para mes ≤ meses_diferir.
+        Ítems con meses_a_diferir=1 aportan únicamente en el mes 1 (costos únicos de arranque).
+        Las cuotas de todos los perfiles se acumulan.
         """
         items: List[dict] = []
         for perfil in perfiles_a:
