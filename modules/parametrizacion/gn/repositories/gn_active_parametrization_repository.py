@@ -1,63 +1,49 @@
-"""Repositorio de lectura GN: lee la parametrización GN activa vía DocumentStore."""
+"""Repositorio de lectura GN: lee la parametrización GN activa vía DocumentStore.
+
+Busca en Cosmos el documento con domain="gn" y status="active".
+No usa VersionIndexRepository ni lee del filesystem local.
+"""
 
 from __future__ import annotations
 
 from typing import Any, Dict
 
 from nexa_engine.db.ports.document_store import DocumentStore
-from nexa_engine.modules.parametrizacion.gn.mappers.gn_version_document_codec import (
-    GNVersionDocumentCodec,
-)
 from nexa_engine.modules.parametrizacion.gn.repositories.collections import (
     GN_PARAMETRIZATION_COLLECTION,
 )
-from nexa_engine.modules.parametrizacion.shared.infrastructure.json_store import read_json
-from nexa_engine.modules.parametrizacion.shared.repositories.version_index_repository import (
-    VersionIndexRepository,
-)
 from nexa_engine.modules.shared.exceptions import ParametrizationNotFoundError
-from nexa_engine.modules.shared.config.config import GN_DIR
 
 
 class GNActiveParametrizationRepository:
-    """Lee la data de parametrización GN activa."""
+    """Lee la data de parametrización GN activa desde Cosmos."""
 
-    def __init__(self, store: DocumentStore, version_index: VersionIndexRepository) -> None:
+    def __init__(self, store: DocumentStore) -> None:
         self._store = store
-        self._codec = GNVersionDocumentCodec()
-        self._version_index = version_index
 
     def get_active_data(self) -> Dict[str, Any]:
-        active = self._version_index.get_active()
-        if active is not None:
-            record = self._store.get_record(GN_PARAMETRIZATION_COLLECTION, active.version_id)
-            if record is not None:
-                data = self._codec.decode(record)
-                if "version_id" not in data:
-                    data = {**data, "version_id": active.version_id}
-                return data
-            if not active.path:
-                raise ParametrizationNotFoundError("gn", active.version_id)
-            data_path = (GN_DIR / active.path).resolve()
-            return read_json(data_path)  # type: ignore[return-value]
-
-        # Fallback: query directa cuando el índice 'versions' no existe en Cosmos
-        try:
-            docs, _ = self._store.query(
-                GN_PARAMETRIZATION_COLLECTION,
-                {"domain": "gn", "status": "active"},
-            )
-            if docs:
-                doc = docs[0]
-                payload = doc.get("payload")
-                if isinstance(payload, dict):
-                    if "version_id" not in payload:
-                        payload = {**payload, "version_id": doc.get("id", "unknown")}
-                    return payload
-        except Exception:
-            pass
-
+        docs, _ = self._store.query(
+            GN_PARAMETRIZATION_COLLECTION,
+            {"domain": "gn", "status": "active"},
+        )
+        if docs:
+            doc = docs[0]
+            payload = doc.get("payload")
+            if isinstance(payload, dict) and payload:
+                if "version_id" not in payload:
+                    payload = {**payload, "version_id": doc.get("id", "unknown")}
+                return payload
         raise ParametrizationNotFoundError("gn", None)
+
+    def get_data_by_id(self, document_id: str) -> Dict[str, Any]:
+        """Lee una versión específica por su ID de documento."""
+        record = self._store.get_record(GN_PARAMETRIZATION_COLLECTION, document_id)
+        if record is None:
+            raise ParametrizationNotFoundError("gn", document_id)
+        payload = record.payload if hasattr(record, "payload") else record.get("payload")
+        if not isinstance(payload, dict) or not payload:
+            raise ParametrizationNotFoundError("gn", document_id)
+        return payload
 
 
 __all__ = ["GNActiveParametrizationRepository"]

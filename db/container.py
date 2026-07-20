@@ -123,28 +123,30 @@ class ApplicationContainer:
 def _build_parametrization_repos(db_config) -> dict:
     """Crear repositorios de parametrización para cualquier backend (JSON o Cosmos).
 
-    build_parametrization_document_store() ya maneja la distinción de proveedor
-    internamente; no es necesario ramificar aquí por tipo de backend.
+    Los repositorios de lectura activa (HR/GN/OP Active) buscan directamente
+    por domain+status en Cosmos — no usan VersionIndexRepository.
+    VersionIndexRepository solo se usa en los repos de upload (escritura).
     """
     param_store = build_parametrization_document_store(db_config)
+    # VersionIndexRepository solo para repos de upload (escritura)
     hr_version_index = VersionIndexRepository(store=param_store, collection=HR_PARAMETRIZATION_COLLECTION)
     gn_version_index = VersionIndexRepository(store=param_store, collection=GN_PARAMETRIZATION_COLLECTION)
     op_version_index = VersionIndexRepository(store=param_store, collection=OP_PARAMETRIZATION_COLLECTION)
     return {
         "param_store": param_store,
-        "hr_repo": HRActiveParametrizationRepository(param_store, hr_version_index),
+        "hr_repo": HRActiveParametrizationRepository(param_store),
         "hr_upload_repo": HRRepository(
             store=param_store,
             version_index_repository=hr_version_index,
             codec=HRVersionDocumentCodec(),
         ),
-        "gn_repo": GNActiveParametrizationRepository(param_store, gn_version_index),
+        "gn_repo": GNActiveParametrizationRepository(param_store),
         "gn_upload_repo": GNRepository(
             store=param_store,
             version_index_repository=gn_version_index,
             codec=GNVersionDocumentCodec(),
         ),
-        "op_repo": OPActiveParametrizationRepository(param_store, op_version_index),
+        "op_repo": OPActiveParametrizationRepository(param_store),
         "op_upload_repo": OPRepository(
             store=param_store,
             version_index_repository=op_version_index,

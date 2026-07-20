@@ -36,6 +36,7 @@ def _get_service(request: Request) -> GNService:
     status_code=201,
 )
 async def upload_gn(
+    request: Request,
     file: UploadFile | None = File(None),
     user_id: str = Query(default="anonymous"),
     service: GNService = Depends(_get_service),
@@ -52,6 +53,11 @@ async def upload_gn(
     check_file_size(file_bytes)
     user_id = sanitize_user_id(user_id)
     resp = service.process_upload(filename or "upload.xlsx", file_bytes, user_id=user_id)
+    _version_registry.invalidate_cache()
+    try:
+        request.app.state.container.parametrization_provider.invalidate_cache("gn")
+    except Exception:
+        pass
     return ApiResponse.ok(resp.model_dump())
 
 
@@ -108,6 +114,7 @@ def get_gn_by_id(
     },
 )
 def activate_gn(
+    request: Request,
     id: UUID = Path(..., description="UUID4 del documento GN a activar"),
     service: GNService = Depends(_get_service),
 ):
@@ -132,6 +139,10 @@ def activate_gn(
             content=ApiResponse(success=False, error=_make_detail("SIM-00600", message=str(e))).model_dump(),
         )
     _version_registry.invalidate_cache()
+    try:
+        request.app.state.container.parametrization_provider.invalidate_cache("gn")
+    except Exception:
+        pass
     return ApiResponse.ok(summary.model_dump())
 
 

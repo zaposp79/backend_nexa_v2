@@ -50,8 +50,7 @@ class HRRepository:
         previously_active_ids = self._query_active_ids(domain_name)
 
         # 2. Embeber status y domain en el payload
-        #    — JsonDocumentStore solo persiste el payload (no root_metadata)
-        #    — Cosmos también usa root_metadata, pero el payload es la fuente canónica
+        #    — el payload es la fuente canónica (root_metadata es auxiliar en Cosmos)
         status = (metadata or {}).get("status", "active")
         data_to_store = {
             **data,

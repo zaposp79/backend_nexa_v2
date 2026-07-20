@@ -48,25 +48,10 @@ class ParametrizationResolver:
 
         if hr_repo is None or gn_repo is None or op_repo is None:
             from nexa_engine.db.factory import get_parametrization_store
-            from nexa_engine.modules.parametrizacion.shared.repositories.version_index_repository import (
-                VersionIndexRepository,
-            )
-            from nexa_engine.modules.parametrizacion.hr.repositories.collections import HR_PARAMETRIZATION_COLLECTION
-            from nexa_engine.modules.parametrizacion.gn.repositories.collections import GN_PARAMETRIZATION_COLLECTION
-            from nexa_engine.modules.parametrizacion.op.repositories.collections import OP_PARAMETRIZATION_COLLECTION
             ps = get_parametrization_store()
-            hr_repo = hr_repo or HRActiveParametrizationRepository(
-                ps,
-                VersionIndexRepository(store=ps, collection=HR_PARAMETRIZATION_COLLECTION),
-            )
-            gn_repo = gn_repo or GNActiveParametrizationRepository(
-                ps,
-                VersionIndexRepository(store=ps, collection=GN_PARAMETRIZATION_COLLECTION),
-            )
-            op_repo = op_repo or OPActiveParametrizationRepository(
-                ps,
-                VersionIndexRepository(store=ps, collection=OP_PARAMETRIZATION_COLLECTION),
-            )
+            hr_repo = hr_repo or HRActiveParametrizationRepository(ps)
+            gn_repo = gn_repo or GNActiveParametrizationRepository(ps)
+            op_repo = op_repo or OPActiveParametrizationRepository(ps)
 
         self._hr_repo = hr_repo
         self._gn_repo = gn_repo

@@ -93,9 +93,8 @@ def test_op_upload_creates_exact_version_file_index_and_http_response(monkeypatc
     ica_sheet = next(s for s in payload["sheets"] if s["name"] == "OP-ICA")
     assert ica_sheet["rows"][0]["ciudad"] == "Bogota"
 
-    versions_entry = read_json(tmp_path / "op" / "versions.json")[0]
-    assert versions_entry["version_id"] == "op-fixed-version"
-    assert versions_entry["is_active"] is True
+    # versions.json index is no longer written — version tracking uses payload fields (status/domain)
+    assert not (tmp_path / "op" / "versions.json").exists()
     # New version document must carry status=active and domain=op
     assert payload["status"] == "active"
     assert payload["domain"] == "op"
@@ -122,9 +121,8 @@ def test_op_upload_second_version_deactivates_previous(monkeypatch, tmp_path, is
     )
     assert r2.status_code == 201
 
-    versions = read_json(tmp_path / "op" / "versions.json")
-    assert [e["version_id"] for e in versions] == ["op-fixed-version", "op-second-version"]
-    assert [e["is_active"] for e in versions] == [False, True]
+    # versions.json index is no longer written — is_active state is in the document files
+    assert not (tmp_path / "op" / "versions.json").exists()
 
     first_doc = read_json(tmp_path / "op" / "op-fixed-version.json")
     second_doc = read_json(tmp_path / "op" / "op-second-version.json")
@@ -146,10 +144,8 @@ def test_op_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatc
         assert response.status_code == 201
         assert response.json()["success"] is True
 
-    versions = read_json(tmp_path / "op" / "versions.json")
-    assert [entry["version_id"] for entry in versions] == ["op-fixed-version", "op-fixed-version"]
-    assert [entry["filename"] for entry in versions] == ["OP_first.xlsx", "OP_second.xlsx"]
-    assert [entry["is_active"] for entry in versions] == [False, True]
+    # versions.json index is no longer written — version state lives in each document's payload
+    assert not (tmp_path / "op" / "versions.json").exists()
 
 
 def test_op_upload_no_file_returns_400(monkeypatch, tmp_path, isolated_app):

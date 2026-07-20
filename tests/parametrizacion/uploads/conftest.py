@@ -10,10 +10,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-PROJECTS_ROOT = Path(__file__).resolve().parents[4]
+PROJECTS_ROOT = Path(__file__).resolve().parents[3]
 if str(PROJECTS_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECTS_ROOT))
-import backend_nexa  # noqa: F401,E402
+import backend_nexa_v2  # noqa: F401,E402
 
 
 def workbook_bytes(sheets: dict[str, tuple[Iterable[str], list[Iterable[object]]]]) -> bytes:

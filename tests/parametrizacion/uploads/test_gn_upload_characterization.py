@@ -94,7 +94,8 @@ def test_gn_upload_creates_exact_version_file_index_and_http_response(monkeypatc
     assert payload["status"] == "active"
     assert payload["domain"] == "gn"
 
-    assert read_json(tmp_path / "gn" / "versions.json")[0]["version_id"] == "gn-fixed-version"
+    # versions.json index is no longer written — version tracking uses payload fields (status/domain)
+    assert not (tmp_path / "gn" / "versions.json").exists()
 
     versions_response = client.get("/parametrization/gn/versions")
     assert versions_response.status_code == 200
@@ -120,9 +121,8 @@ def test_gn_upload_second_version_deactivates_previous(monkeypatch, tmp_path, is
     )
     assert r2.status_code == 201
 
-    versions = read_json(tmp_path / "gn" / "versions.json")
-    assert [e["version_id"] for e in versions] == ["gn-fixed-version", "gn-second-version"]
-    assert [e["is_active"] for e in versions] == [False, True]
+    # versions.json index is no longer written — is_active state is in the document files
+    assert not (tmp_path / "gn" / "versions.json").exists()
 
     first_doc = read_json(tmp_path / "gn" / "gn-fixed-version.json")
     second_doc = read_json(tmp_path / "gn" / "gn-second-version.json")
@@ -144,10 +144,8 @@ def test_gn_upload_duplicate_version_id_appends_duplicate_index_entry(monkeypatc
         assert response.status_code == 201
         assert response.json()["success"] is True
 
-    versions = read_json(tmp_path / "gn" / "versions.json")
-    assert [e["version_id"] for e in versions] == ["gn-fixed-version", "gn-fixed-version"]
-    assert [e["filename"] for e in versions] == ["GN_first.xlsx", "GN_second.xlsx"]
-    assert [e["is_active"] for e in versions] == [False, True]
+    # versions.json index is no longer written — version state lives in each document's payload
+    assert not (tmp_path / "gn" / "versions.json").exists()
 
 
 def test_gn_upload_no_file_returns_400(monkeypatch, tmp_path, isolated_app):

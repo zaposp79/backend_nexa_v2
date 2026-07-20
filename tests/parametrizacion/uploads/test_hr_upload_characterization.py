@@ -117,9 +117,8 @@ def test_hr_upload_creates_exact_version_file_index_and_http_response(monkeypatc
     assert payload["status"] == "active"
     assert payload["domain"] == "hr"
 
-    versions = read_json(tmp_path / "hr" / "versions.json")
-    assert versions[0]["version_id"] == "hr-fixed-version"
-    assert versions[0]["is_active"] is True
+    # versions.json index is no longer written — version tracking uses payload fields (status/domain)
+    assert not (tmp_path / "hr" / "versions.json").exists()
 
     # HR versions response: 'id' is the internal UUID, 'version_id' is the Colombia datetime label
     assert client.get("/parametrization/hr/versions").json()["data"][0]["id"] == "hr-fixed-version"
@@ -145,10 +144,8 @@ def test_hr_upload_second_version_deactivates_previous(monkeypatch, tmp_path, is
     )
     assert r2.status_code == 201
 
-    # Index must reflect correct is_active flags
-    versions = read_json(tmp_path / "hr" / "versions.json")
-    assert [e["version_id"] for e in versions] == ["hr-fixed-version", "hr-second-version"]
-    assert [e["is_active"] for e in versions] == [False, True]
+    # versions.json index is no longer written — is_active state is in the document files
+    assert not (tmp_path / "hr" / "versions.json").exists()
 
     # Individual document files must carry status field
     first_doc = read_json(tmp_path / "hr" / "hr-fixed-version.json")

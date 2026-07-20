@@ -168,4 +168,22 @@ class ParametrizationProvider(
         )
         return instance
 
+    def invalidate_cache(self, module: Optional[str] = None) -> None:
+        """Invalida las cachés en memoria para forzar re-lectura desde el store.
+
+        Debe llamarse después de activar o subir una versión para que el motor
+        use los nuevos datos en el siguiente cálculo.
+
+        Args:
+            module: 'hr', 'gn', 'op', o None para limpiar todos los módulos.
+        """
+        # Capa 1: resolver._cache (compartido por todos los repositorios)
+        self._payroll._resolver.invalidate_cache(module)
+        # Capa 2: caché interna de PayrollParametrizationRepository
+        if module in (None, "hr"):
+            self._payroll._hr_data = None
+            self._payroll._rotacion_ausentismo = None
+            self._payroll._rotacion_loaded = False
+        logger.info("[PARAMETRIZATION] Provider cache invalidated module=%s", module or "all")
+
 

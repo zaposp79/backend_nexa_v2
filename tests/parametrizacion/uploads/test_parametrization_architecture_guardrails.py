@@ -55,10 +55,10 @@ def test_parametrization_json_store_is_only_hardcoded_in_factory() -> None:
 
 
 @pytest.mark.parametrize("repository_cls", ACTIVE_REPOSITORIES)
-def test_active_repositories_use_get_record_and_not_store_get(repository_cls: type) -> None:
+def test_active_repositories_use_store_api_and_not_store_get(repository_cls: type) -> None:
     source = inspect.getsource(repository_cls.get_active_data)
 
-    assert "get_record(" in source
+    assert "self._store.query(" in source
     assert "self._store.get(" not in source
 
 
@@ -96,9 +96,8 @@ def test_upload_repositories_do_not_use_direct_filesystem_or_json_provider(
 def test_upload_persistence_uses_record_api_as_primary_write_route() -> None:
     source = inspect.getsource(save_version_payload_and_index)
 
-    assert "upsert_records_atomic(" in source
     assert "upsert_record(" in source
-    assert "get_record(" in source
+    assert "upsert_records_atomic(" not in source
     assert "self._store.get(" not in source
     assert "open(" not in source
     assert "json.dump" not in source
@@ -145,7 +144,7 @@ def test_op_poliza_uses_definitive_headers() -> None:
     from nexa_engine.modules.parametrizacion.op.contracts import OP_CONTRACT
 
     poliza = next(s for s in OP_CONTRACT.sheets if s.excel_name == "OP-Poliza")
-    assert poliza.headers == ["Poliza", "Porcentaje", "PorcentajeExigido"]
+    assert list(poliza.headers) == ["Poliza", "Porcentaje", "PorcentajeExigido"]
 
 
 

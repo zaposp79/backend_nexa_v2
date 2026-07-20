@@ -1,8 +1,7 @@
-"""Repositorio de lectura HR: lee la parametrización activa vía DocumentStore.
+"""Repositorio de lectura HR: lee la parametrización HR activa vía DocumentStore.
 
-Usa VersionIndexRepository para el índice de versiones (formato encapsulado).
-Usa DocumentStore.get_record para data de versión y conserva read_json solo
-como fallback legacy para archivos con path override (../v2-7/hr.json).
+Busca en Cosmos el documento con domain="hr" y status="active".
+No usa VersionIndexRepository ni lee del filesystem local.
 """
 
 from __future__ import annotations
@@ -10,60 +9,41 @@ from __future__ import annotations
 from typing import Any, Dict
 
 from nexa_engine.db.ports.document_store import DocumentStore
-from nexa_engine.modules.parametrizacion.hr.mappers.hr_version_document_codec import (
-    HRVersionDocumentCodec,
-)
 from nexa_engine.modules.parametrizacion.hr.repositories.collections import (
     HR_PARAMETRIZATION_COLLECTION,
 )
-from nexa_engine.modules.parametrizacion.shared.infrastructure.json_store import read_json
-from nexa_engine.modules.parametrizacion.shared.repositories.version_index_repository import (
-    VersionIndexRepository,
-)
 from nexa_engine.modules.shared.exceptions import ParametrizationNotFoundError
-from nexa_engine.modules.shared.config.config import HR_DIR
 
 
 class HRActiveParametrizationRepository:
-    """Lee la data de parametrización HR activa."""
+    """Lee la data de parametrización HR activa desde Cosmos."""
 
-    def __init__(self, store: DocumentStore, version_index: VersionIndexRepository) -> None:
+    def __init__(self, store: DocumentStore) -> None:
         self._store = store
-        self._codec = HRVersionDocumentCodec()
-        self._version_index = version_index
 
     def get_active_data(self) -> Dict[str, Any]:
-        active = self._version_index.get_active()
-        if active is not None:
-            record = self._store.get_record(HR_PARAMETRIZATION_COLLECTION, active.version_id)
-            if record is not None:
-                data = self._codec.decode(record)
-                if "version_id" not in data:
-                    data = {**data, "version_id": active.version_id}
-                return data
-            if not active.path:
-                raise ParametrizationNotFoundError("hr", active.version_id)
-            data_path = (HR_DIR / active.path).resolve()
-            return read_json(data_path)  # type: ignore[return-value]
-
-        # Fallback: query directa cuando el índice 'versions' no existe en Cosmos
-        # (documentos subidos antes de que el índice se escribiera al store)
-        try:
-            docs, _ = self._store.query(
-                HR_PARAMETRIZATION_COLLECTION,
-                {"domain": "hr", "status": "active"},
-            )
-            if docs:
-                doc = docs[0]
-                payload = doc.get("payload")
-                if isinstance(payload, dict):
-                    if "version_id" not in payload:
-                        payload = {**payload, "version_id": doc.get("id", "unknown")}
-                    return payload
-        except Exception:
-            pass
-
+        docs, _ = self._store.query(
+            HR_PARAMETRIZATION_COLLECTION,
+            {"domain": "hr", "status": "active"},
+        )
+        if docs:
+            doc = docs[0]
+            payload = doc.get("payload")
+            if isinstance(payload, dict) and payload:
+                if "version_id" not in payload:
+                    payload = {**payload, "version_id": doc.get("id", "unknown")}
+                return payload
         raise ParametrizationNotFoundError("hr", None)
+
+    def get_data_by_id(self, document_id: str) -> Dict[str, Any]:
+        """Lee una versión específica por su ID de documento."""
+        record = self._store.get_record(HR_PARAMETRIZATION_COLLECTION, document_id)
+        if record is None:
+            raise ParametrizationNotFoundError("hr", document_id)
+        payload = record.payload if hasattr(record, "payload") else record.get("payload")
+        if not isinstance(payload, dict) or not payload:
+            raise ParametrizationNotFoundError("hr", document_id)
+        return payload
 
 
 __all__ = ["HRActiveParametrizationRepository"]
