@@ -210,15 +210,19 @@ class PyGCalculator:
         # - Cadena A  → Panel!L7 = indexacion.componente_humano  (típico "IPC")
         # - Cadena B/C → Panel!L8 = indexacion.componente_tecnologico (típico "20% SMMLV 80% IPC")
         # Diferencia vs V2-7: V2-7 no aplicaba factor de indexación anual sobre ingreso
+        # Año 1 del contrato (año de inicio): los costos ya están en precios del año de
+        # inicio → no se aplica indexación. Solo se indexa desde el segundo año calendario.
         if self._panel.indexacion and self._panel.fecha_inicio:
-            _anio    = _anio_para_mes(self._panel.fecha_inicio, mes)
+            _anio       = _anio_para_mes(self._panel.fecha_inicio, mes)
+            _start_year = date.fromisoformat(self._panel.fecha_inicio[:10]).year
             _comp_a  = self._panel.indexacion.componente_humano
             _comp_bc = self._panel.indexacion.componente_tecnologico
-            _rate_a  = _get_indexacion_anual(self._parametrizacion, _comp_a,  _anio)
-            _rate_bc = _get_indexacion_anual(self._parametrizacion, _comp_bc, _anio)
-            ingreso_cadena_a *= (1.0 + _rate_a)
-            ingreso_cadena_b *= (1.0 + _rate_bc)
-            ingreso_cadena_c *= (1.0 + _rate_bc)
+            if _anio > _start_year:
+                _rate_a  = _get_indexacion_anual(self._parametrizacion, _comp_a,  _anio)
+                _rate_bc = _get_indexacion_anual(self._parametrizacion, _comp_bc, _anio)
+                ingreso_cadena_a *= (1.0 + _rate_a)
+                ingreso_cadena_b *= (1.0 + _rate_bc)
+                ingreso_cadena_c *= (1.0 + _rate_bc)
 
         # GAP-PYG-1: Imprevistos = Panel!C73 × ingreso_bruto (V2-5 nuevo)
         imprevistos = self._panel.imprevistos * ingreso_bruto

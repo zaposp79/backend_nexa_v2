@@ -403,12 +403,13 @@ class ContextBuilderPerfilesSoporteMixin:
 
     def _calcular_opex_ti_total(self, perfiles_a: List[PerfilCadenaAInput]) -> float:
         """
-        Calcula OPEX TI total promedio por estación desde opex_fijo.items[].
+        Calcula OPEX fijo total promedio por estación desde opex_fijo.items[].
 
         REGLA: opex_ti_por_estacion NO es concepto atómico.
-        Es Σ(costos TI) / estaciones presenciales.
+        Es Σ(todos los costos opex_fijo) / estaciones presenciales.
+        El Excel incluye TODOS los ítems de opex_fijo.items en "OPEX Fijo"
+        sin distinguir entre TI y no-TI.
         """
-        KEYWORDS_TI = ["internet", "licencia", "plataforma", "cx1", "soporte", "software"]
         total_opex_ti = 0.0
         total_estaciones = 0.0
 
@@ -427,13 +428,6 @@ class ContextBuilderPerfilesSoporteMixin:
             total_estaciones += estaciones_perfil
 
             for item in items:
-                concepto = str(item.get('concepto', '')).lower()
-                tipo = str(item.get('tipo', '')).lower()
-                es_ti = tipo == "tecnología" or any(kw in concepto for kw in KEYWORDS_TI)
-
-                if not es_ti:
-                    continue
-
                 costo = float(item.get('costo', 0.0))
                 cantidad = float(item.get('cantidad', 1.0))
                 costo_totalizado = item.get('costo_totalizado', False)
