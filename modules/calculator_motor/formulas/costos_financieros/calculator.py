@@ -156,22 +156,23 @@ class CostosFinancierosCalculator:
             meses_contrato = self._panel.meses_contrato
             polizas_vigentes = [
                 p for p in self._polizas_usuario
-                if not (mes > meses_contrato and not p.aplica_extension)
+                if p.activa and not (mes > meses_contrato and not p.aplica_extension)
             ]
 
-            # Separate per-canal polizas (insurance premiums) from comAdm.
-            # Per-canal: marked per_canal=True (Pólizas sheet rows 173-185).
+            # Separate insurance polizas from comAdm.
+            # Insurance: all active non-ComAdm policies (rows 12:163 deal-wide AND
+            #   rows 173:185 per_canal=True). Both apply as per-cadena premium.
             # ComAdm: marked is_comision_administracion=True (Pólizas sheet row 188).
             # tasa_comAdm = pct_poliza × 1.42 (Excel D188 formula).
             comadm_poliza = next(
-                (p for p in polizas_vigentes if p.is_comision_administracion and p.activa),
+                (p for p in polizas_vigentes if p.is_comision_administracion),
                 None
             )
             tasa_comadm = comadm_poliza.pct_poliza * 1.42 if comadm_poliza else 0.0
 
             pure_pol = [
                 p for p in polizas_vigentes
-                if p.per_canal and not p.is_comision_administracion
+                if not p.is_comision_administracion
             ]
             tasa_pure_a = sum(p.tasa_efectiva for p in pure_pol if p.aplica_a)
             tasa_pure_b = sum(p.tasa_efectiva for p in pure_pol if p.aplica_b)
@@ -201,7 +202,6 @@ class CostosFinancierosCalculator:
             pure_pol_a = self._calcular_polizas(base_a, fin_a, tasa_pure_a, fm_a)
             pure_pol_b = self._calcular_polizas(base_b, fin_b, tasa_pure_b, fm_b)
             pure_pol_c = self._calcular_polizas(base_c, fin_c, tasa_pure_c, fm_c)
-            pure_pol_total = pure_pol_a + pure_pol_b + pure_pol_c
 
             # Comisión de Administración per cadena: (costo + fin) / fm × tasa_comAdm.
             # Pólizas sheet D188: tasa = pct_poliza × 1.42.
