@@ -222,10 +222,12 @@ class CostosFinancierosCalculator:
             gmf_c = self._calcular_gmf(base_c, pure_pol_c, fin_c)
             gmf = gmf_a + gmf_b + gmf_c
 
-            # polizas (H69) = ICA + GMF + pure_pol_a + comAdm_a + pure_pol_b + comAdm_b + pure_pol_c.
-            # Matches Excel Pólizas sheet rows 12:163 + 198:327 ("Activado").
-            # Note: comAdm_c (rows 333:351) is outside range 198:327, so NOT included here.
-            polizas = ica + gmf + pure_pol_a + comision_admin_a + pure_pol_b + comadm_b + pure_pol_c
+            # polizas (PyG display) = pure insurance premiums only.
+            # ICA and GMF are tracked in their own fields and summed separately in
+            # PyGMensual.costos_financieros and CostosFinancierosMes.total.
+            # Keeping polizas = just insurance avoids double-counting in both aggregates.
+            # (H69 Excel aggregate = ica + gmf + polizas + comAdm, reconstructed at display layer.)
+            polizas = pure_pol_a + pure_pol_b + pure_pol_c
             polizas_a = pure_pol_a
             polizas_b = pure_pol_b
             polizas_c = pure_pol_c
@@ -235,9 +237,10 @@ class CostosFinancierosCalculator:
             costo_financiero_vt_cadena_a = ica_a + gmf_a + pure_pol_a
 
         else:
-            tasa_polizas = self._parametrizacion.get_tasa_polizas_efectiva(mes)
-            polizas = self._calcular_polizas(costo_operativo, financiacion,
-                                             tasa_polizas, factor_margenes)
+            # No polizas configured → no insurance cost.
+            # Former OP-parametrization fallback was unintuitive: users who don't
+            # configure polizas expect $0, not a hidden rate from the uploaded OP table.
+            polizas = 0.0
             polizas_a = polizas_b = polizas_c = 0.0
             ica = self._calcular_ica(costo_operativo, polizas, financiacion, factor_margenes)
             gmf = self._calcular_gmf(costo_operativo, polizas, financiacion)
@@ -247,13 +250,13 @@ class CostosFinancierosCalculator:
 
         _audit_trace(
             component="costos_financieros",
-            rule="V2-7.per_cadena: ICA+GMF+pure_pol+comAdm_a+comAdm_b=H69; comAdm_total=H68",
+            rule="V2-7.per_cadena: polizas=pure_ins_a+b+c; comAdm=H68; H69_total=ica+gmf+polizas+comAdm",
             formula=("financiacion = costo_mes_anterior × tasa × factor_periodo;"
                      " pure_pol_X = tasa_pure × (costo_X+fin_X)/fm_X;"
                      " ica_X = (costo_X/fm_X + pure_pol_X + fin_X) × tasa_ica;"
                      " gmf_X = (costo_X + pure_pol_X + fin_X) × tasa_gmf;"
                      " comAdm_X = (costo_X+fin_X)/fm_X × (pct_poliza_comAdm × 1.42);"
-                     " polizas(H69) = ica+gmf+pure_pol_a+comAdm_a+pure_pol_b+comAdm_b+pure_pol_c;"
+                     " polizas(PyG) = pure_pol_a+pure_pol_b+pure_pol_c [insurance only, not ica/gmf];"
                      " comAdm_total(H68) = comAdm_a+comAdm_b+comAdm_c"),
             inputs={
                 "costo_operativo": costo_operativo,
