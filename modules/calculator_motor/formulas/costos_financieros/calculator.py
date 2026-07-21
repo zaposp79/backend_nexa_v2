@@ -139,7 +139,6 @@ class CostosFinancierosCalculator:
         Returns:
             CostosFinancierosMes con financiación, pólizas, ICA, GMF y comisión adm calculados.
         """
-        factor_margenes   = ProfitabilityCalculator.calcular_factor_margenes(self._panel)
         factor_periodo    = self._parametrizacion.get_factor_periodo(self._panel.periodo_pago_dias)
 
         base_financiacion = (
@@ -152,111 +151,90 @@ class CostosFinancierosCalculator:
         base_b = costo_b if costo_b is not None else 0.0
         base_c = costo_c if costo_c is not None else 0.0
 
+        # Per-cadena factor_billing — always needed for ICA/GMF/ingreso base,
+        # regardless of whether user configured polizas.
+        fm_a = ProfitabilityCalculator.calcular_factor_billing(
+            self._panel.margen,   self._panel.op_cont, self._panel.com_cont,
+            self._panel.markup,   self._panel.descuento,
+        )
+        fm_b = ProfitabilityCalculator.calcular_factor_billing(
+            self._panel.margen_b, self._panel.op_cont, self._panel.com_cont,
+            self._panel.markup,   self._panel.descuento,
+        )
+        fm_c = ProfitabilityCalculator.calcular_factor_billing(
+            self._panel.margen_c, self._panel.op_cont, self._panel.com_cont,
+            self._panel.markup,   self._panel.descuento,
+        )
+
+        # Proportional financing split per cadena — always computed.
+        total_base_fin = max(base_a + base_b + base_c, 0.0)
+        fin_a = financiacion * (base_a / total_base_fin) if total_base_fin > 0 else 0.0
+        fin_b = financiacion * (base_b / total_base_fin) if total_base_fin > 0 else 0.0
+        fin_c = financiacion * (base_c / total_base_fin) if total_base_fin > 0 else 0.0
+
         if self._polizas_usuario is not None:
+            # User-configured polizas: filter active ones for this contract month.
             meses_contrato = self._panel.meses_contrato
             polizas_vigentes = [
                 p for p in self._polizas_usuario
                 if p.activa and not (mes > meses_contrato and not p.aplica_extension)
             ]
 
-            # Separate insurance polizas from comAdm.
             # Insurance: all active non-ComAdm policies (rows 12:163 deal-wide AND
-            #   rows 173:185 per_canal=True). Both apply as per-cadena premium.
-            # ComAdm: marked is_comision_administracion=True (Pólizas sheet row 188).
-            # tasa_comAdm = pct_poliza × 1.42 (Excel D188 formula).
+            #   rows 173:185 per_canal=True). ComAdm: is_comision_administracion=True.
+            # tasa_comAdm = pct_poliza × 1.42 (Excel Pólizas sheet D188 formula).
             comadm_poliza = next(
                 (p for p in polizas_vigentes if p.is_comision_administracion),
                 None
             )
             tasa_comadm = comadm_poliza.pct_poliza * 1.42 if comadm_poliza else 0.0
-
-            pure_pol = [
-                p for p in polizas_vigentes
-                if not p.is_comision_administracion
-            ]
+            pure_pol = [p for p in polizas_vigentes if not p.is_comision_administracion]
             tasa_pure_a = sum(p.tasa_efectiva for p in pure_pol if p.aplica_a)
             tasa_pure_b = sum(p.tasa_efectiva for p in pure_pol if p.aplica_b)
             tasa_pure_c = sum(p.tasa_efectiva for p in pure_pol if p.aplica_c)
-
-            # Per-cadena factor_billing (gross-up denominators).
-            fm_a = ProfitabilityCalculator.calcular_factor_billing(
-                self._panel.margen,   self._panel.op_cont, self._panel.com_cont,
-                self._panel.markup,   self._panel.descuento,
-            )
-            fm_b = ProfitabilityCalculator.calcular_factor_billing(
-                self._panel.margen_b, self._panel.op_cont, self._panel.com_cont,
-                self._panel.markup,   self._panel.descuento,
-            )
-            fm_c = ProfitabilityCalculator.calcular_factor_billing(
-                self._panel.margen_c, self._panel.op_cont, self._panel.com_cont,
-                self._panel.markup,   self._panel.descuento,
-            )
-
-            # Proportional financing split per cadena.
-            total_base_fin = max(base_a + base_b + base_c, 0.0)
-            fin_a = financiacion * (base_a / total_base_fin) if total_base_fin > 0 else 0.0
-            fin_b = financiacion * (base_b / total_base_fin) if total_base_fin > 0 else 0.0
-            fin_c = financiacion * (base_c / total_base_fin) if total_base_fin > 0 else 0.0
-
-            # Pure insurance premiums per cadena: tasa × (costo + fin) / fm.
             pure_pol_a = self._calcular_polizas(base_a, fin_a, tasa_pure_a, fm_a)
             pure_pol_b = self._calcular_polizas(base_b, fin_b, tasa_pure_b, fm_b)
             pure_pol_c = self._calcular_polizas(base_c, fin_c, tasa_pure_c, fm_c)
-
-            # Comisión de Administración per cadena: (costo + fin) / fm × tasa_comAdm.
-            # Pólizas sheet D188: tasa = pct_poliza × 1.42.
             comision_admin_a = (base_a + fin_a) / fm_a * tasa_comadm if fm_a > 0 else 0.0
             comadm_b = (base_b + fin_b) / fm_b * tasa_comadm if fm_b > 0 else 0.0
             comadm_c = (base_c + fin_c) / fm_c * tasa_comadm if fm_c > 0 else 0.0
-            comision_adm = comision_admin_a + comadm_b + comadm_c
-
-            # ICA per cadena: (costo/fm + pure_pol + fin) × tasa_ica.
-            ica_a = self._calcular_ica(base_a, pure_pol_a, fin_a, fm_a)
-            ica_b = self._calcular_ica(base_b, pure_pol_b, fin_b, fm_b)
-            ica_c = self._calcular_ica(base_c, pure_pol_c, fin_c, fm_c)
-            ica = ica_a + ica_b + ica_c
-
-            # GMF per cadena: (costo + pure_pol + fin) × tasa_gmf.
-            gmf_a = self._calcular_gmf(base_a, pure_pol_a, fin_a)
-            gmf_b = self._calcular_gmf(base_b, pure_pol_b, fin_b)
-            gmf_c = self._calcular_gmf(base_c, pure_pol_c, fin_c)
-            gmf = gmf_a + gmf_b + gmf_c
-
-            # polizas (PyG display) = pure insurance premiums only.
-            # ICA and GMF are tracked in their own fields and summed separately in
-            # PyGMensual.costos_financieros and CostosFinancierosMes.total.
-            # Keeping polizas = just insurance avoids double-counting in both aggregates.
-            # (H69 Excel aggregate = ica + gmf + polizas + comAdm, reconstructed at display layer.)
-            polizas = pure_pol_a + pure_pol_b + pure_pol_c
-            polizas_a = pure_pol_a
-            polizas_b = pure_pol_b
-            polizas_c = pure_pol_c
-
-            # VT cadena-A financials: regular ICA + GMF + pure per_canal polizas.
-            # Extended months (aplica_extension=True) are handled in vision_tarifas.py.
-            costo_financiero_vt_cadena_a = ica_a + gmf_a + pure_pol_a
-
         else:
-            # No polizas configured → no insurance cost.
-            # Former OP-parametrization fallback was unintuitive: users who don't
-            # configure polizas expect $0, not a hidden rate from the uploaded OP table.
-            polizas = 0.0
-            polizas_a = polizas_b = polizas_c = 0.0
-            ica = self._calcular_ica(costo_operativo, polizas, financiacion, factor_margenes)
-            gmf = self._calcular_gmf(costo_operativo, polizas, financiacion)
-            base_comision = costo_a if costo_a is not None else costo_operativo
-            comision_adm = self._calcular_comision_administracion(base_comision, factor_margenes)
-            costo_financiero_vt_cadena_a = 0.0
+            # No polizas configured → zero insurance and zero comAdm.
+            pure_pol_a = pure_pol_b = pure_pol_c = 0.0
+            comision_admin_a = comadm_b = comadm_c = 0.0
+
+        comision_adm = comision_admin_a + comadm_b + comadm_c
+
+        # Per-cadena ICA/GMF — always computed so pyg_calculator can include them
+        # in costo_total_cadena_X → ingreso correctly covers all financial costs.
+        ica_a = self._calcular_ica(base_a, pure_pol_a, fin_a, fm_a)
+        ica_b = self._calcular_ica(base_b, pure_pol_b, fin_b, fm_b)
+        ica_c = self._calcular_ica(base_c, pure_pol_c, fin_c, fm_c)
+        ica = ica_a + ica_b + ica_c
+
+        gmf_a = self._calcular_gmf(base_a, pure_pol_a, fin_a)
+        gmf_b = self._calcular_gmf(base_b, pure_pol_b, fin_b)
+        gmf_c = self._calcular_gmf(base_c, pure_pol_c, fin_c)
+        gmf = gmf_a + gmf_b + gmf_c
+
+        # Pure insurance premiums for P&G "Pólizas" display row (not ICA/GMF — those are separate).
+        polizas = pure_pol_a + pure_pol_b + pure_pol_c
+        polizas_a = pure_pol_a
+        polizas_b = pure_pol_b
+        polizas_c = pure_pol_c
+
+        # VT cadena-A financial sub-total (ICA + GMF + insurance, for Vision Tarifas attribution).
+        costo_financiero_vt_cadena_a = ica_a + gmf_a + pure_pol_a
 
         _audit_trace(
             component="costos_financieros",
-            rule="V2-7.per_cadena: polizas=pure_ins_a+b+c; comAdm=H68; H69_total=ica+gmf+polizas+comAdm",
+            rule="per_cadena: ica/gmf always computed; polizas=pure_ins_a+b+c; comAdm=H68",
             formula=("financiacion = costo_mes_anterior × tasa × factor_periodo;"
                      " pure_pol_X = tasa_pure × (costo_X+fin_X)/fm_X;"
                      " ica_X = (costo_X/fm_X + pure_pol_X + fin_X) × tasa_ica;"
                      " gmf_X = (costo_X + pure_pol_X + fin_X) × tasa_gmf;"
                      " comAdm_X = (costo_X+fin_X)/fm_X × (pct_poliza_comAdm × 1.42);"
-                     " polizas(PyG) = pure_pol_a+pure_pol_b+pure_pol_c [insurance only, not ica/gmf];"
+                     " polizas(PyG) = pure_pol_a+pure_pol_b+pure_pol_c [insurance only];"
                      " comAdm_total(H68) = comAdm_a+comAdm_b+comAdm_c"),
             inputs={
                 "costo_operativo": costo_operativo,
@@ -286,9 +264,6 @@ class CostosFinancierosCalculator:
                 self.FORMULA_ID.GMF_PER_CADENA,
             ],
         )
-        _has_user_polizas = self._polizas_usuario is not None
-        _comision_admin_a = comision_admin_a if _has_user_polizas else 0.0
-        _costo_financiero_vt_cadena_a = costo_financiero_vt_cadena_a if _has_user_polizas else 0.0
         return CostosFinancierosMes(
             financiacion            = financiacion,
             polizas                 = polizas,
@@ -296,22 +271,21 @@ class CostosFinancierosCalculator:
             polizas_b               = polizas_b,
             polizas_c               = polizas_c,
             ica                     = ica,
-            ica_a                   = ica_a if _has_user_polizas else 0.0,
-            ica_b                   = ica_b if _has_user_polizas else 0.0,
-            ica_c                   = ica_c if _has_user_polizas else 0.0,
+            ica_a                   = ica_a,
+            ica_b                   = ica_b,
+            ica_c                   = ica_c,
             gmf                     = gmf,
-            gmf_a                   = gmf_a if _has_user_polizas else 0.0,
-            gmf_b                   = gmf_b if _has_user_polizas else 0.0,
-            gmf_c                   = gmf_c if _has_user_polizas else 0.0,
+            gmf_a                   = gmf_a,
+            gmf_b                   = gmf_b,
+            gmf_c                   = gmf_c,
             comision_administracion  = comision_adm,
-            comision_admin_cadena_a  = _comision_admin_a,
-            comision_admin_cadena_b  = comadm_b if _has_user_polizas else 0.0,
-            comision_admin_cadena_c  = comadm_c if _has_user_polizas else 0.0,
-            costo_financiero_vt_cadena_a = _costo_financiero_vt_cadena_a,
-            # EXCEL V2-8: per-cadena proportional financing split for HME ingreso base.
-            fin_a                   = fin_a if _has_user_polizas else 0.0,
-            fin_b                   = fin_b if _has_user_polizas else 0.0,
-            fin_c                   = fin_c if _has_user_polizas else 0.0,
+            comision_admin_cadena_a  = comision_admin_a,
+            comision_admin_cadena_b  = comadm_b,
+            comision_admin_cadena_c  = comadm_c,
+            costo_financiero_vt_cadena_a = costo_financiero_vt_cadena_a,
+            fin_a                   = fin_a,
+            fin_b                   = fin_b,
+            fin_c                   = fin_c,
         )
 
     # ──────────────────────────────────────────────────────────────
