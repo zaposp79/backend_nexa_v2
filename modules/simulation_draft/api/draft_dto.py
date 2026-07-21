@@ -52,8 +52,8 @@ class DatosOperativos(BaseModel):
     servicio: Optional[str] = None
     cliente: Optional[str] = None
     tipo_cliente: Optional[str] = None
-    antiguedad: Optional[str] = None
-    periodo_pago: Optional[str] = None
+    antiguedad_cliente: Optional[str] = None
+    periodo_pago: Optional[Any] = None
     fecha_inicio: Optional[str] = None
     duracion_meses: Optional[int] = None
     ciudad: Optional[str] = None
@@ -159,13 +159,13 @@ class Volumetria(BaseModel):
 
 class EscenarioComercial(BaseModel):
     model_config = {"extra": "allow"}
-    escenario: Optional[str] = None
+    escenario: Optional[Any] = None
     modalidad: Optional[str] = None
     canal: Optional[str] = None
     modelo_cobro: Optional[str] = None
-    componente_fijo: Optional[float] = None
+    componente_fijo: Optional[str] = None
     proporcion_componente_fijo: Optional[float] = None
-    componente_variable: Optional[float] = None
+    componente_variable: Optional[str] = None
     proporcion_componente_variable: Optional[float] = None
 
 

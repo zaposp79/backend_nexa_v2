@@ -50,9 +50,10 @@ class SimulationDraftService:
             clean_active = _clean(active_doc)
             clean_active["status"] = "inactive"
             clean_active["updated_at"] = now
+            clean_active["client_id"] = clean_active.get("client_id") or "anonymous"
             self._repo.save(clean_active)
 
-        client_id = request.client_id or ""
+        client_id = request.client_id or "anonymous"
 
         document = {
             "id": str(uuid.uuid4()),
