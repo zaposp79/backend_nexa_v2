@@ -71,7 +71,7 @@ def configuracion_comercial_to_dict(resultado: PricingResult) -> Dict[str, Any]:
             if resultado.vision_tarifas else kpis.ingreso_mensual
         ),
         "costo_mensual_total":    (
-            resultado.vision_tarifas.costo_cadena_a_total + resultado.vision_tarifas.costo_cadena_c_total
+            resultado.vision_tarifas.costo_total / (panel.meses_contrato or 1)
             if resultado.vision_tarifas else kpis.costo_mensual_promedio
         ),
         "valor_total_deal":       kpis.valor_total_deal,

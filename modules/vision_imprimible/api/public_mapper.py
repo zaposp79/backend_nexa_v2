@@ -243,11 +243,34 @@ def _build_charts(document: dict[str, Any]) -> dict[str, Any]:
                 if isinstance(item, dict)
             ],
         }
+
+    # Gráfica de cuartiles: "Comparación de Margenes de Servicio y Cliente Histórico"
+    # Fuente: graficos_bandas_vision persistido desde datasets_vision.graficos.bandas_vision_final
+    bandas = deepcopy(document.get("graficos_bandas_vision") or {})
+    if bandas:
+        bp = bandas.get("bandas_portfolio") or {}
+        charts["comparativo_margenes"] = {
+            "id": "comparativo_margenes",
+            "title": "Comparación de Margenes de Servicio y Cliente Histórico",
+            "type": "bands",
+            "source": "graficos_bandas_vision",
+            "data": {
+                "quartil_1": bp.get("quartil_1"),
+                "quartil_2": bp.get("quartil_2"),
+                "quartil_3": bp.get("quartil_3"),
+                "quartil_4": bp.get("quartil_4"),
+                "promedio_categoria": bp.get("promedio_categoria"),
+                "margen_historico_cliente": bandas.get("margen_historico_cliente"),
+                "margen_deal_actual": bandas.get("margen_deal_actual"),
+                "categoria_servicio": bandas.get("categoria_servicio"),
+            },
+        }
+
     return charts
 
 
 def _build_analisis_section(document: dict[str, Any], charts: dict[str, Any]) -> dict[str, Any] | None:
-    items = [chart for chart in charts.values() if chart.get("id") in {"waterfall", "evolucion_ingreso_neto"}]
+    items = [chart for chart in charts.values() if chart.get("id") in {"waterfall", "evolucion_ingreso_neto", "comparativo_margenes"}]
     section = {
         "id": "analisis_grafico",
         "title": "Analisis grafico",

@@ -45,15 +45,19 @@ def build_graficos_result(
             return None
 
         portfolio_raw = parametrizacion.get_portfolio_clientes()
-        portfolio = [
-            PortfolioClienteRow(
-                categoria=row["categoria"],
-                cliente=row["cliente"],
-                margen_bruto=float(row["margen_bruto"]),
-            )
-            for row in portfolio_raw.get("clientes", [])
-        ]
-        promedios = portfolio_raw.get("promedios_por_categoria", {})
+        if portfolio_raw is None:
+            portfolio = []
+            promedios = {}
+        else:
+            portfolio = [
+                PortfolioClienteRow(
+                    categoria=row["categoria"],
+                    cliente=row["cliente"],
+                    margen_bruto=float(row["margen_bruto"]),
+                )
+                for row in portfolio_raw.get("clientes", [])
+            ]
+            promedios = portfolio_raw.get("promedios_por_categoria", {})
 
         panel = solicitud.panel
         categoria_servicio = getattr(panel, "linea_negocio", None) or ""

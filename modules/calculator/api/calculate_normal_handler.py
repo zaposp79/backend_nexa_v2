@@ -172,6 +172,15 @@ def _calculate_normal(body: CalculationRequest):
         # El SimulationSnapshot (JSON local, PHASE 9) ya preserva estos datos.
         _COSMOS_EXCLUDED = {"audit_trace", "datasets_vision", "panel"}
         cosmos_dict = {k: v for k, v in full_dict.items() if k not in _COSMOS_EXCLUDED}
+
+        # Extraer bandas_vision_final de datasets_vision y persistir por separado:
+        # es pequeño (solo floats de cuartiles) y es necesario para el chart de
+        # "Comparación de Márgenes" en la visión imprimible.
+        _datasets = full_dict.get("datasets_vision") or {}
+        _graficos = _datasets.get("graficos") or {}
+        _bandas = _graficos.get("bandas_vision_final")
+        if _bandas:
+            cosmos_dict["graficos_bandas_vision"] = _bandas
         cosmos_dict["type"] = "results"
         if body.id is not None:
             cosmos_dict["id_draft"] = body.id
