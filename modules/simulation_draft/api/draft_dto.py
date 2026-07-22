@@ -549,6 +549,7 @@ class SimulationDraftUpdateRequest(BaseModel):
 
 
 class SimulationDraftResponse(BaseModel):
+    """Response del draft — pass-through de lo almacenado, sin re-validar secciones."""
     model_config = {"extra": "allow"}
 
     id: str
@@ -562,14 +563,16 @@ class SimulationDraftResponse(BaseModel):
     version: int
     created_at: str
     updated_at: str
-    datos_operativos: Optional[DatosOperativos] = None
-    polizas: Optional[List[Poliza]] = None
-    reglas_negocio: Optional[ReglasNegocio] = None
-    volumetria: Optional[Volumetria] = None
-    escenarios_comerciales: Optional[List[EscenarioComercial]] = None
-    condiciones_cadena_a: Optional[CondicionesCadenaA] = None
-    condiciones_cadena_b: Optional[CondicionesCadenaB] = None
-    condiciones_cadena_c: Optional[CondicionesCadenaC] = None
+    # Secciones como Any: el draft almacena cualquier estructura sin re-validar tipos.
+    # La validación ocurre solo en el Request (POST/PUT), no en la lectura.
+    datos_operativos: Optional[Any] = None
+    polizas: Optional[Any] = None
+    reglas_negocio: Optional[Any] = None
+    volumetria: Optional[Any] = None
+    escenarios_comerciales: Optional[Any] = None
+    condiciones_cadena_a: Optional[Any] = None
+    condiciones_cadena_b: Optional[Any] = None
+    condiciones_cadena_c: Optional[Any] = None
 
 
 __all__ = [
