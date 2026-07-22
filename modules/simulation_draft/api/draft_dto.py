@@ -503,6 +503,37 @@ class CondicionesCadenaC(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# List summary (GET /all)
+# ---------------------------------------------------------------------------
+
+class SimulationDraftListItem(BaseModel):
+    """Resumen plano de un borrador para el listado — GET /simulation/draft/all.
+
+    Campos raíz del documento + campos clave de datos_operativos aplanados.
+    No incluye secciones completas (condiciones_cadena_*, polizas, etc.).
+    """
+    model_config = {"extra": "ignore"}
+
+    id: str
+    client_id: Optional[str] = None
+    id_hr: Optional[str] = None
+    id_gn: Optional[str] = None
+    id_op: Optional[str] = None
+    status: str
+    user_id: str
+    version: int
+    updated_at: str
+    # Campos aplanados desde datos_operativos
+    servicio: Optional[str] = None
+    cliente: Optional[str] = None
+    periodo_pago: Optional[Any] = None
+    fecha_inicio: Optional[str] = None
+    duracion_meses: Optional[int] = None
+    ciudad: Optional[str] = None
+    sede: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
 # Request / Response
 # ---------------------------------------------------------------------------
 
@@ -573,6 +604,8 @@ class SimulationDraftResponse(BaseModel):
 
 
 __all__ = [
+    # List summary
+    "SimulationDraftListItem",
     # Primitivos
     "CiudadRecurso", "ValorMinMax", "ActualMinMax", "TipoValue", "TarifaCanal",
     # DatosOperativos

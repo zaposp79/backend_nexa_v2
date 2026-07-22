@@ -16,6 +16,7 @@ from fastapi import APIRouter, Depends, Query
 from nexa_engine.db.dependencies import get_draft_service
 from nexa_engine.modules.shared.responses import ApiResponse
 from nexa_engine.modules.simulation_draft.api.draft_dto import (
+    SimulationDraftListItem,
     SimulationDraftRequest,
     SimulationDraftResponse,
     SimulationDraftUpdateRequest,
@@ -55,14 +56,14 @@ def create_draft(
 
 @router.get(
     "/all",
-    response_model=ApiResponse[List[SimulationDraftResponse]],
+    response_model=ApiResponse[List[SimulationDraftListItem]],
     operation_id="listAllSimulationDrafts",
     summary="Listar todos los borradores de simulación",
 )
 def list_all_drafts(
     service: SimulationDraftService = Depends(get_draft_service),
-) -> ApiResponse[List[SimulationDraftResponse]]:
-    """Retorna todos los borradores almacenados en el container 'simulation' filtrando por type='draft'."""
+) -> ApiResponse[List[SimulationDraftListItem]]:
+    """Retorna resumen plano de todos los borradores: campos raíz + campos clave de datos_operativos."""
     drafts = service.list_all()
     return ApiResponse.ok(drafts)
 

@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from nexa_engine.modules.shared.exceptions import NotFoundError
 from nexa_engine.modules.simulation_draft.api.draft_dto import (
+    SimulationDraftListItem,
     SimulationDraftRequest,
     SimulationDraftResponse,
     SimulationDraftUpdateRequest,
@@ -142,14 +143,37 @@ class SimulationDraftService:
         doc = self._repo.find_by_id(draft_id, client_id=client_id)
         return _to_response(_clean(doc))
 
-    def list_all(self) -> list[SimulationDraftResponse]:
+    def list_all(self) -> list[SimulationDraftListItem]:
         docs = self._repo.list_all()
-        return [_to_response(_clean(doc)) for doc in docs]
+        return [_to_list_item(doc) for doc in docs]
 
     def delete(self, draft_id: str) -> None:
         doc = self._get_by_id(draft_id)
         client_id = doc.get("client_id", "")
         self._repo.delete_by_partition(draft_id, client_id)
+
+
+def _to_list_item(doc: dict) -> SimulationDraftListItem:
+    """Mapeo plano para el listado: raíz + campos clave de datos_operativos."""
+    datos = doc.get("datos_operativos") or {}
+    return SimulationDraftListItem(
+        id=doc["id"],
+        client_id=doc.get("client_id"),
+        id_hr=doc.get("id_hr"),
+        id_gn=doc.get("id_gn"),
+        id_op=doc.get("id_op"),
+        status=doc.get("status", "active"),
+        user_id=doc.get("user_id", "anonymous"),
+        version=doc.get("version", 1),
+        updated_at=doc.get("updated_at", ""),
+        servicio=datos.get("servicio"),
+        cliente=datos.get("cliente"),
+        periodo_pago=datos.get("periodo_pago"),
+        fecha_inicio=datos.get("fecha_inicio"),
+        duracion_meses=datos.get("duracion_meses"),
+        ciudad=datos.get("ciudad"),
+        sede=datos.get("sede"),
+    )
 
 
 def _to_response(doc: dict) -> SimulationDraftResponse:
