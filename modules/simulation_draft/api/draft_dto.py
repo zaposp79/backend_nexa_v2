@@ -513,7 +513,6 @@ class SimulationDraftRequest(BaseModel):
     id_hr: Optional[str] = None
     id_gn: Optional[str] = None
     id_op: Optional[str] = None
-    tipo: Optional[str] = None
     user_id: str = "anonymous"
     datos_operativos: Optional[DatosOperativos] = None
     polizas: Optional[List[Poliza]] = None
@@ -536,7 +535,6 @@ class SimulationDraftUpdateRequest(BaseModel):
     id_hr: Optional[str] = None
     id_gn: Optional[str] = None
     id_op: Optional[str] = None
-    tipo: Optional[str] = None
     user_id: Optional[str] = None
     datos_operativos: Optional[DatosOperativos] = None
     polizas: Optional[List[Poliza]] = None
@@ -558,7 +556,6 @@ class SimulationDraftResponse(BaseModel):
     id_gn: Optional[str] = None
     id_op: Optional[str] = None
     status: str
-    tipo: Optional[str] = None
     user_id: str
     version: int
     created_at: str

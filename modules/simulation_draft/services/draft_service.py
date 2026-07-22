@@ -63,7 +63,6 @@ class SimulationDraftService:
             "id_op": request.id_op,
             "type": "draft",
             "status": "active",
-            "tipo": request.tipo,
             "user_id": request.user_id,
             "version": 1,
             "created_at": now,
@@ -108,8 +107,6 @@ class SimulationDraftService:
             document["id_gn"] = request.id_gn
         if request.id_op is not None:
             document["id_op"] = request.id_op
-        if request.tipo is not None:
-            document["tipo"] = request.tipo
         if request.datos_operativos is not None:
             document["datos_operativos"] = _dump(request.datos_operativos)
         if request.polizas is not None:
@@ -163,7 +160,6 @@ def _to_response(doc: dict) -> SimulationDraftResponse:
         "id_gn": doc.get("id_gn"),
         "id_op": doc.get("id_op"),
         "status": doc.get("status", "active"),
-        "tipo": doc.get("tipo"),
         "user_id": doc.get("user_id", "anonymous"),
         "version": doc.get("version", 1),
         "created_at": doc.get("created_at", ""),
