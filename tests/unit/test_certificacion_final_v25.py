@@ -103,15 +103,15 @@ class TestFase2PrecisionNumerica:
 
     def test_ica_gross_up_precision(self):
         """
-        ICA con gross-up: base = costo/factor + polizas + financiacion.
+        ICA con gross-up: base = costo/factor + financiacion.
+        Polizas excluidas de la base ICA — ya son costo directo en costo_total_cadena.
         Sin redondeo intermedio — precisión nativa IEEE 754.
         """
         costo = 42_000_000.0
         factor = 0.82 * 0.98
-        polizas = 1_800_000.0
         financiacion = 650_000.0
         tasa_ica = 0.01
-        base = (costo / factor) + polizas + financiacion
+        base = (costo / factor) + financiacion
         ica = base * tasa_ica
         # Verificar que no hay overflow ni NaN
         assert math.isfinite(ica)
@@ -718,7 +718,7 @@ class TestFase6AuditTrace:
         """El tracer debe capturar la fórmula Excel como string declarativo."""
         from nexa_engine.modules.audit.trace import trace, get_tracer
         tracer = self._enable_tracer()
-        formula = "ICA = (costo/factor_márgenes + polizas + financiacion) × tasa_ica"
+        formula = "ICA = (costo/factor_márgenes + financiacion) × tasa_ica"
         try:
             trace(
                 component="costos_financieros",

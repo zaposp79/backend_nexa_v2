@@ -147,7 +147,7 @@ class SimulationDraftService:
 
     def list_all(self) -> list[SimulationDraftResponse]:
         docs = self._repo.list_all()
-        return [_to_response(doc) for doc in docs]
+        return [_to_response(_clean(doc)) for doc in docs]
 
     def delete(self, draft_id: str) -> None:
         doc = self._get_by_id(draft_id)

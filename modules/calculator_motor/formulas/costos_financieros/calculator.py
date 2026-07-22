@@ -207,9 +207,9 @@ class CostosFinancierosCalculator:
 
         # Per-cadena ICA/GMF — always computed so pyg_calculator can include them
         # in costo_total_cadena_X → ingreso correctly covers all financial costs.
-        ica_a = self._calcular_ica(base_a, pure_pol_a, fin_a, fm_a)
-        ica_b = self._calcular_ica(base_b, pure_pol_b, fin_b, fm_b)
-        ica_c = self._calcular_ica(base_c, pure_pol_c, fin_c, fm_c)
+        ica_a = self._calcular_ica(base_a, fin_a, fm_a)
+        ica_b = self._calcular_ica(base_b, fin_b, fm_b)
+        ica_c = self._calcular_ica(base_c, fin_c, fm_c)
         ica = ica_a + ica_b + ica_c
 
         gmf_a = self._calcular_gmf(base_a, pure_pol_a, fin_a)
@@ -231,7 +231,7 @@ class CostosFinancierosCalculator:
             rule="per_cadena: ica/gmf always computed; polizas=pure_ins_a+b+c; comAdm=H68",
             formula=("financiacion = costo_mes_anterior × tasa × factor_periodo;"
                      " pure_pol_X = tasa_pure × (costo_X+fin_X)/fm_X;"
-                     " ica_X = (costo_X/fm_X + pure_pol_X + fin_X) × tasa_ica;"
+                     " ica_X = (costo_X/fm_X + fin_X) × tasa_ica;"  # polizas excluidas de base ICA
                      " gmf_X = (costo_X + pure_pol_X + fin_X) × tasa_gmf;"
                      " comAdm_X = (costo_X+fin_X)/fm_X × (pct_poliza_comAdm × 1.42);"
                      " polizas(PyG) = pure_pol_a+pure_pol_b+pure_pol_c [insurance only];"
@@ -318,18 +318,21 @@ class CostosFinancierosCalculator:
             / factor_margenes
         )
 
-    def _calcular_ica(self, costo_operativo: float, polizas: float,
+    def _calcular_ica(self, costo_operativo: float,
                        financiacion: float, factor_margenes: float) -> float:
         """
         Impuesto de Industria y Comercio (ICA).
 
         El ICA aplica gross-up: la base es el ingreso neto equivalente
-        (costo/factor_márgenes) más los costos financieros ya calculados.
-        Esto refleja que el impuesto recae sobre el ingreso, no el costo.
+        (costo/factor_márgenes) más la financiación.
+        Las primas de pólizas NO se incluyen en la base del ICA — ya están
+        contabilizadas como costo directo en costo_total_cadena_X y añadirlas
+        a la base generaría un doble cómputo fiscal.
+
+        # Excel V2-8: ICA_base = costo/fm + financiacion  (sin polizas)
         """
         base_ingreso_neto = (
             (costo_operativo / factor_margenes)
-            + polizas
             + financiacion
         )
         return base_ingreso_neto * self._panel.tasa_ica

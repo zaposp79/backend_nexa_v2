@@ -76,11 +76,11 @@ def test_pricing_componentes_label_matches_legacy():
 def test_financial_pure_calculators_basic():
     from nexa_engine.modules.calculator_motor.formulas.costos_financieros.financiacion import FinancialCalculator
 
-    # ICA gross-up: base = costo/factor + polizas + financiacion
+    # ICA gross-up: base = costo/factor + financiacion  (polizas excluidas de base ICA)
     ica = FinancialCalculator.calcular_ica(
-        costo=1000.0, polizas=10.0, financiacion=5.0, tasa_ica=0.01, factor_margenes=0.8
+        costo=1000.0, financiacion=5.0, tasa_ica=0.01, factor_margenes=0.8
     )
-    expected = ((1000.0 / 0.8) + 10.0 + 5.0) * 0.01
+    expected = ((1000.0 / 0.8) + 5.0) * 0.01
     assert ica == pytest.approx(expected, rel=1e-12)
 
     # GMF

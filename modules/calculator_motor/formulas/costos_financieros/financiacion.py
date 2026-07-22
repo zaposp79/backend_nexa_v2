@@ -7,7 +7,7 @@ Pure financial calculators. NO IO, NO logging.
 Public API
 ----------
 
-  FinancialCalculator.calcular_ica(base_ica, tasa_ica, factor_margenes) -> float
+  FinancialCalculator.calcular_ica(costo, financiacion, tasa_ica, factor_margenes) -> float
   FinancialCalculator.calcular_gmf(base_gmf, tasa_gmf) -> float
   FinancialCalculator.calcular_financiacion(costo_base, tasa_mensual, factor_periodo) -> float
   FinancialCalculator.calcular_polizas(base, tasa_polizas) -> float
@@ -68,21 +68,23 @@ class FinancialCalculator:
     @staticmethod
     def calcular_ica(
         costo: float,
-        polizas: float,
         financiacion: float,
         tasa_ica: float,
         factor_margenes: float,
     ) -> float:
         """
         ICA con gross-up:
-          base = costo/factor_margenes + polizas + financiacion
+          base = costo/factor_margenes + financiacion
           ica  = base × tasa_ica
+
+        Las primas de pólizas NO se incluyen — ya están en costo_total_cadena_X
+        como costo directo; incluirlas aquí generaría doble cómputo fiscal.
 
         Returns 0.0 if factor_margenes <= 0 (deal mal configurado).
         """
         if factor_margenes <= 0 or tasa_ica <= 0:
             return 0.0
-        base = (costo / factor_margenes) + polizas + financiacion
+        base = (costo / factor_margenes) + financiacion
         return base * tasa_ica
 
     @staticmethod

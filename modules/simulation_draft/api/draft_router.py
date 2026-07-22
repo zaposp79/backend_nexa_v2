@@ -62,7 +62,7 @@ def create_draft(
 def list_all_drafts(
     service: SimulationDraftService = Depends(get_draft_service),
 ) -> ApiResponse[List[SimulationDraftResponse]]:
-    """Retorna todos los borradores almacenados en el container 'configuration'."""
+    """Retorna todos los borradores almacenados en el container 'simulation' filtrando por type='draft'."""
     drafts = service.list_all()
     return ApiResponse.ok(drafts)
 

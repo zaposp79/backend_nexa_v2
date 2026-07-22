@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import MagicMock
 
 from nexa_engine.modules.calculator_motor.formulas.costos_financieros import CostosFinancierosCalculator
-from nexa_engine.modules.shared.models import PanelDeControl
+from nexa_engine.modules.shared.models import PanelDeControl, PolizaContractual
 
 
 # ---------------------------------------------------------------------------
@@ -133,9 +133,10 @@ class TestFinanciacion:
 class TestPolizas:
     def test_polizas_gross_up_formula(self):
         """
-        polizas = tasa_polizas × (costo_op + financiacion) / factor_margenes
+        polizas = tasa_efectiva × (costo_op + financiacion) / factor_margenes
 
         Uses: factor_margenes = (1-0.17)×(1-0.025) = 0.83×0.975 = 0.80925
+        PolizaContractual(pct_poliza=0.002, pct_atribuible=1.0) → tasa_efectiva=0.002
         """
         panel = _make_panel(
             margen=0.17, op_cont=0.025,
@@ -143,7 +144,12 @@ class TestPolizas:
             tasa_ica=0.0, tasa_gmf=0.0,
         )
         provider = _make_provider(tasa_polizas=0.002, factor_periodo=1)
-        calc = CostosFinancierosCalculator(panel, provider)
+        poliza = PolizaContractual(
+            nombre="TestPoliza", activa=True,
+            pct_poliza=0.002, pct_atribuible=1.0,
+            aplica_a=True, aplica_b=False, aplica_c=False,
+        )
+        calc = CostosFinancierosCalculator(panel, provider, polizas_usuario=[poliza])
 
         costo_op = 1_000_000.0
         result = calc.calcular(costo_op, mes=1, costo_operativo_mes_anterior=0.0)

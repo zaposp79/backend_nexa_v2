@@ -1,6 +1,6 @@
 """Repositorio de borradores de simulación.
 
-Persiste documentos en la colección "configuration" de CosmosDB con
+Persiste documentos en el container "simulation" de CosmosDB con
 partition key /client_id.
 
 Para operaciones de punto (get/delete) se necesita el client_id exacto.
@@ -41,9 +41,22 @@ class SimulationDraftRepository:
         raise NotFoundError("SimulationDraft", draft_id)
 
     def list_all(self) -> list[dict]:
-        """Retorna solo documentos type='draft' del container simulation."""
-        docs, _ = self._store.query(_COLLECTION, {"type": "draft"})
-        return docs
+        """Retorna todos los documentos type='draft' del container simulation.
+
+        Pagina automáticamente en CosmosDB hasta agotar el continuation_token
+        para garantizar que se retornan TODOS los borradores, no solo la primera
+        página.
+        """
+        all_docs: list[dict] = []
+        token: str | None = None
+        while True:
+            docs, token = self._store.query(
+                _COLLECTION, {"type": "draft"}, continuation_token=token
+            )
+            all_docs.extend(docs)
+            if not token:
+                break
+        return all_docs
 
     def find_by_status(self, status: str) -> list[dict]:
         """Retorna borradores con el status indicado filtrando por type='draft'."""
