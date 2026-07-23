@@ -69,9 +69,8 @@ def _header(result: Dict[str, Any]) -> Dict[str, Any]:
         "plazo_meses": ficha.get("meses_contrato") or resumen.get("meses_contrato") or panel.get("meses_contrato"),
         "sede": ficha.get("sede") or resumen.get("sede") or panel.get("sede"),
         "periodo_pago": (
-            ficha.get("periodo_pago")
-            or resumen.get("periodo_pago")
-            or panel.get("periodo_pago")
+            ficha.get("periodo_pago_dias")
+            or resumen.get("periodo_pago_dias")
             or panel.get("periodo_pago_dias")
         ),
         "antiguedad_cliente": (
@@ -79,8 +78,14 @@ def _header(result: Dict[str, Any]) -> Dict[str, Any]:
             or resumen.get("antiguedad_cliente")
             or panel.get("antiguedad_cliente")
         ),
-        "componente_tecnologico": (panel.get("indexacion") or {}).get("componente_tecnologico"),
-        "frecuencia": (panel.get("indexacion") or {}).get("frecuencia"),
+        "componente_tecnologico": (
+            ficha.get("ajuste_precio_tecnologico")
+            or (panel.get("indexacion") or {}).get("componente_tecnologico")
+        ),
+        "frecuencia": (
+            ficha.get("ajuste_precio_frecuencia")
+            or (panel.get("indexacion") or {}).get("frecuencia")
+        ),
     }
 
 
