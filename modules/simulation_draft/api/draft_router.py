@@ -68,6 +68,25 @@ def list_all_drafts(
     return ApiResponse.ok(drafts)
 
 
+@router.patch(
+    "/{draft_id}/activate",
+    response_model=ApiResponse[SimulationDraftResponse],
+    operation_id="activateSimulationDraft",
+    summary="Activar borrador de simulación",
+)
+def activate_draft(
+    draft_id: str,
+    client_id: str | None = Query(default=None),
+    service: SimulationDraftService = Depends(get_draft_service),
+) -> ApiResponse[SimulationDraftResponse]:
+    """Activa un borrador (status=active) y desactiva automáticamente cualquier otro borrador activo.
+
+    Busca por `id` + `client_id` (opcional) filtrando por `type=draft`.
+    """
+    draft = service.activate(draft_id, client_id=client_id)
+    return ApiResponse.ok(draft)
+
+
 @router.put(
     "/{draft_id}",
     response_model=ApiResponse[SimulationDraftResponse],

@@ -3,7 +3,20 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+_COT = timezone(timedelta(hours=-5))  # Colombia Time (UTC-5)
+
+
+def _fmt_cot(dt_str: str) -> str:
+    """Convierte ISO UTC a hora Colombia (COT, UTC-5) con formato 'aaaa-mm-dd hh:mm:ss'."""
+    try:
+        dt = datetime.fromisoformat(dt_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(_COT).strftime("%Y-%m-%d %H:%M:%S")
+    except (ValueError, AttributeError):
+        return dt_str
 
 from nexa_engine.modules.shared.exceptions import NotFoundError
 from nexa_engine.modules.simulation_draft.api.draft_dto import (
@@ -139,6 +152,31 @@ class SimulationDraftService:
 
         return _to_response(saved)
 
+    def activate(self, draft_id: str, client_id: str | None = None) -> SimulationDraftResponse:
+        """Activa un borrador por id y desactiva todos los demás activos."""
+        now = datetime.now(timezone.utc).isoformat()
+
+        # Localizar el borrador a activar (filtra por type=draft internamente)
+        target_raw = self._repo.find_by_id(draft_id, client_id=client_id)
+        target = _clean(target_raw)
+
+        # Desactivar todos los activos excepto el objetivo
+        for active_doc in self._repo.find_by_status("active"):
+            if active_doc.get("id") == draft_id:
+                continue
+            clean_active = _clean(active_doc)
+            clean_active["status"] = "inactive"
+            clean_active["updated_at"] = now
+            clean_active["client_id"] = clean_active.get("client_id") or "anonymous"
+            self._repo.save(clean_active)
+
+        # Activar el objetivo
+        target["status"] = "active"
+        target["updated_at"] = now
+        target["version"] = target.get("version", 1) + 1
+        saved = self._repo.save(target)
+        return _to_response(saved)
+
     def get(self, draft_id: str, client_id: str | None = None) -> SimulationDraftResponse:
         doc = self._repo.find_by_id(draft_id, client_id=client_id)
         return _to_response(_clean(doc))
@@ -165,7 +203,7 @@ def _to_list_item(doc: dict) -> SimulationDraftListItem:
         status=doc.get("status", "active"),
         user_id=doc.get("user_id", "anonymous"),
         version=doc.get("version", 1),
-        updated_at=doc.get("updated_at", ""),
+        updated_at=_fmt_cot(doc.get("updated_at", "")),
         servicio=datos.get("servicio"),
         cliente=datos.get("cliente"),
         periodo_pago=datos.get("periodo_pago"),
