@@ -662,24 +662,24 @@ def _sanitize_invalid(value: Any, omitted_paths: list[str], path: str = "") -> A
     return value
 
 
-def _safe_float(value: Any) -> Optional[float]:
+def _safe_float(value: Any) -> float:
     if value is None:
-        return None
+        return 0.0
     if isinstance(value, (int, float)):
         if math.isnan(value) or math.isinf(value):
-            return 0
+            return 0.0
         return float(value)
     if isinstance(value, str):
         value = value.strip()
         if not value:
-            return None
+            return 0.0
         if value in _INVALID_STRINGS:
-            return 0
+            return 0.0
         try:
             return float(value)
         except (ValueError, TypeError):
-            return None
-    return None
+            return 0.0
+    return 0.0
 
 
 def _is_invalid_value(value: Any) -> bool:
