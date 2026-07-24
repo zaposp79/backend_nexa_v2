@@ -156,7 +156,7 @@ def _calculate_normal(body: CalculationRequest):
         # WAVE 14 — honour any explicit simulation_id the engine attached
         # to the result (e.g. when with_lineage=True or the request
         # carried metadata.simulation_id). Falls back to a fresh UUID.
-        simulation_id = getattr(resultado, "simulation_id", None) or _results_repo.new_id()
+        simulation_id = body.id or getattr(resultado, "simulation_id", None) or _results_repo.new_id()
         full_dict     = pricing_result_to_dict(resultado, simulation_id)
 
         # client_id = partition key del container 'simulation' en Cosmos.

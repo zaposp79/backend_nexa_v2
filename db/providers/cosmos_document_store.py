@@ -22,6 +22,8 @@ import copy
 import logging
 from typing import TYPE_CHECKING
 
+from azure.core.exceptions import ServiceResponseError as _AzureServiceResponseError
+
 from nexa_engine.db.config import CosmosSettings
 from nexa_engine.db.constants.provider_constants import FIELD_ID, PROVIDER_COSMOS
 from nexa_engine.db.exceptions import (
@@ -631,6 +633,8 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
             raise DbConflictError(f"conflict upserting {doc_id!r}") from exc
         except self._cosmos_exceptions.CosmosHttpResponseError as exc:
             raise DbConnectionError(f"Cosmos upsert failed: {exc.status_code}") from exc
+        except _AzureServiceResponseError as exc:
+            raise DbConnectionError(f"Cosmos network error during upsert: {exc}") from exc
         logger.info("[%s] upsert collection=%s id=%s", PROVIDER_COSMOS, collection.name, doc_id)
         stored_dict = dict(stored)
         stored_dict.pop(self._RECORD_PARTITION_FIELD, None)
