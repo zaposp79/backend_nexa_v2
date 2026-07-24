@@ -109,9 +109,13 @@ class ContractValidator:
                     if canal:
                         perfil_keys.add((modalidad, canal))
         for i, escenario in enumerate(escenarios or []):
-            for field in ("escenario", "modalidad", "canal", "modelo_cobro"):
+            is_total = str(escenario.get("escenario", "")).strip().lower() == "total"
+            required = ("escenario", "modelo_cobro") if is_total else ("escenario", "modalidad", "canal", "modelo_cobro")
+            for field in required:
                 if escenario.get(field) in (None, ""):
                     result.errors.append(f"escenarios_comerciales[{i}].{field} is required")
+            if is_total:
+                continue
             key = (str(escenario.get("modalidad", "")).lower(), str(escenario.get("canal", "")).lower())
             if perfil_keys and key not in perfil_keys:
                 result.errors.append(

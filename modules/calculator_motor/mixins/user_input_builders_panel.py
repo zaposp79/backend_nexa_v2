@@ -167,8 +167,11 @@ class UserInputBuildersPanelMixin:
     def _escenarios(self, raw: list) -> list:
         result = []
         for e in raw or []:
+            raw_num = e.get("escenario", len(result) + 1)
+            if str(raw_num).strip().lower() == "total":
+                continue
             result.append(EscenarioComercialInput(
-                escenario                 = int(e.get("escenario", len(result) + 1)),
+                escenario                 = int(raw_num),
                 modalidad                 = str(e.get("modalidad", "")),
                 canal                     = str(e.get("canal", "")),
                 modelo_cobro              = str(e.get("modelo_cobro", "")),
