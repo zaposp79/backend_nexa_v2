@@ -26,11 +26,13 @@ class CalculationRequest(BaseModel):
     envuelve automáticamente en ``{"user_input": <body>}``.  Esto evita el
     422 cuando el cliente envía un body plano.
 
-    `id` es opcional. Cuando se envía, se persiste como ``id_draft`` en el
-    documento Cosmos para vincular el resultado con el borrador de origen.
+    `id` es opcional. Cuando se envía, se devuelve como ``id_draft`` en el
+    response y se persiste en Cosmos para vincular el resultado con el borrador.
+    `client_id` es opcional. Se devuelve tal cual en el response.
     """
     user_input: Dict[str, Any]
     id: Optional[str] = None
+    client_id: Optional[str] = None
 
     @model_validator(mode="before")
     @classmethod
@@ -38,19 +40,22 @@ class CalculationRequest(BaseModel):
         """
         Acepta dos formas de request body:
 
-          1. Canónica  → {"user_input": {...}, "id": "<draft_id>"}
-          2. Plana     → {"datos_operativos": {...}, "polizas": [...], ...}
+          1. Canónica  → {"user_input": {...}, "id": "...", "client_id": "..."}
+          2. Plana     → {"datos_operativos": {...}, "id": "...", "client_id": "...", ...}
 
-        Si no hay clave ``user_input``, todo el dict (excepto ``id``) se
-        trata como el valor de ``user_input``. El campo ``id`` se extrae
-        antes de envolver para que quede en el nivel correcto del modelo.
+        Si no hay clave ``user_input``, todo el dict (excepto ``id`` y ``client_id``)
+        se trata como el valor de ``user_input``. Los campos ``id`` y ``client_id``
+        se extraen antes de envolver para que queden en el nivel correcto del modelo.
         """
         if isinstance(data, dict) and "user_input" not in data:
             id_val = data.get("id")
-            user_input = {k: v for k, v in data.items() if k != "id"}
+            client_id_val = data.get("client_id")
+            user_input = {k: v for k, v in data.items() if k not in ("id", "client_id")}
             result: Dict[str, Any] = {"user_input": user_input}
             if id_val is not None:
                 result["id"] = id_val
+            if client_id_val is not None:
+                result["client_id"] = client_id_val
             return result
         return data
 

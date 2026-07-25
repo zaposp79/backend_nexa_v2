@@ -156,11 +156,11 @@ def _calculate_normal(body: CalculationRequest):
         # WAVE 14 — honour any explicit simulation_id the engine attached
         # to the result (e.g. when with_lineage=True or the request
         # carried metadata.simulation_id). Falls back to a fresh UUID.
-        simulation_id = body.id or getattr(resultado, "simulation_id", None) or _results_repo.new_id()
+        simulation_id = getattr(resultado, "simulation_id", None) or _results_repo.new_id()
         full_dict     = pricing_result_to_dict(resultado, simulation_id)
 
-        # client_id = partition key del container 'simulation' en Cosmos.
-        client_id = (
+        # client_id: usar el campo top-level del request si viene; si no, fallback a datos_operativos.
+        client_id = body.client_id or (
             body.user_input.get("datos_operativos", {}).get("cliente")
             or body.user_input.get("panel_de_control", {}).get("cliente")
             or ""
@@ -182,8 +182,8 @@ def _calculate_normal(body: CalculationRequest):
         if _bandas:
             cosmos_dict["graficos_bandas_vision"] = _bandas
         cosmos_dict["type"] = "results"
-        if body.id is not None:
-            cosmos_dict["id_draft"] = body.id
+        cosmos_dict["id_draft"] = body.id
+        cosmos_dict["client_id"] = client_id
 
         _results_repo.save(cosmos_dict)
         logger.info("[calculate] ✓ Resultados guardados: %s (client_id=%r)", simulation_id, client_id)
@@ -246,7 +246,9 @@ def _calculate_normal(body: CalculationRequest):
         logger.info("=" * 80)
 
         return ApiResponse.ok({
-            "simulation_id": simulation_id,
+            "id":            simulation_id,
+            "id_draft":      body.id,
+            "client_id":     client_id,
             "message":       "Cálculos guardados correctamente",
             "timestamp":     datetime.now(timezone.utc).isoformat(),
         })
