@@ -16,6 +16,7 @@ class VisionPygDataV1(StrictModel):
     version: str
     simulation_id: str | None = None
     header: dict[str, Any]
+    estaciones_trabajo: float | None = None
     periods: list[dict[str, Any]]
     totales: dict[str, Any]
     metadata: dict[str, Any]

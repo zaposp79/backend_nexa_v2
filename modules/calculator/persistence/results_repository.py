@@ -58,10 +58,10 @@ class ResultsRepository:
     def get(self, result_id: str) -> Dict[str, Any]:
         """Retorna el resultado o lanza NotFoundError.
 
-        Filtra por type='results' y simulation_id (cross-partition).
+        Filtra por type='results' y id (cross-partition).
         """
         docs, _ = self._store.query(
-            _COLLECTION, {"type": "results", "simulation_id": result_id}
+            _COLLECTION, {"type": "results", "id": result_id}
         )
         if not docs:
             raise NotFoundError("PricingResult", result_id)
@@ -70,6 +70,6 @@ class ResultsRepository:
 
     def exists(self, result_id: str) -> bool:
         docs, _ = self._store.query(
-            _COLLECTION, {"type": "results", "simulation_id": result_id}
+            _COLLECTION, {"type": "results", "id": result_id}
         )
         return bool(docs)

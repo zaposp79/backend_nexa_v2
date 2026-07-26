@@ -588,10 +588,11 @@ class CosmosDocumentStore(DocumentStore, AtomicDocumentStore):
         partition_key_in_filter = filters.get(self._RECORD_PARTITION_FIELD)
 
         logger.info(
-            "[%s] query collection=%s sql=%r partition_routed=%s",
+            "[%s] query collection=%s sql=%r params=%r partition_routed=%s",
             PROVIDER_COSMOS,
             collection.name,
             sql,
+            {p["name"]: p["value"] for p in parameters},
             partition_key_in_filter is not None,
         )
         try:
