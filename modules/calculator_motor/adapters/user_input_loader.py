@@ -409,7 +409,7 @@ class UserInputLoader(
             condiciones_a = {"perfiles": perfiles}
 
         # ── 3. condiciones_cadena_b ─────────────────────────────────────────
-        if "condiciones_cadena_b" in data:
+        if "condiciones_cadena_b" in data and data["condiciones_cadena_b"] is not None:
             condiciones_b = data["condiciones_cadena_b"]
             # Formato canónico: condiciones_cadena_b = { "opex": {...}, "hitl": {...}, ... }
             # Formato legacy:   condiciones_cadena_b = { "condiciones_cadena_b": { "opex": {...}, ... } }
@@ -504,13 +504,13 @@ class UserInputLoader(
 
     @staticmethod
     def _inyectar_volumenes_cadena_b(condiciones_b: Dict, volume_service: VolumeResolutionService) -> Dict:
-        condiciones_b = dict(condiciones_b)
+        condiciones_b = dict(condiciones_b or {})
         condiciones_b["_volume_service"] = volume_service
         return condiciones_b
 
     @staticmethod
     def _inyectar_volumenes_cadena_c(condiciones_c: Dict, volume_service: VolumeResolutionService) -> Dict:
-        condiciones_c = dict(condiciones_c)
+        condiciones_c = dict(condiciones_c or {})
         condiciones_c["_volume_service"] = volume_service
         return condiciones_c
 
