@@ -16,10 +16,12 @@ from nexa_engine.modules.calculator.persistence.snapshots_repository import Snap
 from nexa_engine.modules.calculator.persistence.traceability_repository import TraceabilityRepository
 from nexa_engine.modules.audit.writer import TraceabilityWriter
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry  # F8 singleton
+from nexa_engine.modules.simulation_draft.persistence.draft_repository import SimulationDraftRepository
 
-# Resultados de simulación → COSMOS_CONTAINER_SIMULATION (partition key: client_id).
+# Resultados de simulación y borradores → mismo store (configuration container).
 _simulation_store = build_configuration_document_store(load_config())
 _results_repo = ResultsRepository(_simulation_store)
+_draft_repo = SimulationDraftRepository(_simulation_store)
 
 # Snapshots, traceabilidad y lineage → JSON local (no van a Cosmos).
 _json_store = get_provider()

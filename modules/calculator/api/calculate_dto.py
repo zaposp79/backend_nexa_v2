@@ -31,7 +31,7 @@ class CalculationRequest(BaseModel):
     `client_id` es opcional. Se devuelve tal cual en el response.
     """
     user_input: Dict[str, Any]
-    id: Optional[str] = None
+    id_draft: Optional[str] = None
     client_id: Optional[str] = None
 
     @model_validator(mode="before")
@@ -40,20 +40,20 @@ class CalculationRequest(BaseModel):
         """
         Acepta dos formas de request body:
 
-          1. Canónica  → {"user_input": {...}, "id": "...", "client_id": "..."}
-          2. Plana     → {"datos_operativos": {...}, "id": "...", "client_id": "...", ...}
+          1. Canónica  → {"user_input": {...}, "id_draft": "...", "client_id": "..."}
+          2. Plana     → {"datos_operativos": {...}, "id_draft": "...", "client_id": "...", ...}
 
-        Si no hay clave ``user_input``, todo el dict (excepto ``id`` y ``client_id``)
-        se trata como el valor de ``user_input``. Los campos ``id`` y ``client_id``
+        Si no hay clave ``user_input``, todo el dict (excepto ``id_draft`` y ``client_id``)
+        se trata como el valor de ``user_input``. Los campos ``id_draft`` y ``client_id``
         se extraen antes de envolver para que queden en el nivel correcto del modelo.
         """
         if isinstance(data, dict) and "user_input" not in data:
-            id_val = data.get("id")
+            id_draft_val = data.get("id_draft")
             client_id_val = data.get("client_id")
-            user_input = {k: v for k, v in data.items() if k not in ("id", "client_id")}
+            user_input = {k: v for k, v in data.items() if k not in ("id_draft", "client_id")}
             result: Dict[str, Any] = {"user_input": user_input}
-            if id_val is not None:
-                result["id"] = id_val
+            if id_draft_val is not None:
+                result["id_draft"] = id_draft_val
             if client_id_val is not None:
                 result["client_id"] = client_id_val
             return result

@@ -35,6 +35,7 @@ from nexa_engine.modules.calculator_motor.validation.contract_validator import C
 from nexa_engine.modules.calculator.api.calculate_dto import CalculationRequest
 from nexa_engine.modules.calculator.api.calculate_dependencies import (
     _results_repo,
+    _draft_repo,
     _trace_writer,
     _snapshot_repo,
     _lineage_repo,
@@ -182,11 +183,21 @@ def _calculate_normal(body: CalculationRequest):
         if _bandas:
             cosmos_dict["graficos_bandas_vision"] = _bandas
         cosmos_dict["type"] = "results"
-        cosmos_dict["id_draft"] = body.id
+        cosmos_dict["id_draft"] = body.id_draft
         cosmos_dict["client_id"] = client_id
 
         _results_repo.save(cosmos_dict)
         logger.info("[calculate] ✓ Resultados guardados: %s (client_id=%r)", simulation_id, client_id)
+
+        # Inyectar simulation_id en el borrador vinculado (si existe)
+        if body.id_draft:
+            try:
+                draft_doc = _draft_repo.find_by_id(body.id_draft)
+                draft_doc["simulation_id"] = simulation_id
+                _draft_repo.save(draft_doc)
+                logger.info("[calculate] ✓ simulation_id inyectado en draft %s", body.id_draft)
+            except Exception:
+                logger.warning("[calculate] Draft %s no encontrado o no pudo actualizarse con simulation_id", body.id_draft)
 
         # ═══════════════════════════════════════════════════════════════════════
         # PHASE 8: Persistencia de traceabilidad (FASE G)
@@ -247,7 +258,7 @@ def _calculate_normal(body: CalculationRequest):
 
         return ApiResponse.ok({
             "id":            simulation_id,
-            "id_draft":      body.id,
+            "id_draft":      body.id_draft,
             "client_id":     client_id,
             "message":       "Cálculos guardados correctamente",
             "timestamp":     datetime.now(timezone.utc).isoformat(),
