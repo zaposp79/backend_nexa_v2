@@ -207,7 +207,8 @@ class PerfilCadenaAInput:
     # EXCEL V2-8 CCA!C79/C80/C87: roles con incluye_en_deal=False se excluyen del FTE de soporte.
     # Derivado de roles_operativos[].incluye_en_deal en el request; nunca hardcodeado en módulos.
     roles_excluidos_deal: frozenset = field(default_factory=frozenset)
-    pct_presencia: float = 1.0   # fracción que ocupa estación física en sede
+    pct_presencia: float = 1.0           # fracción que ocupa estación física en sede
+    estaciones_presenciales: Optional[float] = None  # conteo absoluto de puestos (alternativo a pct_presencia)
     comision_pct: float = 0.0
     salario_base: Optional[float] = None  # override del salario resuelto desde parametrización activa
     incluye_examenes: bool = True

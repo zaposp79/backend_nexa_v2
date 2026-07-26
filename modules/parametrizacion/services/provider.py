@@ -184,6 +184,8 @@ class ParametrizationProvider(
             self._payroll._hr_data = None
             self._payroll._rotacion_ausentismo = None
             self._payroll._rotacion_loaded = False
+            if hasattr(self, "_profitability") and self._profitability is not None:
+                self._profitability._hr_data = None
         logger.info("[PARAMETRIZATION] Provider cache invalidated module=%s", module or "all")
 
 

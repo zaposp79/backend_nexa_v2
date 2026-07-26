@@ -28,7 +28,11 @@ class HRActiveParametrizationRepository:
         )
         if docs:
             doc = docs[0]
+            # El JSON store devuelve el payload directamente como doc (sin wrapper "payload").
+            # Cosmos también puede devolver el doc plano. Intentar ambas formas.
             payload = doc.get("payload")
+            if not isinstance(payload, dict) or not payload:
+                payload = doc
             if isinstance(payload, dict) and payload:
                 if "version_id" not in payload:
                     payload = {**payload, "version_id": doc.get("id", "unknown")}

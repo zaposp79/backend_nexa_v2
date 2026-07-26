@@ -54,6 +54,10 @@ _UTILIDAD_MAP = {
     "pct_utilidad_neta": ("utilidad", "porcentaje_utilidad_neta"),
 }
 
+_OPERATIVO_MAP = {
+    "rampup": ("operativo", "ramp_up"),
+}
+
 
 def _prune_empty(obj: Any) -> Any:
     """Recursively remove null/empty values while keeping 0, 0.0, and False."""
@@ -142,6 +146,10 @@ def _empty_cost_buckets() -> Dict[str, Any]:
     }
 
 
+def _empty_operativo_bucket() -> Dict[str, Any]:
+    return {}
+
+
 def _assign_nested(target: Dict[str, Any], path: tuple[str, ...], value: Any) -> None:
     current = target
     for key in path[:-1]:
@@ -157,6 +165,7 @@ def _build_periods(vp_data: Dict[str, Any]) -> list[Dict[str, Any]]:
         period["ingresos"] = {}
         period["costos"] = _empty_cost_buckets()
         period["utilidad"] = {}
+        period["operativo"] = _empty_operativo_bucket()
         periods.append(period)
     return periods
 
@@ -166,6 +175,7 @@ def _build_totales() -> Dict[str, Any]:
         "ingresos": {},
         "costos": _empty_cost_buckets(),
         "utilidad": {},
+        "operativo": _empty_operativo_bucket(),
     }
 
 
@@ -180,6 +190,9 @@ def _apply_row_to_contract(row: Dict[str, Any], periods: list[Dict[str, Any]], t
     elif key in _UTILIDAD_MAP:
         period_path = _UTILIDAD_MAP[key]
         total_path = _UTILIDAD_MAP[key]
+    elif key in _OPERATIVO_MAP:
+        period_path = _OPERATIVO_MAP[key]
+        total_path = _OPERATIVO_MAP[key]
     else:
         return
 
@@ -215,6 +228,7 @@ def build_vision_pyg_from_result(
         "version": "v1",
         "simulation_id": simulation_id,
         "header": _build_header(vp_data),
+        "estaciones_trabajo": vp_data.get("puestos_trabajo", 0.0),
         "periods": periods,
         "totales": totales,
         "metadata": {

@@ -214,6 +214,7 @@ class UserInputBuildersCadenaAMixin:
             fte_soporte_overrides = fte_soporte_overrides,
             roles_excluidos_deal = roles_excluidos_deal,
             pct_presencia     = float(d.get("pct_presencia", 1.0)),
+            estaciones_presenciales = float(d["estaciones_presenciales"]) if d.get("estaciones_presenciales") is not None else None,
             comision_pct      = _resolver_comision_pct(d),
             salario_base      = float(d["salario_base"]) if "salario_base" in d else None,
             incluye_examenes  = bool(d.get("incluye_examenes", True)),

@@ -132,13 +132,25 @@ class InputNormalizerCadenaAMixin:
                 )
 
         # ── c. Defaults de campos opcionales del perfil ───────────────────
+        # Si viene estaciones_presenciales (conteo absoluto) pero no pct_presencia,
+        # convertir: pct_presencia = estaciones_presenciales / fte
         if perfil_norm.get("pct_presencia") is None:
-            perfil_norm["pct_presencia"] = 1.0
-            log.add_default(
-                f"{prefix}.pct_presencia",
-                1.0,
-                "Presencia 100% por defecto — modelo híbrido requiere valor explícito",
-            )
+            estaciones = perfil_norm.get("estaciones_presenciales")
+            fte = float(perfil_norm.get("fte") or 1.0)
+            if estaciones is not None and fte > 0:
+                perfil_norm["pct_presencia"] = float(estaciones) / fte
+                log.add_default(
+                    f"{prefix}.pct_presencia",
+                    perfil_norm["pct_presencia"],
+                    f"pct_presencia derivado de estaciones_presenciales ({estaciones}) / fte ({fte})",
+                )
+            else:
+                perfil_norm["pct_presencia"] = 1.0
+                log.add_default(
+                    f"{prefix}.pct_presencia",
+                    1.0,
+                    "Presencia 100% por defecto — modelo híbrido requiere valor explícito",
+                )
 
         if perfil_norm.get("comision_pct") is None:
             perfil_norm["comision_pct"] = 0.0
