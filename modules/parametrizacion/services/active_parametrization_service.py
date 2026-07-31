@@ -18,6 +18,8 @@ _HR_FIELDS = [
     "campana",
     "costo_fijo",
     "med_seg",
+    "ratios_hitl",
+    "hora_gtr",
 ]
 
 # Claves de estructura interna del payload — no se copian como campos de tabla

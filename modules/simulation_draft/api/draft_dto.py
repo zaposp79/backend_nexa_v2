@@ -276,15 +276,15 @@ class PerfilCadenaA(BaseModel):
 class DetalleRecursoHumano(BaseModel):
     model_config = {"extra": "allow"}
     cargo: Optional[str] = None
-    salario_base: Optional[float] = None
-    comisiones: Optional[float] = None
+    salario: Optional[float] = None
+    comision: Optional[float] = None
 
 
 class CondicionesCadenaA(BaseModel):
     model_config = {"extra": "allow"}
     Calculo_conversion_fte_interacciones: Optional[CalculoConversionFte] = None
     perfiles: Optional[List[PerfilCadenaA]] = None
-    detalles_recursos_humanos: Optional[List[DetalleRecursoHumano]] = None
+    detalle_nomina: Optional[List[DetalleRecursoHumano]] = None
 
 
 # ---------------------------------------------------------------------------

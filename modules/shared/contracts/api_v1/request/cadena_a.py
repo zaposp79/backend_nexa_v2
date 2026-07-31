@@ -34,8 +34,8 @@ class DetalleRecursoHumanoV1(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     cargo: str
-    salario_base: float = Field(ge=0.0)
-    comisiones: float = Field(default=0.0, ge=0.0)
+    salario: float = Field(ge=0.0)
+    comision: float = Field(default=0.0, ge=0.0)
 
 
 class PerfilCadenaAV1(BaseModel):
@@ -83,5 +83,5 @@ class CadenaARequestV1(BaseModel):
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
-    detalles_recursos_humanos: List[DetalleRecursoHumanoV1] = Field(default_factory=list)
+    detalle_nomina: List[DetalleRecursoHumanoV1] = Field(default_factory=list)
     perfiles: List[PerfilCadenaAV1] = Field(default_factory=list)

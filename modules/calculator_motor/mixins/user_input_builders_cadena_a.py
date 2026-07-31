@@ -142,11 +142,11 @@ class UserInputBuildersCadenaAMixin:
     def _cadena_a(self, d: Dict) -> CondicionesCadenaAInput:
         perfiles = [self._perfil_a(p) for p in d.get("perfiles", [])]
         staff_config = [self._staff_rol(s) for s in d.get("staff_config", [])]
-        detalles = [self._detalle_recurso_humano(item) for item in d.get("detalles_recursos_humanos", [])]
+        detalles = [self._detalle_recurso_humano(item) for item in d.get("detalle_nomina", [])]
         return CondicionesCadenaAInput(
             perfiles=perfiles,
             staff_config=staff_config,
-            detalles_recursos_humanos=detalles,
+            detalle_nomina=detalles,
         )
 
 
@@ -156,8 +156,8 @@ class UserInputBuildersCadenaAMixin:
 
         return DetalleRecursoHumanoInput(
             cargo=str(d["cargo"]),
-            salario_base=float(d["salario_base"]),
-            comisiones=float(d.get("comisiones", 0.0)),
+            salario=float(d["salario"]),
+            comision=float(d.get("comision", 0.0)),
         )
 
 

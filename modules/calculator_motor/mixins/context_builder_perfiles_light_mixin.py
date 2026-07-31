@@ -69,7 +69,7 @@ class ContextBuilderPerfilesLightMixin:
             perfiles_base, linea, meses_contrato, pct_rotacion,
             complejidad_especialista=complejidad_especialista,
             staff_config=staff_config,
-            detalles_recursos_humanos=getattr(cadena_a, "detalles_recursos_humanos", []),
+            detalle_nomina=getattr(cadena_a, "detalle_nomina", []),
             roles_excluidos_deal=roles_excluidos_deal)
 
         # Clasificar cargo_tipo en todos los perfiles desde HR-clasificacion_cargos.

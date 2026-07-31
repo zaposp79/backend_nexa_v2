@@ -261,15 +261,15 @@ class DetalleRecursoHumanoInput:
     """Valor editable que reemplaza salario y comisión HR para un cargo."""
 
     cargo: str
-    salario_base: float
-    comisiones: float = 0.0
+    salario: float
+    comision: float = 0.0
 
 
 @dataclass
 class CondicionesCadenaAInput:
     perfiles: List[PerfilCadenaAInput] = field(default_factory=list)
     staff_config: List[StaffRolInput] = field(default_factory=list)
-    detalles_recursos_humanos: List[DetalleRecursoHumanoInput] = field(default_factory=list)
+    detalle_nomina: List[DetalleRecursoHumanoInput] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------

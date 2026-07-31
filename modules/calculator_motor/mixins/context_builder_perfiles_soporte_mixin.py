@@ -94,7 +94,7 @@ class ContextBuilderPerfilesSoporteMixin:
                                      meses_contrato: int, pct_rotacion: float,
                                      complejidad_especialista: str = "ALTA",
                                      staff_config: list = None,
-                                     detalles_recursos_humanos: list = None,
+                                     detalle_nomina: list = None,
                                      roles_excluidos_deal: frozenset = None):
         """
         Genera automáticamente los perfiles de staff de soporte para cada perfil base.
@@ -118,7 +118,7 @@ class ContextBuilderPerfilesSoporteMixin:
         mes_ajuste = MES_INICIO_AJUSTE_ANUAL
         detalles_por_rol = {
             self._normalize_rol(item.cargo): item
-            for item in (detalles_recursos_humanos or [])
+            for item in (detalle_nomina or [])
         }
 
         def valores_recurso_humano(rol: str) -> tuple[float, float, bool]:
@@ -128,8 +128,8 @@ class ContextBuilderPerfilesSoporteMixin:
                     rol, f"rol_soporte en cadena_a linea={linea}"
                 )
                 return salario, self._prov.get_comision_pct_rol(rol), False
-            salario = float(detalle.salario_base)
-            comision_pct = float(detalle.comisiones) / salario if salario > 0 else 0.0
+            salario = float(detalle.salario)
+            comision_pct = float(detalle.comision) / salario if salario > 0 else 0.0
             return salario, comision_pct, True
 
         # Apply per-deal staff_config: override ratios and exclude inactive roles.

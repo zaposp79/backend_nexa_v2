@@ -106,12 +106,12 @@ def test_cargos_adicionales_contract_accepts_list_and_legacy_scalar() -> None:
 
 
 @pytest.mark.golden
-def test_detalles_recursos_humanos_override_salary_and_commission() -> None:
+def test_detalle_nomina_override_salary_and_commission() -> None:
     """Los valores editables reemplazan HR y los duplicados de roles_operativos."""
     def edit_detail(payload):
-        detail = payload["condiciones_cadena_a"]["detalles_recursos_humanos"][0]
-        detail["salario_base"] = 1_000_000
-        detail["comisiones"] = 250_000
+        detail = payload["condiciones_cadena_a"]["detalle_nomina"][0]
+        detail["salario"] = 1_000_000
+        detail["comision"] = 250_000
 
     _, solicitud, _ = _build_context(payload_mutator=edit_detail)
     directores = [
@@ -125,10 +125,10 @@ def test_detalles_recursos_humanos_override_salary_and_commission() -> None:
 
 
 @pytest.mark.golden
-def test_detalles_recursos_humanos_matches_excel_catalog() -> None:
+def test_detalle_nomina_matches_excel_catalog() -> None:
     """Agente Básico 1 es fila técnica y no se agrega al catálogo editable del Excel."""
     user_input, _, _ = _build_context()
-    cargos = {item.cargo for item in user_input.cadena_a.detalles_recursos_humanos}
+    cargos = {item.cargo for item in user_input.cadena_a.detalle_nomina}
 
     assert "Director de cuentas" in cargos
     assert "Agente Básico 1" not in cargos
