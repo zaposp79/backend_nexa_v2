@@ -93,7 +93,7 @@ class ContextBuilderPerfilesSoporteMixin:
     def _construir_perfiles_soporte(self, perfiles_base: list, linea: str,
                                      meses_contrato: int, pct_rotacion: float,
                                      complejidad_especialista: str = "ALTA",
-                                     staff_config: list = None,
+                                     ratios_request: dict = None,
                                      detalle_nomina: list = None,
                                      roles_excluidos_deal: frozenset = None):
         """
@@ -132,20 +132,27 @@ class ContextBuilderPerfilesSoporteMixin:
             comision_pct = float(detalle.comision) / salario if salario > 0 else 0.0
             return salario, comision_pct, True
 
-        # Apply per-deal staff_config: override ratios and exclude inactive roles.
-        # staff_config entries (StaffRolInput) come from CondicionesCadenaAInput.
+        # Apply per-deal ratios.filas: override ratios and exclude inactive roles.
+        # filas_por_rol indexed by normalized role name for per-profile ratio lookup.
         staff_excluidos_extra: set[str] = set()
-        if staff_config:
-            for sc in staff_config:
-                rol_n = self._normalize_rol(sc.nombre)
-                if not sc.activo:
+        filas_por_rol: dict = {}
+        if ratios_request:
+            for fila in ratios_request.get("filas", []):
+                nombre = fila.get("position_name") or fila.get("position_id", "")
+                rol_n = self._normalize_rol(nombre)
+                filas_por_rol[rol_n] = fila
+                if not fila.get("incluido", True):
                     staff_excluidos_extra.add(rol_n)
-                elif sc.ratio_override is not None and sc.ratio_override > 0:
-                    if rol_n in ratios:
-                        ratios = dict(ratios)  # copy before mutating
-                    else:
-                        ratios = dict(ratios)
-                    ratios[rol_n] = sc.ratio_override
+                else:
+                    agentes_str = str(fila.get("agentes", "") or "")
+                    if agentes_str:
+                        try:
+                            global_ratio = float(agentes_str)
+                            if global_ratio > 0:
+                                ratios = dict(ratios)
+                                ratios[rol_n] = global_ratio
+                        except (ValueError, TypeError):
+                            pass
         # EXCEL V2-8 CCA!C79/C80/C87: wire roles_operativos[].incluye_en_deal=False exclusions.
         # Names come from the request (not hardcoded here); normalized for comparison.
         if roles_excluidos_deal:
@@ -235,6 +242,22 @@ class ContextBuilderPerfilesSoporteMixin:
                 # Especialista volumétrico: se procesa al final con su propia fórmula
                 if rol in roles_fte_volumetrico:
                     continue
+
+                # Per-profile ratio override: ratios.filas[rol].por_perfil[idx_perfil]
+                # personalizado takes priority over ratio; falls back to global agentes.
+                fila = filas_por_rol.get(rol)
+                if fila is not None:
+                    for pp in fila.get("por_perfil", []):
+                        if pp.get("indice_perfil") == idx_perfil:
+                            pp_str = str(pp.get("personalizado") or pp.get("ratio") or "")
+                            if pp_str:
+                                try:
+                                    pp_ratio = float(pp_str)
+                                    if pp_ratio > 0:
+                                        ratio = pp_ratio
+                                except (ValueError, TypeError):
+                                    pass
+                            break
 
                 if rol == rol_jefe_comerc_n:
                     fte_contable = fte_base_soporte / ratio

@@ -285,6 +285,7 @@ class CondicionesCadenaA(BaseModel):
     Calculo_conversion_fte_interacciones: Optional[CalculoConversionFte] = None
     perfiles: Optional[List[PerfilCadenaA]] = None
     detalle_nomina: Optional[List[DetalleRecursoHumano]] = None
+    ratios: Optional[dict] = None
 
 
 # ---------------------------------------------------------------------------

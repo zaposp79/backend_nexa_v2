@@ -141,11 +141,10 @@ class UserInputBuildersCadenaAMixin:
 
     def _cadena_a(self, d: Dict) -> CondicionesCadenaAInput:
         perfiles = [self._perfil_a(p) for p in d.get("perfiles", [])]
-        staff_config = [self._staff_rol(s) for s in d.get("staff_config", [])]
         detalles = [self._detalle_recurso_humano(item) for item in d.get("detalle_nomina", [])]
         return CondicionesCadenaAInput(
             perfiles=perfiles,
-            staff_config=staff_config,
+            ratios=d.get("ratios", {}),
             detalle_nomina=detalles,
         )
 
@@ -158,16 +157,6 @@ class UserInputBuildersCadenaAMixin:
             cargo=str(d["cargo"]),
             salario=float(d["salario"]),
             comision=float(d.get("comision", 0.0)),
-        )
-
-
-    def _staff_rol(self, d: Dict) -> "StaffRolInput":
-        from nexa_engine.modules.calculator_motor.dto.user_inputs import StaffRolInput
-        ratio = d.get("ratio_override")
-        return StaffRolInput(
-            nombre=str(d["nombre"]),
-            activo=bool(d.get("activo", True)),
-            ratio_override=float(ratio) if ratio is not None else None,
         )
 
 

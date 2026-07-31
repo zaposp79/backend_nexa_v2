@@ -245,18 +245,6 @@ class PerfilCadenaAInput:
 
 
 @dataclass
-class StaffRolInput:
-    """
-    Per-deal staff role configuration (from Condiciones Cadena A).
-    Controls which support roles are active and their per-deal ratio override.
-    Empty list → use parametrization defaults for all roles.
-    """
-    nombre: str
-    activo: bool = True
-    ratio_override: Optional[float] = None  # None → use parametrization default
-
-
-@dataclass
 class DetalleRecursoHumanoInput:
     """Valor editable que reemplaza salario y comisión HR para un cargo."""
 
@@ -268,7 +256,7 @@ class DetalleRecursoHumanoInput:
 @dataclass
 class CondicionesCadenaAInput:
     perfiles: List[PerfilCadenaAInput] = field(default_factory=list)
-    staff_config: List[StaffRolInput] = field(default_factory=list)
+    ratios: dict = field(default_factory=dict)
     detalle_nomina: List[DetalleRecursoHumanoInput] = field(default_factory=list)
 
 

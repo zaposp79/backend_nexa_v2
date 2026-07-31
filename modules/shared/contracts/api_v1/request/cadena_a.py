@@ -84,4 +84,5 @@ class CadenaARequestV1(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     detalle_nomina: List[DetalleRecursoHumanoV1] = Field(default_factory=list)
+    ratios: Optional[Dict] = None
     perfiles: List[PerfilCadenaAV1] = Field(default_factory=list)

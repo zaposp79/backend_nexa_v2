@@ -46,17 +46,22 @@ class ContextBuilderPerfilesLightMixin:
         a partir de los ratios maestros y las reglas de roles.
         """
         ratios = self._prov.get_ratios_staff(linea)
-        staff_config = getattr(cadena_a, "staff_config", [])
+        ratios_request = getattr(cadena_a, "ratios", {}) or {}
         # Remove inactive staff roles from ratios so fte_examenes excludes them
-        # (mirrors Excel Condiciones Cadena A: rows with activo=False → FTE = 0 → excluded).
-        if staff_config:
+        # (mirrors Excel Condiciones Cadena A: rows with incluido=False → FTE = 0 → excluded).
+        filas = ratios_request.get("filas", [])
+        if filas:
             ratios_examenes = dict(ratios)
-            for sc in staff_config:
-                if not sc.activo:
-                    rol_n = self._normalize_rol(sc.nombre)
-                    ratios_examenes.pop(rol_n, None)
+            for fila in filas:
+                if not fila.get("incluido", True):
+                    nombre = fila.get("position_name") or fila.get("position_id", "")
+                    ratios_examenes.pop(self._normalize_rol(nombre), None)
         else:
             ratios_examenes = ratios
+        # complejidad from request overrides the default parameter
+        complejidad_from_request = ratios_request.get("complejidad")
+        if complejidad_from_request:
+            complejidad_especialista = str(complejidad_from_request).upper()
         perfiles_base    = [self._construir_perfil_a(p, ratios_examenes, factor_capex=factor_capex,
                                                       meses_contrato=meses_contrato)
                             for p in cadena_a.perfiles]
@@ -68,7 +73,7 @@ class ContextBuilderPerfilesLightMixin:
         perfiles_soporte = self._construir_perfiles_soporte(
             perfiles_base, linea, meses_contrato, pct_rotacion,
             complejidad_especialista=complejidad_especialista,
-            staff_config=staff_config,
+            ratios_request=ratios_request,
             detalle_nomina=getattr(cadena_a, "detalle_nomina", []),
             roles_excluidos_deal=roles_excluidos_deal)
 
