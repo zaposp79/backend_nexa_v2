@@ -422,13 +422,14 @@ class ContextBuilderPanelBCMixin:
             DomainError with descriptive message if role not found
         """
         from nexa_engine.modules.shared.exceptions import DomainError, NotFoundError
+        from nexa_engine.modules.parametrizacion.repositories.payroll_parametrization_repository import RoleNotFoundError
         import logging
-        
+
         logger = logging.getLogger(__name__)
-        
+
         try:
             return self._prov.get_salario_rol(rol)
-        except (NotFoundError, KeyError) as e:
+        except (NotFoundError, RoleNotFoundError, KeyError) as e:
             msg = (
                 f"Rol '{rol}' no encontrado en HR-Nomina. "
                 f"Contexto: {contexto}. "

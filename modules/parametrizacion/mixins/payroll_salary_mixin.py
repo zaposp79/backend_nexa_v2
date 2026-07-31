@@ -8,6 +8,11 @@ import unicodedata
 from typing import Any, Dict, Optional
 from nexa_engine.modules.parametrizacion.services.resolver import ParametrizationResolver
 from nexa_engine.modules.shared.exceptions import ParametrizationError, ParametrizationNotFoundError, DomainError
+from nexa_engine.modules.parametrizacion.repositories.payroll_parametrization_repository import (
+    RoleNotFoundError,
+    ContributionNotFoundError,
+    BenefitNotFoundError,
+)
 logger = logging.getLogger(__name__)
 
 
