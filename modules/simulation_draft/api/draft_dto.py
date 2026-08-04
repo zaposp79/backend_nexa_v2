@@ -89,19 +89,22 @@ class Poliza(BaseModel):
 # ReglasNegocio
 # ---------------------------------------------------------------------------
 
+class MargenObjetivo(BaseModel):
+    model_config = {"extra": "allow"}
+    cadena_a: Optional[float] = None
+    cadena_b: Optional[float] = None
+    cadena_c: Optional[float] = None
+
+
 class ReglasNegocio(BaseModel):
     model_config = {"extra": "allow"}
-    margen_objetivo_cadena_a: Optional[float] = None
-    margen_objetivo_cadena_b: Optional[float] = None
+    margen_objetivo: Optional[MargenObjetivo] = None
     contingencia_operativa: Optional[ValorMinMax] = None
     contingencia_comercial: Optional[ValorMinMax] = None
     markup: Optional[ValorMinMax] = None
-    descuento_volumen: Optional[float] = None
-    imprevistos: Optional[float] = None
+    descuento_volumen: Optional[ValorMinMax] = None
     porcentaje_acumulado: Optional[ActualMinMax] = None
-    margen_objetivo_cadena_c: Optional[float] = None
-    descuento_volumen_minimo: Optional[float] = None
-    descuento_volumen_maximo: Optional[float] = None
+    imprevistos: Optional[float] = None
 
 
 # ---------------------------------------------------------------------------
@@ -241,14 +244,22 @@ class OpexFijo(BaseModel):
     staffing: Optional[Staffing] = None
 
 
+class PorPerfilInversion(BaseModel):
+    model_config = {"extra": "allow"}
+    indice_perfil: Optional[int] = None
+    valor: Optional[float] = None
+    nombre: Optional[str] = None
+
+
 class InversionCadenaA(BaseModel):
     model_config = {"extra": "allow"}
     descripcion: Optional[str] = None
-    precio: Optional[float] = None
-    meses_a_diferir: Optional[int] = None
+    precio_compra: Optional[float] = None
+    meses_diferimiento: Optional[int] = None
     precio_mensual: Optional[float] = None
     es_precio_total: Optional[bool] = None
-    cantidad: Optional[int] = None
+    tipo: Optional[str] = None
+    por_perfil: Optional[List[PorPerfilInversion]] = None
 
 
 class PerfilCadenaA(BaseModel):
@@ -286,6 +297,7 @@ class CondicionesCadenaA(BaseModel):
     perfiles: Optional[List[PerfilCadenaA]] = None
     detalle_nomina: Optional[List[DetalleRecursoHumano]] = None
     ratios: Optional[dict] = None
+    inversiones: Optional[List[InversionCadenaA]] = None
 
 
 # ---------------------------------------------------------------------------

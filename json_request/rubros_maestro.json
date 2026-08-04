@@ -1,0 +1,682 @@
+[
+  {
+    "id": "nomina_total_mensual",
+    "version": "v2.8",
+    "nombre": "Nómina Total Mensual Cadena A",
+    "bloque": "Nómina",
+    "capa": 1,
+    "descripcion": "Suma del costo empresa de todos los perfiles (agentes + estructura) en Cadena A, aplicando reglas de Salario Integral, Aux Transporte y Dotaciones.",
+    "orden_calculo": 10,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum(costo_empresa_perfil_i * fte_perfil_i for each perfil) + sum(costo_empresa_cargo_j * cantidad_cargo_j for each cargo_estructura)",
+      "notas": "Cada perfil y cargo usa las subformulas de costo_empresa definidas abajo. Cantidad de cargo estructura = ceil(FTE_total_agentes / ratio_cargo_j).",
+      "subformulas": {
+        "t_imponible": "salario_base + comision_variable",
+        "aux_transporte": "249095 if (0 < t_imponible < 2 * SMLV) else 0",
+        "t_haberes": "t_imponible + aux_transporte",
+        "base_integral": "t_haberes - aux_transporte",
+        "es_integral": "base_integral > 10 * SMLV",
+        "salud": "t_imponible * 0.70 * 0.085 if es_integral else 0",
+        "pension": "base_integral * 0.12 * (0.70 if es_integral else 1)",
+        "arl": "base_integral * 0.00522 * (0.70 if es_integral else 1)",
+        "seg_social": "salud + pension + arl",
+        "caja": "base_integral * 0.04 * (0.70 if es_integral else 1)",
+        "icbf_sena": "t_imponible * 0.04 * 0.70 if es_integral else 0",
+        "parafiscales": "caja + icbf_sena",
+        "cesantias": "0 if es_integral else t_haberes * 0.0833",
+        "primas": "0 if es_integral else t_haberes * 0.0833",
+        "interes_cesantia": "cesantias * 0.12",
+        "vacaciones": "base_integral * 0.0417 * (0.70 if es_integral else 1)",
+        "prestaciones": "cesantias + primas + interes_cesantia + vacaciones",
+        "dotaciones": "15375 if (0 < t_imponible < 2 * SMLV) else 0",
+        "costo_empresa": "t_haberes + seg_social + parafiscales + prestaciones + dotaciones"
+      }
+    },
+    "variables": [
+      { "nombre": "SMLV", "tipo": "parametro", "fuente": "parametrization", "path": "hr.smlv_mensual", "valor_referencia": 1795000 },
+      { "nombre": "salario_base", "tipo": "input", "fuente": "request.condiciones_cadena_a.detalle_nomina[*].salario" },
+      { "nombre": "comision_variable", "tipo": "input", "fuente": "request.condiciones_cadena_a.detalle_nomina[*].comision" },
+      { "nombre": "fte_perfil_i", "tipo": "input", "fuente": "request.condiciones_cadena_a.perfiles[*].fte" },
+      { "nombre": "ratio_cargo_j", "tipo": "input", "fuente": "request.condiciones_cadena_a.ratios[*].ratio_por_perfil" },
+      { "nombre": "ausentismo_pct", "tipo": "input", "fuente": "request.reglas_negocio.ausentismo", "valor_referencia": 0.065 },
+      { "nombre": "rotacion_pct", "tipo": "input", "fuente": "request.reglas_negocio.rotacion", "valor_referencia": 0.085 }
+    ],
+    "dependencias": [],
+    "cadena": "A"
+  },
+
+  {
+    "id": "no_payroll_total_mensual",
+    "version": "v2.8",
+    "nombre": "No Payroll Total Mensual Cadena A",
+    "bloque": "No Payroll",
+    "capa": 2,
+    "descripcion": "Suma de OPEX fijo (crucero × FTE), inversiones amortizadas y costos fijos adicionales del deal.",
+    "orden_calculo": 20,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "opex_fijo + inversiones_mensual + costos_adicionales_mensual",
+      "subformulas": {
+        "opex_fijo": "crucero_valor * fte_total_cadena_a",
+        "inversiones_mensual": "sum(inversion_i / meses_amortizacion_i for each inversion_i)",
+        "costos_adicionales_mensual": "sum(item_costo_adicional for each item in inversiones_adicionales)"
+      }
+    },
+    "variables": [
+      { "nombre": "crucero_valor", "tipo": "input", "fuente": "request.reglas_negocio.crucero", "valor_referencia": 8600 },
+      { "nombre": "fte_total_cadena_a", "tipo": "computed", "rubro_fuente": "fte_total_cadena_a" },
+      { "nombre": "inversiones", "tipo": "input", "fuente": "request.condiciones_cadena_a.inversiones" },
+      { "nombre": "meses_proyecto", "tipo": "input", "fuente": "request.datos_operativos.meses_contrato", "valor_referencia": 10 }
+    ],
+    "dependencias": [],
+    "cadena": "A"
+  },
+
+  {
+    "id": "costo_cadena_a",
+    "version": "v2.8",
+    "nombre": "Costo Operativo Total Cadena A",
+    "bloque": "Costo Cadena A",
+    "capa": 3,
+    "descripcion": "Suma de nómina y no-payroll. Representa el costo puro de operación ANTES de componentes financieros.",
+    "orden_calculo": 30,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "nomina_total_mensual + no_payroll_total_mensual"
+    },
+    "variables": [
+      { "nombre": "nomina_total_mensual", "tipo": "computed", "rubro_fuente": "nomina_total_mensual" },
+      { "nombre": "no_payroll_total_mensual", "tipo": "computed", "rubro_fuente": "no_payroll_total_mensual" }
+    ],
+    "dependencias": ["nomina_total_mensual", "no_payroll_total_mensual"],
+    "cadena": "A"
+  },
+
+  {
+    "id": "costo_cadena_b",
+    "version": "v2.8",
+    "nombre": "Costo Operativo Total Cadena B",
+    "bloque": "Costo Cadena B",
+    "capa": 3,
+    "descripcion": "Costo total Cadena B (digital/automatización). Retorna 0 si cadena_b no está activa.",
+    "orden_calculo": 31,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "(nomina_total_cadena_b + no_payroll_total_cadena_b) if cadena_b_activa else 0"
+    },
+    "variables": [
+      { "nombre": "cadena_b_activa", "tipo": "input", "fuente": "request.condiciones_cadena_b != null", "valor_referencia": false }
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "costo_cadena_c",
+    "version": "v2.8",
+    "nombre": "Costo Operativo Total Cadena C",
+    "bloque": "Costo Cadena C",
+    "capa": 3,
+    "descripcion": "Costo total Cadena C (IA). Retorna 0 si cadena_c no está activa.",
+    "orden_calculo": 32,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "(nomina_total_cadena_c + no_payroll_total_cadena_c) if cadena_c_activa else 0"
+    },
+    "variables": [
+      { "nombre": "cadena_c_activa", "tipo": "input", "fuente": "request.condiciones_cadena_c != null", "valor_referencia": false }
+    ],
+    "dependencias": [],
+    "cadena": "C"
+  },
+
+  {
+    "id": "ingreso_cadena_a",
+    "version": "v2.8",
+    "nombre": "Ingreso Cadena A (tarifa bruta)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Tarifa que se cobra al cliente para la Cadena A, calculada para cubrir costos + margen + ajustes comerciales.",
+    "orden_calculo": 60,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "costo_cadena_a / ((1 - margen_a - tasa_financiero_efectiva) * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento))",
+      "notas": "Fuente: Hoja Maestra Escenarios. Excel V2-8: ingreso=costo/(1-margen-tasa_financiero_efectiva). tasa_financiero_efectiva=ica+gmf+polizas*(1-imprevistos): ICA/GMF aplican sobre ingreso_bruto (ley colombiana), pólizas sobre ingreso_neto. ramp_up NO aplica a ingreso_cadena_a. Para SAC cont_op=cont_com=markup=descuento=0."
+    },
+    "variables": [
+      { "nombre": "costo_cadena_a", "tipo": "computed", "rubro_fuente": "costo_cadena_a" },
+      { "nombre": "margen_a", "tipo": "input", "fuente": "request.reglas_negocio.margen_objetivo_cadena_a", "valor_referencia": 0.18 },
+      { "nombre": "cont_op", "tipo": "input", "fuente": "request.reglas_negocio.contingencia_operativa", "valor_referencia": 0.0 },
+      { "nombre": "cont_com", "tipo": "input", "fuente": "request.reglas_negocio.contingencia_comercial", "valor_referencia": 0.0 },
+      { "nombre": "markup", "tipo": "input", "fuente": "request.reglas_negocio.markup", "valor_referencia": 0.0 },
+      { "nombre": "descuento", "tipo": "input", "fuente": "request.reglas_negocio.descuento_volumen", "valor_referencia": 0.0 }
+    ],
+    "dependencias": ["costo_cadena_a"],
+    "cadena": "A"
+  },
+
+  {
+    "id": "ingreso_cadena_b",
+    "version": "v2.8",
+    "nombre": "Ingreso Cadena B (tarifa bruta)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Tarifa Cadena B. Retorna 0 si cadena_b no está activa.",
+    "orden_calculo": 61,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "(costo_cadena_b / ((1 - margen_b) * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento))) if cadena_b_activa else 0"
+    },
+    "variables": [
+      { "nombre": "costo_cadena_b", "tipo": "computed", "rubro_fuente": "costo_cadena_b" },
+      { "nombre": "margen_b", "tipo": "input", "fuente": "request.reglas_negocio.margen_objetivo_cadena_b", "valor_referencia": 0.30 },
+      { "nombre": "cadena_b_activa", "tipo": "input", "fuente": "request.condiciones_cadena_b != null", "valor_referencia": false }
+    ],
+    "dependencias": ["costo_cadena_b"],
+    "cadena": "B"
+  },
+
+  {
+    "id": "ingreso_cadena_c",
+    "version": "v2.8",
+    "nombre": "Ingreso Cadena C (tarifa bruta)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Tarifa Cadena C. Retorna 0 si cadena_c no está activa.",
+    "orden_calculo": 62,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "(costo_cadena_c / ((1 - margen_c) * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento))) if cadena_c_activa else 0"
+    },
+    "variables": [
+      { "nombre": "costo_cadena_c", "tipo": "computed", "rubro_fuente": "costo_cadena_c" },
+      { "nombre": "margen_c", "tipo": "input", "fuente": "request.reglas_negocio.margen_objetivo_cadena_c", "valor_referencia": 0.1767 },
+      { "nombre": "cadena_c_activa", "tipo": "input", "fuente": "request.condiciones_cadena_c != null", "valor_referencia": false }
+    ],
+    "dependencias": ["costo_cadena_c"],
+    "cadena": "C"
+  },
+
+  {
+    "id": "ingreso_bruto",
+    "version": "v2.8",
+    "nombre": "Ingreso Bruto (con Ramp-Up)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Suma de ingresos de las 3 cadenas activas, ajustada por el factor de ramp-up (escalamiento progresivo en los primeros meses).",
+    "orden_calculo": 63,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "(ingreso_cadena_a + ingreso_cadena_b + ingreso_cadena_c) * (1 - paso_cobro_variable)",
+      "notas": "Fuente: Visión P&G fila 19. Fórmula Excel: =(J20+J21+J22)*(1-J16) donde J16=paso_cobro_variable=0 para SAC. El ramp-up ya está aplicado en ingreso_cadena_a."
+    },
+    "variables": [
+      { "nombre": "ingreso_cadena_a", "tipo": "computed", "rubro_fuente": "ingreso_cadena_a" },
+      { "nombre": "ingreso_cadena_b", "tipo": "computed", "rubro_fuente": "ingreso_cadena_b" },
+      { "nombre": "ingreso_cadena_c", "tipo": "computed", "rubro_fuente": "ingreso_cadena_c" },
+      { "nombre": "ramp_up_mes", "tipo": "input", "fuente": "request.datos_operativos.ramp_up[mes_numero]", "valor_referencia": 0.0 }
+    ],
+    "dependencias": ["ingreso_cadena_a", "ingreso_cadena_b", "ingreso_cadena_c"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "contingencia_operativa_valor",
+    "version": "v2.8",
+    "nombre": "Contingencia Operativa (valor monetario)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Cargo adicional al cliente por contingencia operativa (coberturas imprevistas de operación). Se suma al ingreso bruto.",
+    "orden_calculo": 64,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_bruto * cont_op / (1 - cont_op) if cont_op > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 23. Para este deal cont_op=0 → resultado=0"
+    },
+    "variables": [
+      { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
+      { "nombre": "cont_op", "tipo": "input", "fuente": "request.reglas_negocio.contingencia_operativa", "valor_referencia": 0.0 }
+    ],
+    "dependencias": ["ingreso_bruto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "contingencia_comercial_valor",
+    "version": "v2.8",
+    "nombre": "Contingencia Comercial (valor monetario)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Cargo adicional por contingencia comercial (riesgos de mercado pactados con el cliente).",
+    "orden_calculo": 65,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_bruto * cont_com / (1 - cont_com) if cont_com > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 24. Para este deal cont_com=0 → resultado=0"
+    },
+    "variables": [
+      { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
+      { "nombre": "cont_com", "tipo": "input", "fuente": "request.reglas_negocio.contingencia_comercial", "valor_referencia": 0.0 }
+    ],
+    "dependencias": ["ingreso_bruto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "markup_valor",
+    "version": "v2.8",
+    "nombre": "Mark-Up (valor monetario)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Cargo adicional de mark-up sobre la base del ingreso bruto.",
+    "orden_calculo": 66,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_bruto * markup / (1 - markup) if markup > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 25. Para este deal markup=0 → resultado=0"
+    },
+    "variables": [
+      { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
+      { "nombre": "markup", "tipo": "input", "fuente": "request.reglas_negocio.markup", "valor_referencia": 0.0 }
+    ],
+    "dependencias": ["ingreso_bruto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "descuento_valor",
+    "version": "v2.8",
+    "nombre": "Descuento por Volumen (valor monetario)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Descuento concedido al cliente por volumen de operación. Se resta del ingreso.",
+    "orden_calculo": 67,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_bruto * descuento if descuento > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 26. Para este deal descuento=0 → resultado=0"
+    },
+    "variables": [
+      { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
+      { "nombre": "descuento", "tipo": "input", "fuente": "request.reglas_negocio.descuento_volumen", "valor_referencia": 0.0 }
+    ],
+    "dependencias": ["ingreso_bruto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "imprevistos_valor",
+    "version": "v2.8",
+    "nombre": "Imprevistos (valor monetario)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Provisión para imprevistos calculada como porcentaje del Ingreso Bruto. Se descuenta del Ingreso Fijo reconocido (actúa como buffer de seguridad, no como costo adicional al cliente).",
+    "orden_calculo": 68,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_bruto * pct_imprevistos",
+      "notas": "Fuente: Visión P&G fila 27. pct_imprevistos = 10% para este deal."
+    },
+    "variables": [
+      { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
+      { "nombre": "pct_imprevistos", "tipo": "input", "fuente": "request.reglas_negocio.imprevistos", "valor_referencia": 0.10 }
+    ],
+    "dependencias": ["ingreso_bruto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "ingreso_fijo",
+    "version": "v2.8",
+    "nombre": "Ingreso Fijo Reconocido",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Ingreso neto contable de la parte fija del deal, después de aplicar contingencias, markup, descuento e imprevistos al Ingreso Bruto.",
+    "orden_calculo": 69,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_bruto + contingencia_operativa_valor + contingencia_comercial_valor + markup_valor - descuento_valor",
+      "notas": "Excel V2-8: Visión P&G fila 28. ingreso_fijo = ingreso_bruto + ajustes_comerciales. Imprevistos NO se restan aquí; se restan en ingreso_neto."
+    },
+    "variables": [
+      { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
+      { "nombre": "contingencia_operativa_valor", "tipo": "computed", "rubro_fuente": "contingencia_operativa_valor" },
+      { "nombre": "contingencia_comercial_valor", "tipo": "computed", "rubro_fuente": "contingencia_comercial_valor" },
+      { "nombre": "markup_valor", "tipo": "computed", "rubro_fuente": "markup_valor" },
+      { "nombre": "descuento_valor", "tipo": "computed", "rubro_fuente": "descuento_valor" },
+      { "nombre": "imprevistos_valor", "tipo": "computed", "rubro_fuente": "imprevistos_valor" }
+    ],
+    "dependencias": ["ingreso_bruto", "contingencia_operativa_valor", "contingencia_comercial_valor", "markup_valor", "descuento_valor", "imprevistos_valor"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "ingreso_variable",
+    "version": "v2.8",
+    "nombre": "Ingreso Variable (Cobranzas/Variable)",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Ingreso de la parte variable del deal (comisiones por cobro/resultado). Es 0 para servicios tipo SAC; aplica en SACO/Cobranzas.",
+    "orden_calculo": 70,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_variable_cobranzas if tipo_servicio == 'SACO' else 0",
+      "notas": "Fuente: Visión P&G filas 29-30. Para SAC → 0. Para SACO → calculado desde volumetría y comisión variable pactada."
+    },
+    "variables": [
+      { "nombre": "tipo_servicio", "tipo": "input", "fuente": "request.datos_operativos.tipo_servicio", "valor_referencia": "SAC" }
+    ],
+    "dependencias": [],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "ingreso_neto",
+    "version": "v2.8",
+    "nombre": "Ingreso Neto Total",
+    "bloque": "P&G - Ingresos",
+    "capa": 6,
+    "descripcion": "Ingreso total reconocido en el período: fijo + variable. Es la base para calcular márgenes y contribuciones.",
+    "orden_calculo": 71,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_fijo - imprevistos_valor + ingreso_variable",
+      "notas": "Excel V2-8: Visión P&G fila 31. ingreso_neto = ingreso_fijo - imprevistos + ingreso_variable. Para SAC: ingreso_variable = 0."
+    },
+    "variables": [
+      { "nombre": "ingreso_fijo", "tipo": "computed", "rubro_fuente": "ingreso_fijo" },
+      { "nombre": "ingreso_variable", "tipo": "computed", "rubro_fuente": "ingreso_variable" }
+    ],
+    "dependencias": ["ingreso_fijo", "ingreso_variable"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "ica_mensual",
+    "version": "v2.8",
+    "nombre": "ICA (Impuesto de Industria y Comercio)",
+    "bloque": "Componente Financiero",
+    "capa": 7,
+    "descripcion": "Impuesto de industria y comercio calculado sobre el Ingreso Neto. Varía por ciudad de operación.",
+    "orden_calculo": 72,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_neto * pct_ica",
+      "notas": "Fuente: Tasas TRM Polizas. Ciudad Cali → tarifa ICA específica de la tabla de tasas."
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" },
+      { "nombre": "pct_ica", "tipo": "parametro", "fuente": "parametrization.gn.ica_por_ciudad", "path_clave": "ciudad_operacion" }
+    ],
+    "dependencias": ["ingreso_neto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "gmf_mensual",
+    "version": "v2.8",
+    "nombre": "GMF (Gravamen Movimientos Financieros 4×1000)",
+    "bloque": "Componente Financiero",
+    "capa": 7,
+    "descripcion": "Impuesto de 4×1000 aplicado sobre los movimientos financieros del deal. Calculado sobre el ingreso neto total.",
+    "orden_calculo": 73,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_neto * 0.004",
+      "notas": "Tasa fija nacional 4×1000 = 0.4%"
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" }
+    ],
+    "dependencias": ["ingreso_neto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "comision_admin_mensual",
+    "version": "v2.8",
+    "nombre": "Comisión por Administración",
+    "bloque": "Componente Financiero",
+    "capa": 7,
+    "descripcion": "Comisión de administración del contrato. Solo aplica si la póliza de Comisión Admin está activa en el deal.",
+    "orden_calculo": 74,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_neto * pct_comision_admin * pct_atribuible_comision if poliza_comision_admin_activa else 0",
+      "notas": "Fuente: Panel de Control, sección pólizas. Para este deal: activa=true, pct=1.18%, atribuible=10%."
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" },
+      { "nombre": "poliza_comision_admin_activa", "tipo": "input", "fuente": "request.polizas.comision_admin.activa", "valor_referencia": true },
+      { "nombre": "pct_comision_admin", "tipo": "input", "fuente": "request.polizas.comision_admin.porcentaje", "valor_referencia": 0.0118 },
+      { "nombre": "pct_atribuible_comision", "tipo": "input", "fuente": "request.polizas.comision_admin.porcentaje_atribuible", "valor_referencia": 0.10 }
+    ],
+    "dependencias": ["ingreso_neto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "polizas_mensual",
+    "version": "v2.8",
+    "nombre": "Pólizas de Seguro (costo mensual)",
+    "bloque": "Componente Financiero",
+    "capa": 7,
+    "descripcion": "Suma del costo mensual atribuible de las pólizas activas (IRF, Responsabilidad Civil u otras). Solo se consideran las activas y en el porcentaje atribuible al deal.",
+    "orden_calculo": 75,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum(ingreso_neto * poliza_i.porcentaje * poliza_i.porcentaje_atribuible for each poliza_i in polizas_activas)",
+      "notas": "Fuente: Panel de Control, sección pólizas. Para este deal: IRF (2.75%×10%) + Responsabilidad (0.69%×40%)."
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" },
+      { "nombre": "polizas_activas", "tipo": "input", "fuente": "request.polizas", "filtro": "activa == true" }
+    ],
+    "dependencias": ["ingreso_neto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "componente_financiero_total",
+    "version": "v2.8",
+    "nombre": "Componente Financiero Total",
+    "bloque": "Componente Financiero",
+    "capa": 7,
+    "descripcion": "Suma de todos los costos financieros e impuestos del deal: ICA + GMF + Comisión Admin + Pólizas + Costos de Financiación.",
+    "orden_calculo": 76,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ica_mensual + gmf_mensual + comision_admin_mensual + polizas_mensual + costos_financiacion_mensual",
+      "notas": "Fuente: Visión P&G fila 69. costos_financiacion=0 para deals sin financiación especial."
+    },
+    "variables": [
+      { "nombre": "ica_mensual", "tipo": "computed", "rubro_fuente": "ica_mensual" },
+      { "nombre": "gmf_mensual", "tipo": "computed", "rubro_fuente": "gmf_mensual" },
+      { "nombre": "comision_admin_mensual", "tipo": "computed", "rubro_fuente": "comision_admin_mensual" },
+      { "nombre": "polizas_mensual", "tipo": "computed", "rubro_fuente": "polizas_mensual" },
+      { "nombre": "costos_financiacion_mensual", "tipo": "input", "fuente": "request.datos_operativos.costos_financiacion", "valor_referencia": 0 }
+    ],
+    "dependencias": ["ica_mensual", "gmf_mensual", "comision_admin_mensual", "polizas_mensual"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "costo_fijo_externo",
+    "version": "v2.8",
+    "nombre": "Costo Fijo Externo (Overhead Corporativo)",
+    "bloque": "Costos Fijos",
+    "capa": 5,
+    "descripcion": "Porción del costo fijo corporativo (G&A) asignado al deal. Se descuenta al calcular Utilidad Neta pero NO afecta la Contribución.",
+    "orden_calculo": 55,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_neto * pct_costo_fijo",
+      "notas": "Fuente: Visión P&G fila 86. pct_costo_fijo proviene del módulo de parametrización GN."
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" },
+      { "nombre": "pct_costo_fijo", "tipo": "parametro", "fuente": "parametrization.gn.pct_costo_fijo_corporativo" }
+    ],
+    "dependencias": ["ingreso_neto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "costo_total",
+    "version": "v2.8",
+    "nombre": "Costo Total del Deal",
+    "bloque": "P&G - Costos",
+    "capa": 8,
+    "descripcion": "Suma de todos los costos operativos y financieros de todas las cadenas activas. Base para calcular contribución.",
+    "orden_calculo": 80,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "costo_cadena_a + costo_cadena_b + costo_cadena_c + componente_financiero_total",
+      "notas": "Fuente: Visión P&G fila 34. No incluye costo_fijo_externo (ese va solo en Utilidad Neta)."
+    },
+    "variables": [
+      { "nombre": "costo_cadena_a", "tipo": "computed", "rubro_fuente": "costo_cadena_a" },
+      { "nombre": "costo_cadena_b", "tipo": "computed", "rubro_fuente": "costo_cadena_b" },
+      { "nombre": "costo_cadena_c", "tipo": "computed", "rubro_fuente": "costo_cadena_c" },
+      { "nombre": "componente_financiero_total", "tipo": "computed", "rubro_fuente": "componente_financiero_total" }
+    ],
+    "dependencias": ["costo_cadena_a", "costo_cadena_b", "costo_cadena_c", "componente_financiero_total"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "contribucion",
+    "version": "v2.8",
+    "nombre": "Contribución",
+    "bloque": "P&G - KPIs",
+    "capa": 9,
+    "descripcion": "Diferencia entre el Ingreso Neto y el Costo Total. Representa el margen operativo del deal antes de descontar overhead corporativo.",
+    "orden_calculo": 90,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_neto - costo_total",
+      "notas": "Fuente: Visión P&G fila 82."
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" },
+      { "nombre": "costo_total", "tipo": "computed", "rubro_fuente": "costo_total" }
+    ],
+    "dependencias": ["ingreso_neto", "costo_total"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "contribucion_por_puesto",
+    "version": "v2.8",
+    "nombre": "Contribución por Puesto",
+    "bloque": "P&G - KPIs",
+    "capa": 9,
+    "descripcion": "Contribución dividida entre el número total de estaciones de trabajo activas. Mide la rentabilidad por agente.",
+    "orden_calculo": 91,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "contribucion / estaciones_trabajo if estaciones_trabajo > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 83."
+    },
+    "variables": [
+      { "nombre": "contribucion", "tipo": "computed", "rubro_fuente": "contribucion" },
+      { "nombre": "estaciones_trabajo", "tipo": "computed", "rubro_fuente": "fte_total_cadena_a" }
+    ],
+    "dependencias": ["contribucion"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "pct_contribucion",
+    "version": "v2.8",
+    "nombre": "% Contribución",
+    "bloque": "P&G - KPIs",
+    "capa": 9,
+    "descripcion": "Margen de contribución como porcentaje del Ingreso Neto. Indicador clave de rentabilidad del deal.",
+    "orden_calculo": 92,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "contribucion / ingreso_neto if ingreso_neto > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 84."
+    },
+    "variables": [
+      { "nombre": "contribucion", "tipo": "computed", "rubro_fuente": "contribucion" },
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" }
+    ],
+    "dependencias": ["contribucion", "ingreso_neto"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "utilidad_neta",
+    "version": "v2.8",
+    "nombre": "Utilidad Neta",
+    "bloque": "P&G - KPIs",
+    "capa": 9,
+    "descripcion": "Resultado final del deal después de descontar también el overhead corporativo (costo fijo externo). Es la utilidad real para la empresa.",
+    "orden_calculo": 93,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "ingreso_neto - costo_total - costo_fijo_externo",
+      "notas": "Fuente: Visión P&G fila 87. La diferencia con Contribución es el costo_fijo_externo (overhead G&A corporativo)."
+    },
+    "variables": [
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" },
+      { "nombre": "costo_total", "tipo": "computed", "rubro_fuente": "costo_total" },
+      { "nombre": "costo_fijo_externo", "tipo": "computed", "rubro_fuente": "costo_fijo_externo" }
+    ],
+    "dependencias": ["ingreso_neto", "costo_total", "costo_fijo_externo"],
+    "cadena": "todas"
+  },
+
+  {
+    "id": "pct_utilidad_neta",
+    "version": "v2.8",
+    "nombre": "% Utilidad Neta",
+    "bloque": "P&G - KPIs",
+    "capa": 9,
+    "descripcion": "Margen de utilidad neta como porcentaje del Ingreso Neto. Indicador final de rentabilidad incluyendo todos los costos.",
+    "orden_calculo": 94,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "utilidad_neta / ingreso_neto if ingreso_neto > 0 else 0",
+      "notas": "Fuente: Visión P&G fila 88."
+    },
+    "variables": [
+      { "nombre": "utilidad_neta", "tipo": "computed", "rubro_fuente": "utilidad_neta" },
+      { "nombre": "ingreso_neto", "tipo": "computed", "rubro_fuente": "ingreso_neto" }
+    ],
+    "dependencias": ["utilidad_neta", "ingreso_neto"],
+    "cadena": "todas"
+  }
+]

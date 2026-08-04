@@ -30,7 +30,8 @@
         "tasa_ica": 0.01,
         "tasa_gmf": 0.004,
         "interacciones_gestionadas_por_fte_promedio": 200,
-        "pct_examenes_anuales": 0.28
+        "pct_examenes_anuales": 0.28,
+        "ramp_up": [0.9, 0.95, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
     },
     "polizas": [
         {
@@ -1023,8 +1024,9 @@
                 "precio_mensual": 58471,
                 "es_precio_total": true,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 30
+                }
             },
             {
                 "descripcion": "Configuración Acceso SFTP 5gb",
@@ -1033,8 +1035,9 @@
                 "precio_mensual": 10000,
                 "es_precio_total": false,
                 "tipo": "Unico",
-                "perfil": 1,
-                "perfi2": 1
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 1
+                }
             },
             {
                 "descripcion": "Diadema JABRA EVOLVE 2020 ( Valor variable dado que cotizan en Dolares y acorde a la cantidad que se compre)",
@@ -1043,8 +1046,9 @@
                 "precio_mensual": 4998,
                 "es_precio_total": false,
                 "tipo": "Agente",
-                "perfil":  10,
-                "perfi2": 30
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 30
+                }
             },
             {
                 "descripcion": "Licencia EDR Sentinel One Enterprise",
@@ -1053,8 +1057,9 @@
                 "precio_mensual": 4612,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil":  10,
-                "perfi2": 30
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 32.9572
+                }
             },
             {
                 "descripcion": "Licencia Nestkope  (SWG filtro)",
@@ -1063,8 +1068,9 @@
                 "precio_mensual": 3621,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 32.9572
+                }
             },
             {
                 "descripcion": "Licencia Office 365 E3",
@@ -1073,8 +1079,9 @@
                 "precio_mensual": 95706,
                 "es_precio_total": false,
                 "tipo": "Operativo",
-                "perfil": 0,
-                "perfi2": 0
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 2.3571999999999997
+                }
             },
             {
                 "descripcion": "Soporte EDR Sentinel One Enterprise",
@@ -1083,8 +1090,9 @@
                 "precio_mensual": 752,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 32.9572
+                }
             },
             {
                 "descripcion": "Soporte Licencia Netskope (SWG filtro)",
@@ -1093,8 +1101,9 @@
                 "precio_mensual": 2440,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "valores_por_perfil": {
+                    "profile-hydrated-1-1785528677236": 32.9572
+                }
             }
         ]
     },

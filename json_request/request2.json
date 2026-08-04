@@ -24,7 +24,11 @@
             },
             {
                 "ciudad": "Medellín",
-                "proporcion": 0.6
+                "proporcion": 0.3
+            },
+            {
+                "ciudad": "Barranquilla",
+                "proporcion": 0.3
             }
         ],
         "tasa_ica": 0.01,
@@ -35,71 +39,83 @@
     "polizas": [
         {
             "nombre": "Póliza de Seriedad",
-            "activa": false,
+            "activa": true,
             "pct_poliza": 0.005,
             "pct_atribuible": 0.1,
-            "aplica_extension": false
+            "aplica_extension": true,
+            "meses_extension": 6
         },
         {
             "nombre": "Póliza de Cumplimiento",
-            "activa": false,
+            "activa": true,
             "pct_poliza": 0.0063,
             "pct_atribuible": 0.2,
-            "aplica_extension": false
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Póliza de Salarios",
             "activa": false,
             "pct_poliza": 0.0128,
-            "pct_atribuible": 0.1,
-            "aplica_extension": false
+            "pct_atribuible": 0.2,
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Póliza de Calidad",
             "activa": false,
             "pct_poliza": 0.0128,
             "pct_atribuible": 0.2,
-            "aplica_extension": false
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Póliza de RC cruzada",
             "activa": false,
             "pct_poliza": 0.0275,
-            "pct_atribuible": 0.4,
-            "aplica_extension": false
+            "pct_atribuible": 0.1,
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Póliza de IRF",
             "activa": true,
             "pct_poliza": 0.0275,
             "pct_atribuible": 0.1,
-            "aplica_extension": false
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Póliza de Responsabilidad",
             "activa": true,
             "pct_poliza": 0.0069,
             "pct_atribuible": 0.4,
-            "aplica_extension": false
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Comisión de Administración (1,18% sobre ventas Gcomercial-Operaciones)",
             "activa": true,
             "pct_poliza": 0.0118,
             "pct_atribuible": 0.1,
-            "aplica_extension": false
+            "aplica_extension": false,
+            "meses_extension": null
         },
         {
             "nombre": "Otros impuestos",
             "activa": false,
             "pct_poliza": 0.01,
-            "pct_atribuible": 0,
-            "aplica_extension": false
+            "pct_atribuible": 0.1,
+            "aplica_extension": false,
+            "meses_extension": null
         }
     ],
     "reglas_negocio": {
-        "margen_objetivo_cadena_a": 0.18,
-        "margen_objetivo_cadena_b": 0.3,
+        "margen_objetivo": {
+            "cadena_a": 0.18,
+            "cadena_b": 0.3,
+            "cadena_c": 0.1767
+        },
         "contingencia_operativa": {
             "valor": 0,
             "minimo": 0.01,
@@ -115,16 +131,17 @@
             "minimo": 0.02,
             "maximo": 0.08
         },
-        "descuento_volumen": 0,
-        "imprevistos": 0.1,
+        "descuento_volumen": {
+            "valor": 0,
+            "minimo": 0,
+            "maximo": 0.08
+        },
         "porcentaje_acumulado": {
             "actual": 0,
             "minimo": 0.12,
             "maximo": 0.15
         },
-        "margen_objetivo_cadena_c": 0.18,
-        "descuento_volumen_minimo": 0,
-        "descuento_volumen_maximo": 0.08
+        "imprevistos": 0.1
     },
     "volumetria": {
         "indexacion": {
@@ -151,7 +168,7 @@
                     }
                 },
                 {
-                    "canal": "Voz2",
+                    "canal": "Voz 2",
                     "cadena_a": {
                         "unidad": "FTE",
                         "valor": 30,
@@ -159,7 +176,7 @@
                     }
                 },
                 {
-                    "canal": "Voz3",
+                    "canal": "Voz 3",
                     "cadena_a": {
                         "unidad": "FTE",
                         "valor": 40,
@@ -188,8 +205,8 @@
         "canales_personalizados": {
             "inbound": [
                 "Voz 1",
-                "Voz2",
-                "Voz3"
+                "Voz 2",
+                "Voz 3"
             ],
             "outbound": [
                 "Outbound1"
@@ -205,7 +222,7 @@
             "componente_fijo": "FTE",
             "proporcion_componente_fijo": 1,
             "componente_variable": "",
-            "proporcion_componente_variable": 0
+            "proporcion_componente_variable": null
         },
         {
             "escenario": 2,
@@ -251,7 +268,7 @@
                     "items": [
                         {
                             "concepto": "Acceso a internet instalaciones Nexa",
-                            "costo": 45000,
+                            "costo": 6923.077,
                             "cantidad": 10,
                             "costo_totalizado": 1
                         },
@@ -264,7 +281,7 @@
                         {
                             "concepto": "Speech Analytics",
                             "costo": 250,
-                            "cantidad": 1020.2346000000001,
+                            "cantidad": 1020.2346,
                             "costo_totalizado": 0
                         },
                         {
@@ -294,7 +311,7 @@
             {
                 "nombre": "perfil2",
                 "modalidad": "Inbound",
-                "canal": "Voz2",
+                "canal": "Voz 2",
                 "fte": 30,
                 "cargos_adicionales": [],
                 "pct_presencia": 0.5,
@@ -319,7 +336,7 @@
                     "items": [
                         {
                             "concepto": "Acceso a internet instalaciones Nexa",
-                            "costo": 45000,
+                            "costo": 10384.615,
                             "cantidad": 15,
                             "costo_totalizado": 1
                         },
@@ -332,7 +349,7 @@
                         {
                             "concepto": "Speech Analytics",
                             "costo": 250,
-                            "cantidad": 3060.7038000000007,
+                            "cantidad": 3060.7038,
                             "costo_totalizado": 0
                         },
                         {
@@ -357,6 +374,74 @@
                     }
                 },
                 "vol_cadena_a_mensual": 30,
+                "no_payroll_mensual": 0
+            },
+            {
+                "nombre": "perfil3",
+                "modalidad": "Inbound",
+                "canal": "Voz 3",
+                "fte": 40,
+                "cargos_adicionales": [],
+                "pct_presencia": 1,
+                "salario_base": 1795000,
+                "comision_pct": 0,
+                "comision_mensual": 500000,
+                "estaciones_presenciales": 40,
+                "capacitacion": {
+                    "dias_capacitacion_perfil": 3,
+                    "incluye_costo_examenes_ingreso": false,
+                    "incluye_costo_examenes_rotacion": false,
+                    "incluye_costo_capacitacion_anual": false,
+                    "incluye_estudio_seguridad_ingreso": false,
+                    "incluye_estudio_seguridad_rotacion": false,
+                    "incluye_estudio_seguridad_final_ingreso": false,
+                    "incluye_estudio_seguridad_final_rotacion": false,
+                    "crucero_mensual": 8600,
+                    "incluye_capacitacion_inicial": false,
+                    "incluye_capacitacion_rotacion": false
+                },
+                "opex_fijo": {
+                    "items": [
+                        {
+                            "concepto": "Acceso a internet instalaciones Nexa",
+                            "costo": 27692.308,
+                            "cantidad": 40,
+                            "costo_totalizado": 1
+                        },
+                        {
+                            "concepto": "Worki",
+                            "costo": 18000,
+                            "cantidad": 40,
+                            "costo_totalizado": 0
+                        },
+                        {
+                            "concepto": "Speech Analytics",
+                            "costo": 250,
+                            "cantidad": 4080.9384,
+                            "costo_totalizado": 0
+                        },
+                        {
+                            "concepto": "Licencia Genesys Blending + Soporte + Reporte",
+                            "costo": 228950,
+                            "cantidad": 40,
+                            "costo_totalizado": 0
+                        },
+                        {
+                            "concepto": "Licencia Genesys Blending + Soporte + Reporte (Rotación)",
+                            "costo": 228950,
+                            "cantidad": 3.4,
+                            "costo_totalizado": 0
+                        }
+                    ],
+                    "staffing": {
+                        "calculo_horas_staffing": {
+                            "semanas_mes": 4.33,
+                            "horas_semanales": 42,
+                            "ausentismo_pago": 0.065
+                        }
+                    }
+                },
+                "vol_cadena_a_mensual": 40,
                 "no_payroll_mensual": 0
             }
         ],
@@ -388,77 +473,77 @@
             },
             {
                 "cargo": "Lider de Experiencia de Cliente y Performance",
-                "salario": 4999273,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Lider de Planeación Operativa",
-                "salario": 5475093,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Jefe de Operación",
-                "salario": 4336703,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Works force",
-                "salario": 2815026,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Reporting",
-                "salario": 2815026,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "GTR",
-                "salario": 1982883,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Analista Prof. De Selección (Inicial)",
-                "salario": 2873766,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Analista 1 de Reclutamiento (Inicial)",
-                "salario": 1906592,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Analista Prof. De Selección (Rotación)",
-                "salario": 2873766,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Analista 1 de Reclutamiento (Rotación)",
-                "salario": 1906592,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Analista 2 Service Desk",
-                "salario": 2228145,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Formadores",
-                "salario": 2057790,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Monitor de Calidad",
-                "salario": 2149179,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Supervisor",
-                "salario": 3090990,
-                "comision": 700000
+                "salario": 0,
+                "comision": 0
             },
             {
                 "cargo": "Validador",
-                "salario": 1750905,
+                "salario": 0,
                 "comision": 0
             },
             {
@@ -468,17 +553,17 @@
             },
             {
                 "cargo": "Aprendiz SENA",
-                "salario": 1750905,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Inclusión",
-                "salario": 1750905,
+                "salario": 0,
                 "comision": 0
             },
             {
                 "cargo": "Especialista de Proyectos",
-                "salario": 5405152,
+                "salario": 0,
                 "comision": 0
             }
         ],
@@ -504,6 +589,12 @@
                             "ratio": "750",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "750",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -523,6 +614,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "1200",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "1200",
                             "personalizado": "",
                             "gtr_horas": null
@@ -548,6 +645,12 @@
                             "ratio": "800",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "800",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -567,6 +670,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "400",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "400",
                             "personalizado": "",
                             "gtr_horas": null
@@ -592,6 +701,12 @@
                             "ratio": "1000",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "1000",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -611,6 +726,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "1000",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "1000",
                             "personalizado": "",
                             "gtr_horas": null
@@ -636,6 +757,12 @@
                             "ratio": "1000",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "1000",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -655,6 +782,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "165",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "165",
                             "personalizado": "",
                             "gtr_horas": null
@@ -680,6 +813,12 @@
                             "ratio": "300",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "300",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -702,6 +841,12 @@
                             "ratio": "300",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "300",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -715,13 +860,19 @@
                     "por_perfil": [
                         {
                             "indice_perfil": 0,
-                            "ratio": "8",
+                            "ratio": "120",
                             "personalizado": "",
                             "gtr_horas": "8"
                         },
                         {
                             "indice_perfil": 1,
-                            "ratio": "8",
+                            "ratio": "120",
+                            "personalizado": "",
+                            "gtr_horas": "8"
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "120",
                             "personalizado": "",
                             "gtr_horas": "8"
                         }
@@ -743,6 +894,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "55",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "55",
                             "personalizado": "",
                             "gtr_horas": null
@@ -768,6 +925,12 @@
                             "ratio": "110",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "110",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -787,6 +950,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "55",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "55",
                             "personalizado": "",
                             "gtr_horas": null
@@ -812,6 +981,12 @@
                             "ratio": "110",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "110",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -831,6 +1006,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "370",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "370",
                             "personalizado": "",
                             "gtr_horas": null
@@ -856,6 +1037,12 @@
                             "ratio": "70",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "70",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -875,6 +1062,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "70",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "70",
                             "personalizado": "",
                             "gtr_horas": null
@@ -900,6 +1093,12 @@
                             "ratio": "20",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "20",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -919,6 +1118,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "1",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "1",
                             "personalizado": "",
                             "gtr_horas": null
@@ -944,6 +1149,12 @@
                             "ratio": "50",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "50",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -963,6 +1174,12 @@
                         },
                         {
                             "indice_perfil": 1,
+                            "ratio": "20",
+                            "personalizado": "",
+                            "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
                             "ratio": "20",
                             "personalizado": "",
                             "gtr_horas": null
@@ -988,6 +1205,12 @@
                             "ratio": "100",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "100",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 },
@@ -1010,6 +1233,12 @@
                             "ratio": "0",
                             "personalizado": "",
                             "gtr_horas": null
+                        },
+                        {
+                            "indice_perfil": 2,
+                            "ratio": "0",
+                            "personalizado": "",
+                            "gtr_horas": null
                         }
                     ]
                 }
@@ -1023,8 +1252,9 @@
                 "precio_mensual": 58471,
                 "es_precio_total": true,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "perfil1": 10,
+                "perfil2": 30,
+                "perfil3": 40
             },
             {
                 "descripcion": "Configuración Acceso SFTP 5gb",
@@ -1033,8 +1263,9 @@
                 "precio_mensual": 10000,
                 "es_precio_total": false,
                 "tipo": "Unico",
-                "perfil": 1,
-                "perfi2": 1
+                "perfil1": 1,
+                "perfil2": 1,
+                "perfil3": 1
             },
             {
                 "descripcion": "Diadema JABRA EVOLVE 2020 ( Valor variable dado que cotizan en Dolares y acorde a la cantidad que se compre)",
@@ -1043,8 +1274,9 @@
                 "precio_mensual": 4998,
                 "es_precio_total": false,
                 "tipo": "Agente",
-                "perfil":  10,
-                "perfi2": 30
+                "perfil1": 10,
+                "perfil2": 30,
+                "perfil3": 40
             },
             {
                 "descripcion": "Licencia EDR Sentinel One Enterprise",
@@ -1053,8 +1285,9 @@
                 "precio_mensual": 4612,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil":  10,
-                "perfi2": 30
+                "perfil1": 10,
+                "perfil2": 30,
+                "perfil3": 40
             },
             {
                 "descripcion": "Licencia Nestkope  (SWG filtro)",
@@ -1063,18 +1296,20 @@
                 "precio_mensual": 3621,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "perfil1": 10,
+                "perfil2": 30,
+                "perfil3": 40
             },
-            {
+			{
                 "descripcion": "Licencia Office 365 E3",
                 "precio_compra": 95706,
                 "meses_diferimiento": 1,
                 "precio_mensual": 95706,
                 "es_precio_total": false,
                 "tipo": "Operativo",
-                "perfil": 0,
-                "perfi2": 0
+                "perfil1": 0,
+                "perfil2": 0,
+                "perfil3": 0
             },
             {
                 "descripcion": "Soporte EDR Sentinel One Enterprise",
@@ -1083,18 +1318,20 @@
                 "precio_mensual": 752,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "perfil1": 10,
+                "perfil2": 30,
+                "perfil3": 40
             },
-            {
+			{
                 "descripcion": "Soporte Licencia Netskope (SWG filtro)",
                 "precio_compra": 2440,
                 "meses_diferimiento": 1,
                 "precio_mensual": 2440,
                 "es_precio_total": false,
                 "tipo": "Operativo;Agente",
-                "perfil": 10,
-                "perfi2": 30
+                "perfil1": 10,
+                "perfil2": 30,
+                "perfil3": 40
             }
         ]
     },

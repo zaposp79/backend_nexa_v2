@@ -211,12 +211,112 @@ def _apply_row_to_contract(row: Dict[str, Any], periods: list[Dict[str, Any]], t
     _assign_nested(totales, total_path, acumulado)
 
 
+def _build_from_v2_result(
+    result_doc: Dict[str, Any],
+    simulation_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Construye el contrato de pantalla desde un resultado del Motor de Reglas (v2).
+
+    El doc v2 almacena 'meses' (lista de {mes, valores}) y 'totales' (dict plano).
+    Los mapea al mismo contrato periódico que el endpoint v1 expone.
+    """
+    meses_data = result_doc.get("meses", [])
+    totales_vals: Dict[str, Any] = result_doc.get("totales", {})
+
+    periods = []
+    for m in meses_data:
+        mes_num = m.get("mes", len(periods) + 1)
+        vals: Dict[str, Any] = m.get("valores", {})
+        periods.append({
+            "index": mes_num,
+            "label": f"Mes {mes_num}",
+            "periodo": mes_num,
+            "ingresos": {
+                "ingreso_bruto": vals.get("ingreso_bruto"),
+                "ingreso_neto": vals.get("ingreso_neto"),
+            },
+            "costos": {
+                "cadena_a": {
+                    "payroll": vals.get("nomina_total_mensual"),
+                    "no_payroll": vals.get("no_payroll_total_mensual"),
+                    "total_cadena_a": vals.get("costo_cadena_a"),
+                },
+                "cadena_b": {},
+                "cadena_c": {},
+                "componente_financiero": {
+                    "ica": vals.get("ica_mensual"),
+                    "gmf": vals.get("gmf_mensual"),
+                    "total_componente_financiero": vals.get("componente_financiero_total"),
+                },
+            },
+            "utilidad": {
+                "contribucion": vals.get("contribucion"),
+                "porcentaje_contribucion": vals.get("pct_contribucion"),
+                "utilidad_neta": vals.get("utilidad_neta"),
+                "porcentaje_utilidad_neta": vals.get("pct_utilidad_neta"),
+            },
+            "operativo": {},
+        })
+
+    totales = {
+        "ingresos": {
+            "ingreso_bruto": totales_vals.get("ingreso_bruto"),
+            "ingreso_neto": totales_vals.get("ingreso_neto"),
+        },
+        "costos": {
+            "cadena_a": {
+                "payroll": totales_vals.get("nomina_total_mensual"),
+                "no_payroll": totales_vals.get("no_payroll_total_mensual"),
+                "total_cadena_a": totales_vals.get("costo_cadena_a"),
+            },
+            "cadena_b": {},
+            "cadena_c": {},
+            "componente_financiero": {
+                "ica": totales_vals.get("ica_mensual"),
+                "gmf": totales_vals.get("gmf_mensual"),
+                "total_componente_financiero": totales_vals.get("componente_financiero_total"),
+            },
+        },
+        "utilidad": {
+            "contribucion": totales_vals.get("contribucion"),
+            "porcentaje_contribucion": totales_vals.get("pct_contribucion"),
+            "utilidad_neta": totales_vals.get("utilidad_neta"),
+            "porcentaje_utilidad_neta": totales_vals.get("pct_utilidad_neta"),
+        },
+        "operativo": {},
+    }
+
+    response = {
+        "version": "v2",
+        "simulation_id": simulation_id or result_doc.get("simulation_id"),
+        "header": {
+            "cliente": result_doc.get("cliente"),
+            "servicio": result_doc.get("servicio"),
+            "duracion_meses": result_doc.get("duracion_meses"),
+        },
+        "periods": periods,
+        "totales": totales,
+        "metadata": {
+            "source": "motor_de_reglas_v2",
+            "omitted_empty_fields": True,
+        },
+    }
+    return _prune_empty(response) or {}
+
+
 def build_vision_pyg_from_result(
     pricing_result_dict: Optional[Dict[str, Any]],
     simulation_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Build the public period-centric vision_pyg contract from persisted data."""
-    vp_data = (pricing_result_dict or {}).get("vision_pyg") or {}
+    doc = pricing_result_dict or {}
+
+    # Motor de Reglas v2: estructura diferente (meses + totales planos)
+    if doc.get("version") == "v2":
+        return _build_from_v2_result(doc, simulation_id=simulation_id)
+
+    # V1: vision_pyg con filas/secciones/fechas_meses
+    vp_data = doc.get("vision_pyg") or {}
 
     periods = _build_periods(vp_data)
     totales = _build_totales()

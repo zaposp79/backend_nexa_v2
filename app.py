@@ -77,6 +77,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .modules.api_v1.router import router as v1_router
+from .modules.api_v2.router import router as v2_router
 from .db.container import build_container
 # IMPORTANTE: importar por 'nexa_engine.*' (no '.modules.*'). El alias nexa_engine
 # carga estos módulos como objetos distintos de backend_nexa_v2.*, por lo que las
@@ -371,6 +372,10 @@ def create_app(settings: AppSettings | None = None) -> FastAPI:
     fastapi_app.include_router(
         v1_router,
         prefix=f"/{resolved.api_prefix}/{resolved.api_version}",
+    )
+    fastapi_app.include_router(
+        v2_router,
+        prefix="/api/v2",
     )
 
     if resolved.docs_enabled:

@@ -58,18 +58,19 @@ class ResultsRepository:
     def get(self, result_id: str) -> Dict[str, Any]:
         """Retorna el resultado o lanza NotFoundError.
 
-        Filtra por type='results' y id (cross-partition).
+        Busca primero type='results' (v1), luego type='results_v2' (Motor de Reglas).
         """
-        docs, _ = self._store.query(
-            _COLLECTION, {"type": "results", "id": result_id}
-        )
+        docs, _ = self._store.query(_COLLECTION, {"type": "results", "id": result_id})
+        if not docs:
+            docs, _ = self._store.query(_COLLECTION, {"type": "results_v2", "id": result_id})
         if not docs:
             raise NotFoundError("PricingResult", result_id)
         doc = docs[0]
         return {k: v for k, v in doc.items() if k not in _INTERNAL_FIELDS}
 
     def exists(self, result_id: str) -> bool:
-        docs, _ = self._store.query(
-            _COLLECTION, {"type": "results", "id": result_id}
-        )
+        docs, _ = self._store.query(_COLLECTION, {"type": "results", "id": result_id})
+        if docs:
+            return True
+        docs, _ = self._store.query(_COLLECTION, {"type": "results_v2", "id": result_id})
         return bool(docs)
