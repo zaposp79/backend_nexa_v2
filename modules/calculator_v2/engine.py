@@ -376,8 +376,28 @@ class MotorDeReglas:
         ica_pricing = (N / factor_margen) * tasa_ica
         gmf_pricing = N * tasa_gmf
 
-        # Paso 4: numerador = N + ICA + GMF; denominador con contingencias completas
-        numerador = N + ica_pricing + gmf_pricing
+        # Paso 3b: costo amortizado de meses de extensión más allá del contrato
+        # Excel V2-8: 'Hoja Maestra Escenarios'!C264 — SUMPRODUCT sobre todos los meses (1..ext)
+        # divide por meses_proyecto; los meses de extensión elevan el promedio de pólizas.
+        pol_ext_amortized = 0.0
+        if for_pricing:
+            duracion_total = int(ctx.get("meses_proyecto", 10)) or 10
+            for p in polizas_activas:
+                if "comisi" in str(p.get("nombre", "")).lower():
+                    continue
+                if not p.get("aplica_extension", False):
+                    continue
+                ext_meses = int(p.get("meses_extension", 0)) or 0
+                extra_meses = max(0, ext_meses - duracion_total)
+                if extra_meses <= 0:
+                    continue
+                pct_ext = float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                pol_ext_amortized += extra_meses * base_ingreso * pct_ext
+            if duracion_total > 0:
+                pol_ext_amortized /= duracion_total
+
+        # Paso 4: numerador = N + ICA + GMF + costo extensión amortizado
+        numerador = N + ica_pricing + gmf_pricing + pol_ext_amortized
         denominador = factor_margen * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento)
         if denominador <= 0:
             return 0.0, {}
