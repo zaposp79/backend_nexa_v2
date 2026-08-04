@@ -214,6 +214,93 @@ def _to_list_item(doc: dict) -> SimulationDraftListItem:
     )
 
 
+def _migrate_reglas_negocio(reglas: dict | None) -> dict | None:
+    """Normaliza reglas_negocio al formato actual en tiempo de lectura.
+
+    Migra documentos legacy guardados con estructura plana:
+      margen_objetivo_cadena_a/b/c  →  margen_objetivo: {cadena_a, cadena_b, cadena_c}
+      descuento_volumen (float)     →  descuento_volumen: {valor, minimo, maximo}
+    """
+    if not reglas:
+        return reglas
+
+    result = dict(reglas)
+
+    # margen_objetivo flat → nested
+    if "margen_objetivo" not in result:
+        cadena_a = result.pop("margen_objetivo_cadena_a", None)
+        cadena_b = result.pop("margen_objetivo_cadena_b", None)
+        cadena_c = result.pop("margen_objetivo_cadena_c", None)
+        margen: dict = {}
+        if cadena_a is not None:
+            margen["cadena_a"] = cadena_a
+        if cadena_b is not None:
+            margen["cadena_b"] = cadena_b
+        if cadena_c is not None:
+            margen["cadena_c"] = cadena_c
+        if margen:
+            result["margen_objetivo"] = margen
+    else:
+        result.pop("margen_objetivo_cadena_a", None)
+        result.pop("margen_objetivo_cadena_b", None)
+        result.pop("margen_objetivo_cadena_c", None)
+
+    # descuento_volumen float → ValorMinMax
+    descuento = result.get("descuento_volumen")
+    if isinstance(descuento, (int, float)):
+        minimo = result.pop("descuento_volumen_minimo", 0)
+        maximo = result.pop("descuento_volumen_maximo", 0.08)
+        result["descuento_volumen"] = {
+            "valor": float(descuento),
+            "minimo": float(minimo),
+            "maximo": float(maximo),
+        }
+    else:
+        result.pop("descuento_volumen_minimo", None)
+        result.pop("descuento_volumen_maximo", None)
+
+    return result
+
+
+def _migrate_inversion(inv: dict) -> dict:
+    """Normaliza una inversión con perfil1/2/N planos → por_perfil array."""
+    if "por_perfil" in inv:
+        return inv
+
+    result = {k: v for k, v in inv.items() if not k.startswith("perfil")}
+    por_perfil = []
+    i = 1
+    while True:
+        key = f"perfil{i}"
+        if key not in inv:
+            break
+        por_perfil.append({
+            "indice_perfil": i - 1,
+            "valor": inv[key],
+            "nombre": key,
+        })
+        i += 1
+
+    if por_perfil:
+        result["por_perfil"] = por_perfil
+    return result
+
+
+def _migrate_condiciones_cadena_a(cadena_a: dict | None) -> dict | None:
+    """Normaliza inversiones dentro de condiciones_cadena_a al formato por_perfil."""
+    if not cadena_a:
+        return cadena_a
+
+    inversiones = cadena_a.get("inversiones")
+    if not isinstance(inversiones, list):
+        return cadena_a
+
+    return {
+        **cadena_a,
+        "inversiones": [_migrate_inversion(inv) for inv in inversiones],
+    }
+
+
 def _to_response(doc: dict) -> SimulationDraftResponse:
     return SimulationDraftResponse.model_validate({
         "id": doc["id"],
@@ -228,10 +315,10 @@ def _to_response(doc: dict) -> SimulationDraftResponse:
         "updated_at": doc.get("updated_at", ""),
         "datos_operativos": doc.get("datos_operativos"),
         "polizas": doc.get("polizas"),
-        "reglas_negocio": doc.get("reglas_negocio"),
+        "reglas_negocio": _migrate_reglas_negocio(doc.get("reglas_negocio")),
         "volumetria": doc.get("volumetria"),
         "escenarios_comerciales": doc.get("escenarios_comerciales"),
-        "condiciones_cadena_a": doc.get("condiciones_cadena_a"),
+        "condiciones_cadena_a": _migrate_condiciones_cadena_a(doc.get("condiciones_cadena_a")),
         "condiciones_cadena_b": doc.get("condiciones_cadena_b"),
         "condiciones_cadena_c": doc.get("condiciones_cadena_c"),
     })
