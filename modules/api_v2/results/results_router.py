@@ -2,6 +2,7 @@
 GET endpoints para resultados de simulación v2.
 
 GET /api/v2/simulation/{simulation_id}/results/vision-pyg
+GET /api/v2/simulation/{simulation_id}/results/vision-cost-to-serve
 """
 from __future__ import annotations
 
@@ -49,5 +50,46 @@ async def get_vision_pyg_v2(
             "calculated_at": doc.get("calculated_at"),
             "vision_pyg": doc.get("vision_pyg", {}),
             "totales": doc.get("totales", {}),
+        }
+    )
+
+
+@router.get(
+    "/{simulation_id}/results/vision-cost-to-serve",
+    response_model=ApiResponse,
+    summary="Visión Cost-to-Serve de una simulación v2",
+    operation_id="getVisionCostToServeV2",
+)
+async def get_vision_cost_to_serve_v2(
+    request: Request,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+) -> ApiResponse:
+    """Retorna la Visión Cost-to-Serve de una simulación v2 previamente calculada."""
+    container = request.app.state.container
+    repo = V2SimulationResultsRepository(container.configuration_store)
+
+    try:
+        doc = repo.get(simulation_id)
+    except NotFoundError:
+        return ApiResponse.fail(
+            "SIM-00601",
+            message=f"Simulación v2 no encontrada: {simulation_id}",
+        )
+
+    vision_cts = doc.get("vision_cts")
+    if not vision_cts:
+        return ApiResponse.fail(
+            "SIM-00602",
+            message="Esta simulación no contiene Visión Cost-to-Serve. Recalcule con la versión actual del motor.",
+        )
+
+    return ApiResponse.ok(
+        data={
+            "simulation_id": simulation_id,
+            "cliente": doc.get("cliente"),
+            "servicio": doc.get("servicio"),
+            "duracion_meses": doc.get("duracion_meses"),
+            "calculated_at": doc.get("calculated_at"),
+            "vision_cts": vision_cts,
         }
     )

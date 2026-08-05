@@ -23,8 +23,9 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from .context_builder import build_base_context
+from .cts_calculator import CTSCalculator
 from .formula_evaluator import evaluate_formula
-from .models import ResultadoMes, RubroMaestro, SimulationResultV2, VisionPyG
+from .models import PerfilCTS, ResultadoMes, RubroMaestro, SimulationResultV2, VisionCostToServe, VisionPyG
 from .no_payroll_calculator import NoPayrollCalculator
 from .nomina_calculator import NominaCalculator
 from .rubros_repository import RubrosRepository
@@ -119,7 +120,8 @@ class MotorDeReglas:
         # Pre-computar valores aggregated que no cambian mes a mes
         nomina_fija = NominaCalculator(request_data).calcular()
         ciudad = datos_op.get("ciudad", "")
-        costo_fijo_estacion = self._repo.get_hr_costo_fijo_estacion(ciudad)
+        sede = datos_op.get("sede", "")
+        costo_fijo_estacion = self._repo.get_hr_costo_fijo_estacion(ciudad, localidad=sede)
         no_payroll_fijo = NoPayrollCalculator(request_data, costo_fijo_estacion).calcular()
 
         # Ramp-up desde HR-Campaña (prioridad sobre request.datos_operativos.ramp_up)
@@ -234,6 +236,30 @@ class MotorDeReglas:
         totales = self._calcular_totales(resultados_por_mes)
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
+        # Componentes financieros base (100% ramp, sin IPC, for_pricing=False)
+        # Excel V2-8: 'Visión Cost To Serve' — usa los mismos componentes del HM
+        _, componentes_base = self._compute_ingreso_cadena_a_hm(
+            nomina_fija + no_payroll_fijo, _ctx_base, for_pricing=False
+        )
+        ica_b = componentes_base.get("ica_hm", 0.0)
+        gmf_b = componentes_base.get("gmf_hm", 0.0)
+        com_b = componentes_base.get("comision_admin_hm", 0.0)
+        pol_b = componentes_base.get("polizas_puras_hm", 0.0)
+        # Estructura R69 del Excel P&G (componente_financiero_total)
+        pol_adicionales = ica_b + gmf_b + com_b + pol_b
+        componente_financiero_base = ica_b + gmf_b + com_b + pol_adicionales
+
+        vision_cts = self._construir_vision_cts(
+            request_data=request_data,
+            costo_fijo_estacion=costo_fijo_estacion,
+            ctx_base=_ctx_base,
+            nomina_base=nomina_fija,
+            no_payroll_base=no_payroll_fijo,
+            ingreso_base=ingreso_cadena_a_base,
+            componente_financiero_base=componente_financiero_base,
+            totales=totales,
+        )
+
         return SimulationResultV2(
             simulation_id=simulation_id,
             cliente=datos_op.get("cliente"),
@@ -242,6 +268,7 @@ class MotorDeReglas:
             meses=resultados_por_mes,
             totales=totales,
             vision_pyg=vision,
+            vision_cts=vision_cts,
         )
 
     # ── Evaluación por tipo ────────────────────────────────────────────────
@@ -409,6 +436,70 @@ class MotorDeReglas:
             "polizas_puras_hm": pol_pricing,
         }
         return numerador / denominador, componentes_hm
+
+    # ── Visión Cost-to-Serve ───────────────────────────────────────────────
+
+    def _construir_vision_cts(
+        self,
+        request_data: Dict[str, Any],
+        costo_fijo_estacion: float,
+        ctx_base: Dict[str, Any],
+        nomina_base: float,
+        no_payroll_base: float,
+        ingreso_base: float,
+        componente_financiero_base: float,
+        totales: Dict[str, float],
+    ) -> Optional[VisionCostToServe]:
+        """Construye la Visión Cost-to-Serve.
+
+        # Excel V2-8: 'Visión Cost To Serve' — Economics + por Cadena + por Perfil
+        # Los valores se calculan a capacidad plena (100% ramp, sin IPC):
+        #   - payroll y no_payroll provienen de NominaCalculator / NoPayrollCalculator al 100%
+        #   - financiero es el componente_financiero_total (estructura R69 del P&G) asignado
+        #     proporcionalmente a costo_directo por perfil
+        #   - ingreso_base es el ingreso HM (for_pricing=True) a 100%
+        """
+        try:
+            margen = float(ctx_base.get("margen_a", 0.18))
+            fte_total = int(ctx_base.get("fte_total_cadena_a", 0))
+
+            cts_calc = CTSCalculator(request_data, costo_fijo_estacion)
+            perfiles_raw = cts_calc.calcular(margen, componente_financiero_base)
+
+            if not perfiles_raw:
+                return None
+
+            perfiles_cts = [PerfilCTS(**p) for p in perfiles_raw]
+
+            payroll_total = sum(p.payroll for p in perfiles_cts)
+            no_payroll_total = sum(p.no_payroll for p in perfiles_cts)
+            costo_directo_total = sum(p.costo_directo for p in perfiles_cts)
+            financiero_total = sum(p.financiero for p in perfiles_cts)
+            cts_total = costo_directo_total + financiero_total
+
+            fte_safe = max(fte_total, 1)
+
+            return VisionCostToServe(
+                cts_mensual=round(cts_total, 2),
+                ingreso_mensual=round(ingreso_base, 2),
+                margen=margen,
+                valor_total_contrato=round(totales.get("ingreso_bruto", 0.0), 2),
+                n_fte_total=fte_total,
+                payroll_total=round(payroll_total, 2),
+                no_payroll_total=round(no_payroll_total, 2),
+                costo_directo_total=round(costo_directo_total, 2),
+                financiero_total=round(financiero_total, 2),
+                cts_total=round(cts_total, 2),
+                payroll_por_fte=round(payroll_total / fte_safe, 2),
+                no_payroll_por_fte=round(no_payroll_total / fte_safe, 2),
+                costo_directo_por_fte=round(costo_directo_total / fte_safe, 2),
+                financiero_por_fte=round(financiero_total / fte_safe, 2),
+                cts_por_fte=round(cts_total / fte_safe, 2),
+                perfiles=perfiles_cts,
+            )
+        except Exception as exc:
+            logger.warning("[motor-reglas] Error construyendo VisionCostToServe: %s", exc)
+            return None
 
     # ── Agregación post-cálculo ────────────────────────────────────────────
 

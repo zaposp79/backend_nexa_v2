@@ -109,8 +109,14 @@ class RubrosRepository:
         logger.info("[v2] OP IPC rates cargadas: %s", rates)
         return rates
 
-    def get_hr_costo_fijo_estacion(self, ciudad: str) -> float:
-        """Suma de costos fijos por estación para la ciudad del deal (de HR activa)."""
+    def get_hr_costo_fijo_estacion(self, ciudad: str, localidad: str = "") -> float:
+        """Suma de costos fijos por estación para la ciudad/localidad del deal (de HR activa).
+
+        Filtra primero por ciudad + localidad (sede); si no hay coincidencias exactas
+        (localidad vacía o no configurada en HR), cae back a ciudad sola.
+        Esto evita sumar costos de TODAS las localidades de una ciudad cuando el HR
+        tiene múltiples localidades por ciudad (ej. Bogotá/Toberín, Bogotá/Chapinero).
+        """
         try:
             docs, _ = self._store.query(_COLLECTION, {"domain": "hr"})
         except Exception as exc:
@@ -124,10 +130,26 @@ class RubrosRepository:
 
         cf_lista = active.get("payload", {}).get("costo_fijo", [])
         ciudad_lower = str(ciudad).strip().lower()
+        localidad_lower = str(localidad).strip().lower()
+
+        # Intento 1: filtrar por ciudad + localidad (más específico)
+        if localidad_lower:
+            rows_localidad = [
+                r for r in cf_lista
+                if str(r.get("ciudad", "")).strip().lower() == ciudad_lower
+                and str(r.get("localidad", "")).strip().lower() == localidad_lower
+            ]
+            if rows_localidad:
+                total = sum(float(r.get("valor", 0)) for r in rows_localidad)
+                logger.info("[v2] HR costo_fijo_estacion '%s/%s' = %.2f", ciudad, localidad, total)
+                return total
+            logger.warning("[v2] No hay costo_fijo para '%s/%s' en HR — fallback a ciudad sola", ciudad, localidad)
+
+        # Intento 2: fallback a ciudad sola (suma todas las localidades)
         total = sum(
             float(r.get("valor", 0))
             for r in cf_lista
             if str(r.get("ciudad", "")).strip().lower() == ciudad_lower
         )
-        logger.info("[v2] HR costo_fijo_estacion '%s' = %.2f", ciudad, total)
+        logger.info("[v2] HR costo_fijo_estacion '%s' (ciudad sola) = %.2f", ciudad, total)
         return total

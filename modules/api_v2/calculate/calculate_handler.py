@@ -59,6 +59,7 @@ def handle_calculate_v2(
         "servicio": result.servicio,
         "duracion_meses": result.duracion_meses,
         "vision_pyg": result.vision_pyg.model_dump(),
+        "vision_cts": result.vision_cts.model_dump() if result.vision_cts else None,
         "meses": [m.model_dump() for m in result.meses],
         "totales": result.totales,
     }
