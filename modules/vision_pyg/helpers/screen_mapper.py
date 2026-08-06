@@ -255,7 +255,9 @@ def _build_from_v2_result(
                 "utilidad_neta": vals.get("utilidad_neta"),
                 "porcentaje_utilidad_neta": vals.get("pct_utilidad_neta"),
             },
-            "operativo": {},
+            "operativo": {
+                "ramp_up": vals.get("ramp_up_mes"),
+            },
         })
 
     totales = {

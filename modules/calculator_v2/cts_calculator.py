@@ -34,14 +34,17 @@ class CTSCalculator:
         self,
         margen: float,
         componente_financiero_total: float,
+        nomina_base: float = 0.0,
     ) -> List[Dict[str, Any]]:
         """Desglose CTS por perfil.
 
         Args:
             margen: Margen objetivo Cadena A (ej. 0.18).
-            componente_financiero_total: Total del componente financiero del deal
-                (ICA + GMF + Comisión + Pólizas adicionales, con la estructura R69
-                del Excel P&G). Se asigna por perfil proporcional a costo_directo.
+            componente_financiero_total: ICA + GMF + Comisión + Pólizas (una vez cada uno).
+                Se asigna por perfil proporcional a costo_directo.
+            nomina_base: Nómina total del NominaCalculator (incluye agentes + staff ratios).
+                Permite distribuir el overhead de supervisores/coordinadores por FTE.
+                Si es 0, se usa solo costo_empresa_agente (sin overhead de ratios).
 
         Returns:
             Lista de dicts con CTS desglosado por perfil.
@@ -51,6 +54,30 @@ class CTSCalculator:
             return []
 
         inversiones_por_perfil = self._inversiones_por_perfil(n)
+
+        # Overhead de staff ratios por FTE (supervisores, coordinadores, directores)
+        # Excel V2-8 CTS F173: Costo Empresa Agente Básico (sin ratios staff)
+        # Excel V2-8 CTS F139: Nomina Loaded = costo_empresa + ratios_overhead × FTE
+        total_costo_empresa_agentes = sum(
+            calcular_costo_empresa(float(p.get("salario_base", 0)), float(p.get("comision_mensual", 0)))
+            * float(p.get("fte", 0))
+            for p in self._perfiles
+        )
+        fte_total = sum(float(p.get("fte", 0)) for p in self._perfiles)
+        # nomina_base (de NominaCalculator) incluye crucero; hay que excluirlo antes de calcular
+        # el overhead de staff ratios, porque crucero se suma por separado a cada perfil.
+        # Excel V2-8 CTS F139: Nomina Loaded = costo_empresa_agente + staff_overhead (sin crucero)
+        # Excel V2-8 CTS F138: Payroll = Nomina Loaded + Crucero
+        total_crucero = sum(
+            float(p.get("capacitacion", {}).get("crucero_mensual", 0)) * float(p.get("fte", 0))
+            for p in self._perfiles
+        )
+        nomina_sin_crucero = max(0.0, nomina_base - total_crucero)
+        overhead_per_fte = (
+            (nomina_sin_crucero - total_costo_empresa_agentes) / max(fte_total, 1)
+            if nomina_sin_crucero > total_costo_empresa_agentes
+            else 0.0
+        )
 
         # Primera pasada: payroll + no_payroll + costo_directo por perfil
         perfiles_cts: List[Dict] = []
@@ -64,8 +91,9 @@ class CTSCalculator:
 
             costo_fte = calcular_costo_empresa(salario, comision)
             salario_cargado = costo_fte * fte
+            nomina_loaded = salario_cargado + overhead_per_fte * fte
             crucero = crucero_unit * fte
-            payroll = salario_cargado + crucero
+            payroll = nomina_loaded + crucero
 
             opex_items = perfil.get("opex_fijo", {}).get("items", [])
             opex_it = sum(self._valor_item(item) for item in opex_items)

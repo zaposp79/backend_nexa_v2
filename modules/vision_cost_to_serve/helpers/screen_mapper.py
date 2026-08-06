@@ -247,9 +247,102 @@ def _charts(result: Dict[str, Any], has_risk: bool) -> Dict[str, Any]:
     return charts
 
 
+def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
+    """Construye el contrato de pantalla CTS desde un resultado del Motor de Reglas (v2)."""
+    simulation_id = result.get("simulation_id")
+    vision_cts: Dict[str, Any] = result.get("vision_cts") or {}
+    perfiles: List[Dict[str, Any]] = vision_cts.get("perfiles") or []
+
+    header = {
+        "cliente": result.get("cliente"),
+        "servicio": result.get("servicio"),
+        "duracion_meses": result.get("duracion_meses"),
+    }
+
+    summary_cards = [
+        {
+            "key": "ingreso",
+            "label": "Ingreso",
+            "value": vision_cts.get("ingreso_mensual", 0.0),
+            "format": "currency",
+        },
+        {
+            "key": "costo",
+            "label": "CTS Mensual",
+            "value": vision_cts.get("cts_mensual", 0.0),
+            "format": "currency",
+        },
+        {
+            "key": "margen",
+            "label": "Margen",
+            "value": vision_cts.get("margen", 0.0),
+            "format": "percent",
+        },
+        {
+            "key": "cts",
+            "label": "CTS por FTE",
+            "value": vision_cts.get("cts_por_fte", 0.0),
+            "format": "currency",
+        },
+        {
+            "key": "valor_contrato",
+            "label": "Valor Total Contrato",
+            "value": vision_cts.get("valor_total_contrato", 0.0),
+            "format": "currency",
+        },
+    ]
+
+    sections = [
+        {
+            "key": "totales",
+            "label": "Totales Cadena A",
+            "source": "vision_cts",
+            "items": [
+                {
+                    "n_fte_total": vision_cts.get("n_fte_total"),
+                    "payroll_total": vision_cts.get("payroll_total"),
+                    "no_payroll_total": vision_cts.get("no_payroll_total"),
+                    "costo_directo_total": vision_cts.get("costo_directo_total"),
+                    "financiero_total": vision_cts.get("financiero_total"),
+                    "cts_total": vision_cts.get("cts_total"),
+                    "payroll_por_fte": vision_cts.get("payroll_por_fte"),
+                    "no_payroll_por_fte": vision_cts.get("no_payroll_por_fte"),
+                    "costo_directo_por_fte": vision_cts.get("costo_directo_por_fte"),
+                    "financiero_por_fte": vision_cts.get("financiero_por_fte"),
+                    "cts_por_fte": vision_cts.get("cts_por_fte"),
+                }
+            ],
+        },
+        {
+            "key": "perfiles",
+            "label": "Desglose por Perfil",
+            "source": "vision_cts.perfiles",
+            "items": perfiles,
+        },
+    ]
+
+    return {
+        "version": "v2",
+        "simulation_id": simulation_id,
+        "header": header,
+        "summary_cards": summary_cards,
+        "sections": sections,
+        "charts": {"gaps": [], "data_status": {"available_charts": 0, "missing_charts": 0}},
+        "metadata": {
+            "source": "motor_de_reglas_v2",
+            "missing_fields": [],
+        },
+    }
+
+
 def build_vision_cts_from_result(pricing_result_dict: dict) -> dict:
     """Build screen-ready CTS contract from persisted pricing_result."""
     result = pricing_result_dict or {}
+
+    # Motor de Reglas v2: estructura diferente (vision_cts directo)
+    if result.get("version") == "v2":
+        return _build_from_v2_result(result)
+
     simulation_id = result.get("simulation_id")
     has_risk = bool(result.get("evaluacion_riesgo"))
 

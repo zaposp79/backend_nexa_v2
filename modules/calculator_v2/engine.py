@@ -159,7 +159,7 @@ class MotorDeReglas:
         # Ingreso base calculado sobre costo_op a plena capacidad (sin IPC, ramp=1).
         # Excel V2-8: Hoja Maestra!C296 — valor fijo; pricing usa tasa ponderada para extensión.
         _ctx_base = build_base_context(request_data, 1, ramp_up_override=ramp_up_campana)
-        ingreso_cadena_a_base, _ = self._compute_ingreso_cadena_a_hm(
+        ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
             nomina_fija + no_payroll_fijo, _ctx_base, for_pricing=True
         )
 
@@ -236,28 +236,24 @@ class MotorDeReglas:
         totales = self._calcular_totales(resultados_por_mes)
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
-        # Componentes financieros base (100% ramp, sin IPC, for_pricing=False)
-        # Excel V2-8: 'Visión Cost To Serve' — usa los mismos componentes del HM
-        _, componentes_base = self._compute_ingreso_cadena_a_hm(
-            nomina_fija + no_payroll_fijo, _ctx_base, for_pricing=False
-        )
-        ica_b = componentes_base.get("ica_hm", 0.0)
-        gmf_b = componentes_base.get("gmf_hm", 0.0)
-        com_b = componentes_base.get("comision_admin_hm", 0.0)
-        pol_b = componentes_base.get("polizas_puras_hm", 0.0)
-        # Estructura R69 del Excel P&G (componente_financiero_total)
-        pol_adicionales = ica_b + gmf_b + com_b + pol_b
-        componente_financiero_base = ica_b + gmf_b + com_b + pol_adicionales
+        # Componentes financieros base (100% ramp, sin IPC) — reutiliza el call de pricing
+        # Excel V2-8: 'Visión Cost To Serve' — financiero = ICA + GMF + Comision + Polizas
+        # (componentes de la Hoja Maestra Escenarios, for_pricing=True, una sola vez)
+        ica_b = componentes_pricing.get("ica_hm", 0.0)
+        gmf_b = componentes_pricing.get("gmf_hm", 0.0)
+        com_b = componentes_pricing.get("comision_admin_hm", 0.0)
+        pol_b = componentes_pricing.get("polizas_puras_hm", 0.0)
+        componente_financiero_base = ica_b + gmf_b + com_b + pol_b
 
         vision_cts = self._construir_vision_cts(
             request_data=request_data,
             costo_fijo_estacion=costo_fijo_estacion,
             ctx_base=_ctx_base,
             nomina_base=nomina_fija,
-            no_payroll_base=no_payroll_fijo,
             ingreso_base=ingreso_cadena_a_base,
             componente_financiero_base=componente_financiero_base,
             totales=totales,
+            duracion_meses=duracion_meses,
         )
 
         return SimulationResultV2(
@@ -445,26 +441,25 @@ class MotorDeReglas:
         costo_fijo_estacion: float,
         ctx_base: Dict[str, Any],
         nomina_base: float,
-        no_payroll_base: float,
         ingreso_base: float,
         componente_financiero_base: float,
         totales: Dict[str, float],
+        duracion_meses: int = 1,
     ) -> Optional[VisionCostToServe]:
         """Construye la Visión Cost-to-Serve.
 
         # Excel V2-8: 'Visión Cost To Serve' — Economics + por Cadena + por Perfil
-        # Los valores se calculan a capacidad plena (100% ramp, sin IPC):
-        #   - payroll y no_payroll provienen de NominaCalculator / NoPayrollCalculator al 100%
-        #   - financiero es el componente_financiero_total (estructura R69 del P&G) asignado
-        #     proporcionalmente a costo_directo por perfil
-        #   - ingreso_base es el ingreso HM (for_pricing=True) a 100%
+        # Payroll por perfil incluye overhead de staff ratios (supervisores, directores)
+        #   via nomina_base que proviene de NominaCalculator (incluye todos los cargos).
+        # Financiero = ICA + GMF + Comision + Polizas (una vez, sin duplicar estructura R69).
+        # ingreso_mensual = promedio del deal (valor_total_contrato / duracion_meses).
         """
         try:
             margen = float(ctx_base.get("margen_a", 0.18))
             fte_total = int(ctx_base.get("fte_total_cadena_a", 0))
 
             cts_calc = CTSCalculator(request_data, costo_fijo_estacion)
-            perfiles_raw = cts_calc.calcular(margen, componente_financiero_base)
+            perfiles_raw = cts_calc.calcular(margen, componente_financiero_base, nomina_base)
 
             if not perfiles_raw:
                 return None
@@ -479,11 +474,18 @@ class MotorDeReglas:
 
             fte_safe = max(fte_total, 1)
 
+            # Excel CTS: ingreso_mensual = precio a 100% ramp × factor_ramp_promedio (sin IPC).
+            # totales["ingreso_bruto"] incluye inflación IPC en meses ajustados → da valor inflado.
+            # Corrección: base_ingreso × promedio_de_ramp = ingreso a precios base del deal.
+            sum_ramp = totales.get("ramp_up_mes", float(duracion_meses))
+            ingreso_mensual_avg = ingreso_base * sum_ramp / max(duracion_meses, 1)
+            valor_total_contrato = ingreso_base * sum_ramp
+
             return VisionCostToServe(
                 cts_mensual=round(cts_total, 2),
-                ingreso_mensual=round(ingreso_base, 2),
+                ingreso_mensual=round(ingreso_mensual_avg, 2),
                 margen=margen,
-                valor_total_contrato=round(totales.get("ingreso_bruto", 0.0), 2),
+                valor_total_contrato=round(valor_total_contrato, 2),
                 n_fte_total=fte_total,
                 payroll_total=round(payroll_total, 2),
                 no_payroll_total=round(no_payroll_total, 2),
@@ -518,6 +520,7 @@ class MotorDeReglas:
             return [float(m.valores.get(key, 0.0)) for m in meses]
 
         return VisionPyG(
+            ramp_up=serie("ramp_up_mes"),
             ingreso_bruto=serie("ingreso_bruto"),
             ingreso_neto=serie("ingreso_neto"),
             costo_total=serie("costo_total"),

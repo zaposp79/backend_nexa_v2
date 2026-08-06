@@ -103,6 +103,7 @@ class VisionCostToServe(BaseModel):
 
 
 class VisionPyG(BaseModel):
+    ramp_up: List[float]
     ingreso_bruto: List[float]
     ingreso_neto: List[float]
     costo_total: List[float]
