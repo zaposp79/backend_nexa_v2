@@ -425,11 +425,14 @@ class MotorDeReglas:
         if denominador <= 0:
             return 0.0, {}
 
+        # Excel V2-8: pol_ext_amortized contribuye al numerador (y al ingreso_cadena_a_base)
+        # pero también debe incluirse en polizas_puras_hm para que el CTS financiero sea correcto.
+        # Sin esto, componente_financiero_base queda subestimado por pol_ext_amortized.
         componentes_hm = {
             "ica_hm": ica_pricing,
             "gmf_hm": gmf_pricing,
             "comision_admin_hm": admin_pricing,
-            "polizas_puras_hm": pol_pricing,
+            "polizas_puras_hm": pol_pricing + pol_ext_amortized,
         }
         return numerador / denominador, componentes_hm
 
@@ -474,16 +477,19 @@ class MotorDeReglas:
 
             fte_safe = max(fte_total, 1)
 
-            # Excel CTS: ingreso_mensual = precio a 100% ramp × factor_ramp_promedio (sin IPC).
-            # totales["ingreso_bruto"] incluye inflación IPC en meses ajustados → da valor inflado.
-            # Corrección: base_ingreso × promedio_de_ramp = ingreso a precios base del deal.
-            sum_ramp = totales.get("ramp_up_mes", float(duracion_meses))
-            ingreso_mensual_avg = ingreso_base * sum_ramp / max(duracion_meses, 1)
-            valor_total_contrato = ingreso_base * sum_ramp
+            # Excel CTS: ingreso_mensual = ingreso_neto a 100% ramp (sin IPC, sin ramp-down).
+            # factor_neto = ratio ingreso_neto / ingreso_bruto del deal (captura imprevistos,
+            # contingencias, markup, descuento aplicados en los rubros del P&G).
+            # valor_total_contrato = suma de ingreso_neto mensual real (con IPC + ramp).
+            ingreso_bruto_total = totales.get("ingreso_bruto", ingreso_base * float(duracion_meses))
+            ingreso_neto_total = totales.get("ingreso_neto", ingreso_bruto_total)
+            factor_neto = (ingreso_neto_total / ingreso_bruto_total) if ingreso_bruto_total > 0 else 1.0
+            ingreso_mensual = ingreso_base * factor_neto
+            valor_total_contrato = ingreso_neto_total
 
             return VisionCostToServe(
                 cts_mensual=round(cts_total, 2),
-                ingreso_mensual=round(ingreso_mensual_avg, 2),
+                ingreso_mensual=round(ingreso_mensual, 2),
                 margen=margen,
                 valor_total_contrato=round(valor_total_contrato, 2),
                 n_fte_total=fte_total,

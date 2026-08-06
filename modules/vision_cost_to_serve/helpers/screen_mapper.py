@@ -281,7 +281,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         {
             "key": "cts",
             "label": "CTS por FTE",
-            "value": vision_cts.get("cts_por_fte", 0.0),
+            "value": vision_cts.get("costo_directo_por_fte", 0.0),
             "format": "currency",
         },
         {
