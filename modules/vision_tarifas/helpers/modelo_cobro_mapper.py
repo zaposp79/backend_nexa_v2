@@ -21,6 +21,11 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
         resumen_resultado_escenario[], modelo_cobro[], desglose_producto_opex[]
     """
     result = pricing_result_dict or {}
+
+    # Motor de Reglas v2: traduce la estructura v2 al contrato v1 antes de procesar
+    if result.get("version") == "v2":
+        result = _bridge_v2_to_v1(result)
+
     vt_data = result.get("vision_tarifas") or {}
     missing_fields: list[str] = []
 
@@ -695,6 +700,116 @@ def _coalesce(*values: Any) -> Any:
         if value is not None and value != "":
             return value
     return None
+
+
+# ---------------------------------------------------------------------------
+# Motor de Reglas v2 → v1 structure bridge
+# ---------------------------------------------------------------------------
+
+
+def _bridge_v2_to_v1(result: dict) -> dict:
+    """Translate a v2 Cosmos document to the v1 shape expected by the mapper.
+
+    v2 vision_tarifas uses {escenarios[], total, ajustes_aplicados}.
+    v1 mapper expects {canales[], escenarios_detalle[], desglose_producto_opex[]}.
+    """
+    v2_vt = result.get("vision_tarifas") or {}
+    v2_escenarios = v2_vt.get("escenarios") or []
+    ajustes = v2_vt.get("ajustes_aplicados") or {}
+    total = v2_vt.get("total") or {}
+
+    escenarios_detalle: list[dict] = []
+    canales: list[dict] = []
+
+    for idx, esc in enumerate(v2_escenarios, start=1):
+        if not isinstance(esc, dict):
+            continue
+
+        tfc = esc.get("tarifa_componente_fijo") or {}
+        tcv = esc.get("tarifa_componente_variable") or {}
+        costos = esc.get("desglose_costos_mensual") or {}
+
+        meta = {
+            "escenario": idx,
+            "modalidad": esc.get("modalidad"),
+            "canal": esc.get("canal"),
+            "modelo_cobro": esc.get("modelo_cobro"),
+            "componente_fijo_label": esc.get("componente_fijo"),
+            "pct_fijo": esc.get("pct_fijo", 0),
+            "componente_variable_label": esc.get("componente_variable"),
+            "pct_variable": esc.get("pct_variable", 0),
+            "fte": esc.get("fte", 0),
+            "facturacion_directo": esc.get("facturacion_mensual", 0),
+            "tarifa_componente_fijo": tfc.get("valor", 0),
+            "tarifa_componente_variable": tcv.get("valor", 0),
+        }
+
+        reglas = {
+            "margen_objetivo_cadena_a": ajustes.get("margen_cadena_a", 0),
+            "margen_cadena_a": ajustes.get("margen_cadena_a", 0),
+            "margen_cadena_b": ajustes.get("margen_cadena_b", 0),
+            "margen_cadena_c": ajustes.get("margen_cadena_c", 0),
+            "cont_operativa": ajustes.get("cont_op", 0),
+            "cont_comercial": ajustes.get("cont_com", 0),
+            "markup": ajustes.get("markup", 0),
+            "descuento": ajustes.get("descuento", 0),
+        }
+
+        tarifas = {
+            "facturacion_total": esc.get("facturacion_mensual", 0),
+            "tarifa_por_fte": tfc.get("valor", 0),
+            "tarifa_por_transaccion": tcv.get("valor", 0),
+            "volumen_minimo_transaccion": tcv.get("volumen_minimo", 0),
+            "ingreso_componente_fijo": esc.get("ingreso_fijo_mensual", 0),
+            "ingreso_componente_variable": esc.get("ingreso_variable_mensual", 0),
+        }
+
+        cadena_a = {
+            "payroll": costos.get("payroll", 0),
+            "no_payroll": costos.get("no_payroll", 0),
+            "costos_financiacion": costos.get("financiero", 0),
+            "total": costos.get("costo_total", 0),
+            "ingreso_mensual": esc.get("facturacion_mensual", 0),
+        }
+
+        escenarios_detalle.append({
+            "meta": meta,
+            "reglas_business": reglas,
+            "tarifas": tarifas,
+            "componente_fijo": {},
+            "componente_variable": {},
+            "cadena_a": cadena_a,
+            "cadena_b": {},
+            "cadena_c": {},
+            "tarifas_venta": [],
+        })
+
+        canales.append({
+            "nombre_canal": esc.get("canal"),
+            "modalidad": esc.get("modalidad"),
+            "producto": esc.get("canal"),
+            "modelo_cobro": esc.get("modelo_cobro"),
+            "componente_fijo": esc.get("componente_fijo"),
+            "componente_variable": esc.get("componente_variable"),
+        })
+
+    bridged_vt = {
+        "canales": canales,
+        "escenarios_detalle": escenarios_detalle,
+        "desglose_producto_opex": [],
+        "ingreso_mensual": total.get("facturacion_mensual", 0),
+        "costo_total": total.get("facturacion_mensual", 0),
+    }
+
+    bridged = dict(result)
+    bridged["vision_tarifas"] = bridged_vt
+    # Expose top-level v2 fields where the header builder expects them
+    bridged["ficha_deal"] = {
+        "cliente": result.get("cliente"),
+        "servicio": result.get("servicio"),
+        "ciudad": None,
+    }
+    return bridged
 
 
 __all__ = ["build_modelo_cobro_from_result"]

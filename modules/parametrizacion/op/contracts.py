@@ -5,7 +5,7 @@ Based on production file: OP_productiva_2026-05-11-10-35-25.xlsx
 Sheet inventory (all required):
   OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
   OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo,
-  OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio.
+  OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio, OP-Riesgo, OP-RiesgoValor.
 
 OP-ReglaNegocio.Minimo / OP-ReglaNegocio.Maximo
     Numeric boundaries for each business rule. Stored as decimal values.
@@ -35,6 +35,16 @@ OP-ICA.Valor
 OP-HardSoft.Tipo
     Multi-value string like ``"Operativo;Agente"`` — typed ``raw_text`` to
     preserve the separator.
+
+OP-Riesgo.Nivel1 / Nivel2 / Nivel3
+    Text risk level label (e.g. "Alto", "Medio", "Bajo"). Typed ``string``.
+
+OP-Riesgo.PesoPropuesto
+    Proposed weight as percentage string (e.g. "25%"). Typed
+    ``percentage_decimal``: "25%" → 0.25.
+
+OP-RiesgoValor.MayorIgualA
+    Score threshold with one decimal (e.g. 5.0). Typed ``decimal``.
 """
 
 from nexa_engine.modules.parametrizacion.shared.contracts.base import (
@@ -198,6 +208,39 @@ OP_REGLA_NEGOCIO = SheetContract(
 )
 
 
+OP_RIESGO = SheetContract(
+    excel_name="OP-Riesgo",
+    required=True,
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("Factor",        _S),
+        ColumnContract("Categoria",     _S),
+        ColumnContract("Pregunta",      _S),
+        ColumnContract("Opcion1",       _S),
+        ColumnContract("Nivel1",        _S),
+        ColumnContract("Opcion2",       _S),
+        ColumnContract("Nivel2",        _S),
+        ColumnContract("Opcion3",       _S),
+        ColumnContract("Nivel3",        _S),
+        ColumnContract("PesoPropuesto", _PCT),  # "25%" → 0.25
+        ColumnContract("Racional",      _S),
+    ],
+    allow_trailing_unnamed=False,
+)
+
+OP_RIESGO_VALOR = SheetContract(
+    excel_name="OP-RiesgoValor",
+    required=True,
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("Riesgo",      _S),
+        ColumnContract("Valor",       _DEC),
+        ColumnContract("MayorIgualA", _DEC),  # entero con decimal, ej. 5.0
+    ],
+    allow_trailing_unnamed=False,
+)
+
+
 OP_CONTRACT = ModuleContract(
     module="op",
     sheet_prefix="OP-",
@@ -214,5 +257,7 @@ OP_CONTRACT = ModuleContract(
         OP_MARGEN_OBJETIVO,
         OP_ICA,
         OP_REGLA_NEGOCIO,
+        OP_RIESGO,
+        OP_RIESGO_VALOR,
     ],
 )

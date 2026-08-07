@@ -61,6 +61,7 @@ def handle_calculate_v2(
         "vision_pyg": result.vision_pyg.model_dump(),
         "vision_cts": result.vision_cts.model_dump() if result.vision_cts else None,
         "vision_imprimible": result.vision_imprimible,
+        "vision_tarifas": result.vision_tarifas,
         "meses": [m.model_dump() for m in result.meses],
         "totales": result.totales,
     }

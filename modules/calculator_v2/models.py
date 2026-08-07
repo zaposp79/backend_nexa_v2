@@ -127,3 +127,4 @@ class SimulationResultV2(BaseModel):
     vision_pyg: VisionPyG
     vision_cts: Optional[VisionCostToServe] = None
     vision_imprimible: Optional[Dict[str, Any]] = None
+    vision_tarifas: Optional[Dict[str, Any]] = None
