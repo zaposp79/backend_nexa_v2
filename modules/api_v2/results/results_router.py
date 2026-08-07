@@ -93,3 +93,44 @@ async def get_vision_cost_to_serve_v2(
             "vision_cts": vision_cts,
         }
     )
+
+
+@router.get(
+    "/{simulation_id}/results/vision-imprimible",
+    response_model=ApiResponse,
+    summary="Visión Imprimible de una simulación v2",
+    operation_id="getVisionImprimibleV2",
+)
+async def get_vision_imprimible_v2(
+    request: Request,
+    simulation_id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+) -> ApiResponse:
+    """Retorna la Visión Imprimible (7 secciones) de una simulación v2 previamente calculada."""
+    container = request.app.state.container
+    repo = V2SimulationResultsRepository(container.configuration_store)
+
+    try:
+        doc = repo.get(simulation_id)
+    except NotFoundError:
+        return ApiResponse.fail(
+            "SIM-00603",
+            message=f"Simulación v2 no encontrada: {simulation_id}",
+        )
+
+    vision_imprimible = doc.get("vision_imprimible")
+    if not vision_imprimible:
+        return ApiResponse.fail(
+            "SIM-00604",
+            message="Esta simulación no contiene Visión Imprimible. Recalcule con la versión actual del motor.",
+        )
+
+    return ApiResponse.ok(
+        data={
+            "simulation_id": simulation_id,
+            "cliente": doc.get("cliente"),
+            "servicio": doc.get("servicio"),
+            "duracion_meses": doc.get("duracion_meses"),
+            "calculated_at": doc.get("calculated_at"),
+            "vision_imprimible": vision_imprimible,
+        }
+    )

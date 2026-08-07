@@ -126,3 +126,4 @@ class SimulationResultV2(BaseModel):
     totales: Dict[str, float]
     vision_pyg: VisionPyG
     vision_cts: Optional[VisionCostToServe] = None
+    vision_imprimible: Optional[Dict[str, Any]] = None

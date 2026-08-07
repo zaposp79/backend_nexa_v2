@@ -28,6 +28,7 @@ from .formula_evaluator import evaluate_formula
 from .models import PerfilCTS, ResultadoMes, RubroMaestro, SimulationResultV2, VisionCostToServe, VisionPyG
 from .no_payroll_calculator import NoPayrollCalculator
 from .nomina_calculator import NominaCalculator
+from .vision_imprimible_builder import build_vision_imprimible
 from .rubros_repository import RubrosRepository
 
 logger = logging.getLogger("nexa.motor_reglas.engine")
@@ -256,6 +257,22 @@ class MotorDeReglas:
             duracion_meses=duracion_meses,
         )
 
+        cts_perfiles_raw = (
+            [p.model_dump() for p in vision_cts.perfiles] if vision_cts else []
+        )
+        meses_raw = [m.model_dump() for m in resultados_por_mes]
+        try:
+            vision_imprimible = build_vision_imprimible(
+                request_data=request_data,
+                meses=meses_raw,
+                totales=totales,
+                duracion_meses=duracion_meses,
+                cts_perfiles=cts_perfiles_raw,
+            )
+        except Exception as exc:
+            logger.warning("[motor-reglas] Error construyendo VisionImprimible: %s", exc)
+            vision_imprimible = None
+
         return SimulationResultV2(
             simulation_id=simulation_id,
             cliente=datos_op.get("cliente"),
@@ -265,6 +282,7 @@ class MotorDeReglas:
             totales=totales,
             vision_pyg=vision,
             vision_cts=vision_cts,
+            vision_imprimible=vision_imprimible,
         )
 
     # ── Evaluación por tipo ────────────────────────────────────────────────
