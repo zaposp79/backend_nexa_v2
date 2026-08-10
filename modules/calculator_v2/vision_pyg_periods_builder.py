@@ -37,8 +37,8 @@ def _period_cadena_a(v: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "payroll": v.get("nomina_total_mensual"),
         "nomina_loaded": v.get("nomina_loaded_mensual"),
-        "salario_fijo": None,
-        "salario_variable": None,
+        "salario_fijo": v.get("salario_fijo_mensual"),
+        "salario_variable": v.get("salario_variable_mensual"),
         "capacitacion_inicial": None,
         "capacitacion_rotacion": None,
         "examenes_medicos": None,
@@ -57,7 +57,7 @@ def _period_componente_financiero(v: Dict[str, Any]) -> Dict[str, Any]:
         "ica": v.get("ica_mensual"),
         "gmf": v.get("gmf_mensual"),
         "comision_administracion": v.get("comision_admin_hm"),
-        "polizas_adicionales": v.get("polizas_mensual"),
+        "polizas_adicionales": v.get("polizas_adicionales_hm"),
         "costos_financieros": None,
         "total_componente_financiero": v.get("componente_financiero_total"),
     }
@@ -131,4 +131,11 @@ def build_vision_pyg_periods(doc: Dict[str, Any]) -> Dict[str, Any]:
         "operativo": {},
     }
 
-    return {"periods": periods, "totales": totales_out}
+    # estaciones_trabajo es constante por deal → leer del primer mes (la suma en totales no sirve)
+    # Excel V2-8: 'Visión P&G'!J14 = SUM('Condiciones Cadena A'!$E$11:$S$11)
+    estaciones_trabajo = None
+    if meses:
+        et = meses[0].get("valores", {}).get("estaciones_trabajo")
+        estaciones_trabajo = et if et is not None else None
+
+    return {"periods": periods, "totales": totales_out, "estaciones_trabajo": estaciones_trabajo}

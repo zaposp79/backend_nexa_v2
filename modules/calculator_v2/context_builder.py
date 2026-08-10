@@ -42,6 +42,10 @@ def build_base_context(
     perfiles: List[Dict] = cadena_a.get("perfiles", [])
     fte_total_cadena_a = sum(float(p.get("fte", 0)) for p in perfiles)
 
+    # Estaciones de trabajo presencial en sede
+    # Excel V2-8: 'Condiciones Cadena A'!E11:S11 → 'Visión P&G'!J14 = SUM($E$11:$S$11)
+    estaciones_trabajo_presencial = sum(float(p.get("estaciones_presenciales", 0)) for p in perfiles)
+
     # Polizas activas (lista de dicts para generadores en fórmulas)
     polizas_activas = [p for p in polizas if p.get("activa", False)]
 
@@ -102,7 +106,8 @@ def build_base_context(
 
         # ── FTE ────────────────────────────────────────────────────────────
         "fte_total_cadena_a": fte_total_cadena_a,
-        "estaciones_trabajo": fte_total_cadena_a,  # alias para fórmula contribucion_por_puesto
+        # Excel V2-8: 'Visión P&G'!J14 = SUM('Condiciones Cadena A'!$E$11:$S$11)
+        "estaciones_trabajo": estaciones_trabajo_presencial,
 
         # ── Pólizas ────────────────────────────────────────────────────────
         "polizas_activas": polizas_activas,  # lista de dicts para sum() en fórmulas

@@ -275,8 +275,8 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
         "cadena_a": {
             "payroll":              nomina or None,
             "nomina_loaded":        _scale(cts["nomina_loaded_base"], nomina, cts["payroll_base"]),
-            "salario_fijo":         vals.get("salario_fijo"),
-            "salario_variable":     vals.get("salario_variable"),
+            "salario_fijo":         vals.get("salario_fijo_mensual"),
+            "salario_variable":     vals.get("salario_variable_mensual"),
             "capacitacion_inicial": vals.get("capacitacion_inicial"),
             "capacitacion_rotacion": vals.get("capacitacion_rotacion"),
             "examenes_medicos":     vals.get("examenes_medicos"),
@@ -311,7 +311,8 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "ica":                     vals.get("ica_mensual") or vals.get("ica_hm"),
             "gmf":                     vals.get("gmf_mensual") or vals.get("gmf_hm"),
             "comision_administracion": vals.get("comision_admin_hm"),
-            "polizas_adicionales":     vals.get("polizas_puras_hm"),
+            # R73 Excel P&G = ICA + GMF + Comisión + Pólizas_puras (no solo polizas_puras)
+            "polizas_adicionales":     vals.get("polizas_adicionales_hm"),
             "costos_financieros":      vals.get("costos_financieros"),
             "total_componente_financiero": vals.get("componente_financiero_total"),
         },
@@ -383,6 +384,12 @@ def _build_from_v2_result(
         "costos_fijos":  _scale(cts["costos_fijos_base"],nopayroll_tot, cts["no_payroll_base"]),
     })
 
+    # estaciones_trabajo: constante por deal — leer del primer mes
+    # Excel V2-8: 'Visión P&G'!J14 = SUM('Condiciones Cadena A'!$E$11:$S$11)
+    estaciones_trabajo = None
+    if meses_data:
+        estaciones_trabajo = meses_data[0].get("valores", {}).get("estaciones_trabajo")
+
     return {
         "version": "v2",
         "simulation_id": simulation_id or result_doc.get("simulation_id"),
@@ -391,6 +398,7 @@ def _build_from_v2_result(
             "servicio":       result_doc.get("servicio"),
             "duracion_meses": result_doc.get("duracion_meses"),
         },
+        "estaciones_trabajo": estaciones_trabajo,
         "periods":  periods,
         "totales":  totales,
         "metadata": {

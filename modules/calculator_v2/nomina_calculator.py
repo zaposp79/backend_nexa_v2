@@ -91,11 +91,41 @@ class NominaCalculator:
         Excel V2-8: 'Visión P&G'!R37 = R38 + R39 = Salario Fijo + Salario Variable.
         Salario Fijo NL incluye cargos de agentes Y estructura pro-rateada.
         """
+        nomina_loaded = self._nomina_agentes() + self._nomina_estructura()
+        salario_fijo = self._nomina_sin_comision()
         return {
-            "nomina_loaded": self._nomina_agentes() + self._nomina_estructura(),
+            "nomina_loaded": nomina_loaded,
             "crucero_total": self._crucero(),
             "capacitacion_rotacion": self._capacitacion_rotacion(),
+            "salario_fijo": salario_fijo,
+            "salario_variable": nomina_loaded - salario_fijo,
         }
+
+    def _nomina_sin_comision(self) -> float:
+        """Costo empresa (comision=0) para agentes + estructura.
+
+        Excel V2-8: 'Visión P&G'!R38 Salario Fijo = costo prestacional del salario base sin comisiones.
+        """
+        perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
+        detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
+        ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
+        detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
+
+        total = sum(
+            calcular_costo_empresa(float(p.get("salario_base", 0)), 0.0) * float(p.get("fte", 0))
+            for p in perfiles
+        )
+        for fila in ratios_filas:
+            if not fila.get("incluido", False):
+                continue
+            cargo_data = self._resolver_cargo(fila, detalle_map)
+            if not cargo_data:
+                continue
+            cantidad = self._calcular_cantidad(fila, perfiles)
+            if cantidad <= 0:
+                continue
+            total += calcular_costo_empresa(float(cargo_data.get("salario", 0)), 0.0) * cantidad
+        return total
 
     def _crucero(self) -> float:
         """Costo operacional mensual plano por agente (sin cargas sociales).

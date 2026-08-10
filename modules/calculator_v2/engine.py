@@ -44,6 +44,8 @@ _AGGREGATED_IDS = {
     "costo_cadena_b",
     "costo_cadena_c",
     "comision_admin_mensual",
+    # Computado en context_builder desde perfiles.estaciones_presenciales — no pisar con fórmula
+    "estaciones_trabajo",
 }
 
 # Excel V2-8: 'Pólizas - Costo Financiacion'!D338 = FILTER(Panel!D45) × 1.42
@@ -281,6 +283,8 @@ class MotorDeReglas:
             ctx["nomina_loaded_mensual"] = _nomina_detalle["nomina_loaded"] * double_h
             ctx["crucero_total_mensual"] = _nomina_detalle["crucero_total"] * double_h
             ctx["capacitacion_rotacion_mensual"] = _nomina_detalle["capacitacion_rotacion"] * double_h
+            ctx["salario_fijo_mensual"] = _nomina_detalle["salario_fijo"] * double_h
+            ctx["salario_variable_mensual"] = _nomina_detalle["salario_variable"] * double_h
             ctx["opex_fijo_mensual"] = _no_payroll_detalle["opex_fijo"] * double_t
             ctx["inversiones_mensual"] = _no_payroll_detalle["inversiones"] * double_t
             ctx["costos_fijos_mensual"] = _no_payroll_detalle["costos_fijos"] * double_t
@@ -290,6 +294,10 @@ class MotorDeReglas:
             ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
             ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
             ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
+            # R73 Excel P&G 'Pólizas adicionales' = ICA + GMF + Comisión + Pólizas_puras
+            ctx["polizas_adicionales_hm"] = (
+                ctx["ica_hm"] + ctx["gmf_hm"] + ctx["comision_admin_hm"] + ctx["polizas_puras_hm"]
+            )
 
             # Ingreso Cadena A: ingreso HM (pricing, ponderado) × ramp_up del mes
             ctx["ingreso_cadena_a"] = ingreso_mes * ramp_up
