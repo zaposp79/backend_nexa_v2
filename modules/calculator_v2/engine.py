@@ -108,6 +108,46 @@ def _compute_ipc_factor(
     return factor
 
 
+def _compute_ipc_incremental(
+    fecha_inicio: datetime,
+    mes_numero: int,
+    mes_ajuste: int,
+    ipc_rates: Dict[int, float],
+) -> float:
+    """Factor IPC incremental del año calendario del mes para P&G.
+
+    # Excel V2-8: 'Tasas, TRM, Polizas'!J8:O16 "Aumento x Año"
+    # El P&G aplica este factor EXTRA sobre los costos del NL (que ya tienen el acumulado).
+    # Para ingreso: mismo factor como única aplicación sobre HM_avg.
+    """
+    año_cal, mes_cal = _calendar_year_month(fecha_inicio, mes_numero)
+    año_inicio = fecha_inicio.year
+    if año_cal <= año_inicio or mes_cal < mes_ajuste:
+        return 0.0
+    return ipc_rates.get(año_cal, 0.0)
+
+
+def _compute_avg_ipc_factor_single(
+    fecha_inicio: Optional[datetime],
+    duracion_meses: int,
+    mes_ajuste: int,
+    ipc_rates: Dict[int, float],
+    ipc_activo: bool,
+) -> float:
+    """Factor IPC promedio simple (NL-level) sobre todos los meses del deal.
+
+    # Excel V2-8: 'Hoja Maestra'!C258 — SUMPRODUCT(NomLoaded!D15:BK33) / duracion
+    # El NL aplica IPC acumulado a cada mes; el HM promedia esos valores.
+    """
+    if not ipc_activo or not fecha_inicio:
+        return 1.0
+    total = sum(
+        _compute_ipc_factor(fecha_inicio, mes, mes_ajuste, ipc_rates)
+        for mes in range(1, duracion_meses + 1)
+    )
+    return total / duracion_meses
+
+
 class MotorDeReglas:
     def __init__(self, rubros_repo: RubrosRepository) -> None:
         self._repo = rubros_repo
@@ -120,11 +160,15 @@ class MotorDeReglas:
         rubros = self._repo.get_rubros_maestros()
 
         # Pre-computar valores aggregated que no cambian mes a mes
-        nomina_fija = NominaCalculator(request_data).calcular()
+        _nomina_calc = NominaCalculator(request_data)
+        nomina_fija = _nomina_calc.calcular()
+        _nomina_detalle = _nomina_calc.calcular_detalle()
         ciudad = datos_op.get("ciudad", "")
         sede = datos_op.get("sede", "")
         costo_fijo_estacion = self._repo.get_hr_costo_fijo_estacion(ciudad, localidad=sede)
-        no_payroll_fijo = NoPayrollCalculator(request_data, costo_fijo_estacion).calcular()
+        _no_pay_calc = NoPayrollCalculator(request_data, costo_fijo_estacion)
+        no_payroll_fijo = _no_pay_calc.calcular()
+        _no_payroll_detalle = _no_pay_calc.calcular_detalle()
 
         # Ramp-up desde HR-Campaña (prioridad sobre request.datos_operativos.ramp_up)
         servicio = datos_op.get("servicio", "")
@@ -138,6 +182,8 @@ class MotorDeReglas:
         comp_humano = str(indexacion.get("componente_humano", "")).upper()
         comp_tecnologico = str(indexacion.get("componente_tecnologico", "")).upper()
         mes_ajuste_ipc = int(indexacion.get("mes_aplicacion", 1))
+        # Excel V2-8: 'Panel de Control General'!C21 / L8 — si False, tarifa no escala con IPC
+        aplica_indexacion_tarifa = bool(indexacion.get("aplica_indexacion_tarifa", True))
 
         fecha_inicio: Optional[datetime] = None
         fecha_inicio_str = datos_op.get("fecha_inicio", "")
@@ -158,15 +204,25 @@ class MotorDeReglas:
 
         resultados_por_mes: List[ResultadoMes] = []
 
-        # Ingreso base calculado sobre costo_op a plena capacidad (sin IPC, ramp=1).
-        # Excel V2-8: Hoja Maestra!C296 — valor fijo; pricing usa tasa ponderada para extensión.
+        # Ingreso base Hoja Maestra — se calcula sobre el costo promedio IPC del deal.
+        # Excel V2-8: 'Hoja Maestra'!C296 — SUMPRODUCT(NomLoaded!D15:BK33) / duracion como base.
+        # El NL aplica IPC acumulado (simple) a cada mes; la HM promedia esos valores para
+        # obtener un ingreso estable que luego el P&G escala con el IPC incremental del año.
         _ctx_base = build_base_context(request_data, 1, ramp_up_override=ramp_up_campana)
-        ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
-            nomina_fija + no_payroll_fijo, _ctx_base, for_pricing=True
+        # HM usa costo promedio con IPC solo si la tarifa está indexada.
+        # Si aplica_indexacion_tarifa=False, tarifa es fija → HM se basa en costos del mes 1.
+        # Excel V2-8: 'Hoja Maestra'!C258 — solo promedia cuando la tarifa escala con IPC.
+        _avg_ipc = (
+            _compute_avg_ipc_factor_single(
+                fecha_inicio, duracion_meses, mes_ajuste_ipc, ipc_rates, ipc_activo
+            )
+            if aplica_indexacion_tarifa else 1.0
         )
-
-        # Cache de ingreso HM por factor IPC (pricing) — constante dentro del mismo factor
-        _hm_ingreso_cache: Dict[float, float] = {1.0: ingreso_cadena_a_base}
+        _avg_nomina = nomina_fija * (_avg_ipc if comp_humano == "IPC" else 1.0)
+        _avg_no_payroll = no_payroll_fijo * (_avg_ipc if comp_tecnologico == "IPC" else 1.0)
+        ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
+            _avg_nomina + _avg_no_payroll, _ctx_base, for_pricing=True
+        )
 
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
@@ -175,26 +231,33 @@ class MotorDeReglas:
             ctx = build_base_context(request_data, mes, ramp_up_override=ramp_up_campana)
             ramp_up = ctx["ramp_up_mes"]
 
-            # Factor IPC para este mes del deal
-            # Excel: aplica desde el mes_ajuste (enero=1) del año siguiente al inicio del deal
+            # Factor IPC acumulado del NL para este mes (Tasas "Aumento Acumulado")
             ipc_factor = (
                 _compute_ipc_factor(fecha_inicio, mes, mes_ajuste_ipc, ipc_rates)
                 if ipc_activo else 1.0
             )
+            # Factor IPC incremental del P&G para este mes (Tasas "Aumento x Año")
+            # Excel V2-8: costos P&G = costo_NL × (1 + IPC_incremental); doble aplicación
+            ipc_incremental = (
+                _compute_ipc_incremental(fecha_inicio, mes, mes_ajuste_ipc, ipc_rates)
+                if ipc_activo else 0.0
+            )
 
-            # Costos mensuales ajustados por IPC según componente configurado
-            nomina_mes = nomina_fija * ipc_factor if comp_humano == "IPC" else nomina_fija
-            no_payroll_mes = no_payroll_fijo * ipc_factor if comp_tecnologico == "IPC" else no_payroll_fijo
+            # Factor de escala para costos:
+            # - aplica_indexacion_tarifa=True  → doble IPC (NL-level × P&G-level incremental)
+            # - aplica_indexacion_tarifa=False → solo IPC simple del NL (factor acumulado)
+            # Excel V2-8: P&G R38 formula aplica el extra IPC solo cuando la tarifa está indexada.
+            _extra_ipc = (1.0 + ipc_incremental) if aplica_indexacion_tarifa else 1.0
+            double_h = ipc_factor * _extra_ipc if comp_humano == "IPC" else 1.0
+            double_t = ipc_factor * _extra_ipc if comp_tecnologico == "IPC" else 1.0
+            nomina_mes = nomina_fija * double_h
+            no_payroll_mes = no_payroll_fijo * double_t
             costo_op_mes = nomina_mes + no_payroll_mes
 
-            # Ingreso (pricing): HM con tasa ponderada para extensión — cacheado por factor IPC
-            # Excel V2-8: 'Hoja Maestra Escenarios'!C266 — precio estable aunque Seriedad expire en M7
-            if ipc_factor not in _hm_ingreso_cache:
-                ingreso_ipc, _ = self._compute_ingreso_cadena_a_hm(
-                    costo_op_mes, _ctx_base, for_pricing=True
-                )
-                _hm_ingreso_cache[ipc_factor] = ingreso_ipc
-            ingreso_mes = _hm_ingreso_cache[ipc_factor]
+            # Ingreso: HM × (1 + IPC_incremental) — IPC simple siempre aplica al ingreso
+            # Excel V2-8: 'Visión P&G'!R20 = HM!C296 × ramp × (1 + INDEX(Tasas!J8:O16,...))
+            # La diferencia entre aplica=True/False está en el HM base (avg vs base costs).
+            ingreso_mes = ingreso_cadena_a_base * (1.0 + ipc_incremental)
 
             # Costo real mensual: pólizas con extensión aplican tasa completa hasta mes <= meses_extension
             # Excel V2-8: 'Visión P&G'!R69 — Componente Financiero varía entre M6 y M7-10
@@ -213,6 +276,14 @@ class MotorDeReglas:
             ctx["costo_cadena_b"] = 0.0
             ctx["costo_cadena_c"] = 0.0
             ctx["comision_admin_mensual"] = 0.0  # ya incluida en polizas_mensual
+
+            # Sub-componentes para formato periods — mismo factor doble IPC que el total
+            ctx["nomina_loaded_mensual"] = _nomina_detalle["nomina_loaded"] * double_h
+            ctx["crucero_total_mensual"] = _nomina_detalle["crucero_total"] * double_h
+            ctx["capacitacion_rotacion_mensual"] = _nomina_detalle["capacitacion_rotacion"] * double_h
+            ctx["opex_fijo_mensual"] = _no_payroll_detalle["opex_fijo"] * double_t
+            ctx["inversiones_mensual"] = _no_payroll_detalle["inversiones"] * double_t
+            ctx["costos_fijos_mensual"] = _no_payroll_detalle["costos_fijos"] * double_t
 
             # Componentes financieros reales del mes (ICA/GMF con N de pólizas activas este mes)
             ctx["ica_hm"] = componentes_cost_mes.get("ica_hm", 0.0)

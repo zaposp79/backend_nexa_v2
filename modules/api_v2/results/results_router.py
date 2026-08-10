@@ -15,6 +15,7 @@ from fastapi import APIRouter, Path, Request
 from nexa_engine.modules.shared.responses import ApiResponse
 from nexa_engine.modules.shared.exceptions import NotFoundError
 from .results_repository import V2SimulationResultsRepository
+from nexa_engine.modules.calculator_v2.vision_pyg_periods_builder import build_vision_pyg_periods
 
 logger = logging.getLogger("nexa.v2.results_router")
 
@@ -43,15 +44,22 @@ async def get_vision_pyg_v2(
             message=f"Simulación v2 no encontrada: {simulation_id}",
         )
 
+    periods_data = build_vision_pyg_periods(doc)
     return ApiResponse.ok(
         data={
+            "version": doc.get("version", "v2"),
             "simulation_id": simulation_id,
-            "cliente": doc.get("cliente"),
-            "servicio": doc.get("servicio"),
-            "duracion_meses": doc.get("duracion_meses"),
-            "calculated_at": doc.get("calculated_at"),
-            "vision_pyg": doc.get("vision_pyg", {}),
-            "totales": doc.get("totales", {}),
+            "header": {
+                "cliente": doc.get("cliente"),
+                "servicio": doc.get("servicio"),
+                "duracion_meses": doc.get("duracion_meses"),
+            },
+            **periods_data,
+            "metadata": {
+                "source": "motor_de_reglas_v2",
+                "calculated_at": doc.get("calculated_at"),
+                "omitted_empty_fields": False,
+            },
         }
     )
 

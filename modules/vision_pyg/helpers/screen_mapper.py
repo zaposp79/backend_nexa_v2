@@ -211,99 +211,193 @@ def _apply_row_to_contract(row: Dict[str, Any], periods: list[Dict[str, Any]], t
     _assign_nested(totales, total_path, acumulado)
 
 
+def _cts_breakdown(vision_cts: Dict[str, Any]) -> Dict[str, float]:
+    """Pre-computa totales base del CTS para pro-rateo mensual."""
+    perfiles = vision_cts.get("perfiles") or []
+    return {
+        "payroll_base":       vision_cts.get("payroll_total") or 0.0,
+        "no_payroll_base":    vision_cts.get("no_payroll_total") or 0.0,
+        "crucero_base":       sum(p.get("crucero", 0.0) for p in perfiles),
+        "nomina_loaded_base": sum(p.get("salario_cargado", 0.0) for p in perfiles),
+        "opex_fijo_base":     sum(p.get("opex_it", 0.0) for p in perfiles),
+        "inversiones_base":   sum(p.get("inversiones", 0.0) for p in perfiles),
+        "costos_fijos_base":  sum(p.get("costos_fijos", 0.0) for p in perfiles),
+    }
+
+
+def _scale(base: float, actual: float, denom: float) -> Optional[float]:
+    """Pro-rateo lineal: base × (actual / denom). None si denominador es 0."""
+    if not denom:
+        return None
+    return base * (actual / denom)
+
+
+def _ingresos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
+    ingreso_bruto    = vals.get("ingreso_bruto") or 0.0
+    pct_imprevistos  = vals.get("pct_imprevistos") or 0.0
+    cont_op          = vals.get("contingencia_op") or 0.0
+    cont_com         = vals.get("contingencia_com") or 0.0
+    markup           = vals.get("markup_ingreso") or 0.0
+    descuento        = vals.get("descuento_ingreso") or 0.0
+
+    imprevistos = vals.get("imprevistos_ingreso")
+    if imprevistos is None and pct_imprevistos:
+        imprevistos = pct_imprevistos * ingreso_bruto
+
+    # Ingreso Fijo = ingreso_bruto + cont_op + cont_com + markup − descuento − imprevistos
+    ingreso_fijo = (
+        ingreso_bruto + cont_op + cont_com + markup - descuento - (imprevistos or 0.0)
+    ) if ingreso_bruto else None
+
+    return {
+        "ingreso_bruto":       ingreso_bruto or None,
+        "ingreso_cadena_a":    vals.get("ingreso_cadena_a"),
+        "ingreso_cadena_b":    vals.get("ingreso_cadena_b"),
+        "ingreso_cadena_c":    vals.get("ingreso_cadena_c"),
+        "contingencia_op":     cont_op or None,
+        "contingencia_com":    cont_com or None,
+        "markup":              markup or None,
+        "descuento":           descuento or None,
+        "imprevistos":         imprevistos,
+        "ingreso_fijo":        ingreso_fijo,
+        "ingreso_por_comision": vals.get("ingreso_por_comision"),
+        "ingreso_variable":    vals.get("ingreso_variable"),
+        "ingreso_neto":        vals.get("ingreso_neto"),
+    }
+
+
+def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
+    nomina   = vals.get("nomina_total_mensual") or 0.0
+    nopayroll = vals.get("no_payroll_total_mensual") or 0.0
+
+    return {
+        "costo_total": vals.get("costo_total"),
+        "cadena_a": {
+            "payroll":              nomina or None,
+            "nomina_loaded":        _scale(cts["nomina_loaded_base"], nomina, cts["payroll_base"]),
+            "salario_fijo":         vals.get("salario_fijo"),
+            "salario_variable":     vals.get("salario_variable"),
+            "capacitacion_inicial": vals.get("capacitacion_inicial"),
+            "capacitacion_rotacion": vals.get("capacitacion_rotacion"),
+            "examenes_medicos":     vals.get("examenes_medicos"),
+            "estudios_seguridad":   vals.get("estudios_seguridad"),
+            "crucero":              _scale(cts["crucero_base"], nomina, cts["payroll_base"]),
+            "no_payroll":           nopayroll or None,
+            "opex_fijo":            _scale(cts["opex_fijo_base"], nopayroll, cts["no_payroll_base"]),
+            "inversiones":          _scale(cts["inversiones_base"], nopayroll, cts["no_payroll_base"]),
+            "costos_fijos":         _scale(cts["costos_fijos_base"], nopayroll, cts["no_payroll_base"]),
+            "total_cadena_a":       vals.get("costo_cadena_a"),
+        },
+        "cadena_b": {
+            "total_cadena_b":   vals.get("costo_cadena_b"),
+            "opex_fijo":        vals.get("opex_fijo_b"),
+            "inversiones":      vals.get("inversiones_b"),
+            "s_and_m":          vals.get("sm_b"),
+            "tarifa_canal":     vals.get("tarifa_canal_b"),
+            "tasa_escalamiento": vals.get("tasa_escalamiento_b"),
+            "hitl":             vals.get("hitl_b"),
+        },
+        "cadena_c": {
+            "total_cadena_c":    vals.get("costo_cadena_c"),
+            "tarifa_proveedor":  vals.get("tarifa_proveedor_c"),
+            "opex_fijo":         vals.get("opex_fijo_integ_c"),
+            "inversiones":       vals.get("inversiones_integ_c"),
+            "equipo_integracion": vals.get("equipo_integ_c"),
+            "tasa_escalamiento": vals.get("tasa_escalamiento_c"),
+            "opex_variable":     vals.get("opex_var_integ_c"),
+            "hitl":              vals.get("hitl_c"),
+        },
+        "componente_financiero": {
+            "ica":                     vals.get("ica_mensual") or vals.get("ica_hm"),
+            "gmf":                     vals.get("gmf_mensual") or vals.get("gmf_hm"),
+            "comision_administracion": vals.get("comision_admin_hm"),
+            "polizas_adicionales":     vals.get("polizas_puras_hm"),
+            "costos_financieros":      vals.get("costos_financieros"),
+            "total_componente_financiero": vals.get("componente_financiero_total"),
+        },
+        "costo_por_comision": vals.get("costo_por_comision"),
+    }
+
+
+def _utilidad_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
+    contribucion = vals.get("contribucion")
+    estaciones   = vals.get("estaciones_trabajo") or 0.0
+    cpp = vals.get("contribucion_por_puesto")
+    if cpp is None and contribucion is not None and estaciones:
+        cpp = contribucion / estaciones
+    return {
+        "contribucion":           contribucion,
+        "contribucion_por_puesto": cpp,
+        "porcentaje_contribucion": vals.get("pct_contribucion"),
+        "costo_fijo":             vals.get("costo_fijo"),
+        "utilidad_neta":          vals.get("utilidad_neta"),
+        "porcentaje_utilidad_neta": vals.get("pct_utilidad_neta"),
+    }
+
+
 def _build_from_v2_result(
     result_doc: Dict[str, Any],
     simulation_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Construye el contrato de pantalla desde un resultado del Motor de Reglas (v2).
 
-    El doc v2 almacena 'meses' (lista de {mes, valores}) y 'totales' (dict plano).
-    Los mapea al mismo contrato periódico que el endpoint v1 expone.
+    Expone todos los campos de la Visión P&G (Excel V2-8 'Visión P&G' filas 18-88),
+    incluyendo campos derivados del CTS y campos nulos donde no hay datos disponibles.
     """
-    meses_data = result_doc.get("meses", [])
+    meses_data   = result_doc.get("meses", [])
     totales_vals: Dict[str, Any] = result_doc.get("totales", {})
+    cts = _cts_breakdown(result_doc.get("vision_cts") or {})
 
     periods = []
     for m in meses_data:
         mes_num = m.get("mes", len(periods) + 1)
         vals: Dict[str, Any] = m.get("valores", {})
         periods.append({
-            "index": mes_num,
-            "label": f"Mes {mes_num}",
-            "periodo": mes_num,
-            "ingresos": {
-                "ingreso_bruto": vals.get("ingreso_bruto"),
-                "ingreso_neto": vals.get("ingreso_neto"),
-            },
-            "costos": {
-                "cadena_a": {
-                    "payroll": vals.get("nomina_total_mensual"),
-                    "no_payroll": vals.get("no_payroll_total_mensual"),
-                    "total_cadena_a": vals.get("costo_cadena_a"),
-                },
-                "cadena_b": {},
-                "cadena_c": {},
-                "componente_financiero": {
-                    "ica": vals.get("ica_mensual"),
-                    "gmf": vals.get("gmf_mensual"),
-                    "total_componente_financiero": vals.get("componente_financiero_total"),
-                },
-            },
-            "utilidad": {
-                "contribucion": vals.get("contribucion"),
-                "porcentaje_contribucion": vals.get("pct_contribucion"),
-                "utilidad_neta": vals.get("utilidad_neta"),
-                "porcentaje_utilidad_neta": vals.get("pct_utilidad_neta"),
-            },
-            "operativo": {
-                "ramp_up": vals.get("ramp_up_mes"),
-            },
+            "index":    mes_num,
+            "label":    f"Mes {mes_num}",
+            "periodo":  mes_num,
+            "ingresos": _ingresos_mes(vals),
+            "costos":   _costos_mes(vals, cts),
+            "utilidad": _utilidad_mes(vals),
+            "operativo": {"ramp_up": vals.get("ramp_up_mes")},
         })
 
+    # Totales: igual que un mes pero usando totales_vals
+    # Para CTS el pro-rateo usa el acumulado de nomina/no_payroll
+    nomina_tot    = totales_vals.get("nomina_total_mensual") or 0.0
+    nopayroll_tot = totales_vals.get("no_payroll_total_mensual") or 0.0
+    cts_tot = {k: v for k, v in cts.items()}  # mismas bases
+
     totales = {
-        "ingresos": {
-            "ingreso_bruto": totales_vals.get("ingreso_bruto"),
-            "ingreso_neto": totales_vals.get("ingreso_neto"),
-        },
-        "costos": {
-            "cadena_a": {
-                "payroll": totales_vals.get("nomina_total_mensual"),
-                "no_payroll": totales_vals.get("no_payroll_total_mensual"),
-                "total_cadena_a": totales_vals.get("costo_cadena_a"),
-            },
-            "cadena_b": {},
-            "cadena_c": {},
-            "componente_financiero": {
-                "ica": totales_vals.get("ica_mensual"),
-                "gmf": totales_vals.get("gmf_mensual"),
-                "total_componente_financiero": totales_vals.get("componente_financiero_total"),
-            },
-        },
-        "utilidad": {
-            "contribucion": totales_vals.get("contribucion"),
-            "porcentaje_contribucion": totales_vals.get("pct_contribucion"),
-            "utilidad_neta": totales_vals.get("utilidad_neta"),
-            "porcentaje_utilidad_neta": totales_vals.get("pct_utilidad_neta"),
-        },
+        "ingresos": _ingresos_mes(totales_vals),
+        "costos":   _costos_mes(totales_vals, cts_tot),
+        "utilidad": _utilidad_mes(totales_vals),
         "operativo": {},
     }
+    # Sobreescribir campos CTS en totales con escala acumulada
+    totales["costos"]["cadena_a"].update({
+        "nomina_loaded": _scale(cts["nomina_loaded_base"], nomina_tot, cts["payroll_base"]),
+        "crucero":       _scale(cts["crucero_base"],       nomina_tot, cts["payroll_base"]),
+        "opex_fijo":     _scale(cts["opex_fijo_base"],   nopayroll_tot, cts["no_payroll_base"]),
+        "inversiones":   _scale(cts["inversiones_base"], nopayroll_tot, cts["no_payroll_base"]),
+        "costos_fijos":  _scale(cts["costos_fijos_base"],nopayroll_tot, cts["no_payroll_base"]),
+    })
 
-    response = {
+    return {
         "version": "v2",
         "simulation_id": simulation_id or result_doc.get("simulation_id"),
         "header": {
-            "cliente": result_doc.get("cliente"),
-            "servicio": result_doc.get("servicio"),
+            "cliente":        result_doc.get("cliente"),
+            "servicio":       result_doc.get("servicio"),
             "duracion_meses": result_doc.get("duracion_meses"),
         },
-        "periods": periods,
-        "totales": totales,
+        "periods":  periods,
+        "totales":  totales,
         "metadata": {
-            "source": "motor_de_reglas_v2",
-            "omitted_empty_fields": True,
+            "source":              "motor_de_reglas_v2",
+            "omitted_empty_fields": False,
         },
     }
-    return _prune_empty(response) or {}
 
 
 def build_vision_pyg_from_result(

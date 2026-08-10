@@ -113,4 +113,12 @@ def build_base_context(
 
         # ── Paso cobro variable (fila 16 P&G, ≠ ramp_up, = 0 para SAC) ──────
         "paso_cobro_variable": paso_cobro_variable,
+
+        # ── Datos operativos globales (Panel de Control General) ───────────
+        # Excel V2-8: Panel!C19 = pct_ausentismo, Panel!C20 = pct_rotacion
+        # Panel!C16 = tarifa_diaria_capacitacion, Panel!C18 = horas_formacion_mes
+        "pct_ausentismo": float(datos_op.get("pct_ausentismo", 0.0)),
+        "pct_rotacion": float(datos_op.get("pct_rotacion", 0.0)),
+        "horas_formacion_mes": float(datos_op.get("horas_formacion_mes", 8.0)),
+        "tarifa_diaria_capacitacion": float(datos_op.get("tarifa_diaria_capacitacion", 20_000.0)),
     }

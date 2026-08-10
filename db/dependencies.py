@@ -33,6 +33,7 @@ from nexa_engine.modules.parametrizacion.op.services.op_service import OPService
 from nexa_engine.modules.audit.use_cases.audit_simulation import AuditSimulationUseCase
 from nexa_engine.modules.shared.versioning.registry_provider import _version_registry
 from nexa_engine.modules.simulation_draft.services.draft_service import SimulationDraftService
+from nexa_engine.modules.identity.services.identity_service import IdentityService
 
 
 def get_container(request: Request) -> ApplicationContainer:
@@ -109,6 +110,12 @@ def get_draft_service(
     container: ApplicationContainer = Depends(get_container),
 ) -> SimulationDraftService:
     return container.draft_service
+
+
+def get_identity_service(
+    container: ApplicationContainer = Depends(get_container),
+) -> IdentityService:
+    return container.identity_service
 
 
 def get_audit_use_case(

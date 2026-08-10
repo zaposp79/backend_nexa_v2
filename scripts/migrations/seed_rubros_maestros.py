@@ -77,7 +77,11 @@ def main() -> None:
     container = build_container()
     from nexa_engine.db.ports.document_store import CollectionConfig
 
-    coll = CollectionConfig(name="parameterization", partition_key_field="domain")
+    # CollectionConfig.name se convierte en el valor del campo 'domain' en CosmosDB
+    # (CosmosDocumentStore.upsert() inyecta: {**doc, "domain": collection.name}).
+    # DEBE ser "rubros_maestros" para que RubrosRepository.get_rubros_maestros()
+    # los encuentre (filtra por {"domain": "rubros_maestros"}).
+    coll = CollectionConfig(name="rubros_maestros", partition_key_field="domain")
     ok = 0
     errors = 0
     for r in rubros:

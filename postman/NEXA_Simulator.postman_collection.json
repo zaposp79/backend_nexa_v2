@@ -52,6 +52,12 @@
 			"value": "",
 			"type": "string",
 			"description": "Simulation ID retornado por POST /api/v2/simulation/calculate (motor rubros_maestro)"
+		},
+		{
+			"key": "identity_id",
+			"value": "",
+			"type": "string",
+			"description": "Identity ID retornado por POST /api/v1/identity/anonymous. Se almacena automáticamente en el test script."
 		}
 	],
 	"item": [
@@ -1352,6 +1358,76 @@
 							]
 						},
 						"description": "Elimina una versión específica de parametrización GN por UUID4."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Identity",
+			"description": "Módulo de identidad anónima para Simulator Pricing.\n\nPermite crear identidades anónimas, consultarlas y actualizar el timestamp de última actividad.\n\n- `POST /identity/anonymous` → crea identidad; guarda `identity_id` automáticamente\n- `GET /identity/{identity_id}` → consulta identidad por UUID\n- `PATCH /identity/{identity_id}/last-seen` → actualiza lastSeenAt",
+			"item": [
+				{
+					"name": "POST /api/v1/identity/anonymous",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var json = pm.response.json();",
+									"if (json.success && json.data && json.data.identityId) {",
+									"    pm.collectionVariables.set('identity_id', json.data.identityId);",
+									"    console.log('identity_id guardado:', json.data.identityId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Content-Type", "value": "application/json" },
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/identity/anonymous",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "identity", "anonymous"]
+						},
+						"description": "Crea una identidad anónima nueva.\n\nGenera un UUID v4 como `identityId`, calcula un alias determinístico (animal + color + número) y persiste en Cosmos DB (container: `parameterization`, partition: `identities`).\n\n**Respuesta 201:** identidad creada con `identityId`, `alias`, `authenticationType`, `confidenceScore`, `status`, `createdAt`, `lastSeenAt`.\n\nEl test script guarda automáticamente `identity_id` en las variables de la colección."
+					},
+					"response": []
+				},
+				{
+					"name": "GET /api/v1/identity/{{identity_id}}",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/identity/{{identity_id}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "identity", "{{identity_id}}"]
+						},
+						"description": "Consulta una identidad por su UUID v4.\n\nRequiere que `identity_id` esté definido (se llena automáticamente al ejecutar POST /identity/anonymous).\n\n**Respuesta 200:** datos de la identidad.\n**Respuesta 404:** identidad no encontrada.\n**Respuesta 422:** UUID inválido (formato incorrecto o no es v4)."
+					},
+					"response": []
+				},
+				{
+					"name": "PATCH /api/v1/identity/{{identity_id}}/last-seen",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{ "key": "Accept", "value": "application/json" }
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/identity/{{identity_id}}/last-seen",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "identity", "{{identity_id}}", "last-seen"]
+						},
+						"description": "Actualiza el campo `lastSeenAt` de la identidad al timestamp UTC actual.\n\nSin body — el timestamp lo genera el backend.\n\n**Respuesta 200:** identidad con `lastSeenAt` actualizado.\n**Respuesta 404:** identidad no encontrada.\n**Respuesta 422:** UUID inválido."
 					},
 					"response": []
 				}

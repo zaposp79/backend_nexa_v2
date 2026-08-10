@@ -29,6 +29,14 @@ class NoPayrollCalculator:
     def calcular(self) -> float:
         return self._opex_it() + self._inversiones() + self._costos_fijos()
 
+    def calcular_detalle(self) -> dict:
+        """Sub-components for periods format: opex_fijo, inversiones, costos_fijos."""
+        return {
+            "opex_fijo": self._opex_it(),
+            "inversiones": self._inversiones(),
+            "costos_fijos": self._costos_fijos(),
+        }
+
     def _opex_it(self) -> float:
         """Suma ítems de opex_fijo de cada perfil (licencias, internet, etc.)."""
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])

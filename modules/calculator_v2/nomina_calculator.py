@@ -77,7 +77,25 @@ class NominaCalculator:
         self._cadena_a = request_data.get("condiciones_cadena_a", {})
 
     def calcular(self) -> float:
-        return self._nomina_agentes() + self._nomina_estructura() + self._crucero()
+        return (
+            self._nomina_agentes()
+            + self._nomina_estructura()
+            + self._crucero()
+            + self._capacitacion_rotacion()
+        )
+
+    def calcular_detalle(self) -> dict:
+        """Sub-components for periods format.
+
+        nomina_loaded = agentes + estructura (Salario Fijo + Variable del NL).
+        Excel V2-8: 'Visión P&G'!R37 = R38 + R39 = Salario Fijo + Salario Variable.
+        Salario Fijo NL incluye cargos de agentes Y estructura pro-rateada.
+        """
+        return {
+            "nomina_loaded": self._nomina_agentes() + self._nomina_estructura(),
+            "crucero_total": self._crucero(),
+            "capacitacion_rotacion": self._capacitacion_rotacion(),
+        }
 
     def _crucero(self) -> float:
         """Costo operacional mensual plano por agente (sin cargas sociales).
@@ -126,6 +144,29 @@ class NominaCalculator:
             comision = float(cargo_data.get("comision", 0))
             total += calcular_costo_empresa(salario, comision) * cantidad
 
+        return total
+
+    def _capacitacion_rotacion(self) -> float:
+        """Costo mensual de capacitación por rotación (Excel V2-8: 'Nomina Loaded'!E283-E299).
+
+        Por cada perfil con incluye_capacitacion_rotacion=True:
+          costo = fte × dias_capacitacion_perfil × tarifa_diaria_capacitacion × pct_rotacion
+        Excel V2-8: 'Panel de Control General'!C20 = pct_rotacion; C16 = tarifa_diaria.
+        """
+        datos_op = self._req.get("datos_operativos", {})
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+        tarifa_diaria = float(datos_op.get("tarifa_diaria_capacitacion", 20_000.0))
+        if pct_rotacion <= 0 or tarifa_diaria <= 0:
+            return 0.0
+
+        total = 0.0
+        for perfil in self._cadena_a.get("perfiles", []):
+            cap = perfil.get("capacitacion", {})
+            if not cap.get("incluye_capacitacion_rotacion", False):
+                continue
+            fte = float(perfil.get("fte", 0))
+            dias = float(cap.get("dias_capacitacion_perfil", 0))
+            total += fte * dias * tarifa_diaria * pct_rotacion
         return total
 
     @staticmethod

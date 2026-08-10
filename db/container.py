@@ -84,6 +84,11 @@ from nexa_engine.modules.simulation_draft.persistence.draft_repository import (
 from nexa_engine.modules.simulation_draft.services.draft_service import (
     SimulationDraftService,
 )
+from nexa_engine.modules.identity.repositories.identity_repository import (
+    IdentityRepository,
+)
+from nexa_engine.modules.identity.services.alias_service import AliasService
+from nexa_engine.modules.identity.services.identity_service import IdentityService
 
 
 @dataclass
@@ -115,6 +120,8 @@ class ApplicationContainer:
     configuration_store: DocumentStore
     draft_repository: SimulationDraftRepository
     draft_service: SimulationDraftService
+    identity_repository: IdentityRepository
+    identity_service: IdentityService
 
     def close(self) -> None:
         """Cerrar recursos (sin efecto para el backend JSON)."""
@@ -216,6 +223,11 @@ def build_container() -> ApplicationContainer:
         configuration_store=configuration_store,
         draft_repository=SimulationDraftRepository(configuration_store),
         draft_service=SimulationDraftService(SimulationDraftRepository(configuration_store)),
+        identity_repository=IdentityRepository(param_store),
+        identity_service=IdentityService(
+            repository=IdentityRepository(param_store),
+            alias_service=AliasService(),
+        ),
     )
 
 
