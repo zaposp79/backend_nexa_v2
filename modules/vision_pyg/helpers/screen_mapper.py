@@ -274,7 +274,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
         "costo_total": vals.get("costo_total"),
         "cadena_a": {
             "payroll":              nomina or None,
-            "nomina_loaded":        _scale(cts["nomina_loaded_base"], nomina, cts["payroll_base"]),
+            "nomina_loaded":        vals.get("nomina_loaded_mensual"),
             "salario_fijo":         vals.get("salario_fijo_mensual"),
             "salario_variable":     vals.get("salario_variable_mensual"),
             "capacitacion_inicial": vals.get("capacitacion_inicial"),

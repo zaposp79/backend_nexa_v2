@@ -1,7 +1,7 @@
 """GN module upload contract — single source of truth.
 
 Sheet inventory:
-  GN-LV        — catalog by column, 23 columns.
+  GN-LV        — catalog by column, 24 columns.
   GN-Localidad — table rows, 2 columns (Ciudad, Localidad).
 
 Column-type decisions
@@ -51,6 +51,7 @@ GN_LV = SheetContract(
         ColumnContract("Rubro",              _CAT),
         ColumnContract("UnidadMedida",       _CAT),
         ColumnContract("Divisa",             _CAT),
+        ColumnContract("CobranzaHonorario",  _CAT),
     ],
     allow_trailing_unnamed=False,
 )

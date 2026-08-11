@@ -46,6 +46,11 @@ _AGGREGATED_IDS = {
     "comision_admin_mensual",
     # Computado en context_builder desde perfiles.estaciones_presenciales — no pisar con fórmula
     "estaciones_trabajo",
+    # Sub-componentes de nómina: calculados en NominaCalculator × double_h — no pisar con fórmula
+    # Excel V2-8: 'Nomina Loaded'!K108:K127 (salario_fijo) y K198:K217 (comisiones brutas)
+    "nomina_loaded_mensual",
+    "salario_fijo_mensual",
+    "salario_variable_mensual",
 }
 
 # Excel V2-8: 'Pólizas - Costo Financiacion'!D338 = FILTER(Panel!D45) × 1.42

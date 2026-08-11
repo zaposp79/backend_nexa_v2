@@ -89,42 +89,51 @@ class NominaCalculator:
 
         nomina_loaded = agentes + estructura (Salario Fijo + Variable del NL).
         Excel V2-8: 'Visión P&G'!R37 = R38 + R39 = Salario Fijo + Salario Variable.
-        Salario Fijo NL incluye cargos de agentes Y estructura pro-rateada.
+        salario_variable = comisiones brutas (sin cargas prestacionales).
+        Excel V2-8: 'Nomina Loaded'!K198:K217 = sum(comision × FTE/cantidad por cargo).
+        salario_fijo = nomina_loaded - salario_variable.
         """
         nomina_loaded = self._nomina_agentes() + self._nomina_estructura()
-        salario_fijo = self._nomina_sin_comision()
+        salario_variable = self._nomina_comisiones_brutas()
         return {
             "nomina_loaded": nomina_loaded,
             "crucero_total": self._crucero(),
             "capacitacion_rotacion": self._capacitacion_rotacion(),
-            "salario_fijo": salario_fijo,
-            "salario_variable": nomina_loaded - salario_fijo,
+            "salario_fijo": nomina_loaded - salario_variable,
+            "salario_variable": salario_variable,
         }
 
-    def _nomina_sin_comision(self) -> float:
-        """Costo empresa (comision=0) para agentes + estructura.
+    def _nomina_comisiones_brutas(self) -> float:
+        """Suma bruta de comisiones de agentes y estructura (sin cargas prestacionales).
 
-        Excel V2-8: 'Visión P&G'!R38 Salario Fijo = costo prestacional del salario base sin comisiones.
+        Excel V2-8: 'Nomina Loaded'!K198:K217 donde col A="Activado".
+        Incluye comision_mensual × FTE por perfil de agente +
+        comision × cantidad pro-rateada por cargo de estructura.
         """
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
 
+        # Comisiones brutas de agentes (FTE)
         total = sum(
-            calcular_costo_empresa(float(p.get("salario_base", 0)), 0.0) * float(p.get("fte", 0))
+            float(p.get("comision_mensual", 0)) * float(p.get("fte", 0))
             for p in perfiles
         )
+        # Comisiones brutas de estructura (cantidad pro-rateada)
         for fila in ratios_filas:
             if not fila.get("incluido", False):
                 continue
             cargo_data = self._resolver_cargo(fila, detalle_map)
             if not cargo_data:
                 continue
+            comision = float(cargo_data.get("comision", 0))
+            if comision <= 0:
+                continue
             cantidad = self._calcular_cantidad(fila, perfiles)
             if cantidad <= 0:
                 continue
-            total += calcular_costo_empresa(float(cargo_data.get("salario", 0)), 0.0) * cantidad
+            total += comision * cantidad
         return total
 
     def _crucero(self) -> float:

@@ -5,7 +5,8 @@ Based on production file: OP_productiva_2026-05-11-10-35-25.xlsx
 Sheet inventory (all required):
   OP-LV, OP-OPEXFijo, OP-HardSoft, OP-DispositivoRequerido,
   OP-Componente, OP-ComponenteAcumulado, OP-Poliza, OP-PolizaFija, OP-Costo,
-  OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio, OP-Riesgo, OP-RiesgoValor.
+  OP-MargenObjetivo, OP-ICA, OP-ReglaNegocio, OP-Riesgo, OP-RiesgoValor,
+  OP-CobranzaRango.
 
 OP-ReglaNegocio.Minimo / OP-ReglaNegocio.Maximo
     Numeric boundaries for each business rule. Stored as decimal values.
@@ -240,6 +241,17 @@ OP_RIESGO_VALOR = SheetContract(
     allow_trailing_unnamed=False,
 )
 
+OP_COBRANZA_RANGO = SheetContract(
+    excel_name="OP-CobranzaRango",
+    required=True,
+    sheet_type=SheetType.TABLE_ROWS,
+    columns=[
+        ColumnContract("Rango",      _S),
+        ColumnContract("Honorarios", _MON),
+    ],
+    allow_trailing_unnamed=False,
+)
+
 
 OP_CONTRACT = ModuleContract(
     module="op",
@@ -259,5 +271,6 @@ OP_CONTRACT = ModuleContract(
         OP_REGLA_NEGOCIO,
         OP_RIESGO,
         OP_RIESGO_VALOR,
+        OP_COBRANZA_RANGO,
     ],
 )
