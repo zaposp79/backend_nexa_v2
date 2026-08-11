@@ -95,6 +95,8 @@ class SimulationDraftService:
             "condiciones_cadena_a": _dump(request.condiciones_cadena_a),
             "condiciones_cadena_b": _dump(request.condiciones_cadena_b),
             "condiciones_cadena_c": _dump(request.condiciones_cadena_c),
+            "cobranzas": _dump(request.cobranzas),
+            "saco_multicanal": _dump(request.saco_multicanal),
         }
         saved = self._repo.save(document)
         return _to_response(saved)
@@ -137,6 +139,10 @@ class SimulationDraftService:
             document["condiciones_cadena_b"] = _dump(request.condiciones_cadena_b)
         if request.condiciones_cadena_c is not None:
             document["condiciones_cadena_c"] = _dump(request.condiciones_cadena_c)
+        if request.cobranzas is not None:
+            document["cobranzas"] = _dump(request.cobranzas)
+        if request.saco_multicanal is not None:
+            document["saco_multicanal"] = _dump(request.saco_multicanal)
 
         # client_id se sincroniza con datos_operativos.cliente si está presente
         datos_op = document.get("datos_operativos") or {}
@@ -321,6 +327,8 @@ def _to_response(doc: dict) -> SimulationDraftResponse:
         "condiciones_cadena_a": _migrate_condiciones_cadena_a(doc.get("condiciones_cadena_a")),
         "condiciones_cadena_b": doc.get("condiciones_cadena_b"),
         "condiciones_cadena_c": doc.get("condiciones_cadena_c"),
+        "cobranzas": doc.get("cobranzas"),
+        "saco_multicanal": doc.get("saco_multicanal"),
     })
 
 

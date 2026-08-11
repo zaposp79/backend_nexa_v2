@@ -516,6 +516,50 @@ class CondicionesCadenaC(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Cobranzas
+# ---------------------------------------------------------------------------
+
+class MesValor(BaseModel):
+    model_config = {"extra": "allow"}
+    mes: Optional[Any] = None
+    valor: Optional[Any] = None
+
+
+class RangoCartera(BaseModel):
+    model_config = {"extra": "allow"}
+    id: Optional[str] = None
+    rango_de_cartera: Optional[str] = None
+    base_cliente: Optional[float] = None
+    contactabilidad: Optional[float] = None
+    efectividad: Optional[float] = None
+    arpu: Optional[float] = None
+
+
+class Cobranzas(BaseModel):
+    model_config = {"extra": "allow"}
+    numero_de_asesores: Optional[int] = None
+    rangos_de_cartera: Optional[List[RangoCartera]] = None
+    porcentaje_considerando_caidas: Optional[List[MesValor]] = None
+
+
+# ---------------------------------------------------------------------------
+# SacoMulticanal
+# ---------------------------------------------------------------------------
+
+class ConfiguracionSacoMulticanal(BaseModel):
+    model_config = {"extra": "allow"}
+    id: Optional[str] = None
+    concepto: Optional[str] = None
+    tipo: Optional[str] = None
+    detalle: Optional[List[MesValor]] = None
+
+
+class SacoMulticanal(BaseModel):
+    model_config = {"extra": "allow"}
+    configuraciones: Optional[List[ConfiguracionSacoMulticanal]] = None
+
+
+# ---------------------------------------------------------------------------
 # List summary (GET /all)
 # ---------------------------------------------------------------------------
 
@@ -566,6 +610,8 @@ class SimulationDraftRequest(BaseModel):
     condiciones_cadena_a: Optional[CondicionesCadenaA] = None
     condiciones_cadena_b: Optional[CondicionesCadenaB] = None
     condiciones_cadena_c: Optional[CondicionesCadenaC] = None
+    cobranzas: Optional[Cobranzas] = None
+    saco_multicanal: Optional[SacoMulticanal] = None
 
 
 class SimulationDraftUpdateRequest(BaseModel):
@@ -588,6 +634,8 @@ class SimulationDraftUpdateRequest(BaseModel):
     condiciones_cadena_a: Optional[CondicionesCadenaA] = None
     condiciones_cadena_b: Optional[CondicionesCadenaB] = None
     condiciones_cadena_c: Optional[CondicionesCadenaC] = None
+    cobranzas: Optional[Cobranzas] = None
+    saco_multicanal: Optional[SacoMulticanal] = None
 
 
 class SimulationDraftResponse(BaseModel):
@@ -614,6 +662,8 @@ class SimulationDraftResponse(BaseModel):
     condiciones_cadena_a: Optional[Any] = None
     condiciones_cadena_b: Optional[Any] = None
     condiciones_cadena_c: Optional[Any] = None
+    cobranzas: Optional[Any] = None
+    saco_multicanal: Optional[Any] = None
 
 
 __all__ = [
@@ -648,6 +698,10 @@ __all__ = [
     "RolRecursoHumano", "ItemOpexRHT", "RecursoHumanoTransversal",
     "ItemOpexCadenaC", "CostoVariableCadenaC", "ItemOpexHitlC",
     "HitlCadenaC", "CondicionesCadenaC",
+    # Cobranzas
+    "MesValor", "RangoCartera", "Cobranzas",
+    # SacoMulticanal
+    "ConfiguracionSacoMulticanal", "SacoMulticanal",
     # Request / Response
     "SimulationDraftRequest",
     "SimulationDraftUpdateRequest",
