@@ -118,6 +118,7 @@ def _build_header(vp_data: Dict[str, Any]) -> Dict[str, Any]:
         "duracion_meses": resumen.get("meses_contrato"),
         "servicio": resumen.get("servicio"),
         "divisa": resumen.get("divisa"),
+        "fecha_inicio": resumen.get("fecha_inicio"),
     }
 
 
@@ -397,6 +398,7 @@ def _build_from_v2_result(
             "cliente":        result_doc.get("cliente"),
             "servicio":       result_doc.get("servicio"),
             "duracion_meses": result_doc.get("duracion_meses"),
+            "fecha_inicio":   result_doc.get("fecha_inicio"),
         },
         "estaciones_trabajo": estaciones_trabajo,
         "periods":  periods,

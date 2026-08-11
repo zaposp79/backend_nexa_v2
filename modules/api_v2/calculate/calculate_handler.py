@@ -58,6 +58,7 @@ def handle_calculate_v2(
         "cliente": result.cliente,
         "servicio": result.servicio,
         "duracion_meses": result.duracion_meses,
+        "fecha_inicio": request_data.get("datos_operativos", {}).get("fecha_inicio"),
         "vision_pyg": result.vision_pyg.model_dump(),
         "vision_cts": result.vision_cts.model_dump() if result.vision_cts else None,
         "vision_imprimible": result.vision_imprimible,

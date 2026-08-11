@@ -53,6 +53,7 @@ async def get_vision_pyg_v2(
                 "cliente": doc.get("cliente"),
                 "servicio": doc.get("servicio"),
                 "duracion_meses": doc.get("duracion_meses"),
+                "fecha_inicio": doc.get("fecha_inicio"),
             },
             **periods_data,
             "metadata": {
