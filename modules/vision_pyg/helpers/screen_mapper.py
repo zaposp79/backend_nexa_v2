@@ -396,9 +396,11 @@ def _build_from_v2_result(
     totales["ingresos"]["imprevistos"]  = _imp_total or None
     totales["ingresos"]["ingreso_fijo"] = _if_total  or None
 
-    # Sobreescribir campos CTS en totales con escala acumulada
+    # CTS scaling para campos derivados de los perfiles (crucero, opex, inversiones, costos_fijos).
+    # nomina_loaded NO se escala con CTS porque el valor correcto ya está en totales_vals
+    # como suma directa de los meses (nomina_loaded_mensual); escalarlo con nomina_tot
+    # incluiría crucero y capacitación en el numerador → total ~N× incorrecto.
     totales["costos"]["cadena_a"].update({
-        "nomina_loaded": _scale(cts["nomina_loaded_base"], nomina_tot, cts["payroll_base"]),
         "crucero":       _scale(cts["crucero_base"],       nomina_tot, cts["payroll_base"]),
         "opex_fijo":     _scale(cts["opex_fijo_base"],   nopayroll_tot, cts["no_payroll_base"]),
         "inversiones":   _scale(cts["inversiones_base"], nopayroll_tot, cts["no_payroll_base"]),

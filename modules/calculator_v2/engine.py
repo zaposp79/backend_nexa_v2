@@ -320,6 +320,21 @@ class MotorDeReglas:
             resultados_por_mes.append(ResultadoMes(mes=mes, valores=valores_num))
 
         totales = self._calcular_totales(resultados_por_mes)
+
+        # Excel V2-8: 'Visión P&G'!BJ69 = SUM(B69:BI69) incluye meses de extensión post-contrato.
+        # El motor solo itera meses 1..duracion_meses; las pólizas con aplica_extension y
+        # meses_extension > duracion_meses generan costos financieros adicionales que se suman al total.
+        _ext_comp_fin = self._compute_extension_financial_cost(
+            polizas_todos=_polizas_todos,
+            duracion_meses=duracion_meses,
+            avg_nomina=_avg_nomina,
+            avg_no_payroll=_avg_no_payroll,
+            ctx_base=_ctx_base,
+        )
+        if _ext_comp_fin > 0.0:
+            totales["componente_financiero_total"] = totales.get("componente_financiero_total", 0.0) + _ext_comp_fin
+            totales["costo_total"] = totales.get("costo_total", 0.0) + _ext_comp_fin
+
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
         # Componentes financieros base (100% ramp, sin IPC) — reutiliza el call de pricing
@@ -552,6 +567,60 @@ class MotorDeReglas:
             "polizas_puras_hm": pol_pricing + pol_ext_amortized,
         }
         return numerador / denominador, componentes_hm
+
+    # ── Costos financieros de extensión ───────────────────────────────────
+
+    @staticmethod
+    def _compute_extension_financial_cost(
+        polizas_todos: List[Dict[str, Any]],
+        duracion_meses: int,
+        avg_nomina: float,
+        avg_no_payroll: float,
+        ctx_base: Dict[str, Any],
+    ) -> float:
+        """Suma el componente financiero de los meses de extensión de pólizas.
+
+        # Excel V2-8: BJ69 = SUM(B69:BI69) incluye meses k > duracion_meses donde pólizas con
+        # aplica_extension=True y meses_extension > duracion_meses siguen activas.
+        # En esos meses no hay costo_op ni ingreso, solo costo de póliza + ICA/GMF sobre ella.
+        # Fórmula R69: ICA_ext + GMF_ext + R73 donde R73 = ICA_ext + GMF_ext + pol_ext (comision=0).
+        """
+        margen_a = float(ctx_base.get("margen_a", 0.18))
+        factor_margen = 1.0 - margen_a
+        if factor_margen <= 0:
+            return 0.0
+
+        tasa_ica = float(ctx_base.get("tasa_ica", 0.01))
+        tasa_gmf = float(ctx_base.get("tasa_gmf", 0.004))
+        # Base de referencia HM: misma base que usa pol_ext_amortized en for_pricing=True
+        base_ingreso_hm = (avg_nomina + avg_no_payroll) / factor_margen
+
+        max_extension = max(
+            (int(p.get("meses_extension") or 0) for p in polizas_todos if p.get("aplica_extension")),
+            default=0,
+        )
+        if max_extension <= duracion_meses:
+            return 0.0
+
+        ext_total = 0.0
+        for mes_ext in range(duracion_meses + 1, max_extension + 1):
+            tasa_pol_ext = sum(
+                float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                for p in polizas_todos
+                if p.get("aplica_extension")
+                and "comisi" not in str(p.get("nombre", "")).lower()
+                and mes_ext <= int(p.get("meses_extension") or 0)
+            )
+            if tasa_pol_ext <= 0:
+                continue
+            pol_ext_monthly = base_ingreso_hm * tasa_pol_ext
+            # R69 = ICA + GMF + R73; R73 = ICA + GMF + pol_puras (comision=0 en meses ext)
+            ica_ext = (pol_ext_monthly / factor_margen) * tasa_ica
+            gmf_ext = pol_ext_monthly * tasa_gmf
+            r73_ext = ica_ext + gmf_ext + pol_ext_monthly
+            ext_total += ica_ext + gmf_ext + r73_ext
+
+        return ext_total
 
     # ── Visión Cost-to-Serve ───────────────────────────────────────────────
 
