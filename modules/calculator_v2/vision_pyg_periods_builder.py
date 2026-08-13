@@ -143,4 +143,15 @@ def build_vision_pyg_periods(doc: Dict[str, Any]) -> Dict[str, Any]:
         et = meses[0].get("valores", {}).get("estaciones_trabajo")
         estaciones_trabajo = et if et is not None else None
 
+    # Recomputar ratios: _calcular_totales los suma como números acumulados, lo cual es incorrecto.
+    # Excel V2-8: BJ83=BJ82/BJ14; BJ87=BJ31-BJ34-BJ86; BJ88=BJ87/BJ31
+    _contribucion_total  = totales_out["utilidad"].get("contribucion") or 0.0
+    _utilidad_neta_total = totales_out["utilidad"].get("utilidad_neta") or 0.0
+    _ingreso_neto_total  = totales_out["ingresos"].get("ingreso_neto") or 0.0
+    if estaciones_trabajo:
+        totales_out["utilidad"]["contribucion_por_puesto"] = _contribucion_total / estaciones_trabajo
+    if _ingreso_neto_total:
+        totales_out["utilidad"]["porcentaje_contribucion"]  = _contribucion_total / _ingreso_neto_total
+        totales_out["utilidad"]["porcentaje_utilidad_neta"] = _utilidad_neta_total / _ingreso_neto_total
+
     return {"periods": periods, "totales": totales_out, "estaciones_trabajo": estaciones_trabajo}

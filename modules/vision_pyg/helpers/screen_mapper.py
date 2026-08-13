@@ -413,6 +413,17 @@ def _build_from_v2_result(
     if meses_data:
         estaciones_trabajo = meses_data[0].get("valores", {}).get("estaciones_trabajo")
 
+    # Recomputar ratios: _calcular_totales los suma como números acumulados (incorrecto).
+    # Excel V2-8: BJ83=BJ82/BJ14; BJ87=BJ31-BJ34-BJ86; BJ88=BJ87/BJ31
+    _contribucion_total  = totales["utilidad"].get("contribucion") or 0.0
+    _utilidad_neta_total = totales["utilidad"].get("utilidad_neta") or 0.0
+    _ingreso_neto_total  = totales["ingresos"].get("ingreso_neto") or 0.0
+    if estaciones_trabajo:
+        totales["utilidad"]["contribucion_por_puesto"] = _contribucion_total / estaciones_trabajo
+    if _ingreso_neto_total:
+        totales["utilidad"]["porcentaje_contribucion"]  = _contribucion_total / _ingreso_neto_total
+        totales["utilidad"]["porcentaje_utilidad_neta"] = _utilidad_neta_total / _ingreso_neto_total
+
     return {
         "version": "v2",
         "simulation_id": simulation_id or result_doc.get("simulation_id"),

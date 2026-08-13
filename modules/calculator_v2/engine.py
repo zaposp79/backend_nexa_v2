@@ -663,6 +663,8 @@ class MotorDeReglas:
                     "ingreso_bruto":               0.0,
                     "ingreso_neto":                0.0,
                     "contribucion":                -comp_fin_ext,
+                    # Excel V2-8: BJ87 = BJ31-BJ34-BJ86; meses ext tienen costo_fijo=0
+                    "utilidad_neta":               -comp_fin_ext,
                     "nomina_total_mensual":        0.0,
                     "no_payroll_total_mensual":    0.0,
                     "ramp_up_mes":                 0.0,
