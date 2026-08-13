@@ -51,7 +51,7 @@ _AGGREGATED_IDS = {
     "nomina_loaded_mensual",
     "salario_fijo_mensual",
     "salario_variable_mensual",
-    # Capital charge diferido: calculado en el loop de meses con prev_costo_total — no pisar con fórmula
+    # Capital charge diferido: calculado en el loop (CT[k-1] × meses_cc × tasa × IPC_k) — no pisar con fórmula
     # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 × "Activado" × IPC_factor
     "costos_financiacion_mensual",
 }
@@ -237,15 +237,30 @@ class MotorDeReglas:
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
 
-        # Costos Financiación — Excel V2-8: 'Panel de Control General'!C21
-        # cons_costo_de_financiacion > 0 → "Si" → capital charge diferido por período de pago.
-        # Fórmula: SUMPRODUCT('Pólizas - Costo Financiacion'!L528:L606 × "Activado") × IPC_factor
+        # Costos Financiación — Excel V2-8: 'Pólizas - Costo Financiacion'!D515-D516
+        # Panel!C21="Si" → cons_costo_de_financiacion > 0 en el request.
+        # D515 = IFS(periodo_pago=30→1, 60→2, 90→3, else→4) = meses de capital charge.
+        # D516 = tasa mensual = Panel!L11 = indexacion.tasa_interes_mensual.
+        # Formula PCF!col_k = D515[k-1] × D516 × SUMIFS(CT![k-1], canal, modalidad)
+        # CT (Costos Totales) = SUMIFS(NominaLoaded!col + NoPayroll!col, perfil) — IPC simple NL-level.
+        # El P&G multiplica por (1 + IPC_incremental) — capa P&G sobre la base NL.
         tasa_interes = float(indexacion.get("tasa_interes_mensual", 0.0))
         periodo_pago_dias = int(datos_op.get("periodo_pago", 30))
         cons_financiacion = float(datos_op.get("cons_costo_de_financiacion", 0.0))
         financiacion_activa = cons_financiacion > 0 and tasa_interes > 0
-        periodo_factor = (periodo_pago_dias / 30.0) if periodo_pago_dias else 1.0
-        prev_costo_total = 0.0  # costo_total del mes anterior — base del capital charge
+        # meses_cc = D515 = IFS(D514=30→1, 60→2, 90→3, else→4) — ref PCF!D515 ArrayFormula
+        if periodo_pago_dias == 30:
+            meses_cc = 1
+        elif periodo_pago_dias == 60:
+            meses_cc = 2
+        elif periodo_pago_dias == 90:
+            meses_cc = 3
+        else:
+            meses_cc = 4
+        # Factores IPC de la capa NL (acumulados, simple) del mes anterior.
+        # CT[k-1] = (nomina_fija + no_payroll_fijo) × ipc_factor_{k-1} — base del capital charge.
+        _prev_h_factor = 1.0   # ipc_factor_{k-1} para comp_humano
+        _prev_t_factor = 1.0   # ipc_factor_{k-1} para comp_tecnologico
 
         for mes in range(1, duracion_meses + 1):
             ctx = build_base_context(request_data, mes, ramp_up_override=ramp_up_campana)
@@ -322,21 +337,27 @@ class MotorDeReglas:
             # Ingreso Cadena A: ingreso HM (pricing, ponderado) × ramp_up del mes
             ctx["ingreso_cadena_a"] = ingreso_mes * ramp_up
 
-            # Capital charge diferido: 0 en mes 1 (sin mes previo), activo desde mes 2.
-            # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 almacena costo_{mes-1} × factor.
-            # La fórmula del P&G fila 74 lee esa columna × "Activado" × IPC_factor.
+            # Capital charge diferido — PCF!col_k = meses_cc[k-1] × tasa × CT[k-1] × (1+IPC_incr_k)
+            # CT[k-1] = NominaLoaded[k-1] + NoPayroll[k-1] con IPC simple (ipc_factor NL-level).
+            # El P&G aplica (1+ipc_incremental_k) como capa adicional (no reaplicar double_h).
+            # Mes 1 = 0 (no hay mes k-1); activo desde mes 2 si financiacion_activa.
             if financiacion_activa and mes > 1:
-                ctx["costos_financiacion_mensual"] = prev_costo_total * periodo_factor * tasa_interes
+                _h_base = nomina_fija * _prev_h_factor
+                _t_base = no_payroll_fijo * _prev_t_factor
+                ctx["costos_financiacion_mensual"] = (
+                    (_h_base + _t_base) * meses_cc * tasa_interes * (1.0 + ipc_incremental)
+                )
             else:
                 ctx["costos_financiacion_mensual"] = 0.0
+
+            # Actualiza factores IPC del mes actual (se usarán como base del mes siguiente).
+            _prev_h_factor = ipc_factor if (comp_humano == "IPC" and ipc_activo) else 1.0
+            _prev_t_factor = ipc_factor if (comp_tecnologico == "IPC" and ipc_activo) else 1.0
 
             # Evaluar rubros en orden topológico
             for rubro in rubros:
                 valor = self._evaluar_rubro(rubro, ctx)
                 ctx[rubro.id] = valor
-
-            # Guarda costo_total para el capital charge del mes siguiente.
-            prev_costo_total = float(ctx.get("costo_total", 0.0))
 
             # Solo valores numéricos en el modelo (strings y listas del contexto se excluyen)
             valores_num = {
@@ -366,10 +387,17 @@ class MotorDeReglas:
 
         totales = self._calcular_totales(resultados_por_mes)
 
-        # Extra mes N+1: el capital charge del último mes del contrato se paga en mes N+1.
-        # Excel V2-8: 'Pólizas - Costo Financiacion' incluye columna adicional (mes duracion+1).
-        if financiacion_activa and prev_costo_total > 0:
-            extra_fin = prev_costo_total * periodo_factor * tasa_interes
+        # Extra mes N+1: el capital charge basado en CT[N] se paga en el mes N+1.
+        # _prev_h/_t_factor al salir del loop = ipc_factor del último mes (base de CT[N]).
+        # PCF tiene una columna adicional más allá de duracion_meses que se suma a totales.
+        if financiacion_activa:
+            ipc_incr_n1 = (
+                _compute_ipc_incremental(fecha_inicio, duracion_meses + 1, mes_ajuste_ipc, ipc_rates)
+                if ipc_activo else 0.0
+            )
+            _h_base_n = nomina_fija * _prev_h_factor
+            _t_base_n = no_payroll_fijo * _prev_t_factor
+            extra_fin = (_h_base_n + _t_base_n) * meses_cc * tasa_interes * (1.0 + ipc_incr_n1)
             totales["costos_financiacion_mensual"] = (
                 totales.get("costos_financiacion_mensual", 0.0) + extra_fin
             )
