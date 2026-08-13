@@ -58,7 +58,7 @@ def _period_componente_financiero(v: Dict[str, Any]) -> Dict[str, Any]:
         "gmf": v.get("gmf_mensual"),
         "comision_administracion": v.get("comision_admin_hm"),
         "polizas": v.get("polizas_puras_hm"),
-        "costos_financieros": None,
+        "costos_financieros": v.get("costos_financiacion_mensual") or None,
         "total_componente_financiero": v.get("componente_financiero_total"),
     }
 

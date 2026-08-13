@@ -51,6 +51,9 @@ _AGGREGATED_IDS = {
     "nomina_loaded_mensual",
     "salario_fijo_mensual",
     "salario_variable_mensual",
+    # Capital charge diferido: calculado en el loop de meses con prev_costo_total — no pisar con fórmula
+    # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 × "Activado" × IPC_factor
+    "costos_financiacion_mensual",
 }
 
 # Excel V2-8: 'Pólizas - Costo Financiacion'!D338 = FILTER(Panel!D45) × 1.42
@@ -234,6 +237,16 @@ class MotorDeReglas:
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
 
+        # Costos Financiación — Excel V2-8: 'Panel de Control General'!C21
+        # cons_costo_de_financiacion > 0 → "Si" → capital charge diferido por período de pago.
+        # Fórmula: SUMPRODUCT('Pólizas - Costo Financiacion'!L528:L606 × "Activado") × IPC_factor
+        tasa_interes = float(indexacion.get("tasa_interes_mensual", 0.0))
+        periodo_pago_dias = int(datos_op.get("periodo_pago", 30))
+        cons_financiacion = float(datos_op.get("cons_costo_de_financiacion", 0.0))
+        financiacion_activa = cons_financiacion > 0 and tasa_interes > 0
+        periodo_factor = (periodo_pago_dias / 30.0) if periodo_pago_dias else 1.0
+        prev_costo_total = 0.0  # costo_total del mes anterior — base del capital charge
+
         for mes in range(1, duracion_meses + 1):
             ctx = build_base_context(request_data, mes, ramp_up_override=ramp_up_campana)
             ramp_up = ctx["ramp_up_mes"]
@@ -309,10 +322,21 @@ class MotorDeReglas:
             # Ingreso Cadena A: ingreso HM (pricing, ponderado) × ramp_up del mes
             ctx["ingreso_cadena_a"] = ingreso_mes * ramp_up
 
+            # Capital charge diferido: 0 en mes 1 (sin mes previo), activo desde mes 2.
+            # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 almacena costo_{mes-1} × factor.
+            # La fórmula del P&G fila 74 lee esa columna × "Activado" × IPC_factor.
+            if financiacion_activa and mes > 1:
+                ctx["costos_financiacion_mensual"] = prev_costo_total * periodo_factor * tasa_interes
+            else:
+                ctx["costos_financiacion_mensual"] = 0.0
+
             # Evaluar rubros en orden topológico
             for rubro in rubros:
                 valor = self._evaluar_rubro(rubro, ctx)
                 ctx[rubro.id] = valor
+
+            # Guarda costo_total para el capital charge del mes siguiente.
+            prev_costo_total = float(ctx.get("costo_total", 0.0))
 
             # Solo valores numéricos en el modelo (strings y listas del contexto se excluyen)
             valores_num = {
@@ -341,6 +365,15 @@ class MotorDeReglas:
         resultados_por_mes.extend(_ext_meses)
 
         totales = self._calcular_totales(resultados_por_mes)
+
+        # Extra mes N+1: el capital charge del último mes del contrato se paga en mes N+1.
+        # Excel V2-8: 'Pólizas - Costo Financiacion' incluye columna adicional (mes duracion+1).
+        if financiacion_activa and prev_costo_total > 0:
+            extra_fin = prev_costo_total * periodo_factor * tasa_interes
+            totales["costos_financiacion_mensual"] = (
+                totales.get("costos_financiacion_mensual", 0.0) + extra_fin
+            )
+
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
         # Componentes financieros base (100% ramp, sin IPC) — reutiliza el call de pricing
@@ -447,12 +480,12 @@ class MotorDeReglas:
 
         if rubro_id == "componente_financiero_total":
             # Excel P&G I69 = SUM(I70:I74) = ICA + GMF + Comisión + Pólizas_puras + CostosFinancieros
-            # CostosFinancieros (I74) = 0 cuando no hay financiación externa en el deal.
             ica = ctx.get("ica_hm", 0.0)
             gmf = ctx.get("gmf_hm", 0.0)
             comision = ctx.get("comision_admin_hm", 0.0)
             polizas_puras = ctx.get("polizas_puras_hm", 0.0)
-            return ica + gmf + comision + polizas_puras
+            costos_fin = ctx.get("costos_financiacion_mensual", 0.0)  # Excel V2-8 P&G R74
+            return ica + gmf + comision + polizas_puras + costos_fin
 
         if rubro_id == "costo_fijo_externo":
             # pct_costo_fijo viene de parametrización GN (no cargada aún) → 0 por ahora

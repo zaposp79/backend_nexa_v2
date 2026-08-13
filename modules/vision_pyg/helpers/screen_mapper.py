@@ -323,7 +323,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "gmf":                     vals.get("gmf_mensual") or vals.get("gmf_hm"),
             "comision_administracion": vals.get("comision_admin_hm"),
             "polizas":                 vals.get("polizas_puras_hm"),
-            "costos_financieros":      vals.get("costos_financieros"),
+            "costos_financieros":      vals.get("costos_financiacion_mensual"),
             "total_componente_financiero": vals.get("componente_financiero_total"),
         },
         "costo_por_comision": vals.get("costo_por_comision"),
