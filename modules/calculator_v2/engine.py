@@ -587,7 +587,8 @@ class MotorDeReglas:
         """Construye periodos adicionales para meses de extensión de pólizas post-contrato.
 
         # Excel V2-8: 'Visión P&G' columnas post-contrato — pólizas con aplica_extension=True y
-        # meses_extension > duracion_meses generan costos en meses k > duracion_meses.
+        # meses_extension > 0 generan costos en meses duracion+1 … duracion+meses_extension.
+        # meses_extension = meses EXTRA más allá del fin del contrato (no el total).
         # En esos meses: ICA=0, GMF=0, Comision=0 (sin actividad operativa).
         # R73 = polizas_puras_ext; R69 = R73 (sin ICA ni GMF).
         # La base usa el IPC del mes k para consistencia con el P&G mensual.
@@ -597,21 +598,24 @@ class MotorDeReglas:
         if factor_margen <= 0:
             return []
 
+        # max_extension = máximo de meses extra entre todas las pólizas con extensión
         max_extension = max(
             (int(p.get("meses_extension") or 0) for p in polizas_todos if p.get("aplica_extension")),
             default=0,
         )
-        if max_extension <= duracion_meses:
+        if max_extension <= 0:
             return []
 
         ext_resultados: List[ResultadoMes] = []
-        for mes_ext in range(duracion_meses + 1, max_extension + 1):
+        for mes_ext in range(duracion_meses + 1, duracion_meses + max_extension + 1):
+            # ext_num = número de mes de extensión (1-based desde el fin del contrato)
+            ext_num = mes_ext - duracion_meses
             tasa_pol_ext = sum(
                 float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
                 for p in polizas_todos
                 if p.get("aplica_extension")
                 and "comisi" not in str(p.get("nombre", "")).lower()
-                and mes_ext <= int(p.get("meses_extension") or 0)
+                and ext_num <= int(p.get("meses_extension") or 0)
             )
             if tasa_pol_ext <= 0:
                 continue
