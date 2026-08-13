@@ -266,12 +266,13 @@ class MotorDeReglas:
             # La diferencia entre aplica=True/False está en el HM base (avg vs base costs).
             ingreso_mes = ingreso_cadena_a_base * (1.0 + ipc_incremental)
 
-            # Costo real mensual: pólizas con extensión aplican tasa completa hasta mes <= meses_extension
-            # Excel V2-8: 'Visión P&G'!R69 — Componente Financiero varía entre M6 y M7-10
+            # Pólizas con extensión: aplican durante todo el contrato (meses_extension = meses EXTRA
+            # más allá del fin del contrato, no el total de meses activos).
+            # Ej: contrato 10M + meses_extension=2 → póliza activa M1-M12, pero el loop solo llega M10.
             polizas_activas_mes = [
                 p for p in _polizas_todos
                 if not p.get("aplica_extension")
-                or mes <= int(p.get("meses_extension") or 9999)
+                or mes <= duracion_meses + int(p.get("meses_extension") or 0)
             ]
             ctx_cost = {**_ctx_base, "polizas_activas": polizas_activas_mes}
             _, componentes_cost_mes = self._compute_ingreso_cadena_a_hm(
@@ -299,7 +300,8 @@ class MotorDeReglas:
             ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
             ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
             ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
-            # R73 Excel P&G 'Pólizas adicionales' = ICA + GMF + Comisión + Pólizas_puras
+            # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
+            # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
             ctx["polizas_adicionales_hm"] = (
                 ctx["ica_hm"] + ctx["gmf_hm"] + ctx["comision_admin_hm"] + ctx["polizas_puras_hm"]
             )
@@ -444,16 +446,13 @@ class MotorDeReglas:
             return ctx.get("polizas_puras_hm", 0.0)
 
         if rubro_id == "componente_financiero_total":
-            # Excel P&G R73 "Pólizas adicionales" = ICA + GMF + Comisión + Pólizas_puras
-            #   (suma total de la hoja Pólizas - Costo Financiación)
-            # Excel P&G R69 "Componente Financiero" = ICA + GMF + Comisión + R73
-            #   → doble conteo intencional: ICA+GMF+Comisión aparecen en R70/R71/R72 Y dentro de R73
+            # Excel P&G I69 = SUM(I70:I74) = ICA + GMF + Comisión + Pólizas_puras + CostosFinancieros
+            # CostosFinancieros (I74) = 0 cuando no hay financiación externa en el deal.
             ica = ctx.get("ica_hm", 0.0)
             gmf = ctx.get("gmf_hm", 0.0)
             comision = ctx.get("comision_admin_hm", 0.0)
             polizas_puras = ctx.get("polizas_puras_hm", 0.0)
-            polizas_adicionales = ica + gmf + comision + polizas_puras   # R73
-            return ica + gmf + comision + polizas_adicionales             # R69
+            return ica + gmf + comision + polizas_puras
 
         if rubro_id == "costo_fijo_externo":
             # pct_costo_fijo viene de parametrización GN (no cargada aún) → 0 por ahora
@@ -471,14 +470,13 @@ class MotorDeReglas:
         # Resuelve la circularidad ICA/GMF/pol/admin ↔ ingreso sin iteración Excel.
         #
         # for_pricing=True (HM pricing):
-        #   Pólizas con extensión usan tasa ponderada = pct × (ext_meses / duracion_total)
-        #   → Hoja Maestra!C264 "Polizas" = 2,539,284 (ej. Seriedad: 0.0005 × 6/10 = 0.000300)
+        #   Pólizas con extensión aplican al 100% durante todo el contrato.
+        #   Los meses extra (meses_extension) se amortizan en pol_ext_amortized.
         #   → El ingreso resultante es el precio estable durante toda la vida del deal.
         #
         # for_pricing=False (costo real mensual):
-        #   El caller pre-filtra polizas_activas según qué pólizas aún aplican este mes.
-        #   La tasa se usa al valor completo (sin ponderación) sobre la lista recibida.
-        #   → P&G usa tasa completa M1-M6 (ext=6), luego 0 para M7-M10.
+        #   El caller pre-filtra polizas_activas según mes <= duracion + meses_extension.
+        #   meses_extension = meses EXTRA más allá del fin del contrato (no total de meses).
         #
         # Pasos:
         #   base = costo_op / (1-margen)
@@ -511,15 +509,9 @@ class MotorDeReglas:
             nombre = str(p.get("nombre", "")).lower()
             pct = float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
 
-            # Excel V2-8: 'Hoja Maestra Escenarios'!C264 — póliza con extensión
-            # for_pricing=True → tasa promedio ponderada sobre duración total del deal
-            #   pct × (meses_extension / duracion_meses)  ← HM usa este promedio para pricing estable
-            # for_pricing=False → tasa completa (caller ya filtró qué pólizas aplican este mes)
-            if for_pricing and p.get("aplica_extension", False):
-                ext_meses = int(p.get("meses_extension", 1)) or 1
-                duracion_total = int(ctx.get("meses_proyecto", 10)) or 10
-                if ext_meses < duracion_total:
-                    pct = pct * (ext_meses / duracion_total)
+            # meses_extension = meses EXTRA más allá del fin del contrato (no el total de meses).
+            # La póliza aplica al 100% durante todo el contrato; los meses extra se amortizan
+            # en pol_ext_amortized (bloque for_pricing abajo).
 
             if "comisi" in nombre:
                 # Hoja Maestra D338 = Panel!D45 × 1.42 → aplica factor a toda la pct efectiva
@@ -550,8 +542,7 @@ class MotorDeReglas:
                     continue
                 if not p.get("aplica_extension", False):
                     continue
-                ext_meses = int(p.get("meses_extension", 0)) or 0
-                extra_meses = max(0, ext_meses - duracion_total)
+                extra_meses = int(p.get("meses_extension", 0)) or 0
                 if extra_meses <= 0:
                     continue
                 pct_ext = float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))

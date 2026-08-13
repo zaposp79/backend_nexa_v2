@@ -45,7 +45,7 @@ _COSTOS_MAP = {
     "ica": ("costos", "componente_financiero", "ica"),
     "gmf": ("costos", "componente_financiero", "gmf"),
     "comision_administracion": ("costos", "componente_financiero", "comision_administracion"),
-    "polizas": ("costos", "componente_financiero", "polizas_adicionales"),
+    "polizas": ("costos", "componente_financiero", "polizas"),
     "financiacion": ("costos", "componente_financiero", "costos_financieros"),
     "costos_financieros": ("costos", "componente_financiero", "total_componente_financiero"),
 }
@@ -322,8 +322,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "ica":                     vals.get("ica_mensual") or vals.get("ica_hm"),
             "gmf":                     vals.get("gmf_mensual") or vals.get("gmf_hm"),
             "comision_administracion": vals.get("comision_admin_hm"),
-            # R73 Excel P&G = ICA + GMF + Comisión + Pólizas_puras (no solo polizas_puras)
-            "polizas_adicionales":     vals.get("polizas_adicionales_hm"),
+            "polizas":                 vals.get("polizas_puras_hm"),
             "costos_financieros":      vals.get("costos_financieros"),
             "total_componente_financiero": vals.get("componente_financiero_total"),
         },
