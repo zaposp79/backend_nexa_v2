@@ -29,6 +29,9 @@ class CTSCalculator:
         self._costo_fijo_estacion = costo_fijo_por_estacion
         indexacion = request_data.get("volumetria", {}).get("indexacion", {})
         self._tasa_interes = float(indexacion.get("tasa_interes_mensual", 0.0))
+        # Tarifa global por estación (Panel de Control General C17)
+        # Excel V2-8: 'Condiciones Cadena A'!E153 = Panel!C17 × FTE
+        self._crucero_base = float(request_data.get("datos_operativos", {}).get("crucero", 0.0))
 
     def calcular(
         self,
@@ -73,7 +76,8 @@ class CTSCalculator:
         # Excel V2-8 CTS F139: Nomina Loaded = costo_empresa_agente + staff_overhead (sin crucero)
         # Excel V2-8 CTS F138: Payroll = Nomina Loaded + Crucero
         total_crucero = sum(
-            float(p.get("capacitacion", {}).get("crucero_mensual", 0)) * float(p.get("fte", 0))
+            (self._crucero_base or float((p.get("capacitacion") or {}).get("crucero_mensual", 0)))
+            * float(p.get("fte", 0))
             for p in self._perfiles
         )
         nomina_sin_crucero = max(0.0, nomina_base - total_crucero)
@@ -94,7 +98,8 @@ class CTSCalculator:
             fte = float(perfil.get("fte", 0))
             salario = float(perfil.get("salario_base", 0))
             comision = float(perfil.get("comision_mensual", 0))
-            crucero_unit = float(perfil.get("capacitacion", {}).get("crucero_mensual", 0))
+            cap = perfil.get("capacitacion") or {}
+            crucero_unit = self._crucero_base or float(cap.get("crucero_mensual", 0))
 
             costo_fte = calcular_costo_empresa(salario, comision)
             salario_cargado = costo_fte * fte

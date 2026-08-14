@@ -199,15 +199,19 @@ class NominaCalculator:
     def _crucero(self) -> float:
         """Costo operacional mensual plano por agente (sin cargas sociales).
 
-        'Agente Básico 1' en ratios.filas (tipo='Agente', ratio=1) mapea a los perfiles.
-        El costo por agente viene de perfiles[i].capacitacion.crucero_mensual × perfil.fte.
+        Excel V2-8: 'Condiciones Cadena A'!E153 = 'Panel de Control General'!C17 × FTE
+        La tarifa global (Panel!C17) viene de datos_operativos.crucero.
+        Fallback: crucero_mensual por perfil (compatibilidad con requests legacy).
         """
+        # Tarifa global por estación — Panel de Control General C17
+        crucero_base = float(self._req.get("datos_operativos", {}).get("crucero", 0.0))
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         total = 0.0
         for perfil in perfiles:
-            crucero_val = float(perfil.get("capacitacion", {}).get("crucero_mensual", 0))
+            cap = perfil.get("capacitacion") or {}
+            crucero_unit = crucero_base or float(cap.get("crucero_mensual", 0))
             fte = float(perfil.get("fte", 0))
-            total += crucero_val * fte
+            total += crucero_unit * fte
         return total
 
     def _nomina_agentes(self) -> float:
