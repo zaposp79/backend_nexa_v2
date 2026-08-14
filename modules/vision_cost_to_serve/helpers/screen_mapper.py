@@ -247,11 +247,141 @@ def _charts(result: Dict[str, Any], has_risk: bool) -> Dict[str, Any]:
     return charts
 
 
+def _pct_str(v: Any) -> str:
+    """Convierte un float a porcentaje string con 2 decimales."""
+    try:
+        return f"{float(v):.2f}"
+    except (TypeError, ValueError):
+        return "0.00"
+
+
+def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Vision general por servicio (Cadena A/B/C) para la sección del mismo nombre."""
+    cts_total = float(vision_cts.get("cts_total") or 0)
+    fte = max(int(vision_cts.get("n_fte_total") or 1), 1)
+    prl_total = float(vision_cts.get("payroll_total") or 0)
+    npl_total = float(vision_cts.get("no_payroll_total") or 0)
+
+    def _item(total: float, label_pct: float) -> Dict[str, Any]:
+        return {"total": round(total, 2), "participacion": _pct_str(label_pct)}
+
+    def _pct_of_cts(v: float) -> float:
+        return (v / cts_total) if cts_total > 0 else 0.0
+
+    cadena_a = {
+        "nombre": "cadena_a",
+        "participacion": _pct_str(1.0),
+        "cost_to_serve": _item(round(cts_total / fte, 2), _pct_of_cts(cts_total)),
+        "payroll": _item(round(prl_total / fte, 2), _pct_of_cts(prl_total)),
+        "nomina_loaded": _item(round((float(vision_cts.get("payroll_total") or 0)) / fte, 2), _pct_of_cts(prl_total)),
+        "salario_fijo": _item(
+            round(sum(float(p.get("salario_fijo", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
+            0,
+        ),
+        "salario_variable": _item(
+            round(sum(float(p.get("salario_variable", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
+            0,
+        ),
+        "capacitacion_inicial": _item(0, 0),
+        "capacitacion_rotacion": _item(0, 0),
+        "examenes_medicos": _item(0, 0),
+        "estudios_seguridad": _item(0, 0),
+        "crucero": _item(
+            round(sum(float(p.get("crucero", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
+            0,
+        ),
+        "no_payroll": _item(round(npl_total / fte, 2), _pct_of_cts(npl_total)),
+        "opex_fijo": _item(
+            round(sum(float(p.get("opex_it", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
+            0,
+        ),
+        "inversiones": _item(
+            round(sum(float(p.get("inversiones", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
+            0,
+        ),
+        "costos_fijos_x_estacion": _item(
+            round(sum(float(p.get("costos_fijos", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
+            0,
+        ),
+    }
+
+    return [cadena_a, {"nombre": "cadena_b", "participacion": "0"}, {"nombre": "cadena_c", "participacion": "0"}]
+
+
+def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Vision detallada por canal desde los grupos modalidad→canal almacenados en engine."""
+    result = []
+    for modalidad_key in ("inbound", "outbound"):
+        for canal_data in (vision_por_canal.get(modalidad_key) or []):
+            canal = canal_data.get("canal", "")
+            data_items = [
+                {
+                    "nombre": "cadena_a",
+                    "participacion": "1.00",
+                    "cost_to_serve": {"total": round(canal_data.get("cts_total", 0), 2), "participacion": "1.00"},
+                },
+                {"nombre": "cadena_b", "participacion": "0"},
+                {"nombre": "cadena_c", "participacion": "0"},
+            ]
+            result.append({
+                "modalidad": modalidad_key.capitalize(),
+                "canal": canal,
+                "data": data_items,
+            })
+    return result
+
+
+def _build_vision_general_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Vision general por canal (inbound/outbound con canales y volúmenes)."""
+    result = []
+    for modalidad_key in ("inbound", "outbound"):
+        canales_raw = vision_por_canal.get(modalidad_key) or []
+        canales = []
+        for cd in canales_raw:
+            canales.append({
+                "canal": cd.get("canal", ""),
+                "volumen": cd.get("fte", 0),
+                "cadena_a": {
+                    "participacion": round(cd.get("cts_total", 0), 2),
+                    "valor": round(cd.get("cts_total", 0), 2),
+                    "activo": bool(cd.get("fte", 0) > 0),
+                },
+                "cadena_b": {"participacion": 0, "valor": 0, "activo": False},
+                "cadena_c": {"participacion": 0, "valor": 0, "activo": False},
+                "ctsPonderado": round(cd.get("cts_total", 0), 2),
+            })
+        result.append({"nombre": modalidad_key, "canales": canales})
+    return result
+
+
+_DETALLE_FACTOR_RIESGOS = [
+    {
+        "categoria": "Operativo",
+        "descripcion": "Cubre sobredotación, rotación, ramp-up extendido, recontacto y fallas de terceros",
+        "niveles": [
+            {"nivel": "Bajo", "desde": 1, "hasta": 4},
+            {"nivel": "Medio", "desde": 5, "hasta": 8},
+            {"nivel": "Alto", "desde": 9, "hasta": 12},
+        ],
+    },
+    {
+        "categoria": "Comercial",
+        "descripcion": "Cubre mora en pago, cambios de alcance, terminación anticipada y renegociaciones",
+        "niveles": [
+            {"nivel": "Bajo", "desde": 1, "hasta": 3},
+            {"nivel": "Medio", "desde": 4, "hasta": 7},
+            {"nivel": "Alto", "desde": 8, "hasta": 12},
+        ],
+    },
+]
+
+
 def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     """Construye el contrato de pantalla CTS desde un resultado del Motor de Reglas (v2)."""
     simulation_id = result.get("simulation_id")
     vision_cts: Dict[str, Any] = result.get("vision_cts") or {}
     perfiles: List[Dict[str, Any]] = vision_cts.get("perfiles") or []
+    vision_por_canal: Dict[str, Any] = vision_cts.get("vision_por_canal") or {}
 
     header = {
         "cliente": result.get("cliente"),
@@ -292,7 +422,16 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         },
     ]
 
-    sections = [
+    # Sección: factor_de_riesgo (evaluación resumida — stub basado en valor contrato)
+    valor_contrato = float(vision_cts.get("valor_total_contrato") or 0)
+    if valor_contrato > 5_000_000_000:
+        nivel_riesgo, detalle_riesgo = "Alto", "El contrato requiere aprobación por valor superior a 5000 SMLV"
+    elif valor_contrato > 1_000_000_000:
+        nivel_riesgo, detalle_riesgo = "Medio", "El contrato requiere revisión: valor entre 1000 y 5000 SMLV"
+    else:
+        nivel_riesgo, detalle_riesgo = "Bajo", "No requiere aprobación: impacto absorbible dentro de márgenes normales"
+
+    sections: List[Dict[str, Any]] = [
         {
             "key": "totales",
             "label": "Totales Cadena A",
@@ -314,6 +453,54 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             ],
         },
         {
+            "key": "factor_de_riesgo",
+            "label": "Factor de riesgo",
+            "source": "vision_cts",
+            "items": [
+                {
+                    "factor": "Clasificación de oportunidad",
+                    "detalle": detalle_riesgo,
+                    "riesgo": nivel_riesgo,
+                }
+            ],
+        },
+        {
+            "key": "detalle_factor_riesgos",
+            "label": "Detalle factor de riesgos",
+            "source": "",
+            "items": _DETALLE_FACTOR_RIESGOS,
+        },
+        {
+            "key": "reglas_de_negocio",
+            "label": "Reglas de negocio",
+            "source": "",
+            "items": vision_cts.get("reglas_negocio") or [],
+        },
+        {
+            "key": "cadenas_estructura_de_equipo",
+            "label": "Cadenas",
+            "source": "",
+            "items": vision_cts.get("cadenas") or [],
+        },
+        {
+            "key": "vision_general_por_servicio",
+            "label": "Vision general por servicio",
+            "source": "",
+            "items": _build_vision_por_servicio(vision_cts),
+        },
+        {
+            "key": "vision_detallada_por_canal",
+            "label": "Vision detallada por canal",
+            "source": "",
+            "items": _build_vision_detallada_canal(vision_por_canal),
+        },
+        {
+            "key": "vision_general_por_canal",
+            "label": "Vision general por canal",
+            "source": "",
+            "items": _build_vision_general_canal(vision_por_canal),
+        },
+        {
             "key": "perfiles",
             "label": "Desglose por Perfil",
             "source": "vision_cts.perfiles",
@@ -321,13 +508,35 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         },
     ]
 
+    # Charts: proporcion_nomina_cargo (por perfil), proporcion_nomina_grupo (stub), evaluacion_de_riesgo
+    proporcion_cargo = []
+    for p in perfiles:
+        nombre = p.get("nombre", "")
+        salario = float(p.get("salario_cargado") or 0)
+        total_payroll = float(vision_cts.get("payroll_total") or 1)
+        proporcion_cargo.append({"nombre": nombre, "valor": _pct_str(salario / total_payroll if total_payroll > 0 else 0)})
+
+    charts = {
+        "proporcion_nomina_cargo": [{"perfil": p.get("nombre", ""), "data": [{"nombre": p.get("nombre", ""), "valor": _pct_str(float(p.get("salario_cargado", 0)) / max(float(vision_cts.get("payroll_total") or 1), 1))}]} for p in perfiles],
+        "proporcion_nomina_grupo": [{"perfil": p.get("nombre", ""), "data": []} for p in perfiles],
+        "evaluacion_de_riesgo": [
+            {"nombre": "Total", "valor": _pct_str(0)},
+            {"nombre": "Cliente", "valor": _pct_str(0)},
+            {"nombre": "Operativo", "valor": _pct_str(0)},
+        ],
+        "data_status": {
+            "available_charts": 0,
+            "missing_charts": 0,
+        },
+    }
+
     return {
         "version": "v2",
         "simulation_id": simulation_id,
         "header": header,
         "summary_cards": summary_cards,
         "sections": sections,
-        "charts": {"gaps": [], "data_status": {"available_charts": 0, "missing_charts": 0}},
+        "charts": charts,
         "metadata": {
             "source": "motor_de_reglas_v2",
             "missing_fields": [],

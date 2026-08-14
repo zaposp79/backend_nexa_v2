@@ -50,25 +50,45 @@ class PerfilCTS(BaseModel):
     canal: str
     modalidad: str
     fte: int
-    # Payroll
-    salario_cargado: float
-    crucero: float
-    payroll: float
+    # Payroll detallado
+    nomina_loaded: float = 0.0   # salario_cargado + overhead_staff (sin crucero)
+    salario_fijo: float = 0.0    # nomina_loaded - salario_variable
+    salario_variable: float = 0.0  # comisiones brutas (sin cargas)
+    capacitacion_inicial: Optional[float] = None
+    capacitacion_rotacion: Optional[float] = None
+    examenes: Optional[float] = None
+    estudios_seguridad: Optional[float] = None
+    crucero: float = 0.0
+    salario_cargado: float = 0.0  # costo empresa × fte (sin overhead de ratios)
+    payroll: float = 0.0          # nomina_loaded + crucero
+    nomina: float = 0.0           # salario_cargado sin overhead (base del agente)
     # No Payroll
-    opex_it: float
-    inversiones: float
-    costos_fijos: float
-    no_payroll: float
+    opex_it: float = 0.0
+    inversiones: float = 0.0
+    costos_fijos: float = 0.0
+    no_payroll: float = 0.0
     # Costo Directo
-    costo_directo: float
-    costo_directo_por_fte: float
-    # Financiero (asignado pro-rata a costo_directo)
-    financiero: float
+    costo_directo: float = 0.0
+    costo_directo_por_fte: float = 0.0
+    # Financiero desglosado (asignado pro-rata a costo_directo)
+    ica: float = 0.0
+    gmf: float = 0.0
+    polizas: float = 0.0
+    comision_administracion: float = 0.0
+    costo_financiacion: float = 0.0
+    financiero: float = 0.0
     # Totales
-    costo_total: float
-    costo_total_por_fte: float
-    ingreso: float      # costo_total / (1 - margen) — fórmula Excel CTS I160
-    tarifa_fte: float   # ingreso / fte
+    costo_total: float = 0.0
+    costo_total_por_fte: float = 0.0
+    ingreso: float = 0.0       # costo_total / (1 - margen) — fórmula Excel CTS I160
+    ingreso_total: float = 0.0  # alias de ingreso
+    tarifa_fte: float = 0.0    # ingreso / fte
+    # Staffing (pesos relativos)
+    peso_staff_agente: Optional[float] = None     # % FTE propio sobre total equipo
+    peso_staff_sin_agente: Optional[float] = None  # % overhead (supervisores, etc.)
+    staff_cadena_a: Optional[float] = None
+    staff_cadena_b: Optional[float] = None
+    staff_cadena_c: Optional[float] = None
 
 
 class VisionCostToServe(BaseModel):
@@ -100,6 +120,11 @@ class VisionCostToServe(BaseModel):
 
     # Desglose por perfil (filas 122-178 del Excel CTS)
     perfiles: List[PerfilCTS] = Field(default_factory=list)
+
+    # Secciones adicionales — almacenadas en engine para evitar recomputation en mapper
+    reglas_negocio: List[Dict[str, Any]] = Field(default_factory=list)
+    cadenas: List[Dict[str, Any]] = Field(default_factory=list)
+    vision_por_canal: Dict[str, Any] = Field(default_factory=dict)
 
 
 class VisionPyG(BaseModel):

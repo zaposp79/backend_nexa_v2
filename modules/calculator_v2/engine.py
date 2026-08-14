@@ -415,6 +415,10 @@ class MotorDeReglas:
         pol_b = componentes_pricing.get("polizas_puras_hm", 0.0)
         componente_financiero_base = ica_b + gmf_b + com_b + pol_b
 
+        componentes_pricing_fin = {
+            "ica": ica_b, "gmf": gmf_b, "polizas": pol_b, "comision": com_b,
+            "financiacion": totales.get("costos_financiacion_mensual", 0.0),
+        }
         vision_cts = self._construir_vision_cts(
             request_data=request_data,
             costo_fijo_estacion=costo_fijo_estacion,
@@ -424,6 +428,7 @@ class MotorDeReglas:
             componente_financiero_base=componente_financiero_base,
             totales=totales,
             duracion_meses=duracion_meses,
+            componentes_pricing_fin=componentes_pricing_fin,
         )
 
         cts_perfiles_raw = (
@@ -743,6 +748,7 @@ class MotorDeReglas:
         componente_financiero_base: float,
         totales: Dict[str, float],
         duracion_meses: int = 1,
+        componentes_pricing_fin: Optional[Dict[str, float]] = None,
     ) -> Optional[VisionCostToServe]:
         """Construye la Visión Cost-to-Serve.
 
@@ -757,7 +763,10 @@ class MotorDeReglas:
             fte_total = int(ctx_base.get("fte_total_cadena_a", 0))
 
             cts_calc = CTSCalculator(request_data, costo_fijo_estacion)
-            perfiles_raw = cts_calc.calcular(margen, componente_financiero_base, nomina_base)
+            perfiles_raw = cts_calc.calcular(
+                margen, componente_financiero_base, nomina_base,
+                componentes_fin=componentes_pricing_fin,
+            )
 
             if not perfiles_raw:
                 return None
@@ -782,6 +791,10 @@ class MotorDeReglas:
             ingreso_mensual = ingreso_base * factor_neto
             valor_total_contrato = ingreso_neto_total
 
+            reglas_negocio = self._build_reglas_negocio(ctx_base, totales, ingreso_neto_total)
+            cadenas = self._build_cadenas(request_data, totales)
+            vision_por_canal = self._build_vision_por_canal(perfiles_cts)
+
             return VisionCostToServe(
                 cts_mensual=round(cts_total, 2),
                 ingreso_mensual=round(ingreso_mensual, 2),
@@ -799,10 +812,126 @@ class MotorDeReglas:
                 financiero_por_fte=round(financiero_total / fte_safe, 2),
                 cts_por_fte=round(cts_total / fte_safe, 2),
                 perfiles=perfiles_cts,
+                reglas_negocio=reglas_negocio,
+                cadenas=cadenas,
+                vision_por_canal=vision_por_canal,
             )
         except Exception as exc:
             logger.warning("[motor-reglas] Error construyendo VisionCostToServe: %s", exc)
             return None
+
+    @staticmethod
+    def _build_reglas_negocio(
+        ctx_base: Dict[str, Any],
+        totales: Dict[str, float],
+        ingreso_neto_total: float,
+    ) -> List[Dict[str, Any]]:
+        """Construye la lista de reglas de negocio del deal con % y valor monetario.
+
+        Excel V2-8: 'Visión Cost To Serve' — Sección 07 (filas 189-205)
+        """
+        def _pct(key: str, default: float = 0.0) -> float:
+            return float(ctx_base.get(key, default))
+
+        def _valor(totales_key: str, pct: float, fallback: float = 0.0) -> float:
+            v = totales.get(totales_key)
+            if v is not None:
+                return round(float(v), 0)
+            # Aproximación: porcentaje × ingreso_neto_total
+            return round(ingreso_neto_total * pct, 0) if ingreso_neto_total > 0 else fallback
+
+        margen_a = _pct("margen_a", 0.18)
+        margen_b = _pct("margen_b", 0.30)
+        margen_c = _pct("margen_c", 0.18)
+        cont_op = _pct("cont_op", 0.0)
+        cont_com = _pct("cont_com", 0.0)
+        markup = _pct("markup", 0.0)
+        descuento = _pct("descuento", 0.0)
+        imprevistos = _pct("pct_imprevistos", 0.10)
+
+        return [
+            {"concepto": "Margen Cadena A", "porcentaje": round(margen_a * 100, 1), "valor": _valor("utilidad_neta", margen_a)},
+            {"concepto": "Margen Cadena B", "porcentaje": round(margen_b * 100, 1), "valor": round(totales.get("costo_cadena_b", 0) * margen_b / max(1 - margen_b, 0.01), 0)},
+            {"concepto": "Margen Cadena C", "porcentaje": round(margen_c * 100, 1), "valor": round(totales.get("costo_cadena_c", 0) * margen_c / max(1 - margen_c, 0.01), 0)},
+            {"concepto": "Contingencia Operativa", "porcentaje": round(cont_op * 100, 1), "valor": _valor("contingencia_operativa_valor", cont_op)},
+            {"concepto": "Contingencia Comercial", "porcentaje": round(cont_com * 100, 1), "valor": _valor("contingencia_comercial_valor", cont_com)},
+            {"concepto": "Markup (complejidad, horarios)", "porcentaje": round(markup * 100, 1), "valor": _valor("markup_valor", markup)},
+            {"concepto": "Descuento volumen", "porcentaje": round(descuento * 100, 1), "valor": _valor("descuento_valor", descuento)},
+            {"concepto": "Imprevistos", "porcentaje": round(imprevistos * 100, 1), "valor": _valor("imprevistos_valor", imprevistos)},
+        ]
+
+    @staticmethod
+    def _build_cadenas(
+        request_data: Dict[str, Any],
+        totales: Dict[str, float],
+    ) -> List[Dict[str, Any]]:
+        """Construye el desglose de costos por Cadena B y C.
+
+        Excel V2-8: 'Visión Cost To Serve' — Sección cadenas (Estructura del Equipo — Cadenas B/C)
+        """
+        cadenas = []
+        cadena_b = request_data.get("condiciones_cadena_b")
+        cadena_c = request_data.get("condiciones_cadena_c")
+
+        if cadena_b is not None:
+            total_b = round(float(totales.get("costo_cadena_b", 0.0)), 2)
+            comp_fijo_b = round(float(totales.get("componente_fijo_b", 0.0)), 2)
+            comp_var_b = round(float(totales.get("componente_variable_b", 0.0)), 2)
+            cadenas.append({
+                "cadena": "CADENA B",
+                "total": total_b,
+                "inbound": 0,
+                "outbound": total_b,
+                "componentes": [
+                    {"concepto": "Componente Humano", "total": comp_fijo_b, "inbound": 0, "outbound": comp_fijo_b},
+                    {"concepto": "Componente Tecnológico", "total": comp_var_b, "inbound": 0, "outbound": comp_var_b},
+                ],
+            })
+
+        if cadena_c is not None:
+            total_c = round(float(totales.get("costo_cadena_c", 0.0)), 2)
+            cadenas.append({
+                "cadena": "CADENA C",
+                "total": total_c,
+                "inbound": 0,
+                "outbound": total_c,
+                "componentes": [
+                    {"concepto": "Componente Humano", "total": total_c, "inbound": 0, "outbound": total_c},
+                    {"concepto": "Componente Tecnológico", "total": 0, "inbound": 0, "outbound": 0},
+                ],
+            })
+
+        return cadenas
+
+    @staticmethod
+    def _build_vision_por_canal(perfiles: List["PerfilCTS"]) -> Dict[str, Any]:
+        """Agrupa perfiles por modalidad → canal para la visión detallada y general.
+
+        Excel V2-8: 'Visión Cost To Serve' — Sección 04/05 (canales Inbound/Outbound)
+        """
+        # Agrupar por (modalidad, canal)
+        from collections import defaultdict
+        grupos: Dict = defaultdict(lambda: {"perfiles": [], "fte": 0, "cts": 0.0})
+
+        for p in perfiles:
+            key = (p.modalidad.lower(), p.canal)
+            g = grupos[key]
+            g["perfiles"].append(p.model_dump())
+            g["fte"] += p.fte
+            g["cts"] += p.costo_total
+
+        # Construir estructura por modalidad
+        result: Dict[str, List[Dict]] = {"inbound": [], "outbound": []}
+        for (modalidad, canal), g in grupos.items():
+            modalidad_key = "inbound" if "inbound" in modalidad else "outbound"
+            result[modalidad_key].append({
+                "canal": canal,
+                "fte": g["fte"],
+                "cts_total": round(g["cts"], 2),
+                "perfiles": g["perfiles"],
+            })
+
+        return result
 
     # ── Agregación post-cálculo ────────────────────────────────────────────
 

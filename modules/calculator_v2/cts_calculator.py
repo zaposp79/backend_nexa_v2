@@ -10,7 +10,7 @@ Excel V2-8: 'Visión Cost To Serve' — Estructura del Equipo (filas 122-178)
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .nomina_calculator import calcular_costo_empresa
 
@@ -35,6 +35,7 @@ class CTSCalculator:
         margen: float,
         componente_financiero_total: float,
         nomina_base: float = 0.0,
+        componentes_fin: Optional[Dict[str, float]] = None,
     ) -> List[Dict[str, Any]]:
         """Desglose CTS por perfil.
 
@@ -45,6 +46,9 @@ class CTSCalculator:
             nomina_base: Nómina total del NominaCalculator (incluye agentes + staff ratios).
                 Permite distribuir el overhead de supervisores/coordinadores por FTE.
                 Si es 0, se usa solo costo_empresa_agente (sin overhead de ratios).
+            componentes_fin: Desglose individual del financiero:
+                {'ica': float, 'gmf': float, 'polizas': float, 'comision': float, 'financiacion': float}
+                Si None, el total se asigna pro-rata pero sin desglose.
 
         Returns:
             Lista de dicts con CTS desglosado por perfil.
@@ -79,6 +83,9 @@ class CTSCalculator:
             else 0.0
         )
 
+        _fin = componentes_fin or {}
+        fte_total_deal = max(sum(float(p.get("fte", 0)) for p in self._perfiles), 1)
+
         # Primera pasada: payroll + no_payroll + costo_directo por perfil
         perfiles_cts: List[Dict] = []
         costo_directo_total = 0.0
@@ -94,6 +101,9 @@ class CTSCalculator:
             nomina_loaded = salario_cargado + overhead_per_fte * fte
             crucero = crucero_unit * fte
             payroll = nomina_loaded + crucero
+            # salario_variable = comisiones brutas sin cargas sociales (Excel CTS F205)
+            salario_variable = comision * fte
+            salario_fijo = nomina_loaded - salario_variable
 
             opex_items = perfil.get("opex_fijo", {}).get("items", [])
             opex_it = sum(self._valor_item(item) for item in opex_items)
@@ -107,19 +117,27 @@ class CTSCalculator:
             costo_directo = payroll + no_payroll
             costo_directo_total += costo_directo
 
+            # Pesos de staffing: participación del perfil en el equipo total
+            peso_staff_agente = round(fte / fte_total_deal, 4) if fte_total_deal > 0 else 0.0
+
             perfiles_cts.append({
                 "nombre": str(perfil.get("nombre", f"perfil{i + 1}")),
                 "canal": str(perfil.get("canal", "")),
                 "modalidad": str(perfil.get("modalidad", "")),
                 "fte": int(fte),
-                "salario_cargado": round(salario_cargado, 2),
+                "nomina_loaded": round(nomina_loaded, 2),
+                "salario_fijo": round(salario_fijo, 2),
+                "salario_variable": round(salario_variable, 2),
                 "crucero": round(crucero, 2),
+                "salario_cargado": round(salario_cargado, 2),
                 "payroll": round(payroll, 2),
+                "nomina": round(salario_cargado, 2),  # costo empresa agente (sin overhead)
                 "opex_it": round(opex_it, 2),
                 "inversiones": round(inv, 2),
                 "costos_fijos": round(costos_fijos, 2),
                 "no_payroll": round(no_payroll, 2),
                 "costo_directo": round(costo_directo, 2),
+                "peso_staff_agente": peso_staff_agente,
                 "_costo_directo_raw": costo_directo,
             })
 
@@ -129,16 +147,29 @@ class CTSCalculator:
         for p in perfiles_cts:
             weight = (p["_costo_directo_raw"] / costo_directo_total) if costo_directo_total > 0 else 0.0
             fin = componente_financiero_total * weight
+            # Desglose individual del financiero pro-rata al mismo weight
+            ica = _fin.get("ica", 0.0) * weight
+            gmf = _fin.get("gmf", 0.0) * weight
+            polizas = _fin.get("polizas", 0.0) * weight
+            comision_admin = _fin.get("comision", 0.0) * weight
+            costo_financiacion = _fin.get("financiacion", 0.0) * weight
+
             costo_total = p["costo_directo"] + fin
             ingreso = costo_total / fm
             fte = max(p["fte"], 1)
 
             p.update({
+                "ica": round(ica, 2),
+                "gmf": round(gmf, 2),
+                "polizas": round(polizas, 2),
+                "comision_administracion": round(comision_admin, 2),
+                "costo_financiacion": round(costo_financiacion, 2),
                 "financiero": round(fin, 2),
                 "costo_total": round(costo_total, 2),
                 "costo_directo_por_fte": round(p["costo_directo"] / fte, 2),
                 "costo_total_por_fte": round(costo_total / fte, 2),
                 "ingreso": round(ingreso, 2),
+                "ingreso_total": round(ingreso, 2),
                 "tarifa_fte": round(ingreso / fte, 2),
             })
             del p["_costo_directo_raw"]
