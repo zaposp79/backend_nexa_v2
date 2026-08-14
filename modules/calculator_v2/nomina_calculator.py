@@ -40,20 +40,31 @@ _FACTOR_EXTRA_DIURNO = 1.25
 _FACTOR_EXTRA_NOCTURNO = 1.75
 
 
-def calcular_costo_empresa(salario_base: float, comision: float, smlv: float = _SMLV_DEFAULT) -> float:
+def calcular_costo_empresa(
+    salario_base: float,
+    comision: float,
+    smlv: float = _SMLV_DEFAULT,
+    recargos: float = 0.0,
+) -> float:
     """Costo mensual total a cargo del empleador para un cargo dado.
 
-    Incluye: salario + aux transporte + seguridad social + parafiscales +
+    Incluye: salario + aux transporte + recargos + seguridad social + parafiscales +
     prestaciones sociales + dotaciones.
+
+    Excel V2-8: Inputs de Nomina H62 = T.Imponible + AuxTransporte + Total_Recargos.
+    Los recargos (festivo, dominical, nocturno, etc.) elevan T.Haberes antes de
+    calcular Pensión/ARL/Caja/Primas/Vacaciones. No alteran la base para Salud ni
+    la condición de aux_transporte (que depende de T.Imponible = sal+com).
     """
     t_imponible = salario_base + comision
     if t_imponible <= 0:
         return 0.0
 
     aux_transporte = _AUX_TRANSPORTE if 0 < t_imponible < 2 * smlv else 0.0
-    t_haberes = t_imponible + aux_transporte
-    base_ss = t_imponible  # base para Salud, ICBF+Sena (sobre T.Imponible)
-    base_p = t_haberes - aux_transporte  # base para Pensión, ARL, Caja, Vacaciones
+    # Excel V2-8: H62 = SUM(F62:G62, AL62) = T.Imponible + AuxTransporte + Total_Recargos
+    t_haberes = t_imponible + aux_transporte + recargos
+    base_ss = t_imponible  # base para Salud, ICBF+Sena (F62 = solo sal+com)
+    base_p = t_haberes - aux_transporte  # base para Pensión, ARL, Caja, Vacaciones (H62-G62)
 
     es_integral = base_ss > 10 * smlv
 
@@ -200,14 +211,19 @@ class NominaCalculator:
         return total
 
     def _nomina_agentes(self) -> float:
-        """Suma del costo empresa de todos los perfiles de agentes × FTE."""
+        """Suma del costo empresa de todos los perfiles de agentes × FTE.
+
+        Excel V2-8: Inputs de Nomina AM62 = W62 = costo_empresa_con_recargos.
+        Los recargos por FTE se incluyen en T.Haberes antes de calcular cargas sociales.
+        """
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         total = 0.0
         for perfil in perfiles:
             salario = float(perfil.get("salario_base", 0))
             comision = float(perfil.get("comision_mensual", 0))
             fte = float(perfil.get("fte", 0))
-            costo_fte = calcular_costo_empresa(salario, comision)
+            recargo_fte = self._recargo_perfil(perfil)  # base recargo por FTE (Excel AL62)
+            costo_fte = calcular_costo_empresa(salario, comision, recargos=recargo_fte)
             total += costo_fte * fte
         return total
 
