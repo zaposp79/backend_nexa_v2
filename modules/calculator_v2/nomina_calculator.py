@@ -283,9 +283,24 @@ class NominaCalculator:
 
     @staticmethod
     def _calcular_cantidad(fila: Dict, perfiles: List[Dict]) -> float:
-        """Distribución fraccionaria SIN ceil: fte_perfil / ratio (continua, no entera)."""
+        """Distribución fraccionaria SIN ceil: fte_perfil / ratio (continua, no entera).
+
+        Excel V2-8: Condiciones Cadena A E78 = (fte_total / ratio_cargo).
+        Si por_perfil[i].personalizado > 0, se usa ese valor directamente en lugar
+        del cálculo automático (equivale a editar manualmente E78/F78/G78 en el Excel).
+        """
         total = 0.0
         for pr in fila.get("por_perfil", []):
+            # Override manual: si personalizado > 0 se usa tal cual (Excel: celda editada)
+            try:
+                personalizado_val = float(pr.get("personalizado") or 0)
+            except (TypeError, ValueError):
+                personalizado_val = 0.0
+            if personalizado_val > 0:
+                total += personalizado_val
+                continue
+
+            # Cálculo estándar: fte / ratio
             indice = pr.get("indice_perfil", 0)
             try:
                 ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
