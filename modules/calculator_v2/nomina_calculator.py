@@ -27,6 +27,18 @@ _SMLV_DEFAULT = 1_795_000.0
 _AUX_TRANSPORTE = 249_095.0
 _DOTACIONES_MENSUAL = 15_375.0
 
+# Factores de recargo (Excel V2-8: Condiciones Cadena A D15:D21 / Inputs de Nomina cols X–AL)
+# Fórmula: (salario_base / 220) × cantidad × factor — informativo, no suma a costo empresa.
+# Excel: col AM = col W → costo empresa base-only; recargos aparecen en cols separadas.
+_HORAS_MES_BASE = 220.0
+_FACTOR_FESTIVO = 0.90
+_FACTOR_DOMINICAL = 0.90
+_FACTOR_NOCTURNO = 0.35
+_FACTOR_FESTIVO_NOCTURNO = 1.15
+_FACTOR_DOMINICAL_NOCTURNO = 1.15
+_FACTOR_EXTRA_DIURNO = 1.25
+_FACTOR_EXTRA_NOCTURNO = 1.75
+
 
 def calcular_costo_empresa(salario_base: float, comision: float, smlv: float = _SMLV_DEFAULT) -> float:
     """Costo mensual total a cargo del empleador para un cargo dado.
@@ -92,6 +104,7 @@ class NominaCalculator:
         salario_variable = comisiones brutas (sin cargas prestacionales).
         Excel V2-8: 'Nomina Loaded'!K198:K217 = sum(comision × FTE/cantidad por cargo).
         salario_fijo = nomina_loaded - salario_variable.
+        recargos_horas_extra = informativo (no suma a nómina, igual que Excel col AM = col W).
         """
         nomina_loaded = self._nomina_agentes() + self._nomina_estructura()
         salario_variable = self._nomina_comisiones_brutas()
@@ -101,7 +114,43 @@ class NominaCalculator:
             "capacitacion_rotacion": self._capacitacion_rotacion(),
             "salario_fijo": nomina_loaded - salario_variable,
             "salario_variable": salario_variable,
+            "recargos_horas_extra": self._calcular_recargos_total(),
         }
+
+    def _calcular_recargos_total(self) -> float:
+        """Suma de recargos × FTE para todos los perfiles (informativo)."""
+        total = 0.0
+        for perfil in self._cadena_a.get("perfiles", []):
+            fte = float(perfil.get("fte", 0))
+            total += self._recargo_perfil(perfil) * fte
+        return total
+
+    @staticmethod
+    def _recargo_perfil(perfil: Dict) -> float:
+        """Costo de recargos por un FTE del perfil (no suma a costo empresa).
+
+        Excel V2-8: Condiciones Cadena A D15:D21 / Inputs de Nomina cols X–AL.
+        Fórmula: (salario_base / 220) × cantidad × factor.
+        Acepta los conteos en perfil.recargos{} o directamente en perfil{} (flat).
+        """
+        salario_base = float(perfil.get("salario_base", 0))
+        if salario_base <= 0:
+            return 0.0
+        tarifa = salario_base / _HORAS_MES_BASE
+        r: Dict = perfil.get("recargos") or {}
+
+        def _cnt(key: str) -> float:
+            return float(r.get(key) or perfil.get(key) or 0)
+
+        return (
+            tarifa * _cnt("holidayCount") * _FACTOR_FESTIVO
+            + tarifa * _cnt("sundayCount") * _FACTOR_DOMINICAL
+            + tarifa * _cnt("nightHoursCount") * _FACTOR_NOCTURNO
+            + tarifa * _cnt("nightHolidayCount") * _FACTOR_FESTIVO_NOCTURNO
+            + tarifa * _cnt("nightSundayCount") * _FACTOR_DOMINICAL_NOCTURNO
+            + tarifa * _cnt("extraDayHoursCount") * _FACTOR_EXTRA_DIURNO
+            + tarifa * _cnt("extraNightHoursCount") * _FACTOR_EXTRA_NOCTURNO
+        )
 
     def _nomina_comisiones_brutas(self) -> float:
         """Suma bruta de comisiones de agentes y estructura (sin cargas prestacionales).

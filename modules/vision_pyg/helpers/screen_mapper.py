@@ -293,6 +293,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "inversiones":          _scale(cts["inversiones_base"], nopayroll, cts["no_payroll_base"]),
             "costos_fijos":         _scale(cts["costos_fijos_base"], nopayroll, cts["no_payroll_base"]),
             "total_cadena_a":       vals.get("costo_cadena_a"),
+            "recargos_horas_extra": vals.get("recargos_horas_extra_mensual") or None,
         },
         "cadena_b": {
             "total_cadena_b":    vals.get("costo_cadena_b"),

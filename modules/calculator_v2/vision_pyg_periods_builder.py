@@ -49,6 +49,7 @@ def _period_cadena_a(v: Dict[str, Any]) -> Dict[str, Any]:
         "inversiones": v.get("inversiones_mensual"),
         "costos_fijos": v.get("costos_fijos_mensual"),
         "total_cadena_a": v.get("costo_cadena_a"),
+        "recargos_horas_extra": v.get("recargos_horas_extra_mensual") or None,
     }
 
 

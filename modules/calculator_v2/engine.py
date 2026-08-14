@@ -319,6 +319,8 @@ class MotorDeReglas:
             ctx["capacitacion_rotacion_mensual"] = _nomina_detalle["capacitacion_rotacion"] * double_h
             ctx["salario_fijo_mensual"] = _nomina_detalle["salario_fijo"] * double_h
             ctx["salario_variable_mensual"] = _nomina_detalle["salario_variable"] * double_h
+            # Informativo — mismo factor IPC que nómina; no suma a costo_total (igual que Excel col AM=col W)
+            ctx["recargos_horas_extra_mensual"] = _nomina_detalle.get("recargos_horas_extra", 0.0) * double_h
             ctx["opex_fijo_mensual"] = _no_payroll_detalle["opex_fijo"] * double_t
             ctx["inversiones_mensual"] = _no_payroll_detalle["inversiones"] * double_t
             ctx["costos_fijos_mensual"] = _no_payroll_detalle["costos_fijos"] * double_t
