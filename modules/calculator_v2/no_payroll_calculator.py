@@ -22,18 +22,12 @@ class NoPayrollCalculator:
         self._cadena_a = request_data.get("condiciones_cadena_a", {})
         self._costo_fijo_por_estacion = costo_fijo_por_estacion
         # Excel No payroll fórmula inversiones: SUMPRODUCT(precio × qty) × (1 + Panel!L11)
-        # donde Panel!L11 = tasa_interes_mensual (siempre, sin importar cons_costo_de_financiacion)
         indexacion = request_data.get("volumetria", {}).get("indexacion", {})
         self._tasa_interes_mensual = float(indexacion.get("tasa_interes_mensual", 0.0))
-        # Excel V2-8: Panel!C19 = pct_ausentismo; 'Condiciones Cadena A'!E195 = semanas_al_mes;
-        # E196 = horas_semanales. Usados en formula_cantidad="horas_productivas".
+        # Excel V2-8: Panel!C19 — fuente canónica del ausentismo; siempre actualizado por el frontend.
+        # staffing.calculo_horas_staffing.ausentismo_pago puede estar stale → NO usar para fórmulas.
         datos_op = request_data.get("datos_operativos", {})
         self._pct_ausentismo = float(datos_op.get("pct_ausentismo", 0.0))
-        self._semanas_al_mes = float(datos_op.get("semanas_al_mes", 4.33))
-        self._horas_semanales = float(datos_op.get("horas_semanales", 42.0))
-        # Excel V2-8: Panel!C20 = pct_rotacion; usado en formula_cantidad="rotacion".
-        # 'Condiciones Cadena A'!G168 = E9 × C20 → 'No payroll'!C46 = costo_unit × G168
-        self._pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
 
     def calcular(self) -> float:
         return self._opex_it() + self._inversiones() + self._costos_fijos()
@@ -53,15 +47,13 @@ class NoPayrollCalculator:
         for perfil in perfiles:
             fte = float(perfil.get("fte", 0))
             opex_fijo = perfil.get("opex_fijo", {})
-            # Parámetros de staffing por perfil: permiten sobrescribir los defaults del deal.
-            # Excel V2-8: 'Condiciones Cadena A'!E195=semanas_mes, E196=horas_sem, E197=ausentismo.
+            # semanas y horas del staffing (estables; no cambian con pct_ausentismo)
             staffing = opex_fijo.get("staffing", {}).get("calculo_horas_staffing", {})
-            semanas = float(staffing.get("semanas_mes", self._semanas_al_mes))
-            horas = float(staffing.get("horas_semanales", self._horas_semanales))
-            pct_ausent = float(staffing.get("ausentismo_pago", self._pct_ausentismo))
+            semanas = float(staffing.get("semanas_mes", 4.33))
+            horas = float(staffing.get("horas_semanales", 42.0))
             items: List[Dict] = opex_fijo.get("items", [])
             for item in items:
-                total += self._valor_item(item, fte, semanas, horas, pct_ausent)
+                total += self._valor_item(item, fte, semanas, horas)
         return total
 
     def _inversiones(self) -> float:
@@ -144,25 +136,19 @@ class NoPayrollCalculator:
         fte: float = 0.0,
         semanas: float = 4.33,
         horas: float = 42.0,
-        pct_ausent: float = 0.0,
     ) -> float:
         costo = float(item.get("costo", 0))
-        costo_totalizado = int(item.get("costo_totalizado", 0))
-        if costo_totalizado == 1:
+        if int(item.get("costo_totalizado", 0)) == 1:
             return costo
 
         formula = item.get("formula_cantidad")
         if formula == "horas_productivas":
-            # Excel V2-8: 'Condiciones Cadena A'!G166 = semanas × horas × (1-ausent) × FTE × 60
-            # × pct_uso_recurso × pct_costo_minuto. Motor recomputa; ignora 'cantidad' estático.
-            pct_uso = float(item.get("pct_uso_recurso", 0.0))
-            pct_min = float(item.get("pct_costo_minuto", 0.0))
-            cantidad = semanas * horas * (1.0 - pct_ausent) * fte * 60.0 * pct_uso * pct_min
+            # Excel V2-8: 'Condiciones Cadena A'!G166 = semanas×horas×(1−ausent)×FTE×60×uso×min
+            # pct_ausentismo viene de Panel!C19 (datos_operativos) — siempre actualizado.
+            # pct_uso_recurso=50%, pct_costo_minuto=2%: constantes del Excel; opcionales en el item.
+            pct_uso = float(item.get("pct_uso_recurso", 0.5))
+            pct_min = float(item.get("pct_costo_minuto", 0.02))
+            cantidad = semanas * horas * (1.0 - self._pct_ausentismo) * fte * 60.0 * pct_uso * pct_min
             return costo * cantidad
-
-        if formula == "rotacion":
-            # Excel V2-8: 'Condiciones Cadena A'!G168 = E9 × 'Panel de Control General'!$C$20
-            # 'No payroll'!C46 = costo_unitario × G168 = costo × fte × pct_rotacion
-            return costo * fte * self._pct_rotacion
 
         return costo * float(item.get("cantidad", 0))
