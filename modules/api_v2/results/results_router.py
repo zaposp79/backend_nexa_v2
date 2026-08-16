@@ -1,7 +1,8 @@
 """
 GET endpoints para resultados de simulación v2.
 
-GET /api/v2/simulation                                               — lista de simulaciones
+GET /api/v2/simulation/results                                       — lista de todas las simulaciones
+GET /api/v2/simulation/{id_draft}/results?client_id=...             — simulaciones por id_draft
 GET /api/v2/simulation/{simulation_id}/results/vision-pyg
 GET /api/v2/simulation/{simulation_id}/results/vision-cost-to-serve
 GET /api/v2/simulation/{simulation_id}/results/vision/modelo-cobro
@@ -25,7 +26,7 @@ router = APIRouter(prefix="/simulation", tags=["Simulation v2 Results"])
 
 
 @router.get(
-    "",
+    "/results",
     response_model=ApiResponse,
     summary="Listado de simulaciones v2 calculadas",
     operation_id="listSimulationsV2",
@@ -46,6 +47,29 @@ async def list_simulations_v2(
     return ApiResponse.ok(
         data={"simulations": simulations, "total": len(simulations)},
         meta={"version": "v2", "limit": limit},
+    )
+
+
+@router.get(
+    "/{id_draft}/results",
+    response_model=ApiResponse,
+    summary="Simulaciones v2 por id_draft",
+    operation_id="listSimulationsByDraftV2",
+)
+async def list_simulations_by_draft_v2(
+    request: Request,
+    id_draft: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$"),
+    client_id: Optional[str] = Query(None, description="Filtrar adicionalmente por client_id"),
+    limit: int = Query(50, ge=1, le=200, description="Máximo de resultados"),
+) -> ApiResponse:
+    """Devuelve las simulaciones v2 asociadas a un id_draft específico."""
+    container = request.app.state.container
+    repo = V2SimulationResultsRepository(container.configuration_store)
+
+    simulations = repo.list_simulations(client_id=client_id, id_draft=id_draft, limit=limit)
+    return ApiResponse.ok(
+        data={"simulations": simulations, "total": len(simulations)},
+        meta={"version": "v2", "id_draft": id_draft, "limit": limit},
     )
 
 

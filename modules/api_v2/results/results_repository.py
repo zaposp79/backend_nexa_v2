@@ -40,6 +40,7 @@ class V2SimulationResultsRepository:
         self,
         *,
         client_id: str | None = None,
+        id_draft: str | None = None,
         limit: int = 50,
     ) -> list[Dict[str, Any]]:
         """Devuelve resúmenes de todas las simulaciones v2.
@@ -49,6 +50,8 @@ class V2SimulationResultsRepository:
         filters: Dict[str, Any] = {"type": "results_v2"}
         if client_id:
             filters["client_id"] = client_id
+        if id_draft:
+            filters["id_draft"] = id_draft
 
         docs, _ = self._store.query(_COLLECTION, filters, limit=limit)
 
