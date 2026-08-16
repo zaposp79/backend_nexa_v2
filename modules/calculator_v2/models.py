@@ -146,7 +146,13 @@ class SimulationResultV2(BaseModel):
     version: str = "v2"
     cliente: Optional[str] = None
     servicio: Optional[str] = None
+    tipo_cliente: Optional[str] = None
+    antiguedad_cliente: Optional[str] = None
+    periodo_pago: Optional[int] = None
+    fecha_inicio: Optional[str] = None
     duracion_meses: int
+    ciudad: Optional[str] = None
+    sede: Optional[str] = None
     meses: List[ResultadoMes]
     totales: Dict[str, float]
     vision_pyg: VisionPyG

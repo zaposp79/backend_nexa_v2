@@ -384,9 +384,15 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     vision_por_canal: Dict[str, Any] = vision_cts.get("vision_por_canal") or {}
 
     header = {
-        "cliente": result.get("cliente"),
-        "servicio": result.get("servicio"),
-        "duracion_meses": result.get("duracion_meses"),
+        "cliente":            result.get("cliente"),
+        "servicio":           result.get("servicio"),
+        "tipo_cliente":       result.get("tipo_cliente"),
+        "antiguedad_cliente": result.get("antiguedad_cliente"),
+        "periodo_pago":       result.get("periodo_pago"),
+        "fecha_inicio":       result.get("fecha_inicio"),
+        "duracion_meses":     result.get("duracion_meses"),
+        "ciudad":             result.get("ciudad"),
+        "sede":               result.get("sede"),
     }
 
     summary_cards = [
