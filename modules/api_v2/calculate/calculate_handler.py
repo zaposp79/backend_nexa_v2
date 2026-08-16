@@ -9,8 +9,11 @@ Pipeline:
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
+
+# Colombia no observa horario de verano — UTC-5 permanente
+_TZ_CO = timezone(timedelta(hours=-5))
 
 from nexa_engine.db.ports.document_store import DocumentStore
 from nexa_engine.modules.shared.responses import ApiResponse
@@ -55,6 +58,7 @@ def handle_calculate_v2(
         "version": "v2",
         "motor": "motor_de_reglas",
         "calculated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(_TZ_CO).isoformat(),
         "cliente": result.cliente,
         "servicio": result.servicio,
         "tipo_cliente": result.tipo_cliente,
@@ -85,6 +89,7 @@ def handle_calculate_v2(
             "client_id": effective_client_id,
             "message": "Cálculo guardado correctamente",
             "timestamp": doc["calculated_at"],
+            "created_at": doc["created_at"],
         },
         meta={"version": "v2", "motor": "motor_de_reglas"},
     )

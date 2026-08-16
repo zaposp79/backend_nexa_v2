@@ -54,7 +54,7 @@ class V2SimulationResultsRepository:
 
         _SUMMARY_FIELDS = (
             "id", "client_id", "type", "domain", "id_draft", "simulation_id",
-            "version", "motor", "calculated_at",
+            "version", "motor", "calculated_at", "created_at",
             "cliente", "servicio", "tipo_cliente", "antiguedad_cliente",
             "periodo_pago", "fecha_inicio", "duracion_meses", "ciudad", "sede",
         )
