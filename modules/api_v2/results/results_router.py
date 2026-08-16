@@ -179,9 +179,17 @@ async def get_vision_imprimible_v2(
     return ApiResponse.ok(
         data={
             "simulation_id": simulation_id,
-            "cliente": doc.get("cliente"),
-            "servicio": doc.get("servicio"),
-            "duracion_meses": doc.get("duracion_meses"),
+            "header": {
+                "cliente":            doc.get("cliente"),
+                "servicio":           doc.get("servicio"),
+                "tipo_cliente":       doc.get("tipo_cliente"),
+                "antiguedad_cliente": doc.get("antiguedad_cliente"),
+                "periodo_pago":       doc.get("periodo_pago"),
+                "fecha_inicio":       doc.get("fecha_inicio"),
+                "duracion_meses":     doc.get("duracion_meses"),
+                "ciudad":             doc.get("ciudad"),
+                "sede":               doc.get("sede"),
+            },
             "calculated_at": doc.get("calculated_at"),
             "vision_imprimible": vision_imprimible,
         }

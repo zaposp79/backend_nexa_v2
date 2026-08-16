@@ -53,6 +53,7 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
             missing_fields.append(f"header.{key}")
 
     payload = {
+        "header": header,
         "cliente": header.get("cliente"),
         "servicio": header.get("servicio"),
         "ciudad": header.get("ciudad"),
@@ -92,7 +93,31 @@ def _build_header(result: dict, vt_data: dict, missing_fields: list[str]) -> dic
             or panel.get("linea_negocio")
             or panel.get("servicio")
         ),
+        "tipo_cliente": ficha.get("tipo_cliente") or resumen.get("tipo_cliente") or panel.get("tipo_cliente"),
+        "antiguedad_cliente": (
+            ficha.get("antiguedad_cliente")
+            or resumen.get("antiguedad_cliente")
+            or panel.get("antiguedad_cliente")
+        ),
+        "periodo_pago": (
+            ficha.get("periodo_pago")
+            or resumen.get("periodo_pago")
+            or panel.get("periodo_pago")
+            or ficha.get("periodo_pago_dias")
+            or resumen.get("periodo_pago_dias")
+            or panel.get("periodo_pago_dias")
+        ),
+        "fecha_inicio": ficha.get("fecha_inicio") or resumen.get("fecha_inicio") or panel.get("fecha_inicio"),
+        "duracion_meses": (
+            ficha.get("duracion_meses")
+            or ficha.get("meses_contrato")
+            or resumen.get("duracion_meses")
+            or resumen.get("meses_contrato")
+            or panel.get("duracion_meses")
+            or panel.get("meses_contrato")
+        ),
         "ciudad": ficha.get("ciudad") or resumen.get("ciudad") or panel.get("ciudad"),
+        "sede": ficha.get("sede") or resumen.get("sede") or panel.get("sede"),
     }
 
 
@@ -807,7 +832,13 @@ def _bridge_v2_to_v1(result: dict) -> dict:
     bridged["ficha_deal"] = {
         "cliente": result.get("cliente"),
         "servicio": result.get("servicio"),
-        "ciudad": None,
+        "tipo_cliente": result.get("tipo_cliente"),
+        "antiguedad_cliente": result.get("antiguedad_cliente"),
+        "periodo_pago": result.get("periodo_pago"),
+        "fecha_inicio": result.get("fecha_inicio"),
+        "duracion_meses": result.get("duracion_meses"),
+        "ciudad": result.get("ciudad"),
+        "sede": result.get("sede"),
     }
     return bridged
 
