@@ -35,3 +35,30 @@ class V2SimulationResultsRepository:
         if not docs:
             raise NotFoundError("SimulationV2", simulation_id)
         return docs[0]
+
+    def list_simulations(
+        self,
+        *,
+        client_id: str | None = None,
+        limit: int = 50,
+    ) -> list[Dict[str, Any]]:
+        """Devuelve resúmenes de todas las simulaciones v2.
+
+        Proyecta solo los campos de cabecera; no carga meses ni visiones.
+        """
+        filters: Dict[str, Any] = {"type": "results_v2"}
+        if client_id:
+            filters["client_id"] = client_id
+
+        docs, _ = self._store.query(_COLLECTION, filters, limit=limit)
+
+        _SUMMARY_FIELDS = (
+            "id", "client_id", "type", "domain", "id_draft", "simulation_id",
+            "version", "motor", "calculated_at",
+            "cliente", "servicio", "tipo_cliente", "antiguedad_cliente",
+            "periodo_pago", "fecha_inicio", "duracion_meses", "ciudad", "sede",
+        )
+        return [
+            {field: doc.get(field) for field in _SUMMARY_FIELDS}
+            for doc in docs
+        ]

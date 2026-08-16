@@ -1,6 +1,7 @@
 """
 GET endpoints para resultados de simulación v2.
 
+GET /api/v2/simulation                                               — lista de simulaciones
 GET /api/v2/simulation/{simulation_id}/results/vision-pyg
 GET /api/v2/simulation/{simulation_id}/results/vision-cost-to-serve
 GET /api/v2/simulation/{simulation_id}/results/vision/modelo-cobro
@@ -9,8 +10,9 @@ GET /api/v2/simulation/{simulation_id}/results/vision-imprimible
 from __future__ import annotations
 
 import logging
+from typing import Optional
 
-from fastapi import APIRouter, Path, Request
+from fastapi import APIRouter, Path, Query, Request
 
 from nexa_engine.modules.shared.responses import ApiResponse
 from nexa_engine.modules.shared.exceptions import NotFoundError
@@ -20,6 +22,31 @@ from nexa_engine.modules.calculator_v2.vision_pyg_periods_builder import build_v
 logger = logging.getLogger("nexa.v2.results_router")
 
 router = APIRouter(prefix="/simulation", tags=["Simulation v2 Results"])
+
+
+@router.get(
+    "",
+    response_model=ApiResponse,
+    summary="Listado de simulaciones v2 calculadas",
+    operation_id="listSimulationsV2",
+)
+async def list_simulations_v2(
+    request: Request,
+    client_id: Optional[str] = Query(None, description="Filtrar por client_id"),
+    limit: int = Query(50, ge=1, le=200, description="Máximo de resultados"),
+) -> ApiResponse:
+    """Devuelve un resumen de todas las simulaciones v2 persistidas.
+
+    Cada item incluye solo los campos de cabecera; no retorna meses ni visiones.
+    """
+    container = request.app.state.container
+    repo = V2SimulationResultsRepository(container.configuration_store)
+
+    simulations = repo.list_simulations(client_id=client_id, limit=limit)
+    return ApiResponse.ok(
+        data={"simulations": simulations, "total": len(simulations)},
+        meta={"version": "v2", "limit": limit},
+    )
 
 
 @router.get(
