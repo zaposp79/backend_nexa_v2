@@ -1,12 +1,13 @@
 """
-GET endpoints para resultados de simulación v2.
+Endpoints para resultados de simulación v2.
 
-GET /api/v2/simulation/results                                       — lista de todas las simulaciones
-GET /api/v2/simulation/{id_draft}/results?client_id=...             — simulaciones por id_draft
-GET /api/v2/simulation/{simulation_id}/results/vision-pyg
-GET /api/v2/simulation/{simulation_id}/results/vision-cost-to-serve
-GET /api/v2/simulation/{simulation_id}/results/vision/modelo-cobro
-GET /api/v2/simulation/{simulation_id}/results/vision-imprimible
+GET    /api/v2/simulation/results                                    — lista de todas las simulaciones
+GET    /api/v2/simulation/{id_draft}/results?client_id=...           — simulaciones por id_draft
+DELETE /api/v2/simulation/results/{id}                               — eliminar simulación por id
+GET    /api/v2/simulation/{simulation_id}/results/vision-pyg
+GET    /api/v2/simulation/{simulation_id}/results/vision-cost-to-serve
+GET    /api/v2/simulation/{simulation_id}/results/vision/modelo-cobro
+GET    /api/v2/simulation/{simulation_id}/results/vision-imprimible
 """
 from __future__ import annotations
 
@@ -48,6 +49,40 @@ async def list_simulations_v2(
         data={"simulations": simulations, "total": len(simulations)},
         meta={"version": "v2", "limit": limit},
     )
+
+
+@router.delete(
+    "/results/{id}",
+    response_model=ApiResponse,
+    summary="Eliminar simulación v2 por ID",
+    operation_id="deleteSimulationV2",
+)
+async def delete_simulation_v2(
+    request: Request,
+    id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$", description="ID de la simulación a eliminar"),
+) -> ApiResponse:
+    """Elimina una simulación v2 previamente calculada.
+
+    Solo elimina documentos de tipo `results_v2`. Si el ID corresponde a un
+    documento v1 o no existe, retorna error sin modificar nada.
+    """
+    container = request.app.state.container
+    repo = V2SimulationResultsRepository(container.configuration_store)
+
+    try:
+        deleted = repo.delete_simulation(id)
+    except NotFoundError:
+        return ApiResponse.fail(
+            "SIM-00800",
+            message=f"Simulación no encontrada: {id}",
+        )
+    except ValueError as exc:
+        return ApiResponse.fail(
+            "SIM-00801",
+            message=str(exc),
+        )
+
+    return ApiResponse.ok({"deleted": True, "id": id})
 
 
 @router.get(

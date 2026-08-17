@@ -10,6 +10,7 @@ import logging
 from typing import Any, Dict
 
 from nexa_engine.db.ports.document_store import CollectionConfig, DocumentStore
+from nexa_engine.db.exceptions import DbNotFoundError
 from nexa_engine.modules.shared.exceptions import NotFoundError
 
 logger = logging.getLogger("nexa.v2.results_repo")
@@ -65,3 +66,35 @@ class V2SimulationResultsRepository:
             {field: doc.get(field) for field in _SUMMARY_FIELDS}
             for doc in docs
         ]
+
+    def delete_simulation(self, simulation_id: str) -> Dict[str, Any]:
+        """Elimina una simulación v2 por su ID.
+
+        Verifica que el documento sea de tipo 'results_v2' antes de borrar.
+        Retorna un resumen del documento eliminado.
+        Lanza NotFoundError si no existe.
+        Lanza ValueError si el documento no es de tipo 'results_v2'.
+        """
+        doc = self.get(simulation_id)
+
+        if doc.get("type") != "results_v2":
+            raise ValueError(
+                f"El documento '{simulation_id}' no es de tipo 'results_v2' "
+                f"(type='{doc.get('type')}')."
+            )
+
+        client_id = doc.get("client_id")
+        try:
+            self._store.delete(_COLLECTION, simulation_id, partition_value=client_id)
+        except DbNotFoundError as exc:
+            raise NotFoundError("SimulationV2", simulation_id) from exc
+
+        logger.info("[v2] Simulación eliminada: id=%s client_id=%s", simulation_id, client_id)
+        return {
+            "id": simulation_id,
+            "client_id": client_id,
+            "type": doc.get("type"),
+            "cliente": doc.get("cliente"),
+            "servicio": doc.get("servicio"),
+            "calculated_at": doc.get("calculated_at"),
+        }
