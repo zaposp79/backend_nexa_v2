@@ -28,6 +28,8 @@ class NoPayrollCalculator:
         # staffing.calculo_horas_staffing.ausentismo_pago puede estar stale → NO usar para fórmulas.
         datos_op = request_data.get("datos_operativos", {})
         self._pct_ausentismo = float(datos_op.get("pct_ausentismo", 0.0))
+        # Excel V2-8: 'Panel de Control General'!C20 — % de rotación para ítems de opex rotación
+        self._pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
 
     def calcular(self) -> float:
         return self._opex_it() + self._inversiones() + self._costos_fijos()
@@ -150,5 +152,9 @@ class NoPayrollCalculator:
             pct_min = float(item.get("pct_costo_minuto", 0.02))
             cantidad = semanas * horas * (1.0 - self._pct_ausentismo) * fte * 60.0 * pct_uso * pct_min
             return costo * cantidad
+
+        if formula == "rotacion":
+            # Excel V2-8: 'Condiciones Cadena A'!G168 = FTE × Panel!C20 (pct_rotacion)
+            return costo * fte * self._pct_rotacion
 
         return costo * float(item.get("cantidad", 0))

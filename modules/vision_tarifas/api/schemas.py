@@ -52,7 +52,7 @@ class CadenaChain(BaseModel):
     total: float = 0
     ica: float = 0
     gmf: float = 0
-    comision_administracion: float = 0
+    comision_por_administracion: float = 0
     polizas: float = 0
     costos_financiacion: float = 0
     ingreso_mensual: float = 0
@@ -75,9 +75,9 @@ class Totales(BaseModel):
 
 class ReglasNegocio(BaseModel):
     total_regla_negocio: float = 0
-    descuento_volumen: float = 0
-    cont_operativa: float = 0
-    cont_comercial: float = 0
+    descuento_cliente: float = 0
+    contingencia_operativa: float = 0
+    contingencia_comercial: float = 0
     margen_cadena_a: float = 0
     margen_cadena_b: float = 0
     margen_cadena_c: float = 0
@@ -91,7 +91,7 @@ class TarifaComponenteFijo(BaseModel):
     tarifa_secundaria_label: str = "Tarifa por minuto pagado"
     tarifa_secundaria: float = 0
     tarifa_por_fte: float = 0
-    tarifa_por_minuto_loggeado: float = 0
+    tarifa_por_minuto_logrado: float = 0
     tarifa_por_minuto_pagado: float = 0
 
 
@@ -105,7 +105,7 @@ class TarifaComponenteVariable(BaseModel):
     volumetria_label: str = "Volumetría de 1 FTE"
     volumetria_de_1_fte: float = 0
     tarifa_por_transaccion: float = 0
-    comisiones_m1: float = 0
+    comisiones_mi: float = 0
     ingreso_por_persona: float = 0
 
 
@@ -115,9 +115,9 @@ class ModeloCobroDetail(BaseModel):
     canal: Optional[str] = None
     modelo_cobro: Optional[str] = None
     componente_fijo: Any = 0
-    proporcion_componente_fijo: float = 0
+    proporcion_componente_fijo_pct: float = 0
     componente_variable: Optional[str] = None
-    proporcion_componente_variable: float = 0
+    proporcion_componente_variable_pct: float = 0
     fte: float = 0
     cadena_a: dict[str, float] = {}
     cadena_b: dict[str, float] = {}
@@ -134,10 +134,10 @@ class ResumenRow(BaseModel):
     canal: Optional[str] = None
     modelo_cobro: Optional[str] = None
     componente_fijo: Any = 0
-    proporcion_componente_fijo: float = 0
+    proporcion_componente_fijo_pct: float = 0
     componente_variable: Optional[str] = None
-    proporcion_componente_variable: float = 0
-    facturacion: float = 0
+    proporcion_componente_variable_pct: float = 0
+    facturacion_directa: float = 0
     tarifa_componente_fijo: float = 0
     tarifa_componente_variable: float = 0
 
@@ -151,6 +151,8 @@ class DesgloseProductoOpexRow(BaseModel):
 
 
 class ModeloCobroPublicData(BaseModel):
+    simulation_id: Optional[str] = None
+    header: Optional[dict] = None
     cliente: Optional[str] = None
     servicio: Optional[str] = None
     ciudad: Optional[str] = None
