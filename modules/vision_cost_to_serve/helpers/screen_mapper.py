@@ -348,17 +348,30 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     return [cadena_a, cadena_b, cadena_c]
 
 
+def _costo_directo_per_fte(canal_data: Dict[str, Any]) -> float:
+    """Excel CTS canal: costo_directo / fte (sin financiero).
+    Cada perfil tiene costo_directo = payroll + no_payroll (sin ICA/GMF/pólizas).
+    """
+    perfiles = canal_data.get("perfiles") or []
+    fte = float(canal_data.get("fte", 0))
+    if fte <= 0:
+        return 0.0
+    cd_total = sum(float(p.get("costo_directo", 0)) for p in perfiles)
+    return cd_total / fte
+
+
 def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Vision detallada por canal desde los grupos modalidad→canal almacenados en engine."""
+    """Vision detallada por canal — Cadena A = costo_directo/fte (sin financiero)."""
     result = []
     for modalidad_key in ("inbound", "outbound"):
         for canal_data in (vision_por_canal.get(modalidad_key) or []):
             canal = canal_data.get("canal", "")
+            valor = round(_costo_directo_per_fte(canal_data), 2)
             data_items = [
                 {
                     "nombre": "cadena_a",
                     "participacion": "1.00",
-                    "cost_to_serve": {"total": round(canal_data.get("cts_total", 0), 2), "participacion": "1.00"},
+                    "cost_to_serve": {"total": valor, "participacion": "1.00"},
                 },
                 {"nombre": "cadena_b", "participacion": "0"},
                 {"nombre": "cadena_c", "participacion": "0"},
@@ -372,23 +385,38 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
 
 
 def _build_vision_general_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Vision general por canal (inbound/outbound con canales y volúmenes)."""
+    """Vision general por canal.
+
+    Excel: Cadena A $ = costo_directo/fte por tipo de canal (sin financiero).
+    Excel: % = valor_canal / sum(valores_activos_todos_canales).
+    """
+    # Denominador para % = suma de costo_directo/fte de todos los canales activos
+    total_valor = 0.0
+    for modalidad_key in ("inbound", "outbound"):
+        for cd in (vision_por_canal.get(modalidad_key) or []):
+            if float(cd.get("fte", 0)) > 0:
+                total_valor += _costo_directo_per_fte(cd)
+
     result = []
     for modalidad_key in ("inbound", "outbound"):
         canales_raw = vision_por_canal.get(modalidad_key) or []
         canales = []
         for cd in canales_raw:
+            fte = float(cd.get("fte", 0))
+            activo = fte > 0
+            valor = round(_costo_directo_per_fte(cd), 2) if activo else 0.0
+            pct = round(valor / total_valor, 10) if (activo and total_valor > 0) else 0.0
             canales.append({
                 "canal": cd.get("canal", ""),
                 "volumen": cd.get("fte", 0),
                 "cadena_a": {
-                    "participacion": round(cd.get("cts_total", 0), 2),
-                    "valor": round(cd.get("cts_total", 0), 2),
-                    "activo": bool(cd.get("fte", 0) > 0),
+                    "participacion": pct,
+                    "valor": valor,
+                    "activo": activo,
                 },
                 "cadena_b": {"participacion": 0, "valor": 0, "activo": False},
                 "cadena_c": {"participacion": 0, "valor": 0, "activo": False},
-                "ctsPonderado": round(cd.get("cts_total", 0), 2),
+                "ctsPonderado": valor,
             })
         result.append({"nombre": modalidad_key, "canales": canales})
     return result
