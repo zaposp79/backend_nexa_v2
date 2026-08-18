@@ -3,7 +3,7 @@ Endpoints para resultados de simulación v2.
 
 GET    /api/v2/simulation/results                                    — lista de todas las simulaciones
 GET    /api/v2/simulation/{id_draft}/results?client_id=...           — simulaciones por id_draft
-DELETE /api/v2/simulation/results/{id}                               — eliminar simulación por id
+DELETE /api/v2/simulation/{id}/results?client_id=...                 — eliminar simulación por id
 GET    /api/v2/simulation/{simulation_id}/results/vision-pyg
 GET    /api/v2/simulation/{simulation_id}/results/vision-cost-to-serve
 GET    /api/v2/simulation/{simulation_id}/results/vision/modelo-cobro
@@ -52,7 +52,7 @@ async def list_simulations_v2(
 
 
 @router.delete(
-    "/results/{id}",
+    "/{id}/results",
     response_model=ApiResponse,
     summary="Eliminar simulación v2 por ID",
     operation_id="deleteSimulationV2",
@@ -60,6 +60,7 @@ async def list_simulations_v2(
 async def delete_simulation_v2(
     request: Request,
     id: str = Path(..., pattern=r"^[a-zA-Z0-9_\-]{1,128}$", description="ID de la simulación a eliminar"),
+    client_id: Optional[str] = Query(None, description="client_id para validación adicional (opcional)"),
 ) -> ApiResponse:
     """Elimina una simulación v2 previamente calculada.
 
