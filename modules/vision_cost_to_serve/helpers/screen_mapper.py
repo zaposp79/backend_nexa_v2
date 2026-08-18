@@ -256,53 +256,52 @@ def _pct_str(v: Any) -> str:
 
 
 def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Vision general por servicio (Cadena A/B/C) para la sección del mismo nombre."""
-    cts_total = float(vision_cts.get("cts_total") or 0)
+    """Vision general por servicio (Cadena A) para la sección del mismo nombre.
+
+    Excel 'Cost to Serve'!C36 = SUM(C37:C38) = Payroll + No Payroll (sin financiero).
+    Nómina Loaded = Salario Fijo + Salario Variable (crucero es fila separada).
+    Participación (%) = componente / (Payroll + No Payroll).
+    """
     fte = max(int(vision_cts.get("n_fte_total") or 1), 1)
-    prl_total = float(vision_cts.get("payroll_total") or 0)
-    npl_total = float(vision_cts.get("no_payroll_total") or 0)
+    perfiles = vision_cts.get("perfiles") or []
 
-    def _item(total: float, label_pct: float) -> Dict[str, Any]:
-        return {"total": round(total, 2), "participacion": _pct_str(label_pct)}
+    prl_total  = float(vision_cts.get("payroll_total") or 0)
+    npl_total  = float(vision_cts.get("no_payroll_total") or 0)
+    # Excel CTS = Payroll + No Payroll (excluye ICA/GMF/pólizas/comisión/financiación)
+    cts_base   = prl_total + npl_total
 
-    def _pct_of_cts(v: float) -> float:
-        return (v / cts_total) if cts_total > 0 else 0.0
+    # Nómina Loaded = Salario Fijo + Salario Variable (crucero es ítem separado)
+    sal_fijo   = sum(float(p.get("salario_fijo", 0))   for p in perfiles)
+    sal_var    = sum(float(p.get("salario_variable", 0)) for p in perfiles)
+    nom_loaded = sal_fijo + sal_var
+    crucero    = sum(float(p.get("crucero", 0))         for p in perfiles)
+    opex_it    = sum(float(p.get("opex_it", 0))         for p in perfiles)
+    inversiones = sum(float(p.get("inversiones", 0))    for p in perfiles)
+    costos_fijos = sum(float(p.get("costos_fijos", 0))  for p in perfiles)
+
+    def _item(total: float, base_for_pct: float) -> Dict[str, Any]:
+        pct = (base_for_pct / cts_base) if cts_base > 0 else 0.0
+        return {"total": round(total / fte, 2), "participacion": _pct_str(pct)}
 
     cadena_a = {
         "nombre": "cadena_a",
         "participacion": _pct_str(1.0),
-        "cost_to_serve": _item(round(cts_total / fte, 2), _pct_of_cts(cts_total)),
-        "payroll": _item(round(prl_total / fte, 2), _pct_of_cts(prl_total)),
-        "nomina_loaded": _item(round((float(vision_cts.get("payroll_total") or 0)) / fte, 2), _pct_of_cts(prl_total)),
-        "salario_fijo": _item(
-            round(sum(float(p.get("salario_fijo", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
-            0,
-        ),
-        "salario_variable": _item(
-            round(sum(float(p.get("salario_variable", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
-            0,
-        ),
+        # CTS = Payroll + No Payroll (sin financiero)
+        "cost_to_serve":        _item(cts_base,    cts_base),
+        "payroll":              _item(prl_total,   prl_total),
+        # Nómina Loaded = Salario Fijo + Salario Variable
+        "nomina_loaded":        _item(nom_loaded,  nom_loaded),
+        "salario_fijo":         _item(sal_fijo,    sal_fijo),
+        "salario_variable":     _item(sal_var,     sal_var),
         "capacitacion_inicial": _item(0, 0),
-        "capacitacion_rotacion": _item(0, 0),
-        "examenes_medicos": _item(0, 0),
-        "estudios_seguridad": _item(0, 0),
-        "crucero": _item(
-            round(sum(float(p.get("crucero", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
-            0,
-        ),
-        "no_payroll": _item(round(npl_total / fte, 2), _pct_of_cts(npl_total)),
-        "opex_fijo": _item(
-            round(sum(float(p.get("opex_it", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
-            0,
-        ),
-        "inversiones": _item(
-            round(sum(float(p.get("inversiones", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
-            0,
-        ),
-        "costos_fijos_x_estacion": _item(
-            round(sum(float(p.get("costos_fijos", 0)) for p in (vision_cts.get("perfiles") or [])) / fte, 2),
-            0,
-        ),
+        "capacitacion_rotacion":_item(0, 0),
+        "examenes_medicos":     _item(0, 0),
+        "estudios_seguridad":   _item(0, 0),
+        "crucero":              _item(crucero,     crucero),
+        "no_payroll":           _item(npl_total,   npl_total),
+        "opex_fijo":            _item(opex_it,     opex_it),
+        "inversiones":          _item(inversiones, inversiones),
+        "costos_fijos_x_estacion": _item(costos_fijos, costos_fijos),
     }
 
     return [cadena_a, {"nombre": "cadena_b", "participacion": "0"}, {"nombre": "cadena_c", "participacion": "0"}]
