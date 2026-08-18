@@ -255,6 +255,18 @@ def _pct_str(v: Any) -> str:
         return "0.00"
 
 
+def _compute_cts_ponderado_from_items(items: List[Dict[str, Any]]) -> float:
+    """Excel: =(C34*C31)+(G34*G31)+(K34*K31)
+    C34/G34/K34 = cost_to_serve.total; C31/G31/K31 = participacion (float).
+    """
+    total = 0.0
+    for item in items:
+        cts = item.get("cost_to_serve")
+        if cts:
+            total += float(cts.get("total", 0)) * float(item.get("participacion", 0))
+    return round(total, 2)
+
+
 def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Vision general por servicio (Cadena A) para la sección del mismo nombre.
 
@@ -304,7 +316,36 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
         "costos_fijos_x_estacion": _item(costos_fijos, costos_fijos),
     }
 
-    return [cadena_a, {"nombre": "cadena_b", "participacion": "0"}, {"nombre": "cadena_c", "participacion": "0"}]
+    _z = {"total": 0.0, "participacion": "0.00"}
+    cadena_b = {
+        "nombre": "cadena_b",
+        "participacion": "0.00",
+        "cost_to_serve":       _z,
+        "componente_fijo":     _z,
+        "opex":                _z,
+        "inversiones":         _z,
+        "s_y_m":               _z,
+        "componente_variable": _z,
+        "tarifa":              _z,
+        "opex_variable":       _z,
+        "tasa_escalamiento":   _z,
+        "hitl":                _z,
+    }
+    cadena_c = {
+        "nombre": "cadena_c",
+        "participacion": "0.00",
+        "cost_to_serve":       _z,
+        "tarifa_proveedor":    _z,
+        "costo_integracion":   _z,
+        "opex":                _z,
+        "inversiones":         _z,
+        "equipo_integracion":  _z,
+        "costo_variable":      _z,
+        "tasa_escalamiento":   _z,
+        "opex_variable":       _z,
+        "hitl":                _z,
+    }
+    return [cadena_a, cadena_b, cadena_c]
 
 
 def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -436,6 +477,9 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     else:
         nivel_riesgo, detalle_riesgo = "Bajo", "No requiere aprobación: impacto absorbible dentro de márgenes normales"
 
+    _vgs_items = _build_vision_por_servicio(vision_cts)
+    _cts_ponderado = _compute_cts_ponderado_from_items(_vgs_items)
+
     sections: List[Dict[str, Any]] = [
         {
             "key": "totales",
@@ -491,7 +535,8 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             "key": "vision_general_por_servicio",
             "label": "Vision general por servicio",
             "source": "",
-            "items": _build_vision_por_servicio(vision_cts),
+            "cts_ponderado": _cts_ponderado,
+            "items": _vgs_items,
         },
         {
             "key": "vision_detallada_por_canal",
