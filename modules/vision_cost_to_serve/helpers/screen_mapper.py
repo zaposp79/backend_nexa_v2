@@ -361,20 +361,83 @@ def _costo_directo_per_fte(canal_data: Dict[str, Any]) -> float:
 
 
 def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Vision detallada por canal — Cadena A = costo_directo/fte (sin financiero)."""
+    """Vision detallada por canal — desglosa Payroll y No Payroll por canal (Cadena A).
+
+    Mismo patrón que _build_vision_por_servicio pero acotado a cada canal.
+    Los perfiles del canal ya incluyen todos los sub-campos calculados por CTSCalculator.
+    """
     result = []
     for modalidad_key in ("inbound", "outbound"):
         for canal_data in (vision_por_canal.get(modalidad_key) or []):
             canal = canal_data.get("canal", "")
-            valor = round(_costo_directo_per_fte(canal_data), 2)
+            fte_raw = float(canal_data.get("fte", 0))
+            perfiles = canal_data.get("perfiles") or []
+
+            if fte_raw <= 0:
+                _z = {"total": 0.0, "participacion": "0.00"}
+                data_items = [
+                    {
+                        "nombre": "cadena_a",
+                        "participacion": "0.00",
+                        "cost_to_serve":            _z,
+                        "payroll":                  _z,
+                        "nomina_loaded":            _z,
+                        "salario_fijo":             _z,
+                        "salario_variable":         _z,
+                        "capacitacion_inicial":     _z,
+                        "capacitacion_rotacion":    _z,
+                        "examenes_medicos":         _z,
+                        "estudios_seguridad":       _z,
+                        "crucero":                  _z,
+                        "no_payroll":               _z,
+                        "opex_fijo":                _z,
+                        "inversiones":              _z,
+                        "costos_fijos_x_estacion":  _z,
+                    },
+                    {"nombre": "cadena_b", "participacion": "0.00"},
+                    {"nombre": "cadena_c", "participacion": "0.00"},
+                ]
+                result.append({"modalidad": modalidad_key.capitalize(), "canal": canal, "data": data_items})
+                continue
+
+            fte = fte_raw
+            prl_total    = sum(float(p.get("payroll",        0)) for p in perfiles)
+            npl_total    = sum(float(p.get("no_payroll",     0)) for p in perfiles)
+            cts_base     = prl_total + npl_total
+            sal_fijo     = sum(float(p.get("salario_fijo",   0)) for p in perfiles)
+            sal_var      = sum(float(p.get("salario_variable", 0)) for p in perfiles)
+            nom_loaded   = sal_fijo + sal_var
+            crucero      = sum(float(p.get("crucero",        0)) for p in perfiles)
+            opex_it      = sum(float(p.get("opex_it",        0)) for p in perfiles)
+            inversiones  = sum(float(p.get("inversiones",    0)) for p in perfiles)
+            costos_fijos = sum(float(p.get("costos_fijos",   0)) for p in perfiles)
+
+            def _item(total: float, base_for_pct: float, _fte: float = fte, _base: float = cts_base) -> Dict[str, Any]:
+                pct = (base_for_pct / _base) if _base > 0 else 0.0
+                return {"total": round(total / _fte, 2), "participacion": _pct_str(pct)}
+
+            _z = {"total": 0.0, "participacion": "0.00"}
             data_items = [
                 {
                     "nombre": "cadena_a",
                     "participacion": "1.00",
-                    "cost_to_serve": {"total": valor, "participacion": "1.00"},
+                    "cost_to_serve":            _item(cts_base,    cts_base),
+                    "payroll":                  _item(prl_total,   prl_total),
+                    "nomina_loaded":            _item(nom_loaded,  nom_loaded),
+                    "salario_fijo":             _item(sal_fijo,    sal_fijo),
+                    "salario_variable":         _item(sal_var,     sal_var),
+                    "capacitacion_inicial":     _item(0, 0),
+                    "capacitacion_rotacion":    _item(0, 0),
+                    "examenes_medicos":         _item(0, 0),
+                    "estudios_seguridad":       _item(0, 0),
+                    "crucero":                  _item(crucero,     crucero),
+                    "no_payroll":               _item(npl_total,   npl_total),
+                    "opex_fijo":                _item(opex_it,     opex_it),
+                    "inversiones":              _item(inversiones, inversiones),
+                    "costos_fijos_x_estacion":  _item(costos_fijos, costos_fijos),
                 },
-                {"nombre": "cadena_b", "participacion": "0"},
-                {"nombre": "cadena_c", "participacion": "0"},
+                {"nombre": "cadena_b", "participacion": "0.00"},
+                {"nombre": "cadena_c", "participacion": "0.00"},
             ]
             result.append({
                 "modalidad": modalidad_key.capitalize(),
