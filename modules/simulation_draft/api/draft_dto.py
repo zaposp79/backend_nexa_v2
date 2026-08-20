@@ -607,6 +607,7 @@ class SimulationDraftRequest(BaseModel):
     reglas_negocio: Optional[ReglasNegocio] = None
     volumetria: Optional[Volumetria] = None
     escenarios_comerciales: Optional[List[EscenarioComercial]] = None
+    escenario_total: Optional[EscenarioComercial] = None
     condiciones_cadena_a: Optional[CondicionesCadenaA] = None
     condiciones_cadena_b: Optional[CondicionesCadenaB] = None
     condiciones_cadena_c: Optional[CondicionesCadenaC] = None
@@ -631,6 +632,7 @@ class SimulationDraftUpdateRequest(BaseModel):
     reglas_negocio: Optional[ReglasNegocio] = None
     volumetria: Optional[Volumetria] = None
     escenarios_comerciales: Optional[List[EscenarioComercial]] = None
+    escenario_total: Optional[EscenarioComercial] = None
     condiciones_cadena_a: Optional[CondicionesCadenaA] = None
     condiciones_cadena_b: Optional[CondicionesCadenaB] = None
     condiciones_cadena_c: Optional[CondicionesCadenaC] = None
@@ -659,6 +661,7 @@ class SimulationDraftResponse(BaseModel):
     reglas_negocio: Optional[Any] = None
     volumetria: Optional[Any] = None
     escenarios_comerciales: Optional[Any] = None
+    escenario_total: Optional[Any] = None
     condiciones_cadena_a: Optional[Any] = None
     condiciones_cadena_b: Optional[Any] = None
     condiciones_cadena_c: Optional[Any] = None
