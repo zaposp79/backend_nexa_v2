@@ -650,13 +650,19 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     ]
 
     # Charts: proporcion_nomina_cargo — proporción por cargo de estructura (excl. agente base)
-    # Excel Graficos: AI5:AJ28 = cargo / SUMIFS(nóminas, "<>"&"Agente Básico 1")
+    # Excel Graficos: AI5:AJ28 = cargo / SUMIFS(nóminas, todos los cargos de estructura)
+    # Retorna todos los cargos (incluidos con valor=0), agrupados por perfil.
     nomina_por_cargo: Dict[str, float] = vision_cts.get("nomina_por_cargo") or {}
-    total_estructura = sum(nomina_por_cargo.values()) or 1.0
-    proporcion_cargo = [
+    total_estructura = sum(v for v in nomina_por_cargo.values() if v > 0) or 1.0
+    # Proporciones globales (misma estructura de staff para todos los perfiles)
+    cargo_proportions = [
         {"nombre": cargo, "valor": round(monto / total_estructura, 4)}
         for cargo, monto in nomina_por_cargo.items()
-        if monto > 0
+    ]
+    # Estructura por-perfil: cada perfil muestra los mismos cargos globales
+    proporcion_por_perfil = [
+        {"perfil": p.get("nombre", ""), "data": cargo_proportions}
+        for p in perfiles
     ]
 
     # Scores de riesgo vienen de vision_imprimible.seccion_05_control (calculado en _build_control)
@@ -666,7 +672,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     score_operativo = round(float(control_riesgo.get("score_operativo", 0.0)), 2)
 
     charts = {
-        "proporcion_nomina_cargo": proporcion_cargo,
+        "proporcion_nomina_cargo": proporcion_por_perfil,
         "proporcion_nomina_grupo": [{"perfil": p.get("nombre", ""), "data": []} for p in perfiles],
         "evaluacion_de_riesgo": [
             {"nombre": "Total", "valor": score_total},

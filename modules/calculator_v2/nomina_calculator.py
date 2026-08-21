@@ -238,8 +238,8 @@ class NominaCalculator:
     def desglose_por_cargo(self) -> Dict[str, float]:
         """Nómina cargada por cargo de estructura (excl. agente base).
 
+        Retorna TODOS los cargos definidos en ratios_filas (valor=0 para los no activos).
         Usado para el gráfico 'Proporción Nómina por Cargo' en CTS.
-        Clave = position_name del cargo; valor = costo_empresa × cantidad_por_ratio.
         # Excel Graficos: P5:AF29 (SUMIFS por cargo en NominaLoaded por perfil)
         """
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
@@ -249,17 +249,22 @@ class NominaCalculator:
 
         result: Dict[str, float] = {}
         for fila in ratios_filas:
+            nombre = fila.get("position_name") or fila.get("position_id", "")
+            if not nombre:
+                continue
             if not fila.get("incluido", False):
+                result.setdefault(nombre, 0.0)
                 continue
             cargo_data = self._resolver_cargo(fila, detalle_map)
             if not cargo_data:
+                result.setdefault(nombre, 0.0)
                 continue
             cantidad = self._calcular_cantidad(fila, perfiles)
             if cantidad <= 0:
+                result.setdefault(nombre, 0.0)
                 continue
             salario = float(cargo_data.get("salario", 0))
             comision = float(cargo_data.get("comision", 0))
-            nombre = fila.get("position_name") or fila.get("position_id", "")
             result[nombre] = result.get(nombre, 0.0) + calcular_costo_empresa(salario, comision) * cantidad
 
         return result
