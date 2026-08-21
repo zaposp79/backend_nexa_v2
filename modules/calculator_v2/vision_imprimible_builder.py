@@ -206,11 +206,12 @@ def _nivel(puntaje: int) -> str:
     return {1: "Bajo", 2: "Medio", 3: "Alto"}.get(puntaje, "Bajo")
 
 
-def _q1_clasificacion(ingreso_neto_total: float, ingreso_mensual: float) -> tuple[int, str]:
-    """Alto si deal >= 1000 SMLV o >= 200M COP/mes."""
-    if ingreso_neto_total >= _SMLV_2026 * 1_000 or ingreso_mensual >= 200_000_000:
-        return 3, f"{ingreso_neto_total:,.0f} COP total"
-    return 1, f"{ingreso_neto_total:,.0f} COP total"
+def _q1_clasificacion(valor_total_contrato: float) -> tuple[int, str]:
+    # Excel Riesgo!M3 = IFERROR(IFS(L3>=1000000000,"Alto",(L3/12)>=200000000,"Alto"),"Bajo")
+    # L3 = 'Visión Cost To Serve'!C203 = valor_total_contrato
+    if valor_total_contrato >= 1_000_000_000 or (valor_total_contrato / 12) >= 200_000_000:
+        return 3, f"{valor_total_contrato:,.0f} COP total"
+    return 1, f"{valor_total_contrato:,.0f} COP total"
 
 
 def _q2_tipo_cliente(request_data: Dict[str, Any]) -> tuple[int, str]:
@@ -237,18 +238,18 @@ def _q5_imprevistos(vals_mes0: Dict[str, float]) -> tuple[int, str]:
     return (3, "Sí") if tiene else (1, "No")
 
 
-def _q6_alertas(cont_op: float, cont_com: float) -> tuple[int, str]:
-    """
-    Alertas activadas = contingencias por debajo de su mínimo.
-    Solo Cont. Op (< 1%) y Cont. Com (< 4%) cuentan para Q6.
-    Excel 'Riesgo' Q6: El Tiempo → 2 alertas → Medio (cont_op=0%, cont_com=0%).
-    """
-    n = int(cont_op < 0.01) + int(cont_com < 0.04)
-    if n == 0:
-        return 1, "0 alertas"
-    if n <= 2:
+def _q6_alertas(valor_total_contrato: float, periodo_pago: int) -> tuple[int, str]:
+    # Excel Riesgo!L8 = IF(CTS>=1B,1,0) + IF((CTS/Panel_C9)>=100M,1,0) + IF((CTS/Panel_C9)>=200M,1,0)
+    # M8 = IF(L8=3,"Alto", IF(AND(L8>=1,L8<=2),"Medio","Bajo"))
+    # CTS = valor_total_contrato; Panel_C9 = periodo_pago (días)
+    periodo = max(periodo_pago, 1)
+    ratio = valor_total_contrato / periodo
+    n = int(valor_total_contrato >= 1_000_000_000) + int(ratio >= 100_000_000) + int(ratio >= 200_000_000)
+    if n == 3:
+        return 3, "3 alertas"
+    if n >= 1:
         return 2, f"{n} alertas"
-    return 3, f"{n} alertas"
+    return 1, "0 alertas"
 
 
 def _q7_complejidad(request_data: Dict[str, Any]) -> tuple[int, str]:
@@ -306,22 +307,19 @@ def _build_control(
     totales: Dict[str, float],
 ) -> dict:
     vals0 = meses[0].get("valores", {}) if meses else {}
-    cont_op = float(vals0.get("cont_op", 0.0))
-    cont_com = float(vals0.get("cont_com", 0.0))
 
-    mes_ramp1 = _primer_mes_ramp1(meses)
-    ingreso_mensual = float((mes_ramp1 or {}).get("valores", {}).get("ingreso_neto", 0.0))
     ingreso_neto_total = float(totales.get("ingreso_neto", 0.0))
+    periodo_pago = int(_datos_op(request_data).get("periodo_pago", 30) or 30)
 
     # Preguntas con puntaje, peso y calificación ponderada
     preguntas_raw = [
         # id, factor, categoria, peso, (puntaje, respuesta)
-        (1,  "Clasificación de oportunidad", "cliente",  0.30, _q1_clasificacion(ingreso_neto_total, ingreso_mensual)),
+        (1,  "Clasificación de oportunidad", "cliente",  0.30, _q1_clasificacion(ingreso_neto_total)),
         (2,  "Tipo de cliente",              "cliente",  0.25, _q2_tipo_cliente(request_data)),
         (3,  "Período de pago",              "cliente",  0.25, _q3_periodo_pago(request_data)),
         (4,  "Experiencia con el cliente",   "cliente",  0.10, _q4_experiencia(request_data)),
         (5,  "Presupuesto de imprevistos",   "cliente",  0.10, _q5_imprevistos(vals0)),
-        (6,  "Alertas activadas",            "operativo",0.30, _q6_alertas(cont_op, cont_com)),
+        (6,  "Alertas activadas",            "operativo",0.30, _q6_alertas(ingreso_neto_total, periodo_pago)),
         (7,  "Complejidad",                  "operativo",0.20, _q7_complejidad(request_data)),
         (8,  "Capacitaciones",               "operativo",0.20, _q8_capacitacion(request_data)),
         (9,  "Rotación",                     "operativo",0.20, _q9_rotacion(request_data, vals0)),
