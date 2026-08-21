@@ -41,7 +41,7 @@ class IdentityRepository:
         """Actualiza lastSeenAt sin modificar ningún otro campo."""
         doc = self._get_raw(identity_id)
         doc["lastSeenAt"] = last_seen_at
-        stored = self._store.upsert(_COLLECTION, doc)
+        stored = self._store.upsert(_COLLECTION, {**doc, "domain": _PARTITION})
         logger.info("[identity] lastSeenAt updated id=%s ts=%s", identity_id, last_seen_at)
         return stored
 

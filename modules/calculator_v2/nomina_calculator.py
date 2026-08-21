@@ -233,12 +233,21 @@ class NominaCalculator:
 
     def _nomina_estructura(self) -> float:
         """Suma del costo empresa de cargos de estructura × cantidad calculada por ratio."""
+        return sum(self.desglose_por_cargo().values())
+
+    def desglose_por_cargo(self) -> Dict[str, float]:
+        """Nómina cargada por cargo de estructura (excl. agente base).
+
+        Usado para el gráfico 'Proporción Nómina por Cargo' en CTS.
+        Clave = position_name del cargo; valor = costo_empresa × cantidad_por_ratio.
+        # Excel Graficos: P5:AF29 (SUMIFS por cargo en NominaLoaded por perfil)
+        """
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
 
-        total = 0.0
+        result: Dict[str, float] = {}
         for fila in ratios_filas:
             if not fila.get("incluido", False):
                 continue
@@ -250,9 +259,10 @@ class NominaCalculator:
                 continue
             salario = float(cargo_data.get("salario", 0))
             comision = float(cargo_data.get("comision", 0))
-            total += calcular_costo_empresa(salario, comision) * cantidad
+            nombre = fila.get("position_name") or fila.get("position_id", "")
+            result[nombre] = result.get(nombre, 0.0) + calcular_costo_empresa(salario, comision) * cantidad
 
-        return total
+        return result
 
     def _capacitacion_rotacion(self) -> float:
         """Costo mensual de capacitación por rotación (Excel V2-8: 'Nomina Loaded'!E283-E299).

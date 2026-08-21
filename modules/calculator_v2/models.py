@@ -125,6 +125,7 @@ class VisionCostToServe(BaseModel):
     reglas_negocio: List[Dict[str, Any]] = Field(default_factory=list)
     cadenas: List[Dict[str, Any]] = Field(default_factory=list)
     vision_por_canal: Dict[str, Any] = Field(default_factory=dict)
+    nomina_por_cargo: Dict[str, float] = Field(default_factory=dict)
 
 
 class VisionPyG(BaseModel):

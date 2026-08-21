@@ -649,13 +649,15 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         },
     ]
 
-    # Charts: proporcion_nomina_cargo (por perfil), proporcion_nomina_grupo (stub), evaluacion_de_riesgo
-    proporcion_cargo = []
-    for p in perfiles:
-        nombre = p.get("nombre", "")
-        salario = float(p.get("salario_cargado") or 0)
-        total_payroll = float(vision_cts.get("payroll_total") or 1)
-        proporcion_cargo.append({"nombre": nombre, "valor": _pct_str(salario / total_payroll if total_payroll > 0 else 0)})
+    # Charts: proporcion_nomina_cargo — proporción por cargo de estructura (excl. agente base)
+    # Excel Graficos: AI5:AJ28 = cargo / SUMIFS(nóminas, "<>"&"Agente Básico 1")
+    nomina_por_cargo: Dict[str, float] = vision_cts.get("nomina_por_cargo") or {}
+    total_estructura = sum(nomina_por_cargo.values()) or 1.0
+    proporcion_cargo = [
+        {"nombre": cargo, "valor": round(monto / total_estructura, 4)}
+        for cargo, monto in nomina_por_cargo.items()
+        if monto > 0
+    ]
 
     # Scores de riesgo vienen de vision_imprimible.seccion_05_control (calculado en _build_control)
     control_riesgo: Dict[str, Any] = (result.get("vision_imprimible") or {}).get("seccion_05_control") or {}
@@ -664,7 +666,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     score_operativo = round(float(control_riesgo.get("score_operativo", 0.0)), 2)
 
     charts = {
-        "proporcion_nomina_cargo": [{"perfil": p.get("nombre", ""), "data": [{"nombre": p.get("nombre", ""), "valor": _pct_str(float(p.get("salario_cargado", 0)) / max(float(vision_cts.get("payroll_total") or 1), 1))}]} for p in perfiles],
+        "proporcion_nomina_cargo": proporcion_cargo,
         "proporcion_nomina_grupo": [{"perfil": p.get("nombre", ""), "data": []} for p in perfiles],
         "evaluacion_de_riesgo": [
             {"nombre": "Total", "valor": score_total},

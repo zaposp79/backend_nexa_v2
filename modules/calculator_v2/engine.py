@@ -173,6 +173,7 @@ class MotorDeReglas:
         _nomina_calc = NominaCalculator(request_data)
         nomina_fija = _nomina_calc.calcular()
         _nomina_detalle = _nomina_calc.calcular_detalle()
+        _nomina_desglose_cargo = _nomina_calc.desglose_por_cargo()
         ciudad = datos_op.get("ciudad", "")
         sede = datos_op.get("sede", "")
         costo_fijo_estacion = self._repo.get_hr_costo_fijo_estacion(ciudad, localidad=sede)
@@ -429,6 +430,7 @@ class MotorDeReglas:
             totales=totales,
             duracion_meses=duracion_meses,
             componentes_pricing_fin=componentes_pricing_fin,
+            nomina_desglose_cargo=_nomina_desglose_cargo,
         )
 
         cts_perfiles_raw = (
@@ -755,6 +757,7 @@ class MotorDeReglas:
         totales: Dict[str, float],
         duracion_meses: int = 1,
         componentes_pricing_fin: Optional[Dict[str, float]] = None,
+        nomina_desglose_cargo: Optional[Dict[str, float]] = None,
     ) -> Optional[VisionCostToServe]:
         """Construye la Visión Cost-to-Serve.
 
@@ -821,6 +824,7 @@ class MotorDeReglas:
                 reglas_negocio=reglas_negocio,
                 cadenas=cadenas,
                 vision_por_canal=vision_por_canal,
+                nomina_por_cargo=nomina_desglose_cargo or {},
             )
         except Exception as exc:
             logger.warning("[motor-reglas] Error construyendo VisionCostToServe: %s", exc)
