@@ -92,6 +92,7 @@ class SimulationDraftService:
                 [_dump(e) for e in request.escenarios_comerciales]
                 if request.escenarios_comerciales is not None else None
             ),
+            "escenario_total": _dump(request.escenario_total),
             "condiciones_cadena_a": _dump(request.condiciones_cadena_a),
             "condiciones_cadena_b": _dump(request.condiciones_cadena_b),
             "condiciones_cadena_c": _dump(request.condiciones_cadena_c),
@@ -133,6 +134,8 @@ class SimulationDraftService:
             document["volumetria"] = _dump(request.volumetria)
         if request.escenarios_comerciales is not None:
             document["escenarios_comerciales"] = [_dump(e) for e in request.escenarios_comerciales]
+        if request.escenario_total is not None:
+            document["escenario_total"] = _dump(request.escenario_total)
         if request.condiciones_cadena_a is not None:
             document["condiciones_cadena_a"] = _dump(request.condiciones_cadena_a)
         if request.condiciones_cadena_b is not None:
@@ -324,6 +327,7 @@ def _to_response(doc: dict) -> SimulationDraftResponse:
         "reglas_negocio": _migrate_reglas_negocio(doc.get("reglas_negocio")),
         "volumetria": doc.get("volumetria"),
         "escenarios_comerciales": doc.get("escenarios_comerciales"),
+        "escenario_total": doc.get("escenario_total"),
         "condiciones_cadena_a": _migrate_condiciones_cadena_a(doc.get("condiciones_cadena_a")),
         "condiciones_cadena_b": doc.get("condiciones_cadena_b"),
         "condiciones_cadena_c": doc.get("condiciones_cadena_c"),
