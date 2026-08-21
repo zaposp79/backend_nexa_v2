@@ -310,6 +310,8 @@ def _build_control(
 
     ingreso_neto_total = float(totales.get("ingreso_neto", 0.0))
     periodo_pago = int(_datos_op(request_data).get("periodo_pago", 30) or 30)
+    mes_ramp = _primer_mes_ramp1(meses)
+    ingreso_mensual = float((mes_ramp.get("valores", {}) if mes_ramp else {}).get("ingreso_neto", 0.0))
 
     # Preguntas con puntaje, peso y calificación ponderada
     preguntas_raw = [
