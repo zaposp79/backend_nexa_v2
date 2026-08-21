@@ -855,15 +855,30 @@ class MotorDeReglas:
         descuento = _pct("descuento", 0.0)
         imprevistos = _pct("pct_imprevistos", 0.10)
 
+        # Cadenas B/C: porcentaje = 0 si no tienen costo en este deal
+        costo_b = float(totales.get("costo_cadena_b", 0))
+        costo_c = float(totales.get("costo_cadena_c", 0))
+
+        # imprevistos_valor reutilizado para derivar ingreso_bruto_total
+        imprevistos_valor = _valor("imprevistos_valor", imprevistos)
+
+        # ingreso_bruto_total = antes de imprevistos (Excel: Ingreso Cadena A P&G)
+        # ingreso_neto_total ya viene descontado de imprevistos → es el valor_total_deal
+        ingreso_bruto_total = float(totales.get("ingreso_bruto") or (ingreso_neto_total + imprevistos_valor))
+
         return [
-            {"concepto": "Margen Cadena A", "porcentaje": round(margen_a * 100, 1), "valor": _valor("utilidad_neta", margen_a)},
-            {"concepto": "Margen Cadena B", "porcentaje": round(margen_b * 100, 1), "valor": round(totales.get("costo_cadena_b", 0) * margen_b / max(1 - margen_b, 0.01), 0)},
-            {"concepto": "Margen Cadena C", "porcentaje": round(margen_c * 100, 1), "valor": round(totales.get("costo_cadena_c", 0) * margen_c / max(1 - margen_c, 0.01), 0)},
-            {"concepto": "Contingencia Operativa", "porcentaje": round(cont_op * 100, 1), "valor": _valor("contingencia_operativa_valor", cont_op)},
-            {"concepto": "Contingencia Comercial", "porcentaje": round(cont_com * 100, 1), "valor": _valor("contingencia_comercial_valor", cont_com)},
-            {"concepto": "Markup (complejidad, horarios)", "porcentaje": round(markup * 100, 1), "valor": _valor("markup_valor", markup)},
-            {"concepto": "Descuento volumen", "porcentaje": round(descuento * 100, 1), "valor": _valor("descuento_valor", descuento)},
-            {"concepto": "Imprevistos", "porcentaje": round(imprevistos * 100, 1), "valor": _valor("imprevistos_valor", imprevistos)},
+            # porcentaje en decimal (0.18, no 18) — el front aplica ×100 para mostrar %
+            # Margen Cadena A valor = ingreso bruto total (antes de imprevistos)
+            {"concepto": "Margen Cadena A", "porcentaje": margen_a, "valor": round(ingreso_bruto_total, 0)},
+            {"concepto": "Margen Cadena B", "porcentaje": margen_b if costo_b > 0 else 0.0, "valor": round(costo_b * margen_b / max(1 - margen_b, 0.01), 0)},
+            {"concepto": "Margen Cadena C", "porcentaje": margen_c if costo_c > 0 else 0.0, "valor": round(costo_c * margen_c / max(1 - margen_c, 0.01), 0)},
+            {"concepto": "Contingencia Operativa", "porcentaje": cont_op, "valor": _valor("contingencia_operativa_valor", cont_op)},
+            {"concepto": "Contingencia Comercial", "porcentaje": cont_com, "valor": _valor("contingencia_comercial_valor", cont_com)},
+            {"concepto": "Markup (complejidad, horarios)", "porcentaje": markup, "valor": _valor("markup_valor", markup)},
+            {"concepto": "Descuento volumen", "porcentaje": descuento, "valor": _valor("descuento_valor", descuento)},
+            {"concepto": "Imprevistos", "porcentaje": imprevistos, "valor": imprevistos_valor},
+            # valor_total_deal = ingreso_neto_total (ya descontado imprevistos, con descuento incluido)
+            {"concepto": "valor_total_deal", "porcentaje": None, "valor": round(ingreso_neto_total, 0)},
         ]
 
     @staticmethod
