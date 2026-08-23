@@ -665,6 +665,14 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         for p in perfiles
     ]
 
+    # proporcion_nomina_grupo — grupos de estructura por perfil
+    # Excel Graficos: AH31:AI33 = SUMIF(grupo, proporciones) filtrado por perfil activo
+    nomina_grupos: Dict[str, Any] = vision_cts.get("nomina_grupos_por_perfil") or {}
+    proporcion_por_grupo = [
+        {"perfil": p.get("nombre", ""), "data": nomina_grupos.get(p.get("nombre", ""), [])}
+        for p in perfiles
+    ]
+
     # Scores de riesgo vienen de vision_imprimible.seccion_05_control (calculado en _build_control)
     control_riesgo: Dict[str, Any] = (result.get("vision_imprimible") or {}).get("seccion_05_control") or {}
     score_total = round(float(control_riesgo.get("score_deal", 0.0)), 2)
@@ -673,7 +681,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
 
     charts = {
         "proporcion_nomina_cargo": proporcion_por_perfil,
-        "proporcion_nomina_grupo": [{"perfil": p.get("nombre", ""), "data": []} for p in perfiles],
+        "proporcion_nomina_grupo": proporcion_por_grupo,
         "evaluacion_de_riesgo": [
             {"nombre": "Total", "valor": score_total},
             {"nombre": "Cliente", "valor": score_cliente},

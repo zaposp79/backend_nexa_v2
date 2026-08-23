@@ -9,7 +9,40 @@ Reglas del Excel Nexa - Pricing - Simulador - V2-8.xlsx (Inputs de Nomina, fila 
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
+
+# ── Tabla estática: cargo → grupo (Excel Graficos AM5:AN28) ─────────────────
+# Fuente: 001_ElTiempo.xlsx · Graficos!AM5:AN28
+# Los nombres se normalizan a minúsculas para el matching con position_name.
+_GRUPOS_ORDEN: List[str] = ["Operaciones", "Recursos humanos", "Otros"]
+
+_CARGO_GRUPO_MAP: Dict[str, str] = {
+    # Operaciones (14 cargos)
+    "director de cuentas":                            "Operaciones",
+    "director de performance":                        "Operaciones",
+    "analista profesional afac":                      "Operaciones",
+    "validador":                                      "Operaciones",
+    "gtr":                                            "Operaciones",
+    "reporting":                                      "Operaciones",
+    "works force":                                    "Operaciones",
+    "jefe de operación":                              "Operaciones",
+    "lider de planeación operativa":                  "Operaciones",
+    "lider de experiencia de cliente y performance":  "Operaciones",
+    "jefe comercial regional":                        "Operaciones",
+    "cargos adicionales":                             "Operaciones",
+    "monitor de calidad":                             "Operaciones",
+    "supervisor":                                     "Operaciones",
+    # Recursos humanos (6 cargos)
+    "lider de entrenamiento":                         "Recursos humanos",
+    "formadores":                                     "Recursos humanos",
+    "analista prof. de selección":                    "Recursos humanos",
+    "analista 1 de reclutamiento":                    "Recursos humanos",
+    "aprendiz sena":                                  "Recursos humanos",
+    "inclusión":                                      "Recursos humanos",
+    # Otros (2 cargos)
+    "especialista de proyectos":                      "Otros",
+    "analista 2 service desk":                        "Otros",
+}
 
 # Tasas de nómina (Excel V2-8, Inputs de Nomina fila 36)
 _TASA_SALUD = 0.085
@@ -268,6 +301,99 @@ class NominaCalculator:
             result[nombre] = result.get(nombre, 0.0) + calcular_costo_empresa(salario, comision) * cantidad
 
         return result
+
+    def desglose_por_cargo_por_perfil(self) -> Dict[str, Dict[str, float]]:
+        """Nómina por cargo desglosada POR PERFIL (excl. agente base).
+
+        Retorna todos los cargos de estructura para cada perfil, incluyendo
+        aquellos con valor 0 (no incluidos o sin cantidad).
+        # Excel Graficos: AR5:BH28 — cada columna es un perfil activo del deal
+        """
+        perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
+        detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
+        ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
+        detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
+
+        result: Dict[str, Dict[str, float]] = {
+            p.get("nombre", f"perfil{i+1}"): {} for i, p in enumerate(perfiles)
+        }
+
+        for fila in ratios_filas:
+            cargo_nombre = fila.get("position_name") or fila.get("position_id", "")
+            if not cargo_nombre:
+                continue
+
+            costo_unit = 0.0
+            if fila.get("incluido", False):
+                cargo_data = self._resolver_cargo(fila, detalle_map)
+                if cargo_data:
+                    salario = float(cargo_data.get("salario", 0))
+                    comision = float(cargo_data.get("comision", 0))
+                    costo_unit = calcular_costo_empresa(salario, comision)
+
+            for pr in fila.get("por_perfil", []):
+                indice = pr.get("indice_perfil", 0)
+                if indice >= len(perfiles):
+                    continue
+                perfil_nombre = perfiles[indice].get("nombre", f"perfil{indice+1}")
+                if perfil_nombre not in result:
+                    result[perfil_nombre] = {}
+
+                if costo_unit <= 0:
+                    result[perfil_nombre].setdefault(cargo_nombre, 0.0)
+                    continue
+
+                try:
+                    personalizado = float(pr.get("personalizado") or 0)
+                except (TypeError, ValueError):
+                    personalizado = 0.0
+
+                if personalizado > 0:
+                    cantidad = personalizado
+                else:
+                    try:
+                        ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                    except ValueError:
+                        ratio = 0.0
+                    fte = float(perfiles[indice].get("fte", 0))
+                    cantidad = fte / ratio if ratio > 0 else 0.0
+
+                result[perfil_nombre][cargo_nombre] = (
+                    result[perfil_nombre].get(cargo_nombre, 0.0) + costo_unit * cantidad
+                )
+
+        return result
+
+    def proporcion_nomina_por_grupo(self) -> Dict[str, List[dict]]:
+        """Proporción de nómina de estructura agrupada por grupo y por perfil.
+
+        Grupos y mapping definidos en _CARGO_GRUPO_MAP (Excel Graficos AM5:AN28).
+        Denominador excluye 'Agente Básico 1' (ya excluido en desglose_por_cargo_por_perfil).
+        # Excel Graficos: AH31:AI33 = SUMIF(grupos, AJ_props) por perfil activo
+        """
+        desglose = self.desglose_por_cargo_por_perfil()
+        resultado: Dict[str, List[dict]] = {}
+
+        for perfil_nombre, cargos in desglose.items():
+            totales_grupo: Dict[str, float] = {g: 0.0 for g in _GRUPOS_ORDEN}
+            total_estructura = 0.0
+
+            for cargo_nombre, nomina in cargos.items():
+                grupo = _CARGO_GRUPO_MAP.get(cargo_nombre.strip().lower())
+                if grupo and grupo in totales_grupo:
+                    totales_grupo[grupo] += nomina
+                    total_estructura += nomina
+
+            props = [
+                {
+                    "nombre": grupo,
+                    "valor": round(totales_grupo[grupo] / total_estructura, 4) if total_estructura > 0 else 0.0,
+                }
+                for grupo in _GRUPOS_ORDEN
+            ]
+            resultado[perfil_nombre] = props
+
+        return resultado
 
     def _capacitacion_rotacion(self) -> float:
         """Costo mensual de capacitación por rotación (Excel V2-8: 'Nomina Loaded'!E283-E299).
