@@ -11,7 +11,11 @@ from typing import Any, Dict, List, Optional
 # SMLV 2026 Colombia (COP) — actualizar anualmente si cambia el decreto
 _SMLV_2026 = 1_423_500.0
 
-_RANGOS_CONTINGENCIAS = [
+_RANGOS_CONTINGENCIAS = [						
+
+    {"nombre": "Margen objetivo Cadena A", "campo": "margen_a", "min": 0.0, "max": 1.0},
+    {"nombre": "Margen objetivo Cadena B", "campo": "margen_b", "min": 0.0, "max": 1.0},
+    {"nombre": "Margen objetivo cadena C", "campo": "margen_c", "min": 0.0, "max": 1.0},					
     {"nombre": "Contingencia Operativa", "campo": "cont_op",  "min": 0.01, "max": 0.04},
     {"nombre": "Contingencia Comercial", "campo": "cont_com", "min": 0.04, "max": 0.07},
     {"nombre": "Mark-Up",               "campo": "markup",   "min": 0.02, "max": 0.08},
