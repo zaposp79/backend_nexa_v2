@@ -451,6 +451,7 @@ class MotorDeReglas:
                 totales=totales,
                 duracion_meses=duracion_meses,
                 cts_perfiles=cts_perfiles_raw,
+                cts_mensual=vision_cts.cts_mensual if vision_cts else None,
             )
         except Exception as exc:
             logger.warning("[motor-reglas] Error construyendo VisionImprimible: %s", exc)
