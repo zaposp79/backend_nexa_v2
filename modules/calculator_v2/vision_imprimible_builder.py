@@ -8,6 +8,11 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from nexa_engine.modules.parametrizacion.services.resolver import (
+    ParametrizationResolver,
+)
+
+_resolver = ParametrizationResolver()
 # SMLV 2026 Colombia (COP) — actualizar anualmente si cambia el decreto
 _SMLV_2026 = 1_423_500.0
 
@@ -155,6 +160,7 @@ def _build_margen_historico() -> dict:
     """Construye el margen histórico temporal del servicio SAC."""
     return {
         "servicio": "SAC",
+        "margen_servicio": 0.17,
         "items": {
             "q1": 0.13,
             "q2": 0.17,
@@ -291,6 +297,7 @@ def _q8_capacitacion(request_data: Dict[str, Any]) -> tuple[int, str]:
     return 1, f"{dias_prom:.1f} días"
 
 
+#todo changes percents to config
 def _q9_rotacion(request_data: Dict[str, Any], vals_mes0: Dict[str, float]) -> tuple[int, str]:
     operativeData = request_data.get("datos_operativos", {}) or {}
     tasa = float(
@@ -318,8 +325,16 @@ def _build_control(
     meses: List[Dict],
     totales: Dict[str, float],
 ) -> dict:
-    vals0 = meses[0].get("valores", {}) if meses else {}
+    
+    risk_list = _resolver.get_active_op()["riesgo"]
 
+    def search_in_risk(factor: str) -> str:
+        criterios = risk_list.get("criterios", []) if isinstance(risk_list, dict) else risk_list
+        criterio = next((item for item in criterios if item.get("factor") == factor), {})
+        return criterio.get("pregunta", factor)
+    
+    vals0 = meses[0].get("valores", {}) if meses else {}
+    
     ingreso_neto_total = float(totales.get("ingreso_neto", 0.0))
     periodo_pago = int(_datos_op(request_data).get("periodo_pago", 30) or 30)
     mes_ramp = _primer_mes_ramp1(meses)
@@ -328,16 +343,16 @@ def _build_control(
     # Preguntas con puntaje, peso y calificación ponderada
     preguntas_raw = [
         # id, factor, categoria, peso, (puntaje, respuesta)
-        (1,  "Clasificación de oportunidad", "cliente",  0.30, _q1_clasificacion(ingreso_neto_total)),
-        (2,  "Tipo de cliente",              "cliente",  0.25, _q2_tipo_cliente(request_data)),
-        (3,  "Período de pago",              "cliente",  0.25, _q3_periodo_pago(request_data)),
-        (4,  "Experiencia con el cliente",   "cliente",  0.10, _q4_experiencia(request_data)),
-        (5,  "Presupuesto de imprevistos",   "cliente",  0.10, _q5_imprevistos(vals0)),
-        (6,  "Alertas activadas",            "operativo",0.30, _q6_alertas(ingreso_neto_total, periodo_pago)),
-        (7,  "Complejidad",                  "operativo",0.20, _q7_complejidad(request_data)),
-        (8,  "Capacitaciones",               "operativo",0.20, _q8_capacitacion(request_data)),
-        (9,  "Rotación",                     "operativo",0.20, _q9_rotacion(request_data, vals0)),
-        (10, "Dependencia de terceros",      "operativo",0.10, _q10_terceros(request_data)),
+        (1,  search_in_risk("Clasificación de oportunidad"), "cliente",  0.30, _q1_clasificacion(ingreso_neto_total)),
+        (2,  search_in_risk("Tipo de cliente"),              "cliente",  0.25, _q2_tipo_cliente(request_data)),
+        (3,  search_in_risk("Período de pago"),              "cliente",  0.25, _q3_periodo_pago(request_data)),
+        (4,  search_in_risk("Experiencia con el cliente"),   "cliente",  0.10, _q4_experiencia(request_data)),
+        (5,  search_in_risk("Presupuesto de imprevistos"),   "cliente",  0.10, _q5_imprevistos(vals0)),
+        (6,  search_in_risk("Alertas activadas"),            "operativo",0.30, _q6_alertas(ingreso_neto_total, periodo_pago)),
+        (7,  search_in_risk("Complejidad"),                  "operativo",0.20, _q7_complejidad(request_data)),
+        (8,  search_in_risk("Capacitaciones"),               "operativo",0.20, _q8_capacitacion(request_data)),
+        (9,  search_in_risk("Rotación"),                     "operativo",0.20, _q9_rotacion(request_data, vals0)),
+        (10, search_in_risk("Dependencia de terceros"),      "operativo",0.10, _q10_terceros(request_data)),
     ]
 
     preguntas = []
