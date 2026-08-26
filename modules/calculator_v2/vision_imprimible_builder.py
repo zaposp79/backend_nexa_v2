@@ -122,7 +122,7 @@ def _build_waterfall(meses: List[Dict], totales: Dict[str, float]) -> List[dict]
         ("Tarifa Proveedor", total("tarifa_proveedor_c"), True),
         ("Costo Integración", total("costo_integracion_c"), True),
         ("Costo Variable", total("costo_variable_c"), True),
-        ("Costos Financieros", total("componente_financiero_total"), True),
+        ("Costos Financieros", total("costos_financiacion_mensual"), True),
         ("Utilidad Neta", total("utilidad_neta"), False),
     ]
 
@@ -160,23 +160,25 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
     Excel 'Hoja Maestra Escenarios' — Escenario 1: tarifa = 5,021,494.42 / FTE.
     """
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
+    escenarios_input = request_data.get("escenarios_comerciales", {}) or {}
     perfiles_input = cadena_a.get("perfiles", []) or []
 
     tarifa_por_nombre: Dict[str, float] = {
-        p.get("nombre", ""): float(p.get("tarifa_fte", 0.0))
+        p.get("nombre", "").replace(" ", ""): float(p.get("tarifa_fte", 0.0))
         for p in cts_perfiles
     }
 
     escenarios = []
-    for p in perfiles_input:
+    for p in escenarios_input:
         nombre = str(p.get("nombre", f"Perfil {len(escenarios) + 1}"))
         modelo = str(p.get("modelo_cobro", "Fijo"))
-        pct_var = float(p.get("pct_variable", 0.0))
-        pct_fijo = round(1.0 - pct_var, 4)
+        pct_var = float(p.get("proporcion_componente_variable", 0.0))
+        pct_fijo = float(p.get("proporcion_componente_fijo", 0.0))
         fte = int(float(p.get("fte", 0)))
-        tarifa = tarifa_por_nombre.get(nombre, 0.0)
-        tarifa_variable = float(p.get("tarifa_variable", 0.0)) if pct_var > 0 else None
-
+        tarifa_base = tarifa_por_nombre.get( f"perfil{len(escenarios) + 1}", 0.0)
+        tarifa = tarifa_base * pct_fijo if pct_fijo > 0 else None
+        tarifa_variable = tarifa_base * pct_var if pct_var > 0 else None #Todo fix this
+        
         escenarios.append({
             "nombre": nombre,
             "modalidad": p.get("modalidad"),
@@ -185,7 +187,7 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
             "pct_fijo": pct_fijo,
             "pct_variable": round(pct_var, 4),
             "fte": fte,
-            "tarifa_fija": round(tarifa, 2) if pct_fijo > 0 and tarifa else None,
+            "tarifa_fija": round(tarifa, 2) if tarifa is not None else None,
             "tarifa_variable": round(tarifa_variable, 2) if tarifa_variable else None,
         })
 
@@ -355,28 +357,36 @@ def _build_control(
         return "Bajo"
 
     # Alertas de aprobación
-    alertas = []
-    if ingreso_mensual >= 100_000_000:
-        alertas.append({
-            "nivel": "Gerencia Financiera",
-            "umbral_descripcion": "> COP 100M/mes",
-            "valor_deal": round(ingreso_mensual, 2),
-            "requerida": True,
-        })
-    if ingreso_mensual >= 200_000_000:
-        alertas.append({
-            "nivel": "Gerencia General",
-            "umbral_descripcion": "> COP 200M/mes",
-            "valor_deal": round(ingreso_mensual, 2),
-            "requerida": True,
-        })
-    if ingreso_neto_total >= _SMLV_2026 * 1_000:
-        alertas.append({
-            "nivel": "Alta Dirección",
-            "umbral_descripcion": f"> 1,000 SMLV (total contrato >= {_SMLV_2026 * 1_000:,.0f} COP)",
-            "valor_deal": round(ingreso_neto_total, 2),
-            "requerida": True,
-        })
+    alertas_config = [
+        (
+            "Gerencia Financiera",
+            "> COP 100M/mes",
+            ingreso_mensual,
+            ingreso_mensual >= 100_000_000,
+        ),
+        (
+            "Gerencia General",
+            "> COP 200M/mes",
+            ingreso_mensual,
+            ingreso_mensual >= 200_000_000,
+        ),
+        (
+            "Alta Dirección",
+            f"> 1,000 SMLV (total contrato >= {_SMLV_2026 * 1_000:,.0f} COP)",
+            ingreso_neto_total,
+            ingreso_neto_total >= _SMLV_2026 * 1_000,
+        ),
+    ]
+    alertas = [
+        {
+            "nivel": nivel,
+            "umbral_descripcion": umbral,
+            "valor_deal": round(valor, 2),
+            "requerida": requerida,
+        }
+        for nivel, umbral, valor, requerida in alertas_config
+    ]
+    
 
     return {
         "score_cliente": round(score_cliente, 4),
