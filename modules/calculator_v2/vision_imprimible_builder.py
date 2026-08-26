@@ -151,6 +151,19 @@ def _build_evolucion(meses: List[Dict]) -> List[dict]:
     ]
 
 
+def _build_margen_historico() -> dict:
+    """Construye el margen histórico temporal del servicio SAC."""
+    return {
+        "servicio": "SAC",
+        "items": {
+            "q1": 0.13,
+            "q2": 0.17,
+            "q3": 0.27,
+            "q4": 0.96,
+        },
+    }
+
+
 # ── Sección 04 — Comparativo de Escenarios ───────────────────────────────────
 
 def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) -> List[dict]:
@@ -174,8 +187,10 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
         modelo = str(p.get("modelo_cobro", "Fijo"))
         pct_var = float(p.get("proporcion_componente_variable", 0.0))
         pct_fijo = float(p.get("proporcion_componente_fijo", 0.0))
-        fte = int(float(p.get("fte", 0)))
-        tarifa_base = tarifa_por_nombre.get( f"perfil{len(escenarios) + 1}", 0.0)
+        nombre_perfil = f"perfil{len(escenarios) + 1}"
+        perfil = next((p for p in perfiles_input if p.get("nombre") == nombre_perfil), {})
+        fte = int(float(perfil.get("fte", 0)))
+        tarifa_base = tarifa_por_nombre.get(nombre_perfil, 0.0)
         tarifa = tarifa_base * pct_fijo if pct_fijo > 0 else None
         tarifa_variable = tarifa_base * pct_var if pct_var > 0 else None #Todo fix this
         
@@ -277,10 +292,9 @@ def _q8_capacitacion(request_data: Dict[str, Any]) -> tuple[int, str]:
 
 
 def _q9_rotacion(request_data: Dict[str, Any], vals_mes0: Dict[str, float]) -> tuple[int, str]:
-    cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
+    operativeData = request_data.get("datos_operativos", {}) or {}
     tasa = float(
-        cadena_a.get("tasa_rotacion_anual", 0.0)
-        or vals_mes0.get("tasa_rotacion_anual", 0.0)
+        operativeData.get("pct_rotacion", 0.0)
         or 0.0
     )
     if tasa > 0.10:
@@ -459,6 +473,7 @@ def build_vision_imprimible(
         "seccion_03_grafico": {
             "waterfall": _build_waterfall(meses, totales),
             "evolucion_mensual": _build_evolucion(meses),
+            "margen_historico": _build_margen_historico(),
         },
         "seccion_04_escenarios": {
             "escenarios": _build_escenarios(request_data, cts_perfiles or []),
