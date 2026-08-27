@@ -751,6 +751,8 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         tfc = esc.get("tarifa_componente_fijo") or {}
         tcv = esc.get("tarifa_componente_variable") or {}
         costos = esc.get("desglose_costos_mensual") or {}
+        costos_b = esc.get("desglose_costos_mensual_b") or {}
+        costos_c = esc.get("desglose_costos_mensual_c") or {}
 
         meta = {
             "escenario": idx,
@@ -798,6 +800,30 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "comision_por_administracion": costos.get("comision_por_administracion", 0),
             "polizas": costos.get("polizas", 0),
         }
+        
+        cadena_b = {
+            "componente_fijo": costos_b.get("componente_fijo", 0),
+            "componente_variable": costos_b.get("componente_variable", 0),
+            "costos_financiacion": costos_b.get("financiero", 0),
+            "total": costos_b.get("costo_total_b", 0),
+            "ingreso_mensual": esc.get("facturacion_mensual_b", 0),
+            "ica": costos_b.get("ica_b", 0),
+            "gmf": costos_b.get("gmf_b", 0),
+            "comision_por_administracion": costos_b.get("comision_por_administracion", 0),
+            "polizas": costos_b.get("polizas_b", 0),
+        }
+        
+        cadena_c = {
+            "componente_fijo": costos_c.get("componente_fijo", 0),
+            "componente_variable": costos_c.get("componente_variable", 0),
+            "costos_financiacion": costos_c.get("financiero", 0),
+            "total": costos_c.get("costo_total", 0),
+            "ingreso_mensual": esc.get("facturacion_mensual", 0),
+            "ica": costos_c.get("ica", 0),
+            "gmf": costos_c.get("gmf", 0),
+            "comision_por_administracion": costos_c.get("comision_por_administracion", 0),
+            "polizas": costos_c.get("polizas", 0),
+        }
 
         escenarios_detalle.append({
             "meta": meta,
@@ -806,8 +832,8 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "componente_fijo": {},
             "componente_variable": {},
             "cadena_a": cadena_a,
-            "cadena_b": {},
-            "cadena_c": {},
+            "cadena_b": cadena_b,
+            "cadena_c": cadena_c,
             "tarifas_venta": [],
         })
 

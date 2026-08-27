@@ -117,12 +117,32 @@ def _build_escenario(
     # Costos Cadena A (del CTS)
     payroll = float(cts_p.get("payroll", 0.0)) if cts_p else 0.0
     no_payroll = float(cts_p.get("no_payroll", 0.0)) if cts_p else 0.0
-    financiero = float(cts_p.get("financiero", 0.0)) if cts_p else 0.0
+    financiero = float(cts_p.get("costo_financiacion", 0.0)) if cts_p else 0.0
     ica = float(cts_p.get("ica", 0.0)) if cts_p else 0.0
     gmf = float(cts_p.get("gmf", 0.0)) if cts_p else 0.0
     comision_por_administracion = float(cts_p.get("comision_administracion", 0.0)) if cts_p else 0.0
     polizas = float(cts_p.get("polizas", 0.0)) if cts_p else 0.0
     costo_a = float(cts_p.get("costo_total", 0.0)) if cts_p else (payroll + no_payroll + financiero)
+    
+    # Costos Cadena B (del CTS) TODO Fix these values
+    componente_fijo_b = float(cts_p.get("componente_fijo_b", 0.0)) if cts_p else 0.0
+    componente_variable_b = float(cts_p.get("componente_variable_b", 0.0)) if cts_p else 0.0
+    financiero_b = float(cts_p.get("financiero_b", 0.0)) if cts_p else 0.0
+    ica_b = float(cts_p.get("ica_b", 0.0)) if cts_p else 0.0
+    gmf_b = float(cts_p.get("gmf_b", 0.0)) if cts_p else 0.0
+    comision_por_administracion_b = float(cts_p.get("comision_administracion_b", 0.0)) if cts_p else 0.0
+    polizas_b = float(cts_p.get("polizas_b", 0.0)) if cts_p else 0.0
+    costo_b = float(cts_p.get("costo_total_b", 0.0)) if cts_p else (componente_fijo_b + componente_variable_b + financiero_b)
+
+    # Costos Cadena C (del CTS) TODO Fix these values
+    componente_fijo_c = float(cts_p.get("componente_fijo_c", 0.0)) if cts_p else 0.0
+    componente_variable_c = float(cts_p.get("componente_variable_c", 0.0)) if cts_p else 0.0
+    financiero_c = float(cts_p.get("financiero_c", 0.0)) if cts_p else 0.0
+    ica_c = float(cts_p.get("ica_c", 0.0)) if cts_p else 0.0
+    gmf_c = float(cts_p.get("gmf_c", 0.0)) if cts_p else 0.0
+    comision_por_administracion_c = float(cts_p.get("comision_administracion_c", 0.0)) if cts_p else 0.0
+    polizas_c = float(cts_p.get("polizas_c", 0.0)) if cts_p else 0.0
+    costo_c = float(cts_p.get("costo_total_c", 0.0)) if cts_p else (componente_fijo_c + componente_variable_c + financiero_c)
 
     # Ingreso Cadena A: desde CTS (ya resuelve circularidad HM)
     # Excel 'Vision Tarifas_Modelo_Cobro'!C48: ingreso_a = costo_a / denominador
@@ -205,6 +225,26 @@ def _build_escenario(
             "gmf": round(gmf, 2),
             "comision_por_administracion": round(comision_por_administracion, 2),
             "polizas": round(polizas, 2),
+        },
+        "desglose_costos_mensual_b": {
+            "componente_fijo": round(componente_fijo_b, 2),
+            "componente_variable": round(componente_variable_b, 2),
+            "financiero": round(financiero_b, 2),
+            "costo_total": round(costo_b, 2),
+            "ica": round(ica_b, 2),
+            "gmf": round(gmf_b, 2),
+            "comision_por_administracion": round(comision_por_administracion_b, 2),
+            "polizas": round(polizas_b, 2),
+        },
+        "desglose_costos_mensual_c": {
+            "componente_fijo": round(componente_fijo_c, 2),
+            "componente_variable": round(componente_variable_c, 2),
+            "financiero": round(financiero_c, 2),
+            "costo_total": round(costo_c, 2),
+            "ica": round(ica_c, 2),
+            "gmf": round(gmf_c, 2),
+            "comision_por_administracion": round(comision_por_administracion_c, 2),
+            "polizas": round(polizas_c, 2),
         },
         "facturacion_mensual": round(facturacion_total, 2),
         "ingreso_fijo_mensual": round(ingreso_fijo, 2),
