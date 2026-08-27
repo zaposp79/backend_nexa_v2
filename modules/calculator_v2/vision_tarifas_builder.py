@@ -118,6 +118,10 @@ def _build_escenario(
     payroll = float(cts_p.get("payroll", 0.0)) if cts_p else 0.0
     no_payroll = float(cts_p.get("no_payroll", 0.0)) if cts_p else 0.0
     financiero = float(cts_p.get("financiero", 0.0)) if cts_p else 0.0
+    ica = float(cts_p.get("ica", 0.0)) if cts_p else 0.0
+    gmf = float(cts_p.get("gmf", 0.0)) if cts_p else 0.0
+    comision_por_administracion = float(cts_p.get("comision_administracion", 0.0)) if cts_p else 0.0
+    polizas = float(cts_p.get("polizas", 0.0)) if cts_p else 0.0
     costo_a = float(cts_p.get("costo_total", 0.0)) if cts_p else (payroll + no_payroll + financiero)
 
     # Ingreso Cadena A: desde CTS (ya resuelve circularidad HM)
@@ -197,6 +201,10 @@ def _build_escenario(
             "no_payroll": round(no_payroll, 2),
             "financiero": round(financiero, 2),
             "costo_total": round(costo_a, 2),
+            "ica": round(ica, 2),
+            "gmf": round(gmf, 2),
+            "comision_por_administracion": round(comision_por_administracion, 2),
+            "polizas": round(polizas, 2),
         },
         "facturacion_mensual": round(facturacion_total, 2),
         "ingreso_fijo_mensual": round(ingreso_fijo, 2),

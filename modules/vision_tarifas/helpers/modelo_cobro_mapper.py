@@ -793,6 +793,10 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "costos_financiacion": costos.get("financiero", 0),
             "total": costos.get("costo_total", 0),
             "ingreso_mensual": esc.get("facturacion_mensual", 0),
+            "ica": costos.get("ica", 0),
+            "gmf": costos.get("gmf", 0),
+            "comision_por_administracion": costos.get("comision_por_administracion", 0),
+            "polizas": costos.get("polizas", 0),
         }
 
         escenarios_detalle.append({
