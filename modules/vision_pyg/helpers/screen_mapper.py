@@ -14,7 +14,7 @@ _INGRESOS_MAP = {
     "contingencia_com": ("ingresos", "contingencia_com"),
     "markup_ingreso": ("ingresos", "markup"),
     "descuento_ingreso": ("ingresos", "descuento"),
-    "imprevistos_ingreso": ("ingresos", "imprevistos"),
+    "imprevistos_valor": ("ingresos", "imprevistos"),
     "ingreso_neto": ("ingresos", "ingreso_neto"),
 }
 
@@ -24,14 +24,14 @@ _COSTOS_MAP = {
     "costo_a": ("costos", "cadena_a", "total_cadena_a"),
     "costo_b": ("costos", "cadena_b", "total_cadena_b"),
     "componente_fijo_b": ("costos", "cadena_b", "componente_fijo"),
-    "opex_fijo_b": ("costos", "cadena_b", "opex_fijo"),
-    "inversiones_b": ("costos", "cadena_b", "inversiones"),
-    "sm_b": ("costos", "cadena_b", "s_and_m"),
+    "opex_fijo_cadena_b": ("costos", "cadena_b", "opex_fijo"),
+    "capex_cadena_b": ("costos", "cadena_b", "inversiones"),
+    "sm_cadena_b": ("costos", "cadena_b", "s_and_m"),
     "componente_variable_b": ("costos", "cadena_b", "componente_variable"),
-    "tarifa_canal_b": ("costos", "cadena_b", "tarifa_canal"),
-    "opex_variable_b": ("costos", "cadena_b", "opex_variable"),
-    "tasa_escalamiento_b": ("costos", "cadena_b", "tasa_escalamiento"),
-    "hitl_b": ("costos", "cadena_b", "hitl"),
+    "tarifa_canal_cadena_b": ("costos", "cadena_b", "tarifa_canal"),
+    "opex_variable_cadena_b": ("costos", "cadena_b", "opex_variable"),
+    "tasa_escalamiento_cadena_b": ("costos", "cadena_b", "tasa_escalamiento"),
+    "hitl_cadena_b": ("costos", "cadena_b", "hitl"),
     "costo_c": ("costos", "cadena_c", "total_cadena_c"),
     "tarifa_proveedor_c": ("costos", "cadena_c", "tarifa_proveedor"),
     "costo_integracion_c": ("costos", "cadena_c", "costo_integracion"),
@@ -246,7 +246,7 @@ def _ingresos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
     markup           = vals.get("markup_ingreso") or 0.0
     descuento        = vals.get("descuento_ingreso") or 0.0
 
-    imprevistos = vals.get("imprevistos_ingreso")
+    imprevistos = vals.get("imprevistos_valor")
     if imprevistos is None and pct_imprevistos:
         imprevistos = pct_imprevistos * ingreso_bruto
 
@@ -296,16 +296,16 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "recargos_horas_extra": vals.get("recargos_horas_extra_mensual") or None,
         },
         "cadena_b": {
-            "total_cadena_b":    vals.get("costo_cadena_b"),
-            "componente_fijo":   vals.get("componente_fijo_b"),
-            "opex_fijo":         vals.get("opex_fijo_b"),
-            "inversiones":       vals.get("inversiones_b"),
-            "s_and_m":           vals.get("sm_b"),
+            "total_cadena_b":      vals.get("costo_cadena_b"),
+            "componente_fijo":     vals.get("componente_fijo_b"),
+            "opex_fijo":           vals.get("opex_fijo_cadena_b"),
+            "inversiones":         vals.get("capex_cadena_b"),
+            "s_and_m":             vals.get("sm_cadena_b"),
             "componente_variable": vals.get("componente_variable_b"),
-            "tarifa_canal":      vals.get("tarifa_canal_b"),
-            "opex_variable":     vals.get("opex_variable_b"),
-            "tasa_escalamiento": vals.get("tasa_escalamiento_b"),
-            "hitl":              vals.get("hitl_b"),
+            "tarifa_canal":        vals.get("tarifa_canal_cadena_b"),
+            "opex_variable":       vals.get("opex_variable_cadena_b"),
+            "tasa_escalamiento":   vals.get("tasa_escalamiento_cadena_b"),
+            "hitl":                vals.get("hitl_cadena_b"),
         },
         "cadena_c": {
             "total_cadena_c":    vals.get("costo_cadena_c"),

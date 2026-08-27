@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from .escenarios_enricher import get_escenarios_activos_keys, _clave
+
 
 # ── helpers internos ───────────────────────────────────────────────────────────
 
@@ -48,6 +50,28 @@ def _denominador_ingreso(
 
 def _cts_map(cts_perfiles: List[Dict]) -> Dict[str, Dict]:
     return {p.get("nombre", ""): p for p in cts_perfiles}
+
+
+def _empty_escenario(numero: int) -> dict:
+    """Slot de escenario vacío (número configurado pero sin datos calculados)."""
+    return {
+        "id": f"Escenario {numero}",
+        "nombre": None,
+        "modalidad": None,
+        "canal": None,
+        "modelo_cobro": None,
+        "componente_fijo": None,
+        "pct_fijo": None,
+        "componente_variable": None,
+        "pct_variable": None,
+        "fte": None,
+        "desglose_costos_mensual": None,
+        "facturacion_mensual": None,
+        "ingreso_fijo_mensual": None,
+        "ingreso_variable_mensual": None,
+        "tarifa_componente_fijo": None,
+        "tarifa_componente_variable": None,
+    }
 
 
 # ── Detalle de un escenario (perfil) ──────────────────────────────────────────
@@ -158,7 +182,7 @@ def _build_escenario(
                 tipo_tarifa_variable = "por persona (Resultados)"
 
     return {
-        "id": f"Escenario {idx + 1}",
+        "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
         "modalidad": modalidad,
         "canal": canal,
@@ -196,10 +220,12 @@ def _build_total(escenarios: List[dict], cts_perfiles: List[Dict]) -> dict:
     Total del deal.
     Excel 'Vision Tarifas_Modelo_Cobro'!H19-H21 — columna 'Total'.
     """
-    fte_total = sum(e.get("fte", 0) for e in escenarios)
-    facturacion_total = sum(e.get("facturacion_mensual", 0.0) for e in escenarios)
-    ingreso_fijo_total = sum(e.get("ingreso_fijo_mensual", 0.0) for e in escenarios)
-    ingreso_var_total = sum(e.get("ingreso_variable_mensual", 0.0) for e in escenarios)
+    # Ignorar slots vacíos (facturacion_mensual=None) en los totales
+    active = [e for e in escenarios if e.get("facturacion_mensual") is not None]
+    fte_total = sum(e.get("fte", 0) or 0 for e in active)
+    facturacion_total = sum(e.get("facturacion_mensual", 0.0) or 0.0 for e in active)
+    ingreso_fijo_total = sum(e.get("ingreso_fijo_mensual", 0.0) or 0.0 for e in active)
+    ingreso_var_total = sum(e.get("ingreso_variable_mensual", 0.0) or 0.0 for e in active)
 
     fte_safe = max(fte_total, 1)
     tarifa_fija_total = round(ingreso_fijo_total / fte_safe, 2) if ingreso_fijo_total else None
@@ -249,7 +275,20 @@ def build_vision_tarifas(
     costo_c_mensual = float(vals_ramp1.get("costo_cadena_c", 0.0))
 
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
-    perfiles_input = cadena_a.get("perfiles", []) or []
+    all_perfiles = cadena_a.get("perfiles", []) or []
+
+    # Si hay escenarios_comerciales, mostrar solo los perfiles con escenario configurado
+    esc_activos = get_escenarios_activos_keys(request_data)
+    perfiles_input = list(all_perfiles)
+    if esc_activos is not None:
+        perfiles_input = [
+            p for p in perfiles_input
+            if _clave(p.get("canal"), p.get("modalidad")) in esc_activos
+        ]
+
+    # FTE total de los escenarios configurados — base para distribución proporcional de Cadena B/C.
+    # Excel HME: Cadena B/C se distribuye entre los escenarios activos (no todos los perfiles del deal).
+    fte_total_activos = sum(float(p.get("fte", 0) or 0) for p in perfiles_input)
 
     cts_map = _cts_map(cts_perfiles or [])
 
@@ -258,10 +297,13 @@ def build_vision_tarifas(
         nombre = str(p_input.get("nombre", f"Escenario {i + 1}"))
         cts_p = cts_map.get(nombre)
 
-        # Cadena B y C se distribuyen deal-level (no por perfil) solo si hay 1 perfil
-        # Si hay múltiples perfiles, se adjudica al Total (no a cada uno)
-        b_for_perfil = costo_b_mensual if len(perfiles_input) == 1 else 0.0
-        c_for_perfil = costo_c_mensual if len(perfiles_input) == 1 else 0.0
+        # Distribución FTE-proporcional de costos Cadena B y C entre escenarios activos.
+        # Excel HME C27: costo_B_esc = SUMPRODUCT(CostoFijo filtrado por canal/modalidad)
+        # Aproximación: proporcional a FTE del escenario sobre FTE total activos.
+        fte_esc = float(p_input.get("fte", 0) or 0)
+        fte_weight = fte_esc / max(fte_total_activos, 1)
+        b_for_perfil = round(costo_b_mensual * fte_weight, 2)
+        c_for_perfil = round(costo_c_mensual * fte_weight, 2)
 
         escenario = _build_escenario(
             idx=i,
@@ -279,16 +321,21 @@ def build_vision_tarifas(
         )
         escenarios.append(escenario)
 
-    total = _build_total(escenarios, cts_perfiles or [])
+    # Siempre retornar 5 slots cuando escenarios_comerciales está configurado.
+    # Slots sin datos = {"id": "Escenario N", resto: None}
+    if esc_activos is not None:
+        all_5 = [_empty_escenario(n) for n in range(1, 6)]
+        for esc in escenarios:
+            esc_id = esc.get("id", "")
+            try:
+                slot = int(esc_id.split()[-1]) - 1
+                if 0 <= slot < 5:
+                    all_5[slot] = esc
+            except (ValueError, IndexError):
+                pass
+        escenarios = all_5
 
-    # Si hay B/C y múltiples perfiles, sumarlos al total deal-level
-    if len(perfiles_input) > 1 and (costo_b_mensual or costo_c_mensual):
-        denom_b = _denominador_ingreso(margen_b, cont_op, cont_com, markup, descuento)
-        denom_c = _denominador_ingreso(margen_c, cont_op, cont_com, markup, descuento)
-        ingreso_b_total = costo_b_mensual / denom_b if costo_b_mensual else 0.0
-        ingreso_c_total = costo_c_mensual / denom_c if costo_c_mensual else 0.0
-        total["facturacion_mensual"] = round(total["facturacion_mensual"] + ingreso_b_total + ingreso_c_total, 2)
-        total["ingreso_fijo_mensual"] = round(total["ingreso_fijo_mensual"] + ingreso_b_total + ingreso_c_total, 2)
+    total = _build_total(escenarios, cts_perfiles or [])
 
     return {
         "escenarios": escenarios,

@@ -351,8 +351,8 @@
     "aplica_por_mes": true,
     "tipo_calculo": "formula",
     "formula": {
-      "expresion": "ingreso_bruto + contingencia_operativa_valor + contingencia_comercial_valor + markup_valor - descuento_valor",
-      "notas": "Excel V2-8: Visión P&G fila 28. ingreso_fijo = ingreso_bruto + ajustes_comerciales. Imprevistos NO se restan aquí; se restan en ingreso_neto."
+      "expresion": "ingreso_bruto + contingencia_operativa_valor + contingencia_comercial_valor + markup_valor - descuento_valor - imprevistos_valor",
+      "notas": "Excel V2-8: Visión P&G fila 28. ingreso_fijo = ingreso_bruto + ajustes_comerciales - imprevistos."
     },
     "variables": [
       { "nombre": "ingreso_bruto", "tipo": "computed", "rubro_fuente": "ingreso_bruto" },
@@ -398,8 +398,8 @@
     "aplica_por_mes": true,
     "tipo_calculo": "formula",
     "formula": {
-      "expresion": "ingreso_fijo - imprevistos_valor + ingreso_variable",
-      "notas": "Excel V2-8: Visión P&G fila 31. ingreso_neto = ingreso_fijo - imprevistos + ingreso_variable. Para SAC: ingreso_variable = 0."
+      "expresion": "ingreso_fijo + ingreso_variable",
+      "notas": "Excel V2-8: Visión P&G fila 31. ingreso_neto = ingreso_fijo + ingreso_variable. Imprevistos ya están restados en ingreso_fijo."
     },
     "variables": [
       { "nombre": "ingreso_fijo", "tipo": "computed", "rubro_fuente": "ingreso_fijo" },
@@ -678,5 +678,251 @@
     ],
     "dependencias": ["utilidad_neta", "ingreso_neto"],
     "cadena": "todas"
+  },
+
+  {
+    "id": "opex_fijo_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "OPEX Fijo Cadena B",
+    "bloque": "Componente Fijo",
+    "capa": 3,
+    "descripcion": "Suma de ítems OPEX (licencias, plataformas, servicios cloud) escalados con IPC tecnológico mes a mes.",
+    "orden_calculo": 210,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum(item.valor * item.cantidad for item in opex_items if item.activo) * ipc_tec(t)",
+      "notas": "Excel Condiciones Cadena B B8:J41. IPC tecnológico = Panel!L8. Escala anualmente desde enero del año siguiente al inicio.",
+      "subformulas": {
+        "ipc_tec": "PRODUCT(1+delta_tec[y] for y in años_transcurridos si mes_cal >= mes_ajuste)",
+        "valor_item": "item.precio_unitario * item.cantidad_unidades"
+      }
+    },
+    "variables": [
+      {"nombre": "opex_items", "tipo": "input", "fuente": "request.condiciones_cadena_b.opex"},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"},
+      {"nombre": "mes_ajuste", "tipo": "parametro", "fuente": "request.datos_operativos.mes_ajuste_ipc", "valor_referencia": 1}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "capex_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "CAPEX / Inversiones Cadena B",
+    "bloque": "Componente Fijo",
+    "capa": 3,
+    "descripcion": "Amortización mensual de inversiones/hardware durante los meses configurados, con tasa financiera mensual e IPC tecnológico.",
+    "orden_calculo": 220,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum((item.valor_total / item.meses_diferir) * (1 + tasa_mensual_L11) * ipc_tec(t) if mes_activo(t, item) else 0 for item in capex_items)",
+      "notas": "Excel Condiciones Cadena B B47:K71. Fórmula K47=IFERROR((J47/I47)*(1+Panel!L11),0). Panel!L11=tasa mensual (1.53% en 006_ElTiempo).",
+      "subformulas": {
+        "mes_activo": "mes_inicio_item <= mes_t <= (mes_inicio_item + meses_diferir - 1)",
+        "tasa_mensual": "Panel!L11"
+      }
+    },
+    "variables": [
+      {"nombre": "capex_items", "tipo": "input", "fuente": "request.condiciones_cadena_b.inversiones_capex"},
+      {"nombre": "tasa_mensual_capex", "tipo": "parametro", "fuente": "request.datos_operativos.tasa_mensual_capex", "valor_referencia": 0.0153},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "sm_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "Soporte y Mantenimiento Cadena B",
+    "bloque": "Componente Fijo",
+    "capa": 3,
+    "descripcion": "Costo mensual del equipo S&M: salarios cargados de perfiles activos + dispositivos asignados. Escalado con IPC humano y tecnológico respectivamente. Distribuido por canal según volumen.",
+    "orden_calculo": 230,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "(gasto_personal_sm * ipc_hum(t) + opex_dispositivos_sm * ipc_tec(t)) * proporcion_canal",
+      "notas": "Excel Costo Fijo filas 187-198 (personal) + filas 202-206 (dispositivos). Proporción canal = vol_canal / vol_total_inbound.",
+      "subformulas": {
+        "gasto_personal_sm": "sum(salario_loaded(perfil) * fte_sm(perfil) for perfil in perfiles_sm if perfil.activo)",
+        "fte_sm_perfil": "fte_total_sm * dedicacion_perfil",
+        "opex_dispositivos_sm": "sum(precio_dispositivo * cantidad_dimensionada for d in dispositivos_sm)",
+        "proporcion_canal": "volumen_canal / sum(volumenes_inbound)"
+      }
+    },
+    "variables": [
+      {"nombre": "fte_total_sm", "tipo": "input", "fuente": "request.condiciones_cadena_b.equipo_sm.fte_total"},
+      {"nombre": "perfiles_sm", "tipo": "input", "fuente": "request.condiciones_cadena_b.equipo_sm.perfiles"},
+      {"nombre": "dispositivos_sm", "tipo": "input", "fuente": "request.condiciones_cadena_b.equipo_sm.dispositivos"},
+      {"nombre": "ipc_humano", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_humano"},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "componente_fijo_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "Componente Fijo Cadena B",
+    "bloque": "Componente Fijo",
+    "capa": 4,
+    "descripcion": "Suma de OPEX Fijo + CAPEX + S&M para Cadena B en el mes t.",
+    "orden_calculo": 240,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "opex_fijo_cadena_b + capex_cadena_b + sm_cadena_b",
+      "notas": "Excel Visión P&G B50 = SUM(B51:B53). Aggregation de los 3 sub-componentes fijos."
+    },
+    "variables": [],
+    "dependencias": ["opex_fijo_cadena_b", "capex_cadena_b", "sm_cadena_b"],
+    "cadena": "B"
+  },
+
+  {
+    "id": "tarifa_canal_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "Tarifa por Canal Cadena B",
+    "bloque": "Componente Variable",
+    "capa": 3,
+    "descripcion": "Costo por transacción por canal (Inbound/Outbound). tarifa_COP_transaccion × volumen_canal × IPC_tecnológico.",
+    "orden_calculo": 250,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum(tarifa[canal] * volumen[canal] * ipc_tec(t) for canal in canales_activos)",
+      "notas": "Excel Condiciones Cadena B B113:C119 (Inbound), E113:F119 (Outbound). Costo Variable F42:F60.",
+      "subformulas": {
+        "canales_activos_inbound": "Panel N17=TRUE → canales B113:B119 con tarifa > 0",
+        "canales_activos_outbound": "Panel N30=TRUE → canales E113:E119 con tarifa > 0"
+      }
+    },
+    "variables": [
+      {"nombre": "tarifas_inbound", "tipo": "input", "fuente": "request.condiciones_cadena_b.costos_variables.tarifas_inbound"},
+      {"nombre": "tarifas_outbound", "tipo": "input", "fuente": "request.condiciones_cadena_b.costos_variables.tarifas_outbound"},
+      {"nombre": "volumenes_canal", "tipo": "input", "fuente": "request.volumetria.canales"},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "opex_variable_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "OPEX Variable Cadena B",
+    "bloque": "Componente Variable",
+    "capa": 3,
+    "descripcion": "Costos variables de consumo/metering (cloud compute, APIs, tokens). Escalado con IPC tecnológico.",
+    "orden_calculo": 255,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum(item.valor * item.cantidad for item in opex_variable_items if item.activo) * ipc_tec(t)",
+      "notas": "Excel Costo Variable E80:E86 (Inbound) + E105:E112 (Outbound). En 006_ElTiempo = 0."
+    },
+    "variables": [
+      {"nombre": "opex_variable_items", "tipo": "input", "fuente": "request.condiciones_cadena_b.costos_variables.opex_variable"},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "tasa_escalamiento_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "Tasa de Escalamiento Cadena B",
+    "bloque": "Componente Variable",
+    "capa": 3,
+    "descripcion": "Costo de transacciones escaladas a agente humano. tarifa_escalamiento × (volumen_canal × tasa_pct) × IPC_tecnológico. Los valores de tarifa y tasa llegan pre-calculados desde el frontend.",
+    "orden_calculo": 260,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "sum(item.tarifa * (volumen[canal] * item.tasa_pct) * ipc_tec(t) for item in tasas_escalamiento_activas)",
+      "notas": "Excel Condiciones Cadena B B125:D131 (Inbound), B135:D142 (Outbound). Costo Variable H125:H143. Tarifa D125:D131 pre-calculada desde frontend.",
+      "subformulas": {
+        "vol_escalado": "volumen_canal * tasa_pct_escalamiento",
+        "costo_canal": "tarifa_escalamiento * vol_escalado * ipc_tec(t)"
+      }
+    },
+    "variables": [
+      {"nombre": "tasas_escalamiento_inbound", "tipo": "input", "fuente": "request.condiciones_cadena_b.costos_variables.tasa_escalamiento_inbound"},
+      {"nombre": "tasas_escalamiento_outbound", "tipo": "input", "fuente": "request.condiciones_cadena_b.costos_variables.tasa_escalamiento_outbound"},
+      {"nombre": "volumenes_canal", "tipo": "input", "fuente": "request.volumetria.canales"},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "hitl_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "HITL - Human in the Loop Cadena B",
+    "bloque": "Componente Variable",
+    "capa": 3,
+    "descripcion": "Costo del equipo Human-in-the-Loop: salarios cargados de perfiles HITL activos (escalado IPC humano) + dispositivos asignados (escalado IPC tecnológico). FTE = vol_total_cadena_b / ratio_perfil. Dispositivos pre-calculados desde frontend.",
+    "orden_calculo": 265,
+    "aplica_por_mes": true,
+    "tipo_calculo": "aggregated",
+    "formula": {
+      "expresion": "(gasto_personal_hitl * ipc_hum(t) + opex_dispositivos_hitl * ipc_tec(t)) * proporcion_canal",
+      "notas": "Excel Condiciones Cadena B B155:F161 (perfiles), B167:D172 (dispositivos). Costo Variable F191:F196. FTE=vol_total_CB/ratio. Dispositivos = precio × cantidad_dimensionada (pre-calculado frontend).",
+      "subformulas": {
+        "gasto_personal_hitl": "sum(salario_loaded(perfil) * (vol_total_cb / ratio_perfil) for perfil in perfiles_hitl if perfil.activo)",
+        "vol_total_cb": "sum(volumenes_inbound) + sum(volumenes_outbound)",
+        "opex_dispositivos_hitl": "sum(precio_dispositivo * cantidad_dimensionada for d in dispositivos_hitl)",
+        "proporcion_canal": "vol_canal / vol_total_inbound"
+      }
+    },
+    "variables": [
+      {"nombre": "vol_total_cadena_b", "tipo": "input", "fuente": "request.condiciones_cadena_b.hitl.vol_total_cadena_b"},
+      {"nombre": "perfiles_hitl", "tipo": "input", "fuente": "request.condiciones_cadena_b.hitl.perfiles"},
+      {"nombre": "dispositivos_hitl", "tipo": "input", "fuente": "request.condiciones_cadena_b.hitl.dispositivos"},
+      {"nombre": "ipc_humano", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_humano"},
+      {"nombre": "ipc_tecnologico", "tipo": "parametro", "fuente": "parametrization.tasas.ipc_tecnologico"}
+    ],
+    "dependencias": [],
+    "cadena": "B"
+  },
+
+  {
+    "id": "componente_variable_cadena_b",
+    "domain": "rubros_maestros",
+    "version": "v2.8",
+    "nombre": "Componente Variable Cadena B",
+    "bloque": "Componente Variable",
+    "capa": 4,
+    "descripcion": "Suma de Tarifa Canal + OPEX Variable + Tasa Escalamiento + HITL para Cadena B en el mes t.",
+    "orden_calculo": 270,
+    "aplica_por_mes": true,
+    "tipo_calculo": "formula",
+    "formula": {
+      "expresion": "tarifa_canal_cadena_b + opex_variable_cadena_b + tasa_escalamiento_cadena_b + hitl_cadena_b",
+      "notas": "Excel Visión P&G B54 = SUM(B55:B58). Base ICA/GMF = componente_fijo + componente_variable (Costos Totales!E65)."
+    },
+    "variables": [],
+    "dependencias": [
+      "tarifa_canal_cadena_b",
+      "opex_variable_cadena_b",
+      "tasa_escalamiento_cadena_b",
+      "hitl_cadena_b"
+    ],
+    "cadena": "B"
   }
 ]

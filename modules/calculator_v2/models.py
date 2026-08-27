@@ -141,6 +141,17 @@ class VisionPyG(BaseModel):
     nomina_total_mensual: List[float]
     no_payroll_total_mensual: List[float]
     componente_financiero_total: List[float]
+    # Cadena B desglose (Optional — solo cuando cadena_b está activa)
+    costo_cadena_b: Optional[List[float]] = None
+    componente_fijo_b: Optional[List[float]] = None
+    opex_fijo_cadena_b: Optional[List[float]] = None
+    capex_cadena_b: Optional[List[float]] = None
+    sm_cadena_b: Optional[List[float]] = None
+    componente_variable_b: Optional[List[float]] = None
+    tarifa_canal_cadena_b: Optional[List[float]] = None
+    opex_variable_cadena_b: Optional[List[float]] = None
+    tasa_escalamiento_cadena_b: Optional[List[float]] = None
+    hitl_cadena_b: Optional[List[float]] = None
 
 
 class SimulationResultV2(BaseModel):

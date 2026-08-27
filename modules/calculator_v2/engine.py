@@ -22,8 +22,10 @@ import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
+from .cadena_b_calculator import CadenaBCalculator
 from .context_builder import build_base_context
 from .cts_calculator import CTSCalculator
+from .escenarios_enricher import enrich_perfiles_with_escenarios
 from .formula_evaluator import evaluate_formula
 from .models import PerfilCTS, ResultadoMes, RubroMaestro, SimulationResultV2, VisionCostToServe, VisionPyG
 from .no_payroll_calculator import NoPayrollCalculator
@@ -54,6 +56,18 @@ _AGGREGATED_IDS = {
     # Capital charge diferido: calculado en el loop (CT[k-1] × meses_cc × tasa × IPC_k) — no pisar con fórmula
     # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 × "Activado" × IPC_factor
     "costos_financiacion_mensual",
+    # Cadena B: calculados por CadenaBCalculator × IPC — no pisar con fórmula de rubros
+    "componente_fijo_b",
+    "componente_variable_b",
+    "opex_fijo_cadena_b",
+    "opex_variable_cadena_b",
+    "capex_cadena_b",
+    "sm_cadena_b",
+    "tarifa_canal_cadena_b",
+    "tasa_escalamiento_cadena_b",
+    "hitl_cadena_b",
+    # ingreso_cadena_b: computado en el loop con ramp_up × IPC_incremental (mirrors ingreso_cadena_a)
+    "ingreso_cadena_b",
 }
 
 # Excel V2-8: 'Pólizas - Costo Financiacion'!D338 = FILTER(Panel!D45) × 1.42
@@ -163,6 +177,9 @@ class MotorDeReglas:
         self._repo = rubros_repo
 
     def calcular(self, request_data: Dict[str, Any]) -> SimulationResultV2:
+        # Enriquece perfiles con modelo de cobro del Panel (escenarios) antes de cualquier cálculo
+        request_data = enrich_perfiles_with_escenarios(request_data)
+
         datos_op = request_data.get("datos_operativos", {})
         duracion_meses = int(datos_op.get("duracion_meses", 10))
         simulation_id = str(uuid.uuid4())
@@ -181,6 +198,18 @@ class MotorDeReglas:
         _no_pay_calc = NoPayrollCalculator(request_data, costo_fijo_estacion)
         no_payroll_fijo = _no_pay_calc.calcular()
         _no_payroll_detalle = _no_pay_calc.calcular_detalle()
+
+        # Cadena B — activa si alguna dirección tiene cadena_b: true en cadenas_activas
+        _vol_data = request_data.get("volumetria") or {}
+        _cadena_b_activa = (
+            _vol_data.get("inbound", {}).get("cadenas_activas", {}).get("cadena_b", False)
+            or _vol_data.get("outbound", {}).get("cadenas_activas", {}).get("cadena_b", False)
+        )
+        _cadena_b_calc: Optional[CadenaBCalculator] = (
+            CadenaBCalculator(request_data)
+            if _cadena_b_activa and request_data.get("condiciones_cadena_b")
+            else None
+        )
 
         # Ramp-up desde HR-Campaña (prioridad sobre request.datos_operativos.ramp_up)
         servicio = datos_op.get("servicio", "")
@@ -235,6 +264,23 @@ class MotorDeReglas:
         ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
             _avg_nomina + _avg_no_payroll, _ctx_base, for_pricing=True
         )
+
+        # Ingreso Cadena B base — sin IPC, sin ramp_up (mirrors ingreso_cadena_a_base).
+        # Excel V2-8: 'Hoja Maestra Escenarios'!C304 = C303/(1-margen_b)
+        # El P&G escala por ramp_up × (1+IPC_incremental) igual que cadena A.
+        _ingreso_b_base = 0.0
+        if _cadena_b_calc:
+            _costo_b_base = _cadena_b_calc.calcular_mes(1.0, 1.0)["costo_cadena_b"]
+            _margen_b_base = float(_ctx_base.get("margen_b", 0.30))
+            _denom_b = (
+                (1.0 - _margen_b_base)
+                * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
+                * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
+                * (1.0 - float(_ctx_base.get("markup", 0.0)))
+                * (1.0 + float(_ctx_base.get("descuento", 0.0)))
+            )
+            if _denom_b > 0:
+                _ingreso_b_base = _costo_b_base / _denom_b
 
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
@@ -311,7 +357,19 @@ class MotorDeReglas:
 
             ctx["nomina_total_mensual"] = nomina_mes
             ctx["no_payroll_total_mensual"] = no_payroll_mes
-            ctx["costo_cadena_b"] = 0.0
+            if _cadena_b_calc:
+                ctx.update(_cadena_b_calc.calcular_mes(double_h, double_t))
+            else:
+                ctx["costo_cadena_b"] = 0.0
+                ctx["componente_fijo_b"] = 0.0
+                ctx["componente_variable_b"] = 0.0
+                ctx["opex_fijo_cadena_b"] = 0.0
+                ctx["opex_variable_cadena_b"] = 0.0
+                ctx["capex_cadena_b"] = 0.0
+                ctx["sm_cadena_b"] = 0.0
+                ctx["tarifa_canal_cadena_b"] = 0.0
+                ctx["tasa_escalamiento_cadena_b"] = 0.0
+                ctx["hitl_cadena_b"] = 0.0
             ctx["costo_cadena_c"] = 0.0
             ctx["comision_admin_mensual"] = 0.0  # ya incluida en polizas_mensual
 
@@ -332,6 +390,22 @@ class MotorDeReglas:
             ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
             ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
             ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
+            # Excel V2-8: 'Pólizas - Costo Financiacion'!M162:M233 cubre billing Cadena A + B + C.
+            # Agregar contribución de Cadena B a ICA/GMF/Pólizas (N_b = costo_b, pol_b = admin_b = 0).
+            if _cadena_b_calc and _ingreso_b_base > 0:
+                _ingreso_b_unramped = _ingreso_b_base * (1.0 + ipc_incremental)
+                _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
+                _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
+                _margen_b_loop = float(ctx.get("margen_b", 0.30))
+                _tasa_pol_b = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                    for p in polizas_activas_mes
+                    if "comisi" not in str(p.get("nombre", "")).lower()
+                )
+                ctx["ica_hm"] += _ingreso_b_unramped * _tasa_ica_b
+                ctx["gmf_hm"] += _ingreso_b_unramped * (1.0 - _margen_b_loop) * _tasa_gmf_b
+                ctx["polizas_puras_hm"] += _ingreso_b_unramped * _tasa_pol_b
+
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
             # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
             ctx["polizas_adicionales_hm"] = (
@@ -340,6 +414,13 @@ class MotorDeReglas:
 
             # Ingreso Cadena A: ingreso HM (pricing, ponderado) × ramp_up del mes
             ctx["ingreso_cadena_a"] = ingreso_mes * ramp_up
+
+            # Ingreso Cadena B: base × IPC_incremental × ramp_up (mirrors ingreso_cadena_a).
+            # Excel V2-8: 'Visión P&G'!J21 = C304 × J15(ramp_up) × (1+IPC_anual)
+            if _cadena_b_calc:
+                ctx["ingreso_cadena_b"] = _ingreso_b_base * (1.0 + ipc_incremental) * ramp_up
+            else:
+                ctx["ingreso_cadena_b"] = 0.0
 
             # Capital charge diferido — PCF!col_k = meses_cc[k-1] × tasa × CT[k-1] × (1+IPC_incr_k)
             # CT[k-1] = NominaLoaded[k-1] + NoPayroll[k-1] con IPC simple (ipc_factor NL-level).
@@ -897,12 +978,21 @@ class MotorDeReglas:
         """Construye el desglose de costos por Cadena B y C.
 
         Excel V2-8: 'Visión Cost To Serve' — Sección cadenas (Estructura del Equipo — Cadenas B/C)
+        Solo incluye una cadena si está activa en volumetria.cadenas_activas Y tiene condiciones.
         """
         cadenas = []
+        _vol = request_data.get("volumetria") or {}
+
+        def _cadena_activa(nombre: str) -> bool:
+            return (
+                _vol.get("inbound", {}).get("cadenas_activas", {}).get(nombre, False)
+                or _vol.get("outbound", {}).get("cadenas_activas", {}).get(nombre, False)
+            )
+
         cadena_b = request_data.get("condiciones_cadena_b")
         cadena_c = request_data.get("condiciones_cadena_c")
 
-        if cadena_b is not None:
+        if cadena_b is not None and _cadena_activa("cadena_b"):
             total_b = round(float(totales.get("costo_cadena_b", 0.0)), 2)
             comp_fijo_b = round(float(totales.get("componente_fijo_b", 0.0)), 2)
             comp_var_b = round(float(totales.get("componente_variable_b", 0.0)), 2)
@@ -917,7 +1007,7 @@ class MotorDeReglas:
                 ],
             })
 
-        if cadena_c is not None:
+        if cadena_c is not None and _cadena_activa("cadena_c"):
             total_c = round(float(totales.get("costo_cadena_c", 0.0)), 2)
             cadenas.append({
                 "cadena": "CADENA C",
@@ -978,6 +1068,11 @@ class MotorDeReglas:
         def serie(key: str) -> List[float]:
             return [float(m.valores.get(key, 0.0)) for m in meses]
 
+        def serie_opt(key: str) -> Optional[List[float]]:
+            """Retorna la serie solo si al menos un mes tiene valor distinto de 0."""
+            vals = [float(m.valores.get(key, 0.0)) for m in meses]
+            return vals if any(v != 0.0 for v in vals) else None
+
         return VisionPyG(
             ramp_up=serie("ramp_up_mes"),
             ingreso_bruto=serie("ingreso_bruto"),
@@ -990,4 +1085,14 @@ class MotorDeReglas:
             nomina_total_mensual=serie("nomina_total_mensual"),
             no_payroll_total_mensual=serie("no_payroll_total_mensual"),
             componente_financiero_total=serie("componente_financiero_total"),
+            costo_cadena_b=serie_opt("costo_cadena_b"),
+            componente_fijo_b=serie_opt("componente_fijo_b"),
+            opex_fijo_cadena_b=serie_opt("opex_fijo_cadena_b"),
+            capex_cadena_b=serie_opt("capex_cadena_b"),
+            sm_cadena_b=serie_opt("sm_cadena_b"),
+            componente_variable_b=serie_opt("componente_variable_b"),
+            tarifa_canal_cadena_b=serie_opt("tarifa_canal_cadena_b"),
+            opex_variable_cadena_b=serie_opt("opex_variable_cadena_b"),
+            tasa_escalamiento_cadena_b=serie_opt("tasa_escalamiento_cadena_b"),
+            hitl_cadena_b=serie_opt("hitl_cadena_b"),
         )

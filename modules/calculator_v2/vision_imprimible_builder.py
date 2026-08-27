@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from .escenarios_enricher import get_escenarios_activos_keys, _clave
+
 # SMLV 2026 Colombia (COP) — actualizar anualmente si cambia el decreto
 _SMLV_2026 = 1_423_500.0
 
@@ -162,9 +164,18 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
     Un escenario por perfil de Cadena A.
     tarifa_fte proviene del CTS (ingreso_teorico / fte).
     Excel 'Hoja Maestra Escenarios' — Escenario 1: tarifa = 5,021,494.42 / FTE.
+    Cuando escenarios_comerciales está configurado, siempre retorna 5 slots (vacíos con None).
     """
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
     perfiles_input = cadena_a.get("perfiles", []) or []
+
+    # Si hay escenarios_comerciales, mostrar solo los perfiles con escenario configurado
+    esc_activos = get_escenarios_activos_keys(request_data)
+    if esc_activos is not None:
+        perfiles_input = [
+            p for p in perfiles_input
+            if _clave(p.get("canal"), p.get("modalidad")) in esc_activos
+        ]
 
     tarifa_por_nombre: Dict[str, float] = {
         p.get("nombre", ""): float(p.get("tarifa_fte", 0.0))
@@ -172,26 +183,52 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
     }
 
     escenarios = []
-    for p in perfiles_input:
-        nombre = str(p.get("nombre", f"Perfil {len(escenarios) + 1}"))
+    for i, p in enumerate(perfiles_input):
+        nombre = str(p.get("nombre", f"Perfil {i + 1}"))
+        escenario_nombre = str(p.get("escenario_nombre") or nombre)
         modelo = str(p.get("modelo_cobro", "Fijo"))
         pct_var = float(p.get("pct_variable", 0.0))
         pct_fijo = round(1.0 - pct_var, 4)
+        comp_fijo = p.get("componente_fijo")
+        comp_var = p.get("componente_variable")
         fte = int(float(p.get("fte", 0)))
         tarifa = tarifa_por_nombre.get(nombre, 0.0)
         tarifa_variable = float(p.get("tarifa_variable", 0.0)) if pct_var > 0 else None
 
         escenarios.append({
-            "nombre": nombre,
+            "id": escenario_nombre,
+            "nombre": escenario_nombre,
+            "perfil": nombre,
             "modalidad": p.get("modalidad"),
             "canal": p.get("canal"),
             "modelo_cobro": modelo,
+            "componente_fijo": comp_fijo,
+            "componente_variable": comp_var,
             "pct_fijo": pct_fijo,
             "pct_variable": round(pct_var, 4),
             "fte": fte,
             "tarifa_fija": round(tarifa, 2) if pct_fijo > 0 and tarifa else None,
             "tarifa_variable": round(tarifa_variable, 2) if tarifa_variable else None,
         })
+
+    # Siempre retornar 5 slots cuando escenarios_comerciales está configurado
+    if esc_activos is not None:
+        all_5: List[dict] = [
+            {"id": f"Escenario {n}", "nombre": None, "perfil": None, "modalidad": None,
+             "canal": None, "modelo_cobro": None, "componente_fijo": None,
+             "componente_variable": None, "pct_fijo": None, "pct_variable": None,
+             "fte": None, "tarifa_fija": None, "tarifa_variable": None}
+            for n in range(1, 6)
+        ]
+        for esc in escenarios:
+            esc_id = esc.get("id", "")
+            try:
+                slot = int(esc_id.split()[-1]) - 1
+                if 0 <= slot < 5:
+                    all_5[slot] = esc
+            except (ValueError, IndexError):
+                pass
+        return all_5
 
     return escenarios
 
