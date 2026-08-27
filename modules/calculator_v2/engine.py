@@ -265,22 +265,33 @@ class MotorDeReglas:
             _avg_nomina + _avg_no_payroll, _ctx_base, for_pricing=True
         )
 
-        # Ingreso Cadena B base — sin IPC, sin ramp_up (mirrors ingreso_cadena_a_base).
-        # Excel V2-8: 'Hoja Maestra Escenarios'!C304 = C303/(1-margen_b)
-        # El P&G escala por ramp_up × (1+IPC_incremental) igual que cadena A.
+        # Ingreso Cadena B base — mirrors HM formula: C304 = C303/(1-margen_b)
+        # Excel V2-8: 'Hoja Maestra Escenarios'!C268 = N_b_op + ICA_b + GMF_b + Pol_b
+        # ICA_b = C304×tasa_ica (on billing); GMF_b = N_b_op×tasa_gmf (on op cost)
+        # Pol_b = C304×tasa_pol (on billing).
+        # Solución analítica: C304 = N_b_op × (1+tasa_gmf) / (denom_b − tasa_ica − tasa_pol)
         _ingreso_b_base = 0.0
         if _cadena_b_calc:
-            _costo_b_base = _cadena_b_calc.calcular_mes(1.0, 1.0)["costo_cadena_b"]
+            _costo_b_op = _cadena_b_calc.calcular_mes(1.0, 1.0)["costo_cadena_b"]
             _margen_b_base = float(_ctx_base.get("margen_b", 0.30))
+            _factor_b = 1.0 - _margen_b_base
             _denom_b = (
-                (1.0 - _margen_b_base)
+                _factor_b
                 * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
                 * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
                 * (1.0 - float(_ctx_base.get("markup", 0.0)))
                 * (1.0 + float(_ctx_base.get("descuento", 0.0)))
             )
-            if _denom_b > 0:
-                _ingreso_b_base = _costo_b_base / _denom_b
+            _tasa_ica_hm_b = float(_ctx_base.get("tasa_ica", 0.01))
+            _tasa_gmf_hm_b = float(_ctx_base.get("tasa_gmf", 0.004))
+            _tasa_pol_b_pricing = sum(
+                float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                for p in _ctx_base.get("polizas_activas", [])
+                if "comisi" not in str(p.get("nombre", "")).lower()
+            )
+            _adj_denom_b = _denom_b - _tasa_ica_hm_b - _tasa_pol_b_pricing
+            if _adj_denom_b > 0:
+                _ingreso_b_base = _costo_b_op * (1.0 + _tasa_gmf_hm_b) / _adj_denom_b
 
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
@@ -390,21 +401,22 @@ class MotorDeReglas:
             ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
             ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
             ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
-            # Excel V2-8: 'Pólizas - Costo Financiacion'!M162:M233 cubre billing Cadena A + B + C.
-            # Agregar contribución de Cadena B a ICA/GMF/Pólizas (N_b = costo_b, pol_b = admin_b = 0).
+            # Excel V2-8: ICA/GMF/Pólizas de Cadena B (billing A+B+C en Pólizas-FC M162:M233).
+            # ICA_b = ingreso_b_unramped × tasa_ica (on billing, mirrors Pólizas sheet row)
+            # GMF_b = costo_b_op_mes × tasa_gmf (on operational cost, NOT on ingreso)
+            # Pol_b = ingreso_b_unramped × tasa_pol (on billing, same as ICA)
             if _cadena_b_calc and _ingreso_b_base > 0:
                 _ingreso_b_unramped = _ingreso_b_base * (1.0 + ipc_incremental)
                 _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
                 _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
-                _margen_b_loop = float(ctx.get("margen_b", 0.30))
-                _tasa_pol_b = sum(
+                _tasa_pol_b_mes = sum(
                     float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
                     for p in polizas_activas_mes
                     if "comisi" not in str(p.get("nombre", "")).lower()
                 )
                 ctx["ica_hm"] += _ingreso_b_unramped * _tasa_ica_b
-                ctx["gmf_hm"] += _ingreso_b_unramped * (1.0 - _margen_b_loop) * _tasa_gmf_b
-                ctx["polizas_puras_hm"] += _ingreso_b_unramped * _tasa_pol_b
+                ctx["gmf_hm"] += ctx["costo_cadena_b"] * _tasa_gmf_b
+                ctx["polizas_puras_hm"] += _ingreso_b_unramped * _tasa_pol_b_mes
 
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
             # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
