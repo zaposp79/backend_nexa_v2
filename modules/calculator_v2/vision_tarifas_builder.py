@@ -212,15 +212,16 @@ def _build_escenario(
         } if tarifa_variable is not None else None,
     }
 
-def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float) -> dict:
+def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
     
     componente_fijo = str(data.get("componente_fijo", "FTE")) if data.get("proporcion_componente_fijo", 0.0) > 0 else None
     pct_var = float(data.get("proporcion_componente_variable", 0.0))
     pct_fijo = float(data.get("proporcion_componente_fijo", 0.0))
-    ingreso_a = float(vals0.get("ingreso_cadena_a", 0.0))
-    ingreso_b = float(vals0.get("ingreso_cadena_b", 0.0))
-    ingreso_c = float(vals0.get("ingreso_cadena_c", 0.0))
-    facturacion_directa = ingreso_a + ingreso_b + ingreso_c
+    facturacion_directa = sum(
+        float(escenario.get("facturacion_mensual", 0.0) or 0.0)
+        for escenario in escenarios
+        if escenario.get("facturacion_mensual")
+    )
     if componente_fijo == "FTE":
         tarifa_fija = facturacion_directa / fte_total if fte_total > 0 else 0.0
     else:
@@ -366,7 +367,7 @@ def build_vision_tarifas(
 
     return {
         "escenarios": escenarios,
-        "escenario_total": _build_escenario_total(request_data["escenario_total"], vals0, fte_total_activos), 
+        "escenario_total": _build_escenario_total(request_data["escenario_total"], vals0, fte_total_activos, escenarios), 
         "total": total,
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
