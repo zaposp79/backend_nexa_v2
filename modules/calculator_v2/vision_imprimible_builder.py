@@ -10,6 +10,12 @@ from typing import Any, Dict, List, Optional
 
 from .escenarios_enricher import get_escenarios_activos_keys, _clave
 
+from nexa_engine.modules.parametrizacion.services.resolver import (
+    ParametrizationResolver,
+)
+
+_resolver = ParametrizationResolver()
+
 # SMLV 2026 Colombia (COP) — actualizar anualmente si cambia el decreto
 _SMLV_2026 = 1_423_500.0
 
@@ -177,7 +183,6 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
     Cuando escenarios_comerciales está configurado, siempre retorna 5 slots (vacíos con None).
     """
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
-    escenarios_input = request_data.get("escenarios_comerciales", {}) or {}
     perfiles_input = cadena_a.get("perfiles", []) or []
 
     # Si hay escenarios_comerciales, mostrar solo los perfiles con escenario configurado
@@ -203,8 +208,9 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
         comp_fijo = p.get("componente_fijo")
         comp_var = p.get("componente_variable")
         fte = int(float(p.get("fte", 0)))
-        tarifa = tarifa_por_nombre.get(nombre, 0.0)
-        tarifa_variable = float(p.get("tarifa_variable", 0.0)) if pct_var > 0 else None
+        ingreso = tarifa_por_nombre.get(nombre, 0.0)
+        tarifa = (ingreso * pct_fijo)
+        tarifa_variable = (ingreso * pct_var)
 
 
         escenarios.append({
