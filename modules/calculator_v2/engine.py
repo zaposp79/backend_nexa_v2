@@ -199,8 +199,24 @@ class MotorDeReglas:
         no_payroll_fijo = _no_pay_calc.calcular()
         _no_payroll_detalle = _no_pay_calc.calcular_detalle()
 
-        # Cadena B — activa si alguna dirección tiene cadena_b: true en cadenas_activas
+        # Cadenas activas — controlan qué componentes se incluyen en el cálculo
         _vol_data = request_data.get("volumetria") or {}
+
+        # Cadena A — activa por defecto. Usa AND: si cualquier dirección la deshabilita → inactiva.
+        _cadena_a_activa = (
+            _vol_data.get("inbound", {}).get("cadenas_activas", {}).get("cadena_a", True)
+            and _vol_data.get("outbound", {}).get("cadenas_activas", {}).get("cadena_a", True)
+        )
+        if not _cadena_a_activa:
+            # Zerear todos los componentes de Cadena A para que no afecten el P&G
+            nomina_fija = 0.0
+            no_payroll_fijo = 0.0
+            _nomina_detalle = {k: 0.0 for k in _nomina_detalle}
+            _no_payroll_detalle = {k: 0.0 for k in _no_payroll_detalle}
+            _nomina_desglose_cargo = {}
+            _nomina_grupos_por_perfil = {}
+
+        # Cadena B — activa si alguna dirección tiene cadena_b: true en cadenas_activas
         _cadena_b_activa = (
             _vol_data.get("inbound", {}).get("cadenas_activas", {}).get("cadena_b", False)
             or _vol_data.get("outbound", {}).get("cadenas_activas", {}).get("cadena_b", False)
