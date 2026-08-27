@@ -13,7 +13,11 @@ from .escenarios_enricher import get_escenarios_activos_keys, _clave
 # SMLV 2026 Colombia (COP) — actualizar anualmente si cambia el decreto
 _SMLV_2026 = 1_423_500.0
 
-_RANGOS_CONTINGENCIAS = [
+_RANGOS_CONTINGENCIAS = [						
+
+    {"nombre": "Margen objetivo Cadena A", "campo": "margen_a", "min": 0.0, "max": 1.0},
+    {"nombre": "Margen objetivo Cadena B", "campo": "margen_b", "min": 0.0, "max": 1.0},
+    {"nombre": "Margen objetivo cadena C", "campo": "margen_c", "min": 0.0, "max": 1.0},					
     {"nombre": "Contingencia Operativa", "campo": "cont_op",  "min": 0.01, "max": 0.04},
     {"nombre": "Contingencia Comercial", "campo": "cont_com", "min": 0.04, "max": 0.07},
     {"nombre": "Mark-Up",               "campo": "markup",   "min": 0.02, "max": 0.08},
@@ -61,7 +65,11 @@ def _build_ficha(request_data: Dict[str, Any], duracion_meses: int) -> dict:
 
 # ── Sección 02 — Economics ────────────────────────────────────────────────────
 
-def _build_economics(meses: List[Dict], totales: Dict[str, float]) -> dict:
+def _build_economics(
+    meses: List[Dict],
+    totales: Dict[str, float],
+    cts_mensual: Optional[float] = None,
+) -> dict:
     """
     ingreso_mensual = ingreso_neto del primer mes con ramp=1.0 (tarifa de régimen permanente).
     costo_mensual   = costo_cadena_a del mismo mes (payroll + no_payroll + financiero).
@@ -75,17 +83,11 @@ def _build_economics(meses: List[Dict], totales: Dict[str, float]) -> dict:
     """
     mes = _primer_mes_ramp1(meses)
     vals = mes.get("valores", {}) if mes else {}
-
     ingreso_mensual = float(vals.get("ingreso_neto", 0.0))
 
-    costo_mensual = float(vals.get("costo_cadena_a", 0.0))
-    if costo_mensual == 0.0:
-        costo_mensual = (
-            float(vals.get("nomina_total_mensual", 0.0))
-            + float(vals.get("no_payroll_total_mensual", 0.0))
-            + float(vals.get("componente_financiero_total", 0.0))
-        )
-
+    costo_mensual = float(
+        cts_mensual if cts_mensual is not None else vals.get("cts_mensual", 0.0)
+    )
     margen = float(vals.get("margen_a", 0.0))
     valor_total = float(totales.get("ingreso_neto", 0.0))
 
@@ -101,49 +103,43 @@ def _build_economics(meses: List[Dict], totales: Dict[str, float]) -> dict:
 
 def _build_waterfall(meses: List[Dict], totales: Dict[str, float]) -> List[dict]:
     """
-    Descomposición waterfall de ingresos → costos → utilidad.
-    Excel 'Graficos'!P67:P81 — valores totales del contrato.
+    Descomposición waterfall del ingreso neto → costos → utilidad.
+
+    Cada valor se obtiene de los rubros calculados por el motor y se acumula
+    sobre los meses disponibles. Los costos se devuelven negativos para que el
+    consumidor pueda representarlos como disminuciones en la cascada.
     """
-    ingreso_bruto = float(totales.get("ingreso_bruto", 0.0))
-    ingreso_neto = float(totales.get("ingreso_neto", 0.0))
+    def total(key: str) -> float:
+        if key in totales:
+            return float(totales[key])
+        return sum(float(m.get("valores", {}).get(key, 0.0)) for m in meses)
 
-    cont_op_t = sum(float(m["valores"].get("contingencia_op", 0.0)) for m in meses)
-    cont_com_t = sum(float(m["valores"].get("contingencia_com", 0.0)) for m in meses)
-    markup_t = sum(float(m["valores"].get("markup_ingreso", 0.0)) for m in meses)
-    descuento_t = sum(float(m["valores"].get("descuento_ingreso", 0.0)) for m in meses)
-
-    # ingreso_bruto (motor) ya es después de imprevistos; el bruto del Excel incluye imprevistos.
-    # La diferencia ingreso_bruto - ingreso_neto captura el ajuste neto total.
-    ajuste_neto = ingreso_bruto - ingreso_neto
-
-    payroll_t = float(totales.get("nomina_total_mensual", 0.0))
-    nopayroll_t = float(totales.get("no_payroll_total_mensual", 0.0))
-    financiero_t = float(totales.get("componente_financiero_total", 0.0))
-    costo_a = float(totales.get("costo_cadena_a", payroll_t + nopayroll_t + financiero_t))
-    costo_b = float(totales.get("costo_cadena_b", 0.0))
-    costo_c = float(totales.get("costo_cadena_c", 0.0))
-    costo_total = costo_a + costo_b + costo_c
-    utilidad = ingreso_neto - costo_total
-
-    def pct(v: float) -> float:
-        return round(v / ingreso_neto, 4) if ingreso_neto else 0.0
-
-    items = [
-        {"concepto": "Ingreso Bruto",          "valor": round(ingreso_bruto, 2), "pct": pct(ingreso_bruto)},
-        {"concepto": "Contingencia Operativa", "valor": round(-cont_op_t, 2),   "pct": pct(-cont_op_t)},
-        {"concepto": "Contingencia Comercial", "valor": round(-cont_com_t, 2),  "pct": pct(-cont_com_t)},
-        {"concepto": "Mark-Up",                "valor": round(-markup_t, 2),    "pct": pct(-markup_t)},
-        {"concepto": "Descuento",              "valor": round(-descuento_t, 2), "pct": pct(-descuento_t)},
-        {"concepto": "Ingreso Neto",           "valor": round(ingreso_neto, 2), "pct": 1.0, "subtotal": True},
-        {"concepto": "Costos Cadena A",        "valor": round(-costo_a, 2),     "pct": pct(-costo_a)},
+    ingreso_neto = total("ingreso_neto")
+    conceptos = [
+        ("Ingreso Neto", ingreso_neto, False),
+        ("Payroll", total("nomina_total_mensual"), True),
+        ("No Payroll", total("no_payroll_total_mensual"), True),
+        ("Componente Fijo", total("componente_fijo_b"), True),
+        ("Componente Variable", total("componente_variable_b"), True),
+        ("Tarifa Proveedor", total("tarifa_proveedor_c"), True),
+        ("Costo Integración", total("costo_integracion_c"), True),
+        ("Costo Variable", total("costo_variable_c"), True),
+        ("Costos Financieros", total("costos_financiacion_mensual"), True),
+        ("Utilidad Neta", total("utilidad_neta"), False),
     ]
-    if costo_b:
-        items.append({"concepto": "Costos Cadena B", "valor": round(-costo_b, 2), "pct": pct(-costo_b)})
-    if costo_c:
-        items.append({"concepto": "Costos Cadena C", "valor": round(-costo_c, 2), "pct": pct(-costo_c)})
-    items.append({"concepto": "Utilidad Neta", "valor": round(utilidad, 2), "pct": pct(utilidad), "subtotal": True})
 
-    return items
+    def pct(value: float) -> float:
+        return round(value / ingreso_neto, 4) if ingreso_neto else 0.0
+
+    return [
+        {
+            "concepto": concepto,
+            "valor": round(-value if es_costo else value, 2),
+            "pct": pct(-value if es_costo else value),
+            **({"subtotal": True} if concepto in ("Ingreso Neto", "Utilidad Neta") else {}),
+        }
+        for concepto, value, es_costo in conceptos
+    ]
 
 
 def _build_evolucion(meses: List[Dict]) -> List[dict]:
@@ -157,6 +153,20 @@ def _build_evolucion(meses: List[Dict]) -> List[dict]:
     ]
 
 
+def _build_margen_historico() -> dict:
+    """Construye el margen histórico temporal del servicio SAC."""
+    return {
+        "servicio": "SAC",
+        "margen_servicio": 0.17,
+        "items": {
+            "q1": 0.13,
+            "q2": 0.17,
+            "q3": 0.27,
+            "q4": 0.96,
+        },
+    }
+
+
 # ── Sección 04 — Comparativo de Escenarios ───────────────────────────────────
 
 def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) -> List[dict]:
@@ -167,6 +177,7 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
     Cuando escenarios_comerciales está configurado, siempre retorna 5 slots (vacíos con None).
     """
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
+    escenarios_input = request_data.get("escenarios_comerciales", {}) or {}
     perfiles_input = cadena_a.get("perfiles", []) or []
 
     # Si hay escenarios_comerciales, mostrar solo los perfiles con escenario configurado
@@ -178,7 +189,7 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
         ]
 
     tarifa_por_nombre: Dict[str, float] = {
-        p.get("nombre", ""): float(p.get("tarifa_fte", 0.0))
+        p.get("nombre", "").replace(" ", ""): float(p.get("tarifa_fte", 0.0))
         for p in cts_perfiles
     }
 
@@ -195,6 +206,7 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
         tarifa = tarifa_por_nombre.get(nombre, 0.0)
         tarifa_variable = float(p.get("tarifa_variable", 0.0)) if pct_var > 0 else None
 
+
         escenarios.append({
             "id": escenario_nombre,
             "nombre": escenario_nombre,
@@ -207,7 +219,7 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
             "pct_fijo": pct_fijo,
             "pct_variable": round(pct_var, 4),
             "fte": fte,
-            "tarifa_fija": round(tarifa, 2) if pct_fijo > 0 and tarifa else None,
+            "tarifa_fija": round(tarifa, 2) if tarifa is not None else None,
             "tarifa_variable": round(tarifa_variable, 2) if tarifa_variable else None,
         })
 
@@ -315,11 +327,11 @@ def _q8_capacitacion(request_data: Dict[str, Any]) -> tuple[int, str]:
     return 1, f"{dias_prom:.1f} días"
 
 
+#todo changes percents to config
 def _q9_rotacion(request_data: Dict[str, Any], vals_mes0: Dict[str, float]) -> tuple[int, str]:
-    cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
+    operativeData = request_data.get("datos_operativos", {}) or {}
     tasa = float(
-        cadena_a.get("tasa_rotacion_anual", 0.0)
-        or vals_mes0.get("tasa_rotacion_anual", 0.0)
+        operativeData.get("pct_rotacion", 0.0)
         or 0.0
     )
     if tasa > 0.10:
@@ -343,8 +355,16 @@ def _build_control(
     meses: List[Dict],
     totales: Dict[str, float],
 ) -> dict:
-    vals0 = meses[0].get("valores", {}) if meses else {}
+    
+    risk_list = _resolver.get_active_op()["riesgo"]
 
+    def search_in_risk(factor: str) -> str:
+        criterios = risk_list.get("criterios", []) if isinstance(risk_list, dict) else risk_list
+        criterio = next((item for item in criterios if item.get("factor") == factor), {})
+        return criterio.get("pregunta", factor)
+    
+    vals0 = meses[0].get("valores", {}) if meses else {}
+    
     ingreso_neto_total = float(totales.get("ingreso_neto", 0.0))
     periodo_pago = int(_datos_op(request_data).get("periodo_pago", 30) or 30)
     mes_ramp = _primer_mes_ramp1(meses)
@@ -353,16 +373,16 @@ def _build_control(
     # Preguntas con puntaje, peso y calificación ponderada
     preguntas_raw = [
         # id, factor, categoria, peso, (puntaje, respuesta)
-        (1,  "Clasificación de oportunidad", "cliente",  0.30, _q1_clasificacion(ingreso_neto_total)),
-        (2,  "Tipo de cliente",              "cliente",  0.25, _q2_tipo_cliente(request_data)),
-        (3,  "Período de pago",              "cliente",  0.25, _q3_periodo_pago(request_data)),
-        (4,  "Experiencia con el cliente",   "cliente",  0.10, _q4_experiencia(request_data)),
-        (5,  "Presupuesto de imprevistos",   "cliente",  0.10, _q5_imprevistos(vals0)),
-        (6,  "Alertas activadas",            "operativo",0.30, _q6_alertas(ingreso_neto_total, periodo_pago)),
-        (7,  "Complejidad",                  "operativo",0.20, _q7_complejidad(request_data)),
-        (8,  "Capacitaciones",               "operativo",0.20, _q8_capacitacion(request_data)),
-        (9,  "Rotación",                     "operativo",0.20, _q9_rotacion(request_data, vals0)),
-        (10, "Dependencia de terceros",      "operativo",0.10, _q10_terceros(request_data)),
+        (1,  search_in_risk("Clasificación de oportunidad"), "cliente",  0.30, _q1_clasificacion(ingreso_neto_total)),
+        (2,  search_in_risk("Tipo de cliente"),              "cliente",  0.25, _q2_tipo_cliente(request_data)),
+        (3,  search_in_risk("Período de pago"),              "cliente",  0.25, _q3_periodo_pago(request_data)),
+        (4,  search_in_risk("Experiencia con el cliente"),   "cliente",  0.10, _q4_experiencia(request_data)),
+        (5,  search_in_risk("Presupuesto de imprevistos"),   "cliente",  0.10, _q5_imprevistos(vals0)),
+        (6,  search_in_risk("Alertas activadas"),            "operativo",0.30, _q6_alertas(ingreso_neto_total, periodo_pago)),
+        (7,  search_in_risk("Complejidad"),                  "operativo",0.20, _q7_complejidad(request_data)),
+        (8,  search_in_risk("Capacitaciones"),               "operativo",0.20, _q8_capacitacion(request_data)),
+        (9,  search_in_risk("Rotación"),                     "operativo",0.20, _q9_rotacion(request_data, vals0)),
+        (10, search_in_risk("Dependencia de terceros"),      "operativo",0.10, _q10_terceros(request_data)),
     ]
 
     preguntas = []
@@ -396,28 +416,36 @@ def _build_control(
         return "Bajo"
 
     # Alertas de aprobación
-    alertas = []
-    if ingreso_mensual >= 100_000_000:
-        alertas.append({
-            "nivel": "Gerencia Financiera",
-            "umbral_descripcion": "> COP 100M/mes",
-            "valor_deal": round(ingreso_mensual, 2),
-            "requerida": True,
-        })
-    if ingreso_mensual >= 200_000_000:
-        alertas.append({
-            "nivel": "Gerencia General",
-            "umbral_descripcion": "> COP 200M/mes",
-            "valor_deal": round(ingreso_mensual, 2),
-            "requerida": True,
-        })
-    if ingreso_neto_total >= _SMLV_2026 * 1_000:
-        alertas.append({
-            "nivel": "Alta Dirección",
-            "umbral_descripcion": f"> 1,000 SMLV (total contrato >= {_SMLV_2026 * 1_000:,.0f} COP)",
-            "valor_deal": round(ingreso_neto_total, 2),
-            "requerida": True,
-        })
+    alertas_config = [
+        (
+            "Gerencia Financiera",
+            "> COP 100M/mes",
+            ingreso_mensual,
+            ingreso_mensual >= 100_000_000,
+        ),
+        (
+            "Gerencia General",
+            "> COP 200M/mes",
+            ingreso_mensual,
+            ingreso_mensual >= 200_000_000,
+        ),
+        (
+            "Alta Dirección",
+            f"> 1,000 SMLV (total contrato >= {_SMLV_2026 * 1_000:,.0f} COP)",
+            ingreso_neto_total,
+            ingreso_neto_total >= _SMLV_2026 * 1_000,
+        ),
+    ]
+    alertas = [
+        {
+            "nivel": nivel,
+            "umbral_descripcion": umbral,
+            "valor_deal": round(valor, 2),
+            "requerida": requerida,
+        }
+        for nivel, umbral, valor, requerida in alertas_config
+    ]
+    
 
     return {
         "score_cliente": round(score_cliente, 4),
@@ -472,6 +500,7 @@ def build_vision_imprimible(
     totales: Dict[str, float],
     duracion_meses: int,
     cts_perfiles: Optional[List[Dict]] = None,
+    cts_mensual: Optional[float] = None,
 ) -> dict:
     """Construye el dict completo de Visión Imprimible desde los resultados del motor v2.
 
@@ -481,13 +510,15 @@ def build_vision_imprimible(
         totales: Acumulado del motor (ingreso_bruto, ingreso_neto, costo_cadena_a, ...).
         duracion_meses: Número de meses del contrato.
         cts_perfiles: Perfiles de VisionCostToServe (para tarifas en Sección 04).
+        cts_mensual: CTS mensual de VisionCostToServe para la Sección 02.
     """
     return {
         "seccion_01_ficha": _build_ficha(request_data, duracion_meses),
-        "seccion_02_economics": _build_economics(meses, totales),
+        "seccion_02_economics": _build_economics(meses, totales, cts_mensual),
         "seccion_03_grafico": {
             "waterfall": _build_waterfall(meses, totales),
             "evolucion_mensual": _build_evolucion(meses),
+            "margen_historico": _build_margen_historico(),
         },
         "seccion_04_escenarios": {
             "escenarios": _build_escenarios(request_data, cts_perfiles or []),
