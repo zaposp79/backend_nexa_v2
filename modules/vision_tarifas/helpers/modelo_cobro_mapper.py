@@ -235,7 +235,7 @@ def _build_resumen_resultado_escenario(
         else:
             rows.append(_empty_scenario_row(str(i)))
 
-    total_row = _build_total_resumen_row(vt_data, scenario_map)
+    total_row = _build_total_resumen_row(vt_data)
     rows.append(total_row)
 
     return rows
@@ -257,28 +257,24 @@ def _empty_scenario_row(scenario_number: str) -> dict:
     }
 
 
-def _build_total_resumen_row(vt_data: dict, scenario_map: dict) -> dict:
-    first_entry = next(iter(scenario_map.values()), None)
-    facturacion = _safe_float(vt_data.get("ingreso_mensual"))
-    tarifa_var = 0
-    if first_entry:
-        tarifa_var = _safe_float(first_entry.get("tarifa_componente_variable"))
-
-    return {
-        "escenario": "Total",
-        "modalidad": None,
-        "canal": None,
-        "modelo_cobro": "Fijo",
-        "componente_fijo": "FTE",
-        "proporcion_componente_fijo_pct": 0,
-        "componente_variable": "Transacción",
-        "proporcion_componente_variable_pct": 1,
-        "facturacion_directa": facturacion,
-        "tarifa_componente_fijo": 0,
-        "tarifa_componente_variable": tarifa_var,
-    }
-
-
+def _build_total_resumen_row(vt_data: dict) -> dict:
+    total_entry = vt_data.get("escenario_total") or {}
+    if total_entry:
+        return {
+            "escenario": "Total",
+            "modalidad": total_entry.get("modalidad"),
+            "canal": total_entry.get("canal"),
+            "modelo_cobro": total_entry.get("modelo_cobro"),
+            "componente_fijo": total_entry.get("componente_fijo"),
+            "proporcion_componente_fijo_pct": total_entry.get("proporcion_componente_fijo_pct", 0),
+            "componente_variable": total_entry.get("componente_variable"),
+            "proporcion_componente_variable_pct": total_entry.get("proporcion_componente_variable_pct", 0),
+            "facturacion_directa": total_entry.get("facturacion_directa", 0),
+            "tarifa_componente_fijo": total_entry.get("tarifa_componente_fijo", 0),
+            "tarifa_componente_variable": total_entry.get("tarifa_componente_variable", 0),
+        }
+    return _empty_scenario_row("Total")
+        
 def _empty_resumen_rows() -> list[dict]:
     rows = [_empty_scenario_row(str(i)) for i in range(1, 6)]
     rows.append({
@@ -376,6 +372,7 @@ def _build_total_detail(
     result: dict,
     missing_fields: list,
 ) -> dict:
+    escenario_total = vt_data["escenario_total"] if "escenario_total" in vt_data else None
     first_entry = next(iter(scenario_map.values()), None)
     first_source = next(iter(scenario_sources.values()), None)
 
@@ -415,11 +412,11 @@ def _build_total_detail(
         "escenario": "Total",
         "modalidad": None,
         "canal": None,
-        "modelo_cobro": "Fijo",
-        "componente_fijo": "FTE",
-        "proporcion_componente_fijo_pct": 0,
-        "componente_variable": "Transacción",
-        "proporcion_componente_variable_pct": 1,
+        "modelo_cobro": escenario_total.get("modelo_cobro") if escenario_total else None,
+        "componente_fijo": escenario_total.get("componente_fijo") if escenario_total else None,
+        "proporcion_componente_fijo_pct": escenario_total.get("proporcion_componente_fijo_pct") if escenario_total else 0,
+        "componente_variable": escenario_total.get("componente_variable") if escenario_total else "Transacción",
+        "proporcion_componente_variable_pct": escenario_total.get("proporcion_componente_variable_pct") if escenario_total else 1,
         "fte": fte_total,
         "cadena_a": cadenas["cadena_a"],
         "cadena_b": cadenas["cadena_b"],
@@ -743,7 +740,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
     v2_escenarios = v2_vt.get("escenarios") or []
     ajustes = v2_vt.get("ajustes_aplicados") or {}
     total = v2_vt.get("total") or {}
-
+    escenario_total: dict = v2_vt.get("escenario_total") or {}
     escenarios_detalle: list[dict] = []
     canales: list[dict] = []
 
@@ -821,6 +818,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
 
     bridged_vt = {
         "canales": canales,
+        "escenario_total": escenario_total,
         "escenarios_detalle": escenarios_detalle,
         "desglose_producto_opex": [],
         "ingreso_mensual": total.get("facturacion_mensual", 0),
