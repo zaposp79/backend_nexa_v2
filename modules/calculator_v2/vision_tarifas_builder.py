@@ -268,7 +268,7 @@ def _build_escenario(
             "valor": tarifa_variable,
             "volumen_minimo": volumen_minimo,
         } if tarifa_variable is not None else None,
-        "honorarios_cobranza": _build_honorarios_cobranza(request_data, componente_variable)
+        "honorarios_cobranza": _build_honorarios_cobranza(request_data, ingreso_variable)
     }
 
 def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
