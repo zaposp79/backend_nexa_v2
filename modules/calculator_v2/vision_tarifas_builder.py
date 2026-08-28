@@ -214,7 +214,15 @@ def _build_escenario(
             else:
                 tarifa_variable = round(ingreso_variable / fte_safe, 2)
                 tipo_tarifa_variable = "por persona (Resultados)"
-
+                
+    
+    honorariosCobranza = []
+    honorariosTotales = []
+    servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
+    if(servicio == "cobranzas"):
+        honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
+        honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
+        
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -268,7 +276,8 @@ def _build_escenario(
             "valor": tarifa_variable,
             "volumen_minimo": volumen_minimo,
         } if tarifa_variable is not None else None,
-        "honorarios_cobranza": _build_honorarios_cobranza(request_data, ingreso_variable)
+        "honorarios_cobranza": honorariosCobranza,
+        "honorarios_totales": honorariosTotales
     }
 
 def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
@@ -331,11 +340,14 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
     bechmarkList = _get_cobranzas()
     cobranzas = request_data.get("cobranzas", {}) or {}
     rangos_cartera = cobranzas.get("rangos_de_cartera", []) if isinstance(cobranzas, dict) else []
+    porcentaje_cartera = cobranzas.get("porcentaje_considerando_caidas", 0.0) if isinstance(cobranzas, dict) else 0.0
+    firstMonth = next((x["valor"] for x in porcentaje_cartera if x["mes"] == "1"),0)
+    
     result = []
     sum_product = 0
     componente_variable_escenario = componente_variable
 
-    for item in rangos_cartera:
+    for index, item in enumerate(rangos_cartera):
         if not isinstance(item, dict):
             continue
 
@@ -345,23 +357,24 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
         )
         dificultad = 0 if denominator == 0 else 1 / denominator
         
-        sum_product += dificultad * float(item.get("arpu", 0)) * float(item.get("cantidad_calculada", 0))
+        valueFirstMonth = float(item.get("cantidad_calculada", 0)) * firstMonth
+        arpu = float(item.get("arpu", 0))
+        sum_product += dificultad * arpu * valueFirstMonth
         
-        rango = item.get("rango_de_cartera", "").lower()
-        benchmark_value = next(
-            (
-                b["honorarios"]
-                for b in bechmarkList
-                if rango in b.get("rango", "").lower()
-            ),
-            0.0,
+        benchmark_value = (
+            float(bechmarkList[index].get("honorarios", 0) or 0)
+            if index < len(bechmarkList)
+            else 0.0
         )
+
 
         result.append({
             "antiguedadCartera": item.get("rango_de_cartera"),
             "driver_dificultad": dificultad,
             "calculado": 0.0,
             "benchmark": benchmark_value,
+            "arpu": arpu, #Cals total
+            "cantidad_calculada": item.get("cantidad_calculada", 0),  #Cals total
         })
         
     for item in result:
@@ -373,7 +386,55 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
 
     return result
 
+def _build_honorarios_totales(honorarios: Dict[str, Any], request_data: Dict[str, Any]) -> List[dict]:
+    cobranzas = request_data.get("cobranzas", {}) or {}
+    porcentaje_cartera = cobranzas.get("porcentaje_considerando_caidas", 0.0) if isinstance(cobranzas, dict) else 0.0
+    resultado = {
+        "Ingresos - Comisiones": {
+            "concepto": "Ingresos - Comisiones",
+            "meses": []
+        },
+        "Ingreso por persona": {
+            "concepto": "Ingreso por persona",
+            "meses": []
+        }
+    }
+    personas = cobranzas.get("numero_de_asesores", 0) if isinstance(cobranzas, dict) else 0
 
+    for month in porcentaje_cartera:
+        mes = month["mes"]
+
+        sum_product_benchmark = 0
+        sum_product_calculated = 0
+
+        for item in honorarios:
+            arpu = float(item.get("arpu", 0))
+            cantidad_mes = float(item.get("cantidad_calculada", 0)) * float(month.get("valor", 0))
+
+            sum_product_benchmark += (
+                arpu * cantidad_mes * float(item.get("benchmark", 0))
+            )
+
+            sum_product_calculated += (
+                arpu * cantidad_mes * float(item.get("calculado", 0))
+            )
+
+        # Concepto 1
+        resultado["Ingresos - Comisiones"]["meses"].append({
+            "mes": mes,
+            "benchmark": sum_product_benchmark,
+            "calculado": sum_product_calculated
+        })
+
+        # Concepto 2
+        resultado["Ingreso por persona"]["meses"].append({
+            "mes": mes,
+            "benchmark": sum_product_benchmark / personas if personas else 0,
+            "calculado": sum_product_calculated / personas if personas else 0
+        })
+   
+    return list(resultado.values())
+    
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def build_vision_tarifas(
