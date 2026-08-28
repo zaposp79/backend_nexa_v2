@@ -15,12 +15,21 @@ from typing import Any, Dict, List, Optional
 
 from .escenarios_enricher import get_escenarios_activos_keys, _clave
 
+from nexa_engine.modules.parametrizacion.services.resolver import (
+    ParametrizationResolver,
+)
+
+_resolver = ParametrizationResolver()
+
+
 
 # ── helpers internos ───────────────────────────────────────────────────────────
 
 def _datos_op(request_data: Dict[str, Any]) -> Dict[str, Any]:
     return request_data.get("datos_operativos", {}) or {}
 
+def _get_cobranzas() -> Dict[str, Any]:
+    return _resolver.get_active_op().get("cobranzarango", []) or []
 
 def _primer_mes_ramp1(meses: List[Dict]) -> Optional[Dict]:
     """Primer mes con ramp_up_mes >= 1.0 (régimen permanente pre-IPC)."""
@@ -89,6 +98,7 @@ def _build_escenario(
     descuento: float,
     costo_b_mensual: float,
     costo_c_mensual: float,
+    request_data: Dict[str, Any]
 ) -> dict:
     """
     Construye el objeto de un escenario (= un perfil de Cadena A).
@@ -258,6 +268,7 @@ def _build_escenario(
             "valor": tarifa_variable,
             "volumen_minimo": volumen_minimo,
         } if tarifa_variable is not None else None,
+        "honorarios_cobranza": _build_honorarios_cobranza(request_data, componente_variable)
     }
 
 def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
@@ -313,6 +324,54 @@ def _build_total(escenarios: List[dict], cts_perfiles: List[Dict]) -> dict:
         "ingreso_variable_mensual": round(ingreso_var_total, 2),
         "tarifa_fija": tarifa_fija_total,
     }
+
+
+def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable: float) -> List[dict]:
+    """Construye los honorarios por antigüedad desde la lista de cobranzas."""
+    bechmarkList = _get_cobranzas()
+    cobranzas = request_data.get("cobranzas", {}) or {}
+    rangos_cartera = cobranzas.get("rangos_de_cartera", []) if isinstance(cobranzas, dict) else []
+    result = []
+    sum_product = 0
+    componente_variable_escenario = componente_variable
+
+    for item in rangos_cartera:
+        if not isinstance(item, dict):
+            continue
+
+        denominator = (
+            float(item.get("contactabilidad", 0) or 0)
+            * float(item.get("efectividad", 0) or 0)
+        )
+        dificultad = 0 if denominator == 0 else 1 / denominator
+        
+        sum_product += dificultad * float(item.get("arpu", 0)) * float(item.get("cantidad_calculada", 0))
+        
+        rango = item.get("rango_de_cartera", "").lower()
+        benchmark_value = next(
+            (
+                b["honorarios"]
+                for b in bechmarkList
+                if rango in b.get("rango", "").lower()
+            ),
+            0.0,
+        )
+
+        result.append({
+            "antiguedadCartera": item.get("rango_de_cartera"),
+            "driver_dificultad": dificultad,
+            "calculado": 0.0,
+            "benchmark": benchmark_value,
+        })
+        
+    for item in result:
+        item["calculado"] = (
+            (item["driver_dificultad"] * componente_variable_escenario)
+            / sum_product
+            if sum_product > 0 else 0.0
+        )
+
+    return result
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -394,6 +453,7 @@ def build_vision_tarifas(
             descuento=descuento,
             costo_b_mensual=b_for_perfil,
             costo_c_mensual=c_for_perfil,
+            request_data=request_data
         )
         escenarios.append(escenario)
 
@@ -412,7 +472,6 @@ def build_vision_tarifas(
         escenarios = all_5
 
     total = _build_total(escenarios, cts_perfiles or [])
-
     return {
         "escenarios": escenarios,
         "escenario_total": _build_escenario_total(request_data["escenario_total"], vals0, fte_total_activos, escenarios), 

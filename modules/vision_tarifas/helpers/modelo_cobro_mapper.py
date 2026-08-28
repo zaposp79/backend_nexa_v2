@@ -33,7 +33,7 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
     canales = vt_data.get("canales") or []
     raw_scenarios = vt_data.get("escenarios_detalle") or []
     opex_raw = vt_data.get("desglose_producto_opex") or []
-
+    
     scenario_map, scenario_sources = _index_scenarios(raw_scenarios, canales, vt_data)
 
     selected_view_id, _ = _pick_selected_scenario(result, scenario_map)
@@ -151,6 +151,7 @@ def _index_scenarios(
             "tarifas": raw.get("tarifas") or {},
             "fixed_component": raw.get("componente_fijo") or {},
             "variable_component": raw.get("componente_variable") or {},
+            "honorarios_cobranza": raw.get("honorarios_cobranza") or [],
             "cadena_a": raw.get("cadena_a") or {},
             "cadena_b": raw.get("cadena_b") or {},
             "cadena_c": raw.get("cadena_c") or {},
@@ -325,6 +326,7 @@ def _build_modelo_cobro_list(
                 "cadena_a": _normalize_cadena(source.get("cadena_a") or {}, "a"),
                 "cadena_b": _normalize_cadena(source.get("cadena_b") or {}, "b"),
                 "cadena_c": _normalize_cadena(source.get("cadena_c") or {}, "c"),
+                "honorarios_cobranza": source.get("honorarios_cobranza") or [],
                 "totales": entry.get("totales"),
                 "reglas_negocio": entry.get("reglas_negocio"),
                 "tarifa_componente_fijo": entry.get("tarifa_componente_fijo_detail"),
@@ -831,6 +833,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "tarifas": tarifas,
             "componente_fijo": {},
             "componente_variable": {},
+            "honorarios_cobranza": esc.get("honorarios_cobranza") or [],
             "cadena_a": cadena_a,
             "cadena_b": cadena_b,
             "cadena_c": cadena_c,

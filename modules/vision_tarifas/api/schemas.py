@@ -126,6 +126,7 @@ class ModeloCobroDetail(BaseModel):
     reglas_negocio: ReglasNegocio = ReglasNegocio()
     tarifa_componente_fijo: TarifaComponenteFijo = TarifaComponenteFijo()
     tarifa_componente_variable: TarifaComponenteVariable = TarifaComponenteVariable()
+    honorarios_cobranza: list[HonorarioCobranzaRow] = Field(default_factory=list)
 
 
 class ResumenRow(BaseModel):
@@ -148,6 +149,13 @@ class DesgloseProductoOpexRow(BaseModel):
     costo_financiacion: Optional[float] = 0
     polizas: Optional[float] = 0
     ingreso_por_producto: Optional[float] = 0
+
+
+class HonorarioCobranzaRow(BaseModel):
+    antiguedadCartera: Optional[str] = None
+    driver_dificultad: Optional[float] = None
+    calculado: Optional[float] = None
+    benchmark: Optional[float] = None
 
 
 class ModeloCobroPublicData(BaseModel):
