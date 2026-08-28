@@ -15,12 +15,21 @@ from typing import Any, Dict, List, Optional
 
 from .escenarios_enricher import get_escenarios_activos_keys, _clave
 
+from nexa_engine.modules.parametrizacion.services.resolver import (
+    ParametrizationResolver,
+)
+
+_resolver = ParametrizationResolver()
+
+
 
 # ── helpers internos ───────────────────────────────────────────────────────────
 
 def _datos_op(request_data: Dict[str, Any]) -> Dict[str, Any]:
     return request_data.get("datos_operativos", {}) or {}
 
+def _get_cobranzas() -> Dict[str, Any]:
+    return _resolver.get_active_op().get("cobranzarango", []) or []
 
 def _primer_mes_ramp1(meses: List[Dict]) -> Optional[Dict]:
     """Primer mes con ramp_up_mes >= 1.0 (régimen permanente pre-IPC)."""
@@ -89,6 +98,7 @@ def _build_escenario(
     descuento: float,
     costo_b_mensual: float,
     costo_c_mensual: float,
+    request_data: Dict[str, Any]
 ) -> dict:
     """
     Construye el objeto de un escenario (= un perfil de Cadena A).
@@ -117,8 +127,32 @@ def _build_escenario(
     # Costos Cadena A (del CTS)
     payroll = float(cts_p.get("payroll", 0.0)) if cts_p else 0.0
     no_payroll = float(cts_p.get("no_payroll", 0.0)) if cts_p else 0.0
-    financiero = float(cts_p.get("financiero", 0.0)) if cts_p else 0.0
+    financiero = float(cts_p.get("costo_financiacion", 0.0)) if cts_p else 0.0
+    ica = float(cts_p.get("ica", 0.0)) if cts_p else 0.0
+    gmf = float(cts_p.get("gmf", 0.0)) if cts_p else 0.0
+    comision_por_administracion = float(cts_p.get("comision_administracion", 0.0)) if cts_p else 0.0
+    polizas = float(cts_p.get("polizas", 0.0)) if cts_p else 0.0
     costo_a = float(cts_p.get("costo_total", 0.0)) if cts_p else (payroll + no_payroll + financiero)
+    
+    # Costos Cadena B (del CTS) TODO Fix these values
+    componente_fijo_b = float(cts_p.get("componente_fijo_b", 0.0)) if cts_p else 0.0
+    componente_variable_b = float(cts_p.get("componente_variable_b", 0.0)) if cts_p else 0.0
+    financiero_b = float(cts_p.get("financiero_b", 0.0)) if cts_p else 0.0
+    ica_b = float(cts_p.get("ica_b", 0.0)) if cts_p else 0.0
+    gmf_b = float(cts_p.get("gmf_b", 0.0)) if cts_p else 0.0
+    comision_por_administracion_b = float(cts_p.get("comision_administracion_b", 0.0)) if cts_p else 0.0
+    polizas_b = float(cts_p.get("polizas_b", 0.0)) if cts_p else 0.0
+    costo_b = float(cts_p.get("costo_total_b", 0.0)) if cts_p else (componente_fijo_b + componente_variable_b + financiero_b)
+
+    # Costos Cadena C (del CTS) TODO Fix these values
+    componente_fijo_c = float(cts_p.get("componente_fijo_c", 0.0)) if cts_p else 0.0
+    componente_variable_c = float(cts_p.get("componente_variable_c", 0.0)) if cts_p else 0.0
+    financiero_c = float(cts_p.get("financiero_c", 0.0)) if cts_p else 0.0
+    ica_c = float(cts_p.get("ica_c", 0.0)) if cts_p else 0.0
+    gmf_c = float(cts_p.get("gmf_c", 0.0)) if cts_p else 0.0
+    comision_por_administracion_c = float(cts_p.get("comision_administracion_c", 0.0)) if cts_p else 0.0
+    polizas_c = float(cts_p.get("polizas_c", 0.0)) if cts_p else 0.0
+    costo_c = float(cts_p.get("costo_total_c", 0.0)) if cts_p else (componente_fijo_c + componente_variable_c + financiero_c)
 
     # Ingreso Cadena A: desde CTS (ya resuelve circularidad HM)
     # Excel 'Vision Tarifas_Modelo_Cobro'!C48: ingreso_a = costo_a / denominador
@@ -197,6 +231,30 @@ def _build_escenario(
             "no_payroll": round(no_payroll, 2),
             "financiero": round(financiero, 2),
             "costo_total": round(costo_a, 2),
+            "ica": round(ica, 2),
+            "gmf": round(gmf, 2),
+            "comision_por_administracion": round(comision_por_administracion, 2),
+            "polizas": round(polizas, 2),
+        },
+        "desglose_costos_mensual_b": {
+            "componente_fijo": round(componente_fijo_b, 2),
+            "componente_variable": round(componente_variable_b, 2),
+            "financiero": round(financiero_b, 2),
+            "costo_total": round(costo_b, 2),
+            "ica": round(ica_b, 2),
+            "gmf": round(gmf_b, 2),
+            "comision_por_administracion": round(comision_por_administracion_b, 2),
+            "polizas": round(polizas_b, 2),
+        },
+        "desglose_costos_mensual_c": {
+            "componente_fijo": round(componente_fijo_c, 2),
+            "componente_variable": round(componente_variable_c, 2),
+            "financiero": round(financiero_c, 2),
+            "costo_total": round(costo_c, 2),
+            "ica": round(ica_c, 2),
+            "gmf": round(gmf_c, 2),
+            "comision_por_administracion": round(comision_por_administracion_c, 2),
+            "polizas": round(polizas_c, 2),
         },
         "facturacion_mensual": round(facturacion_total, 2),
         "ingreso_fijo_mensual": round(ingreso_fijo, 2),
@@ -210,8 +268,37 @@ def _build_escenario(
             "valor": tarifa_variable,
             "volumen_minimo": volumen_minimo,
         } if tarifa_variable is not None else None,
+        "honorarios_cobranza": _build_honorarios_cobranza(request_data, ingreso_variable)
     }
 
+def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
+    
+    componente_fijo = str(data.get("componente_fijo", "FTE")) if data.get("proporcion_componente_fijo", 0.0) > 0 else None
+    pct_var = float(data.get("proporcion_componente_variable", 0.0))
+    pct_fijo = float(data.get("proporcion_componente_fijo", 0.0))
+    facturacion_directa = sum(
+        float(escenario.get("facturacion_mensual", 0.0) or 0.0)
+        for escenario in escenarios
+        if escenario.get("facturacion_mensual")
+    )
+    if componente_fijo == "FTE":
+        tarifa_fija = facturacion_directa / fte_total if fte_total > 0 else 0.0
+    else:
+        tarifa_fija = facturacion_directa
+        
+    return {
+        "escenario": "Total",
+        "modalidad": None,
+        "canal": None,
+        "modelo_cobro": str(data.get("modelo_cobro", "")),
+        "componente_fijo": componente_fijo,
+        "proporcion_componente_fijo_pct": pct_fijo,
+        "componente_variable": str(data.get("componente_variable", "")),
+        "proporcion_componente_variable_pct": pct_var,
+        "facturacion_directa": round(facturacion_directa, 2),
+        "tarifa_componente_fijo": tarifa_fija,
+        "tarifa_componente_variable": 0,
+    }
 
 # ── Totales consolidados ──────────────────────────────────────────────────────
 
@@ -237,6 +324,54 @@ def _build_total(escenarios: List[dict], cts_perfiles: List[Dict]) -> dict:
         "ingreso_variable_mensual": round(ingreso_var_total, 2),
         "tarifa_fija": tarifa_fija_total,
     }
+
+
+def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable: float) -> List[dict]:
+    """Construye los honorarios por antigüedad desde la lista de cobranzas."""
+    bechmarkList = _get_cobranzas()
+    cobranzas = request_data.get("cobranzas", {}) or {}
+    rangos_cartera = cobranzas.get("rangos_de_cartera", []) if isinstance(cobranzas, dict) else []
+    result = []
+    sum_product = 0
+    componente_variable_escenario = componente_variable
+
+    for item in rangos_cartera:
+        if not isinstance(item, dict):
+            continue
+
+        denominator = (
+            float(item.get("contactabilidad", 0) or 0)
+            * float(item.get("efectividad", 0) or 0)
+        )
+        dificultad = 0 if denominator == 0 else 1 / denominator
+        
+        sum_product += dificultad * float(item.get("arpu", 0)) * float(item.get("cantidad_calculada", 0))
+        
+        rango = item.get("rango_de_cartera", "").lower()
+        benchmark_value = next(
+            (
+                b["honorarios"]
+                for b in bechmarkList
+                if rango in b.get("rango", "").lower()
+            ),
+            0.0,
+        )
+
+        result.append({
+            "antiguedadCartera": item.get("rango_de_cartera"),
+            "driver_dificultad": dificultad,
+            "calculado": 0.0,
+            "benchmark": benchmark_value,
+        })
+        
+    for item in result:
+        item["calculado"] = (
+            (item["driver_dificultad"] * componente_variable_escenario)
+            / sum_product
+            if sum_product > 0 else 0.0
+        )
+
+    return result
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
@@ -318,6 +453,7 @@ def build_vision_tarifas(
             descuento=descuento,
             costo_b_mensual=b_for_perfil,
             costo_c_mensual=c_for_perfil,
+            request_data=request_data
         )
         escenarios.append(escenario)
 
@@ -336,9 +472,9 @@ def build_vision_tarifas(
         escenarios = all_5
 
     total = _build_total(escenarios, cts_perfiles or [])
-
     return {
         "escenarios": escenarios,
+        "escenario_total": _build_escenario_total(request_data["escenario_total"], vals0, fte_total_activos, escenarios), 
         "total": total,
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
