@@ -32,11 +32,12 @@ class UserInputBuildersCadenaCMixin:
         )
 
     def _equipo_hitl_item(self, d: Dict) -> EquipoHITLItemInput:
+        sal = d.get("salario_cargado")
         return EquipoHITLItemInput(
             rol             = str(d["rol"]),
             activado        = bool(d["activado"]),
             ratio           = float(d["ratio"]),
-            salario_cargado = float(d["salario_cargado"]),
+            salario_cargado = float(sal) if sal is not None else None,
         )
 
     def _canal_c(self, d: Dict) -> CanalCadenaCInput:

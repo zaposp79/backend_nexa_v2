@@ -19,7 +19,7 @@ class NoPayrollCalculator:
         request_data: Dict[str, Any],
         costo_fijo_por_estacion: float = 0.0,
     ) -> None:
-        self._cadena_a = request_data.get("condiciones_cadena_a", {})
+        self._cadena_a = request_data.get("condiciones_cadena_a") or {}
         self._costo_fijo_por_estacion = costo_fijo_por_estacion
         # Excel No payroll fórmula inversiones: SUMPRODUCT(precio × qty) × (1 + Panel!L11)
         indexacion = request_data.get("volumetria", {}).get("indexacion", {})

@@ -130,7 +130,7 @@ class NominaCalculator:
 
     def __init__(self, request_data: Dict[str, Any]) -> None:
         self._req = request_data
-        self._cadena_a = request_data.get("condiciones_cadena_a", {})
+        self._cadena_a = request_data.get("condiciones_cadena_a") or {}
 
     def calcular(self) -> float:
         return (

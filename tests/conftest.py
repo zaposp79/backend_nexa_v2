@@ -22,6 +22,11 @@ if str(_PROJECT_PARENT) not in sys.path:
 
 import backend_nexa_v2  # noqa: E402, F401 — registers nexa_engine alias
 
+# Tests legacy usan `import backend_nexa` (nombre anterior del paquete).
+# Registramos el alias para que no fallen en colección.
+if "backend_nexa" not in sys.modules:
+    sys.modules["backend_nexa"] = backend_nexa_v2
+
 from nexa_engine.app import create_app  # noqa: E402
 
 

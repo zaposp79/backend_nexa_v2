@@ -23,7 +23,7 @@ class CTSCalculator:
         request_data: Dict[str, Any],
         costo_fijo_por_estacion: float = 0.0,
     ) -> None:
-        cadena_a = request_data.get("condiciones_cadena_a", {})
+        cadena_a = request_data.get("condiciones_cadena_a") or {}
         self._perfiles: List[Dict] = cadena_a.get("perfiles", [])
         self._inversiones: List[Dict] = cadena_a.get("inversiones", [])
         self._costo_fijo_estacion = costo_fijo_por_estacion

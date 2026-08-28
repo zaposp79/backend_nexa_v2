@@ -361,8 +361,8 @@ class EquipoHITLItemInput:
     """
     rol: str
     activado: bool
-    ratio: float            # transacciones/mes por persona (denominador)
-    salario_cargado: float  # costo mensual total por persona (base + cargas sociales)
+    ratio: float                       # transacciones/mes por persona (denominador)
+    salario_cargado: Optional[float] = None  # None → lookup HR parametrización por rol
 
 
 @dataclass

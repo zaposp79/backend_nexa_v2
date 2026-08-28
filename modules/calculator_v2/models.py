@@ -152,6 +152,15 @@ class VisionPyG(BaseModel):
     opex_variable_cadena_b: Optional[List[float]] = None
     tasa_escalamiento_cadena_b: Optional[List[float]] = None
     hitl_cadena_b: Optional[List[float]] = None
+    # Cadena C desglose (Optional — solo cuando cadena_c está activa)
+    costo_cadena_c: Optional[List[float]] = None
+    opex_fijo_cadena_c: Optional[List[float]] = None
+    opex_variable_cadena_c: Optional[List[float]] = None
+    capex_cadena_c: Optional[List[float]] = None
+    equipo_transversal_cadena_c: Optional[List[float]] = None
+    tarifa_canal_cadena_c: Optional[List[float]] = None
+    tasa_escalamiento_cadena_c: Optional[List[float]] = None
+    hitl_cadena_c: Optional[List[float]] = None
 
 
 class SimulationResultV2(BaseModel):

@@ -29,7 +29,7 @@ def build_base_context(
     datos_op: Dict = request_data.get("datos_operativos", {})
     reglas: Dict = request_data.get("reglas_negocio", {})
     polizas: List[Dict] = request_data.get("polizas", [])
-    cadena_a: Dict = request_data.get("condiciones_cadena_a", {})
+    cadena_a: Dict = request_data.get("condiciones_cadena_a") or {}
 
     # Estructura nueva: reglas_negocio.margen_objetivo.{cadena_a, cadena_b, cadena_c}
     margen_obj: Dict = reglas.get("margen_objetivo", {})

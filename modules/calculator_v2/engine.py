@@ -23,6 +23,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
 from .cadena_b_calculator import CadenaBCalculator
+from .cadena_c_calculator import CadenaCCalculator
 from .context_builder import build_base_context
 from .cts_calculator import CTSCalculator
 from .escenarios_enricher import enrich_perfiles_with_escenarios
@@ -68,6 +69,16 @@ _AGGREGATED_IDS = {
     "hitl_cadena_b",
     # ingreso_cadena_b: computado en el loop con ramp_up × IPC_incremental (mirrors ingreso_cadena_a)
     "ingreso_cadena_b",
+    # Cadena C: calculados por CadenaCCalculator × IPC — no pisar con fórmula de rubros
+    "opex_fijo_cadena_c",
+    "opex_variable_cadena_c",
+    "capex_cadena_c",
+    "equipo_transversal_cadena_c",
+    "tarifa_canal_cadena_c",
+    "tasa_escalamiento_cadena_c",
+    "hitl_cadena_c",
+    # ingreso_cadena_c: computado en el loop con ramp_up × IPC_incremental
+    "ingreso_cadena_c",
 }
 
 # Excel V2-8: 'Pólizas - Costo Financiacion'!D338 = FILTER(Panel!D45) × 1.42
@@ -227,6 +238,17 @@ class MotorDeReglas:
             else None
         )
 
+        # Cadena C — activa si alguna dirección tiene cadena_c: true en cadenas_activas
+        _cadena_c_activa = (
+            _vol_data.get("inbound", {}).get("cadenas_activas", {}).get("cadena_c", False)
+            or _vol_data.get("outbound", {}).get("cadenas_activas", {}).get("cadena_c", False)
+        )
+        _cadena_c_calc: Optional[CadenaCCalculator] = (
+            CadenaCCalculator(request_data)
+            if _cadena_c_activa and request_data.get("condiciones_cadena_c")
+            else None
+        )
+
         # Ramp-up desde HR-Campaña (prioridad sobre request.datos_operativos.ramp_up)
         servicio = datos_op.get("servicio", "")
         ramp_up_campana = self._repo.get_ramp_up_campana(servicio)
@@ -308,6 +330,31 @@ class MotorDeReglas:
             _adj_denom_b = _denom_b - _tasa_ica_hm_b - _tasa_pol_b_pricing
             if _adj_denom_b > 0:
                 _ingreso_b_base = _costo_b_op * (1.0 + _tasa_gmf_hm_b) / _adj_denom_b
+
+        # Ingreso Cadena C base — mirrors HM formula análitica (igual que Cadena B)
+        # Excel 007: ingreso_c = costo_c_op × (1+tasa_gmf) / (factor_c − tasa_ica − tasa_pol)
+        _ingreso_c_base = 0.0
+        if _cadena_c_calc:
+            _costo_c_op = _cadena_c_calc.calcular_mes(1.0, 1.0)["costo_cadena_c"]
+            _margen_c_base = float(_ctx_base.get("margen_c", 0.18))
+            _factor_c = 1.0 - _margen_c_base
+            _denom_c = (
+                _factor_c
+                * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
+                * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
+                * (1.0 - float(_ctx_base.get("markup", 0.0)))
+                * (1.0 + float(_ctx_base.get("descuento", 0.0)))
+            )
+            _tasa_ica_hm_c = float(_ctx_base.get("tasa_ica", 0.01))
+            _tasa_gmf_hm_c = float(_ctx_base.get("tasa_gmf", 0.004))
+            _tasa_pol_c_pricing = sum(
+                float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                for p in _ctx_base.get("polizas_activas", [])
+                if "comisi" not in str(p.get("nombre", "")).lower()
+            )
+            _adj_denom_c = _denom_c - _tasa_ica_hm_c - _tasa_pol_c_pricing
+            if _adj_denom_c > 0:
+                _ingreso_c_base = _costo_c_op * (1.0 + _tasa_gmf_hm_c) / _adj_denom_c
 
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
@@ -397,7 +444,17 @@ class MotorDeReglas:
                 ctx["tarifa_canal_cadena_b"] = 0.0
                 ctx["tasa_escalamiento_cadena_b"] = 0.0
                 ctx["hitl_cadena_b"] = 0.0
-            ctx["costo_cadena_c"] = 0.0
+            if _cadena_c_calc:
+                ctx.update(_cadena_c_calc.calcular_mes(double_h, double_t))
+            else:
+                ctx["costo_cadena_c"] = 0.0
+                ctx["opex_fijo_cadena_c"] = 0.0
+                ctx["opex_variable_cadena_c"] = 0.0
+                ctx["capex_cadena_c"] = 0.0
+                ctx["equipo_transversal_cadena_c"] = 0.0
+                ctx["tarifa_canal_cadena_c"] = 0.0
+                ctx["tasa_escalamiento_cadena_c"] = 0.0
+                ctx["hitl_cadena_c"] = 0.0
             ctx["comision_admin_mensual"] = 0.0  # ya incluida en polizas_mensual
 
             # Sub-componentes para formato periods — mismo factor doble IPC que el total
@@ -434,6 +491,20 @@ class MotorDeReglas:
                 ctx["gmf_hm"] += ctx["costo_cadena_b"] * _tasa_gmf_b
                 ctx["polizas_puras_hm"] += _ingreso_b_unramped * _tasa_pol_b_mes
 
+            # ICA/GMF/Pólizas de Cadena C — mirrors Cadena B, sobre ingreso_c sin ramp_up
+            if _cadena_c_calc and _ingreso_c_base > 0:
+                _ingreso_c_unramped = _ingreso_c_base * (1.0 + ipc_incremental)
+                _tasa_ica_c = float(ctx.get("tasa_ica", 0.01))
+                _tasa_gmf_c = float(ctx.get("tasa_gmf", 0.004))
+                _tasa_pol_c_mes = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                    for p in polizas_activas_mes
+                    if "comisi" not in str(p.get("nombre", "")).lower()
+                )
+                ctx["ica_hm"] += _ingreso_c_unramped * _tasa_ica_c
+                ctx["gmf_hm"] += ctx["costo_cadena_c"] * _tasa_gmf_c
+                ctx["polizas_puras_hm"] += _ingreso_c_unramped * _tasa_pol_c_mes
+
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
             # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
             ctx["polizas_adicionales_hm"] = (
@@ -449,6 +520,12 @@ class MotorDeReglas:
                 ctx["ingreso_cadena_b"] = _ingreso_b_base * (1.0 + ipc_incremental) * ramp_up
             else:
                 ctx["ingreso_cadena_b"] = 0.0
+
+            # Ingreso Cadena C: base × IPC_incremental × ramp_up (mirrors ingreso_cadena_b)
+            if _cadena_c_calc:
+                ctx["ingreso_cadena_c"] = _ingreso_c_base * (1.0 + ipc_incremental) * ramp_up
+            else:
+                ctx["ingreso_cadena_c"] = 0.0
 
             # Capital charge diferido — PCF!col_k = meses_cc[k-1] × tasa × CT[k-1] × (1+IPC_incr_k)
             # CT[k-1] = NominaLoaded[k-1] + NoPayroll[k-1] con IPC simple (ipc_factor NL-level).
@@ -1124,4 +1201,12 @@ class MotorDeReglas:
             opex_variable_cadena_b=serie_opt("opex_variable_cadena_b"),
             tasa_escalamiento_cadena_b=serie_opt("tasa_escalamiento_cadena_b"),
             hitl_cadena_b=serie_opt("hitl_cadena_b"),
+            costo_cadena_c=serie_opt("costo_cadena_c"),
+            opex_fijo_cadena_c=serie_opt("opex_fijo_cadena_c"),
+            opex_variable_cadena_c=serie_opt("opex_variable_cadena_c"),
+            capex_cadena_c=serie_opt("capex_cadena_c"),
+            equipo_transversal_cadena_c=serie_opt("equipo_transversal_cadena_c"),
+            tarifa_canal_cadena_c=serie_opt("tarifa_canal_cadena_c"),
+            tasa_escalamiento_cadena_c=serie_opt("tasa_escalamiento_cadena_c"),
+            hitl_cadena_c=serie_opt("hitl_cadena_c"),
         )

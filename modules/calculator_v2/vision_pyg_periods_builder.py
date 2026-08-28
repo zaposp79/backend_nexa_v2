@@ -64,6 +64,39 @@ def _period_componente_financiero(v: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _period_cadena_c(v: Dict[str, Any]) -> Dict[str, Any]:
+    """Cadena C desglosada según estructura Excel 'Visión P&G' rows 59-68.
+
+    Excel P&G formula:
+      Costos Cadena C = Tarifa Proveedor + Costo Integración + Costo Variable
+      Costo Integración = OPEX Fijo + Inversiones + Equipo de integración
+      Costo Variable    = Tasa Escalamiento + OPEX Variable + HITL
+    """
+    tarifa      = v.get("tarifa_canal_cadena_c") or 0.0
+    opex_fijo   = v.get("opex_fijo_cadena_c") or 0.0
+    inversiones = v.get("capex_cadena_c") or 0.0
+    equipo      = v.get("equipo_transversal_cadena_c") or 0.0
+    tasa        = v.get("tasa_escalamiento_cadena_c") or 0.0
+    opex_var    = v.get("opex_variable_cadena_c") or 0.0
+    hitl        = v.get("hitl_cadena_c") or 0.0
+
+    costo_integracion = opex_fijo + inversiones + equipo
+    costo_variable    = tasa + opex_var + hitl
+
+    return {
+        "total_cadena_c":     v.get("costo_cadena_c", 0),
+        "tarifa_proveedor":   tarifa or None,
+        "costo_integracion":  costo_integracion or None,
+        "opex_fijo":          opex_fijo or None,
+        "inversiones":        inversiones or None,
+        "equipo_integracion": equipo or None,
+        "costo_variable":     costo_variable or None,
+        "tasa_escalamiento":  tasa or None,
+        "opex_variable":      opex_var or None,
+        "hitl":               hitl or None,
+    }
+
+
 def _period_costos(v: Dict[str, Any]) -> Dict[str, Any]:
     return {
         "costo_total": v.get("costo_total"),
@@ -80,18 +113,7 @@ def _period_costos(v: Dict[str, Any]) -> Dict[str, Any]:
             "tasa_escalamiento":   v.get("tasa_escalamiento_cadena_b"),
             "hitl":                v.get("hitl_cadena_b"),
         },
-        "cadena_c": {
-            "total_cadena_c":    v.get("costo_cadena_c", 0),
-            "tarifa_proveedor":  v.get("tarifa_proveedor_c"),
-            "costo_integracion": v.get("costo_integracion_c"),
-            "opex_fijo":         v.get("opex_fijo_integ_c"),
-            "inversiones":       v.get("inversiones_integ_c"),
-            "equipo_integracion": v.get("equipo_integ_c"),
-            "costo_variable":    v.get("costo_variable_c"),
-            "tasa_escalamiento": v.get("tasa_escalamiento_c"),
-            "opex_variable":     v.get("opex_var_integ_c"),
-            "hitl":              v.get("hitl_c"),
-        },
+        "cadena_c": _period_cadena_c(v),
         "componente_financiero": _period_componente_financiero(v),
         "costo_por_comision": None,
     }

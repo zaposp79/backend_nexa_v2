@@ -76,7 +76,9 @@ class NewEntryDataAdapter:
         if "condiciones_cadena_c" in result:
             cc = result["condiciones_cadena_c"]
             if self._es_formato_entry_data_c(cc):
-                result["condiciones_cadena_c"] = self._adaptar_cadena_c(cc)
+                volumetria = result.get("volumetria", {})
+                panel = result.get("panel_de_control", {})
+                result["condiciones_cadena_c"] = self._adaptar_cadena_c(cc, volumetria, panel)
 
         return result
 
@@ -338,28 +340,184 @@ class NewEntryDataAdapter:
     # Cadena C
     # ──────────────────────────────────────────────────────────────────
 
-    def _adaptar_cadena_c(self, d: Dict) -> Dict:
+    def _adaptar_cadena_c(self, d: Dict, volumetria: Dict = None, panel: Dict = None) -> Dict:
         """
-        Traduce condiciones_cadena_c del formato entry_data al formato
-        interno que espera UserInputLoader._cadena_c().
+        Traduce condiciones_cadena_c al formato interno que espera UserInputLoader._cadena_c().
 
-        Formato interno esperado:
-          canales[]                       ← desde tarifa_proveedor_canal.items[] + costo_variable
-          equipo_transversal[]            ← desde recurso_humano_transversal.roles[]
-          inversion_anual                 ← 0.0 (Excel K34 no incluye K38)
-          opex_herramientas_transversal   ← Σ(precio × cantidad_atribuible) de recurso_humano_transversal.opex
+        Detecta el formato por presencia de `opex` a nivel raíz:
+          - Nuevo (v2): `opex` top-level → delega a _adaptar_cadena_c_v2()
+          - Legado: sin `opex` top-level → lógica original
         """
-        volume_service          = d.get("_volume_service")
-        canales                 = self._c_construir_canales(d, volume_service)
-        equipo                  = self._c_construir_equipo_transversal(d)
-        inversion_anual         = self._c_calcular_inversion(d)
-        opex_herramientas       = self._c_calcular_opex_herramientas_transversal(d)
+        if "opex" in d:
+            return self._adaptar_cadena_c_v2(d, volumetria or {}, panel or {})
+
+        # ── Formato legado ────────────────────────────────────────────────
+        volume_service    = d.get("_volume_service")
+        canales           = self._c_construir_canales(d, volume_service)
+        equipo            = self._c_construir_equipo_transversal(d)
+        inversion_anual   = self._c_calcular_inversion(d)
+        opex_herramientas = self._c_calcular_opex_herramientas_transversal(d)
 
         return {
-            "canales":                        canales,
-            "equipo_transversal":             equipo,
-            "inversion_anual":                inversion_anual,
-            "opex_herramientas_transversal":  opex_herramientas,
+            "canales":                       canales,
+            "equipo_transversal":            equipo,
+            "inversion_anual":               inversion_anual,
+            "opex_herramientas_transversal": opex_herramientas,
+        }
+
+    def _adaptar_cadena_c_v2(self, d: Dict, volumetria: Dict, panel: Dict) -> Dict:
+        """
+        Nuevo formato (v2): `opex` a nivel raíz, `roles[].fte` pre-calculado,
+        `inversiones_capex[].valor_mensual` ya incluye tasa (se desaplica para
+        que reglas.py no la duplique), salario_cargado=None → Opción A via HR.
+
+        Volúmenes: se leen desde `_volume_service` inyectado en `d` (ya disponible
+        en la clave `_volume_service` cuando el loader normaliza el request).
+        Fallback: si `_volume_service` no está, usa `volumetria` directamente
+        (flujo de tests o llamadas directas al adaptador).
+        """
+        volume_service = d.get("_volume_service")
+
+        # Tasa mensual de indexación: primero volumetria (raw), luego panel (post-normalization)
+        tasa = float((volumetria.get("indexacion") or {}).get("tasa_interes_mensual", 0.0) or 0.0)
+        if not tasa:
+            tasa = float(panel.get("tasa_mensual_financ", 0.0) or 0.0)
+
+        # 1. Tarifa proveedor por canal + modalidad
+        tarifa_by: Dict[str, tuple] = {}   # canal → (total, modalidad)
+        for item in d.get("tarifa_proveedor_canal", {}).get("items", []):
+            cn       = str(item.get("canal", ""))
+            modalidad = str(item.get("modalidad", "Inbound"))
+            vt       = float(item.get("valor_total", 0) or 0)
+            prev_tot, prev_mod = tarifa_by.get(cn, (0.0, modalidad))
+            tarifa_by[cn] = (prev_tot + vt, prev_mod)
+
+        # 2. OPEX fijo/variable por canal (top-level opex[])
+        opex_fijo_by: Dict[str, float] = {}
+        opex_var_by:  Dict[str, float] = {}
+        for item in d.get("opex", []):
+            cn   = str(item.get("canal", ""))
+            vt   = float(item.get("valor_total", 0) or 0)
+            tipo = str(item.get("tipo_gasto", "")).strip()
+            if tipo == "Fijo":
+                opex_fijo_by[cn] = opex_fijo_by.get(cn, 0.0) + vt
+            else:
+                opex_var_by[cn]  = opex_var_by.get(cn, 0.0) + vt
+
+        # 3. Escalamiento por canal: costo_variable.tasa_escalamiento.inbound/outbound
+        escal_by: Dict[str, tuple] = {}   # canal → (modalidad, tasa, precio)
+        tasa_escal = (d.get("costo_variable") or {}).get("tasa_escalamiento", {})
+        for item in tasa_escal.get("inbound", []):
+            cn = str(item.get("canal", ""))
+            escal_by[cn] = ("Inbound",  float(item.get("tasa", 0) or 0), float(item.get("precio", 0) or 0))
+        for item in tasa_escal.get("outbound", []):
+            cn = str(item.get("canal", ""))
+            escal_by[cn] = ("Outbound", float(item.get("tasa", 0) or 0), float(item.get("precio", 0) or 0))
+
+        # Fallback de volumen cuando no hay _volume_service (tests directos)
+        vol_map_fallback: Dict[str, tuple] = {}
+        if not volume_service:
+            for c in (volumetria.get("inbound") or {}).get("canales", []):
+                val = float((c.get("cadena_c") or {}).get("valor", 0) or 0)
+                if val > 0:
+                    vol_map_fallback[c["canal"]] = (val, "Inbound")
+            for c in (volumetria.get("outbound") or {}).get("canales", []):
+                val = float((c.get("cadena_c") or {}).get("valor", 0) or 0)
+                if val > 0:
+                    vol_map_fallback[c["canal"]] = (val, "Outbound")
+
+        # 4. Canales internos
+        all_canales = set(tarifa_by) | set(opex_fijo_by) | set(opex_var_by) | set(escal_by)
+        canales = []
+        for cn in all_canales:
+            tarifa_total, modalidad = tarifa_by.get(cn, (0.0, "Inbound"))
+            if cn in escal_by:
+                esc_mod, tasa_e, precio_e = escal_by[cn]
+                modalidad = esc_mod  # escalamiento es fuente autoritativa de modalidad
+            else:
+                tasa_e, precio_e = 0.0, 0.0
+
+            # Volumen: VolumeResolutionService (post-normalization) o fallback desde volumetria
+            if volume_service:
+                vol = volume_service.volumen(modalidad, cn, "cadena_c")
+            else:
+                vol, _ = vol_map_fallback.get(cn, (0.0, modalidad))
+
+            # tarifa_unitaria: vol × unit = total → unit = total / vol
+            tarifa_unit = (tarifa_total / vol) if vol > 0 else tarifa_total
+            vol_eff     = vol if vol > 0 else (1.0 if tarifa_total > 0 else 0.0)
+
+            canales.append({
+                "nombre":             cn,
+                "modalidad":          modalidad,
+                "volumen_mensual":    vol_eff,
+                "activo":             True,
+                "tarifa_unitaria":    tarifa_unit,
+                "opex_fijo_integ":    opex_fijo_by.get(cn, 0.0),
+                "opex_var_integ":     opex_var_by.get(cn, 0.0),
+                "pct_escalamiento":   tasa_e,
+                "costo_escalamiento": precio_e,
+            })
+
+        # 5. Equipo transversal: fte actúa como pct_dedicacion (× salario_cargado = costo total)
+        rh = d.get("recurso_humano_transversal") or {}
+        equipo_transversal = []
+        for rol in rh.get("roles", []):
+            if not rol.get("activo", False):
+                continue
+            fte = float(rol.get("fte", 0) or 0)
+            if fte <= 0:
+                continue
+            equipo_transversal.append({
+                "rol":             str(rol.get("nombre", "")),
+                "activo":          True,
+                "pct_dedicacion":  fte,   # FTEs reales; × calcular_sm(get_salario_rol) = costo
+                "salario_cargado": None,  # Opción A: calcular_sm(get_salario_rol) en context_builder
+            })
+
+        # 6. OPEX herramientas transversal desde dispositivos_requeridos del equipo integración
+        opex_herramientas_transversal = sum(
+            float(it.get("precio", 0) or 0) * float(it.get("cantidad_atribuible_operacion", 0) or 0)
+            for it in rh.get("dispositivos_requeridos", [])
+        )
+
+        # 7. Inversiones: valor_mensual ya incluye tasa; desaplicar para que reglas.py no duplique
+        inv_mensual     = sum(float(i.get("valor_mensual", 0) or 0) for i in d.get("inversiones_capex", []))
+        divisor         = (1.0 + tasa) if tasa > 0 else 1.0
+        inversion_anual = inv_mensual * 12.0 / divisor
+
+        # 8. HITL equipo
+        hitl_data = d.get("hitl") or {}
+        equipo_hitl = []
+        for m in hitl_data.get("equipo", []):
+            if not m.get("activo", False):
+                continue
+            equipo_hitl.append({
+                "rol":             str(m.get("nombre", "")),
+                "activado":        True,
+                "ratio":           float(m.get("ratio", 1) or 1),
+                "salario_cargado": None,  # Opción A: calcular_sm(get_salario_rol) en context_builder
+            })
+
+        # 9. HITL dispositivos por persona
+        total_hitl_fte = sum(
+            float(m.get("fte", 0) or 0)
+            for m in hitl_data.get("equipo", [])
+            if m.get("activo", False)
+        )
+        hitl_disp_total = sum(
+            float(it.get("precio", 0) or 0) * float(it.get("cantidad_total", 0) or 0)
+            for it in hitl_data.get("dispositivos_requeridos", [])
+        )
+        opex_disp_por_persona = (hitl_disp_total / total_hitl_fte) if total_hitl_fte > 0 else 0.0
+
+        return {
+            "canales":                       canales,
+            "equipo_transversal":            equipo_transversal,
+            "equipo_hitl":                   equipo_hitl,
+            "opex_dispositivos_por_persona": opex_disp_por_persona,
+            "inversion_anual":               inversion_anual,
+            "opex_herramientas_transversal": opex_herramientas_transversal,
         }
 
     def _c_construir_canales(self, d: Dict, volume_service=None) -> List[Dict]:

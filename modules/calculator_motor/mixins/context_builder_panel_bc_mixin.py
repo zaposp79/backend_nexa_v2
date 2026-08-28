@@ -304,8 +304,13 @@ class ContextBuilderPanelBCMixin:
 
         # equipo_integ: use salario_cargado from input when provided; fallback to parametrization.
         # Excel V2-8 · 'Costo Cadena C' equipo row: salario_cargado per FTE from v27 fixture = 4,284,360.05
+        # Opción A (salario_cargado=None): calcular_sm(get_salario_rol) = salario cargado
+        # igual que Cadena B. Opción B (salario_cargado explícito): usar directamente.
         costo_equipo_integ = sum(
-            (m.salario_cargado if m.salario_cargado is not None else self._prov.get_salario_rol(m.rol))
+            (
+                m.salario_cargado if m.salario_cargado is not None
+                else self._nomina_service.calcular_sm(self._prov.get_salario_rol(m.rol))
+            )
             * m.pct_dedicacion
             for m in cadena_c.equipo_transversal if m.activo
         )
@@ -325,7 +330,10 @@ class ContextBuilderPanelBCMixin:
                 for m in cadena_c.equipo_hitl if m.activado and m.ratio > 0
             )
             costo_personal_hitl = sum(
-                (vol_total_c / m.ratio) * m.salario_cargado
+                (vol_total_c / m.ratio) * (
+                    m.salario_cargado if m.salario_cargado is not None
+                    else self._nomina_service.calcular_sm(self._prov.get_salario_rol(m.rol))
+                )
                 for m in cadena_c.equipo_hitl if m.activado and m.ratio > 0
             )
             opex_herramientas_hitl = total_personas_hitl * cadena_c.opex_dispositivos_por_persona

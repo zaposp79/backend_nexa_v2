@@ -33,6 +33,16 @@ _COSTOS_MAP = {
     "tasa_escalamiento_cadena_b": ("costos", "cadena_b", "tasa_escalamiento"),
     "hitl_cadena_b": ("costos", "cadena_b", "hitl"),
     "costo_c": ("costos", "cadena_c", "total_cadena_c"),
+    "costo_cadena_c": ("costos", "cadena_c", "total_cadena_c"),
+    # Claves v2 (Motor de Reglas): tarifa_canal_cadena_c, opex_fijo_cadena_c, etc.
+    "tarifa_canal_cadena_c": ("costos", "cadena_c", "tarifa_proveedor"),
+    "opex_fijo_cadena_c": ("costos", "cadena_c", "opex_fijo"),
+    "capex_cadena_c": ("costos", "cadena_c", "inversiones"),
+    "equipo_transversal_cadena_c": ("costos", "cadena_c", "equipo_integracion"),
+    "tasa_escalamiento_cadena_c": ("costos", "cadena_c", "tasa_escalamiento"),
+    "opex_variable_cadena_c": ("costos", "cadena_c", "opex_variable"),
+    "hitl_cadena_c": ("costos", "cadena_c", "hitl"),
+    # Claves legacy v1 (PricingEngine): por compatibilidad con resultados antiguos
     "tarifa_proveedor_c": ("costos", "cadena_c", "tarifa_proveedor"),
     "costo_integracion_c": ("costos", "cadena_c", "costo_integracion"),
     "opex_fijo_integ_c": ("costos", "cadena_c", "opex_fijo"),
@@ -272,6 +282,39 @@ def _ingresos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _cadena_c_costos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
+    """Desglose Cadena C desde valores del Motor de Reglas v2.
+
+    Excel P&G rows 59-68:
+      Costos Cadena C = Tarifa Proveedor + Costo Integración + Costo Variable
+      Costo Integración = OPEX Fijo + Inversiones + Equipo de integración
+      Costo Variable    = Tasa Escalamiento + OPEX Variable + HITL
+    """
+    tarifa      = vals.get("tarifa_canal_cadena_c") or 0.0
+    opex_fijo   = vals.get("opex_fijo_cadena_c") or 0.0
+    inversiones = vals.get("capex_cadena_c") or 0.0
+    equipo      = vals.get("equipo_transversal_cadena_c") or 0.0
+    tasa        = vals.get("tasa_escalamiento_cadena_c") or 0.0
+    opex_var    = vals.get("opex_variable_cadena_c") or 0.0
+    hitl        = vals.get("hitl_cadena_c") or 0.0
+
+    costo_integracion = opex_fijo + inversiones + equipo
+    costo_variable    = tasa + opex_var + hitl
+
+    return {
+        "total_cadena_c":     vals.get("costo_cadena_c"),
+        "tarifa_proveedor":   tarifa or None,
+        "costo_integracion":  costo_integracion or None,
+        "opex_fijo":          opex_fijo or None,
+        "inversiones":        inversiones or None,
+        "equipo_integracion": equipo or None,
+        "costo_variable":     costo_variable or None,
+        "tasa_escalamiento":  tasa or None,
+        "opex_variable":      opex_var or None,
+        "hitl":               hitl or None,
+    }
+
+
 def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
     nomina   = vals.get("nomina_total_mensual") or 0.0
     nopayroll = vals.get("no_payroll_total_mensual") or 0.0
@@ -307,18 +350,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "tasa_escalamiento":   vals.get("tasa_escalamiento_cadena_b"),
             "hitl":                vals.get("hitl_cadena_b"),
         },
-        "cadena_c": {
-            "total_cadena_c":    vals.get("costo_cadena_c"),
-            "tarifa_proveedor":  vals.get("tarifa_proveedor_c"),
-            "costo_integracion": vals.get("costo_integracion_c"),
-            "opex_fijo":         vals.get("opex_fijo_integ_c"),
-            "inversiones":       vals.get("inversiones_integ_c"),
-            "equipo_integracion": vals.get("equipo_integ_c"),
-            "costo_variable":    vals.get("costo_variable_c"),
-            "tasa_escalamiento": vals.get("tasa_escalamiento_c"),
-            "opex_variable":     vals.get("opex_var_integ_c"),
-            "hitl":              vals.get("hitl_c"),
-        },
+        "cadena_c": _cadena_c_costos_mes(vals),
         "componente_financiero": {
             "ica":                     vals.get("ica_mensual") or vals.get("ica_hm"),
             "gmf":                     vals.get("gmf_mensual") or vals.get("gmf_hm"),
