@@ -218,10 +218,14 @@ def _build_escenario(
     
     honorariosCobranza = []
     honorariosTotales = []
+    ventas_multicanal = []
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
+        
+    if(servicio == "saco" or servicio == "ventas multicanal"):
+        ventas_multicanal = _build_ventas_multicanal(request_data, cts_p, perfil_input)
         
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
@@ -277,7 +281,8 @@ def _build_escenario(
             "volumen_minimo": volumen_minimo,
         } if tarifa_variable is not None else None,
         "honorarios_cobranza": honorariosCobranza,
-        "honorarios_totales": honorariosTotales
+        "honorarios_totales": honorariosTotales,
+        "ventas_multicanal": ventas_multicanal
     }
 
 def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
@@ -333,6 +338,74 @@ def _build_total(escenarios: List[dict], cts_perfiles: List[Dict]) -> dict:
         "ingreso_variable_mensual": round(ingreso_var_total, 2),
         "tarifa_fija": tarifa_fija_total,
     }
+
+def add_month_value(concepts, concepto, mes, valor):
+    concepts[concepto]["meses"].append({
+        "mes": mes,
+        "valor": valor
+    })
+    
+def get_value_by_month(list, month):
+    return next(x["valor"] for x in list if x["mes"] == month)
+    
+def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], perfil_input: Dict[str, Any]) -> List[dict]:
+    """Construye los honorarios por antigüedad desde la lista de cobranzas."""
+    total_income = cts.get("ingreso_total")
+    pct_variable = perfil_input.get("pct_variable", 0.0)
+    configurations = (request_data.get("saco_multicanal", {}) or {}).get("configuraciones", []) or []
+    agents = next((x for x in configurations if x["concepto"] == "Cantidad de Asesores"),{})
+    incomes_by_agent = next((x for x in configurations if x["concepto"] == "Ingreso Variable x Asesor"),{})
+    benefits_charges = next((x for x in configurations if x["concepto"] == "Carga Prestacional"),{})
+   
+    concepts = {
+        concept: {
+            "concepto": concept,
+            "meses": []
+        }
+        for concept in [
+            "Crecimiento del cobro a riesgo",
+            "Valor Variable",
+            "Valor fijo",
+            "Total a cubrir",
+            "AIU",
+            "Valor Carga Prestacional",
+            "Valor Total (Comisión por asesor)",
+            "Comisión",
+            "Costo Variable",
+            "Costo Total",
+            "Ingreso por persona",
+            "Costo por Millon Desembolsado",
+            "Mínimo de Ventas"
+        ]
+    }
+   
+    for index, item in enumerate(
+    sorted(agents.get("detalle",[]), key=lambda x: x.get("mes", 0), reverse=True)
+    ):
+        
+        if not isinstance(item, dict):
+            continue
+        
+        growthRisk = 0
+        fixed_value = 0
+        variable_value = 0
+        total_to_cover = 0
+        if(index == 0):
+            growthRisk = pct_variable
+            
+        fixed_value = total_income * growthRisk
+        total_to_cover = fixed_value + variable_value
+        source_variable_income_agent = get_value_by_month(incomes_by_agent.get("detalle",[]), item["mes"])
+        source_benefit_charge_value = get_value_by_month(benefits_charges.get("detalle",[]), item["mes"])
+        benefit_charge_value = source_variable_income_agent * source_benefit_charge_value
+        
+        add_month_value(concepts, "Crecimiento del cobro a riesgo", item["mes"], growthRisk)
+        add_month_value(concepts, "Valor fijo", item["mes"], fixed_value)
+        add_month_value(concepts, "Valor Variable", item["mes"], variable_value)
+        add_month_value(concepts, "Total a cubrir", item["mes"], total_to_cover)
+        add_month_value(concepts, "Valor Carga Prestacional", item["mes"], benefit_charge_value)
+
+    return list(concepts.values())
 
 
 def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable: float) -> List[dict]:
