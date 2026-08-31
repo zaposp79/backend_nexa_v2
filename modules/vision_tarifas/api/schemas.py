@@ -175,6 +175,8 @@ class HonorarioTotalesRow(BaseModel):
     
 class VentasMulticanalRow(BaseModel):
     concepto: Optional[str] = None
+    formato: Optional[str] = None
+    tipo: Optional[str] = None
     meses: list[VentaMulticanalMesRow] = Field(default_factory=list)
 
 

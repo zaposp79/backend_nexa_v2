@@ -356,55 +356,85 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
     agents = next((x for x in configurations if x["concepto"] == "Cantidad de Asesores"),{})
     incomes_by_agent = next((x for x in configurations if x["concepto"] == "Ingreso Variable x Asesor"),{})
     benefits_charges = next((x for x in configurations if x["concepto"] == "Carga Prestacional"),{})
+    aius = next((x for x in configurations if x["concepto"] == "AIU"),{})
+    quantityList = next((x for x in configurations if x["concepto"] == "Cantidad Total de Ventas"),{})
    
+    concept_config = {
+        "Crecimiento del cobro a riesgo": {"format": "percent", "type": "Bold"},
+        "Valor Variable": {"format": "currency", "type": "Bold"},
+        "Valor fijo": {"format": "currency", "type": "Bold"},
+        "Total a cubrir": {"format": "currency", "type": "Bold"},
+        "AIU": {"format": "percent", "type": "Normal"},
+        "Valor Carga Prestacional": {"format": "currency", "type": "Normal"},
+        "Valor Total (Comisión por asesor)": {"format": "currency", "type": "Normal"},
+        "Comisión": {"format": "currency", "type": "Bold"},
+        "Costo Variable": {"format": "currency", "type": "Normal"},
+        "Costo Total": {"format": "currency", "type": "Bold"},
+        "Ingreso por persona": {"format": "currency", "type": "Bold"},
+        "Costo por Millon Desembolsado": {"format": "currency", "type": "Bold"},
+        "Mínimo de Ventas": {"format": "currency", "type": "Bold"},
+    }
+
     concepts = {
         concept: {
             "concepto": concept,
+            "formato": config["format"],
+            "tipo": config["type"],
             "meses": []
         }
-        for concept in [
-            "Crecimiento del cobro a riesgo",
-            "Valor Variable",
-            "Valor fijo",
-            "Total a cubrir",
-            "AIU",
-            "Valor Carga Prestacional",
-            "Valor Total (Comisión por asesor)",
-            "Comisión",
-            "Costo Variable",
-            "Costo Total",
-            "Ingreso por persona",
-            "Costo por Millon Desembolsado",
-            "Mínimo de Ventas"
-        ]
+        for concept, config in concept_config.items()
     }
    
-    for index, item in enumerate(
-    sorted(agents.get("detalle",[]), key=lambda x: x.get("mes", 0), reverse=True)
-    ):
+    details = agents.get("detalle",[])
+    previous_growth_risk = 0
+    for index, item in enumerate(details):
         
         if not isinstance(item, dict):
             continue
         
-        growthRisk = 0
-        fixed_value = 0
-        variable_value = 0
-        total_to_cover = 0
-        if(index == 0):
+        nPersons = item["valor"]
+        growthRisk = fixed_value = variable_value = total_to_cover = 0
+        aiu_value = commision_by_agent = commision = 0
+        
+        if((index+1) == len(details)):
             growthRisk = pct_variable
-            
+        elif (index > 0):
+            growthRisk = previous_growth_risk + ((pct_variable)/(len(details) - 1))
+       
+        previous_growth_risk = growthRisk     
         fixed_value = total_income * growthRisk
-        total_to_cover = fixed_value + variable_value
+        
+        totalQuantitySales = get_value_by_month(quantityList.get("detalle",[]), item["mes"])
         source_variable_income_agent = get_value_by_month(incomes_by_agent.get("detalle",[]), item["mes"])
         source_benefit_charge_value = get_value_by_month(benefits_charges.get("detalle",[]), item["mes"])
         benefit_charge_value = source_variable_income_agent * source_benefit_charge_value
+        commision_by_agent = source_variable_income_agent + benefit_charge_value
+        commision = (commision_by_agent * (1+aiu_value)) * nPersons
+        variable_value = commision_by_agent * nPersons
+        total_to_cover = fixed_value + variable_value
+        total = commision + (total_income*(1-growthRisk)) if commision > 0 else commision
+        income_by_person = commision / nPersons
+        cost_by_million = total / (totalQuantitySales * nPersons)
+        
+        if (growthRisk==0):
+            aiu_value = get_value_by_month(aius.get("detalle",[]), item["mes"])
+        else:
+            aiu_value = total_to_cover/ (variable_value-1)
         
         add_month_value(concepts, "Crecimiento del cobro a riesgo", item["mes"], growthRisk)
         add_month_value(concepts, "Valor fijo", item["mes"], fixed_value)
         add_month_value(concepts, "Valor Variable", item["mes"], variable_value)
         add_month_value(concepts, "Total a cubrir", item["mes"], total_to_cover)
+        add_month_value(concepts, "AIU", item["mes"], aiu_value)
         add_month_value(concepts, "Valor Carga Prestacional", item["mes"], benefit_charge_value)
-
+        add_month_value(concepts, "Valor Total (Comisión por asesor)", item["mes"], commision_by_agent)
+        add_month_value(concepts, "Comisión", item["mes"], commision)
+        add_month_value(concepts, "Costo Variable", item["mes"], variable_value)
+        add_month_value(concepts, "Costo Total", item["mes"], total)
+        add_month_value(concepts, "Ingreso por persona", item["mes"], income_by_person)
+        add_month_value(concepts, "Costo por Millon Desembolsado", item["mes"], cost_by_million)
+        
+        
     return list(concepts.values())
 
 
