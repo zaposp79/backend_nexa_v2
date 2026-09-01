@@ -354,7 +354,6 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
     pct_variable = perfil_input.get("pct_variable", 0.0)
     nPersons = request_data.get("saco_multicanal", {}).get("numero_de_asesores")
     configurations = (request_data.get("saco_multicanal", {}) or {}).get("configuraciones", []) or []
-    agents = next((x for x in configurations if x["concepto"] == "Cantidad de Asesores"),{})
     incomes_by_agent = next((x for x in configurations if x["concepto"] == "Ingreso Variable x Asesor"),{})
     benefits_charges = next((x for x in configurations if x["concepto"] == "Carga Prestacional"),{})
     aius = next((x for x in configurations if x["concepto"] == "AIU"),{})
@@ -386,7 +385,7 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
         for concept, config in concept_config.items()
     }
    
-    details = agents.get("detalle",[])
+    details = benefits_charges.get("detalle",[])
     previous_growth_risk = 0
     for index, item in enumerate(details):
         
