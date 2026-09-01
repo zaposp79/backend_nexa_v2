@@ -393,34 +393,87 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
             continue
         
         nPersons = item["valor"]
+
         growthRisk = fixed_value = variable_value = total_to_cover = 0
         aiu_value = commision_by_agent = commision = 0
-        
-        if((index+1) == len(details)):
+
+        # Growth Risk
+        if index + 1 == len(details):
             growthRisk = pct_variable
-        elif (index > 0):
-            growthRisk = previous_growth_risk + ((pct_variable)/(len(details) - 1))
-       
-        previous_growth_risk = growthRisk     
+        elif index > 0:
+            growthRisk = previous_growth_risk + (
+                pct_variable / (len(details) - 1)
+            )
+
+        previous_growth_risk = growthRisk
+
+        # Valores base
         fixed_value = total_income * growthRisk
-        
-        totalQuantitySales = get_value_by_month(quantityList.get("detalle",[]), item["mes"])
-        source_variable_income_agent = get_value_by_month(incomes_by_agent.get("detalle",[]), item["mes"])
-        source_benefit_charge_value = get_value_by_month(benefits_charges.get("detalle",[]), item["mes"])
-        benefit_charge_value = source_variable_income_agent * source_benefit_charge_value
-        commision_by_agent = source_variable_income_agent + benefit_charge_value
-        commision = (commision_by_agent * (1+aiu_value)) * nPersons
+
+        total_quantity_sales = get_value_by_month(
+            quantityList.get("detalle", []),
+            item["mes"]
+        )
+
+        income_agent = get_value_by_month(
+            incomes_by_agent.get("detalle", []),
+            item["mes"]
+        )
+
+        benefit_charge_pct = get_value_by_month(
+            benefits_charges.get("detalle", []),
+            item["mes"]
+        )
+
+        benefit_charge_value = income_agent * benefit_charge_pct
+
+        commision_by_agent = income_agent + benefit_charge_value
+
+        # Variable value depende de commission by agent
         variable_value = commision_by_agent * nPersons
+
+        # Total a cubrir depende de fixed y variable
         total_to_cover = fixed_value + variable_value
-        total = commision + (total_income*(1-growthRisk)) if commision > 0 else commision
-        income_by_person = commision / nPersons
-        cost_by_million = total / (totalQuantitySales * nPersons)
-        
-        if (growthRisk==0):
-            aiu_value = get_value_by_month(aius.get("detalle",[]), item["mes"])
+
+        # AIU depende de total_to_cover y variable_value
+        if growthRisk == 0:
+            aiu_value = get_value_by_month(
+                aius.get("detalle", []),
+                item["mes"]
+            )
         else:
-            aiu_value = total_to_cover/ (variable_value-1)
-        
+            aiu_value = (
+                total_to_cover / (variable_value - 1)
+                if variable_value > 1
+                else 0
+            )
+
+        # Commission depende de AIU
+        commision = (
+            commision_by_agent *
+            (1 + aiu_value) *
+            nPersons
+        )
+
+        # Total depende de commission
+        total = (
+            commision + (total_income * (1 - growthRisk))
+            if commision > 0
+            else 0
+        )
+
+        income_by_person = (
+            commision / nPersons
+            if nPersons
+            else 0
+        )
+
+        cost_by_million = (
+            total / (total_quantity_sales * nPersons)
+            if total_quantity_sales and nPersons
+            else 0
+        )
+            
         add_month_value(concepts, "Crecimiento del cobro a riesgo", item["mes"], growthRisk)
         add_month_value(concepts, "Valor fijo", item["mes"], fixed_value)
         add_month_value(concepts, "Valor Variable", item["mes"], variable_value)
