@@ -425,90 +425,107 @@ class ItemTarifaProveedor(BaseModel):
     servicio: Optional[str] = None
     modalidad: Optional[str] = None
     canal: Optional[str] = None
-    tipo_de_cobro: Optional[str] = None
     valor: Optional[float] = None
     cantidad: Optional[float] = None
     valor_total: Optional[float] = None
+    tipo_facturacion: Optional[str] = None
 
 
-class TarifaProveedorCanal(BaseModel):
+class ItemOpexCadenaC(BaseModel):
     model_config = {"extra": "allow"}
-    items: Optional[List[ItemTarifaProveedor]] = None
+    rubro: Optional[str] = None
+    modalidad: Optional[str] = None
+    canal: Optional[str] = None
+    producto: Optional[str] = None
+    tipo_facturacion: Optional[str] = None
+    tipo_gasto: Optional[str] = None
+    valor: Optional[float] = None
+    cantidad: Optional[float] = None
+    valor_total: Optional[float] = None
 
 
 class InversionCapexC(BaseModel):
     model_config = {"extra": "allow"}
-    descripcion: Optional[str] = None
     modalidad: Optional[str] = None
     canal: Optional[str] = None
-    tipo_de_cobro: Optional[str] = None
-    tipo_de_gasto: Optional[str] = None
     valor: Optional[float] = None
     cantidad: Optional[float] = None
-    meses_a_diferir: Optional[int] = None
     valor_total: Optional[float] = None
     valor_mensual: Optional[float] = None
+    rubro: Optional[str] = None
+    producto: Optional[str] = None
+    tipo_facturacion: Optional[str] = None
+    meses_diferimiento: Optional[int] = None
 
 
 class RolRecursoHumano(BaseModel):
     model_config = {"extra": "allow"}
-    rol: Optional[str] = None
-    activado: Optional[bool] = None
     dedicacion: Optional[float] = None
     fte: Optional[float] = None
-    salario_cargado: Optional[float] = None
+    nombre: Optional[str] = None
+    activo: Optional[bool] = None
+    salario: Optional[float] = None
 
 
-class ItemOpexRHT(BaseModel):
+class DispositivoRHT(BaseModel):
     model_config = {"extra": "allow"}
     descripcion: Optional[str] = None
     precio: Optional[float] = None
-    cantidad_atribuible: Optional[float] = None
+    cantidad_atribuible_operacion: Optional[float] = None
 
 
 class RecursoHumanoTransversal(BaseModel):
     model_config = {"extra": "allow"}
     fte: Optional[float] = None
     roles: Optional[List[RolRecursoHumano]] = None
-    opex: Optional[List[ItemOpexRHT]] = None
+    dispositivos_requeridos: Optional[List[DispositivoRHT]] = None
 
 
-class ItemOpexCadenaC(BaseModel):
+class TasaEscalItemC(BaseModel):
     model_config = {"extra": "allow"}
-    descripcion: Optional[str] = None
-    modalidad: Optional[str] = None
     canal: Optional[str] = None
-    tipo_de_cobro: Optional[str] = None
-    tipo_de_gasto: Optional[str] = None
-    valor: Optional[float] = None
-    cantidad: Optional[float] = None
-    valor_total: Optional[float] = None
+    tasa: Optional[float] = None
+    precio: Optional[float] = None
+
+
+class TasaEscalamientoC(BaseModel):
+    model_config = {"extra": "allow"}
+    inbound: Optional[List[TasaEscalItemC]] = None
+    outbound: Optional[List[TasaEscalItemC]] = None
 
 
 class CostoVariableCadenaC(BaseModel):
     model_config = {"extra": "allow"}
-    tarifas_por_canal: Optional[TarifasPorCanal] = None
-    tasa_escalamiento: Optional[TasaEscalamiento] = None
-    opex_items: Optional[List[ItemOpexCadenaC]] = None
+    tasa_escalamiento: Optional[TasaEscalamientoC] = None
 
 
-class ItemOpexHitlC(BaseModel):
+class RolHitlC(BaseModel):
+    model_config = {"extra": "allow"}
+    ratio: Optional[float] = None
+    nombre: Optional[str] = None
+    activo: Optional[bool] = None
+    salario: Optional[float] = None
+    fte: Optional[float] = None
+
+
+class DispositivoHitlC(BaseModel):
     model_config = {"extra": "allow"}
     descripcion: Optional[str] = None
     precio: Optional[float] = None
-    cantidad_atribuible: Optional[float] = None
+    cantidad_total: Optional[float] = None
 
 
 class HitlCadenaC(BaseModel):
     model_config = {"extra": "allow"}
     total_volumen_cadena_c: Optional[float] = None
-    equipo: Optional[List[RolHitl]] = None
-    opex: Optional[List[ItemOpexHitlC]] = None
+    equipo: Optional[List[RolHitlC]] = None
+    dispositivos_requeridos: Optional[List[DispositivoHitlC]] = None
 
 
 class CondicionesCadenaC(BaseModel):
     model_config = {"extra": "allow"}
-    tarifa_proveedor_canal: Optional[TarifaProveedorCanal] = None
+    tarifa_proveedor_canal: Optional[List[ItemTarifaProveedor]] = None
+    opex: Optional[List[ItemOpexCadenaC]] = None
     inversiones_capex: Optional[List[InversionCapexC]] = None
     recurso_humano_transversal: Optional[RecursoHumanoTransversal] = None
     costo_variable: Optional[CostoVariableCadenaC] = None
@@ -697,10 +714,10 @@ __all__ = [
     "CostoVariableCadenaB", "RolHitl", "DispositivoHitlB",
     "HitlCadenaB", "CondicionesCadenaB",
     # CadenaC
-    "ItemTarifaProveedor", "TarifaProveedorCanal", "InversionCapexC",
-    "RolRecursoHumano", "ItemOpexRHT", "RecursoHumanoTransversal",
-    "ItemOpexCadenaC", "CostoVariableCadenaC", "ItemOpexHitlC",
-    "HitlCadenaC", "CondicionesCadenaC",
+    "ItemTarifaProveedor", "ItemOpexCadenaC", "InversionCapexC",
+    "RolRecursoHumano", "DispositivoRHT", "RecursoHumanoTransversal",
+    "TasaEscalItemC", "TasaEscalamientoC", "CostoVariableCadenaC",
+    "RolHitlC", "DispositivoHitlC", "HitlCadenaC", "CondicionesCadenaC",
     # Cobranzas
     "MesValor", "RangoCartera", "Cobranzas",
     # SacoMulticanal
