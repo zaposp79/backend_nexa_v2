@@ -127,6 +127,8 @@ class ModeloCobroDetail(BaseModel):
     tarifa_componente_fijo: TarifaComponenteFijo = TarifaComponenteFijo()
     tarifa_componente_variable: TarifaComponenteVariable = TarifaComponenteVariable()
     honorarios_cobranza: list[HonorarioCobranzaRow] = Field(default_factory=list)
+    honorarios_totales: list[HonorarioTotalesRow] = Field(default_factory=list)
+    ventas_multicanal: list[VentasMulticanalRow] = Field(default_factory=list)
 
 
 class ResumenRow(BaseModel):
@@ -156,6 +158,26 @@ class HonorarioCobranzaRow(BaseModel):
     driver_dificultad: Optional[float] = None
     calculado: Optional[float] = None
     benchmark: Optional[float] = None
+    
+class HonorarioTotalMesRow(BaseModel):
+    mes: Optional[int] = None
+    benchmark: Optional[float] = None
+    calculado: Optional[float] = None
+    
+class VentaMulticanalMesRow(BaseModel):
+    mes: Optional[int] = None
+    valor: Optional[float] = None
+
+
+class HonorarioTotalesRow(BaseModel):
+    concepto: Optional[str] = None
+    meses: list[HonorarioTotalMesRow] = Field(default_factory=list)
+    
+class VentasMulticanalRow(BaseModel):
+    concepto: Optional[str] = None
+    formato: Optional[str] = None
+    tipo: Optional[str] = None
+    meses: list[VentaMulticanalMesRow] = Field(default_factory=list)
 
 
 class ModeloCobroPublicData(BaseModel):
