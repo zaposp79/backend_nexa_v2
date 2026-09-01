@@ -354,7 +354,7 @@ def _q10_terceros(request_data: Dict[str, Any]) -> tuple[int, str]:
     fte = _datos_op(request_data).get("interacciones_gestionadas_por_fte_promedio")
     total = ( get_total(inbound, fte) + get_total(outbound, fte))
     total_cadena_c = (get_total(inbound, fte, "cadena_c") + get_total(outbound, fte, "cadena_c"))
-    pct = (total / total_cadena_c) if total_cadena_c > 0 else 0
+    pct = (total_cadena_c / total) if total_cadena_c > 0 else 0
     if pct >= 0.50:
         return 3, f"{pct*100:.1f}%"
     if pct >= 0.10:
