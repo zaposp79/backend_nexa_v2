@@ -348,13 +348,45 @@ def _q9_rotacion(request_data: Dict[str, Any], vals_mes0: Dict[str, float]) -> t
 
 
 def _q10_terceros(request_data: Dict[str, Any]) -> tuple[int, str]:
-    pct = float(_datos_op(request_data).get("pct_dependencia_terceros", 0.0) or 0.0)
-    if pct > 0.50:
+    volumetria = request_data.get("volumetria", {})
+    inbound = volumetria.get("inbound")
+    outbound = volumetria.get("outbound")
+    fte = _datos_op(request_data).get("interacciones_gestionadas_por_fte_promedio")
+    total = ( get_total(inbound, fte) + get_total(outbound, fte))
+    total_cadena_c = (get_total(inbound, fte, "cadena_c") + get_total(outbound, fte, "cadena_c"))
+    pct = (total / total_cadena_c) if total_cadena_c > 0 else 0
+    if pct >= 0.50:
         return 3, f"{pct*100:.1f}%"
     if pct >= 0.10:
         return 2, f"{pct*100:.1f}%"
     return 1, f"{pct*100:.1f}%"
 
+def get_total(data, fte, only_chain=None):
+    total = 0
+
+    active = data.get("cadenas_activas", {})
+    channels = data.get("canales", [])
+
+    for channel in channels:
+        for chain_name, is_active in active.items():
+
+            if not is_active:
+                continue
+
+            if only_chain and chain_name != only_chain:
+                continue
+
+            chain = channel.get(chain_name)
+
+            if not chain:
+                continue
+
+            value = float(chain.get("valor", 0))
+            unit = chain.get("unidad")
+
+            total += value * fte if unit == "FTE" else value
+
+    return total
 
 def _build_control(
     request_data: Dict[str, Any],

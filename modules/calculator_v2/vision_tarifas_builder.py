@@ -352,6 +352,7 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
     """Construye los honorarios por antigüedad desde la lista de cobranzas."""
     total_income = cts.get("ingreso_total")
     pct_variable = perfil_input.get("pct_variable", 0.0)
+    nPersons = request_data.get("saco_multicanal", {}).get("numero_de_asesores")
     configurations = (request_data.get("saco_multicanal", {}) or {}).get("configuraciones", []) or []
     agents = next((x for x in configurations if x["concepto"] == "Cantidad de Asesores"),{})
     incomes_by_agent = next((x for x in configurations if x["concepto"] == "Ingreso Variable x Asesor"),{})
@@ -391,8 +392,7 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
         
         if not isinstance(item, dict):
             continue
-        
-        nPersons = item["valor"]
+    
 
         growthRisk = fixed_value = variable_value = total_to_cover = 0
         aiu_value = commision_by_agent = commision = 0
