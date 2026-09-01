@@ -303,58 +303,41 @@ class MotorDeReglas:
             _avg_nomina + _avg_no_payroll, _ctx_base, for_pricing=True
         )
 
-        # Ingreso Cadena B base — mirrors HM formula: C304 = C303/(1-margen_b)
-        # Excel V2-8: 'Hoja Maestra Escenarios'!C268 = N_b_op + ICA_b + GMF_b + Pol_b
-        # ICA_b = C304×tasa_ica (on billing); GMF_b = N_b_op×tasa_gmf (on op cost)
-        # Pol_b = C304×tasa_pol (on billing).
-        # Solución analítica: C304 = N_b_op × (1+tasa_gmf) / (denom_b − tasa_ica − tasa_pol)
+        # Ingreso Cadena B base — Excel 'Pólizas-FC'!M458 formula:
+        # billing_b = costo_b / (1-margen_b)  [fórmula simple, sin circular ICA/GMF]
+        # Excel V2-8: Pólizas-FC rows 458-460 usan (CT_cost + pol) / (1-margen_c) × tasa_ica
+        # La fórmula analítica previa (×(1+gmf) / (denom-ica-pol)) sobreestimaba billing ~2.86%
         _ingreso_b_base = 0.0
         if _cadena_b_calc:
             _costo_b_op = _cadena_b_calc.calcular_mes(1.0, 1.0)["costo_cadena_b"]
             _margen_b_base = float(_ctx_base.get("margen_b", 0.30))
-            _factor_b = 1.0 - _margen_b_base
             _denom_b = (
-                _factor_b
+                (1.0 - _margen_b_base)
                 * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
                 * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
                 * (1.0 - float(_ctx_base.get("markup", 0.0)))
                 * (1.0 + float(_ctx_base.get("descuento", 0.0)))
             )
-            _tasa_ica_hm_b = float(_ctx_base.get("tasa_ica", 0.01))
-            _tasa_gmf_hm_b = float(_ctx_base.get("tasa_gmf", 0.004))
-            _tasa_pol_b_pricing = sum(
-                float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
-                for p in _ctx_base.get("polizas_activas", [])
-                if "comisi" not in str(p.get("nombre", "")).lower()
-            )
-            _adj_denom_b = _denom_b - _tasa_ica_hm_b - _tasa_pol_b_pricing
-            if _adj_denom_b > 0:
-                _ingreso_b_base = _costo_b_op * (1.0 + _tasa_gmf_hm_b) / _adj_denom_b
+            if _denom_b > 0:
+                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M458 · formula: =costo/(1-margen_b)
+                _ingreso_b_base = _costo_b_op / _denom_b
 
-        # Ingreso Cadena C base — mirrors HM formula análitica (igual que Cadena B)
-        # Excel 007: ingreso_c = costo_c_op × (1+tasa_gmf) / (factor_c − tasa_ica − tasa_pol)
+        # Ingreso Cadena C base — igual que Cadena B: fórmula simple del Excel
+        # Excel V2-8 · 'Pólizas - Costo Financiacion'!M215 · formula: =(CT!M91+pol)/(1-Panel!E63)×tasa_ica
         _ingreso_c_base = 0.0
         if _cadena_c_calc:
             _costo_c_op = _cadena_c_calc.calcular_mes(1.0, 1.0)["costo_cadena_c"]
             _margen_c_base = float(_ctx_base.get("margen_c", 0.18))
-            _factor_c = 1.0 - _margen_c_base
             _denom_c = (
-                _factor_c
+                (1.0 - _margen_c_base)
                 * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
                 * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
                 * (1.0 - float(_ctx_base.get("markup", 0.0)))
                 * (1.0 + float(_ctx_base.get("descuento", 0.0)))
             )
-            _tasa_ica_hm_c = float(_ctx_base.get("tasa_ica", 0.01))
-            _tasa_gmf_hm_c = float(_ctx_base.get("tasa_gmf", 0.004))
-            _tasa_pol_c_pricing = sum(
-                float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
-                for p in _ctx_base.get("polizas_activas", [])
-                if "comisi" not in str(p.get("nombre", "")).lower()
-            )
-            _adj_denom_c = _denom_c - _tasa_ica_hm_c - _tasa_pol_c_pricing
-            if _adj_denom_c > 0:
-                _ingreso_c_base = _costo_c_op * (1.0 + _tasa_gmf_hm_c) / _adj_denom_c
+            if _denom_c > 0:
+                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M215 · formula: =CT_costo/(1-Panel!E63)
+                _ingreso_c_base = _costo_c_op / _denom_c
 
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
