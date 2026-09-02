@@ -397,7 +397,7 @@ def _build_from_v2_result(
     
     cobranzas = None  
     ventas_multicanal = None
-    if(servicio == "saco" or servicio == "ventas_multicanal"):
+    if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = next((x["ventas_multicanal"] for x in vision_tarifas.get("escenarios", []) if x.get("ventas_multicanal") != [] and x.get("ventas_multicanal") != None), None)
         if(ventas_multicanal == None):
             ventas_multicanal = vision_tarifas.get("escenario_total").get("ventas_multicanal")
@@ -411,8 +411,8 @@ def _build_from_v2_result(
     costos_variables_por_mes = []
     if(servicio == "cobranzas"):
         comisiones_por_mes = next(x for x in cobranzas if x.get("concepto") == "Ingresos - Comisiones").get("meses") or []
-    if(servicio == "saco" or servicio == "ventas_multicanal"):
-        comisiones_por_mes = next(x for x in ventas_multicanal if x.get("concepto") == "Comisión SACO").get("meses") or []
+    if(servicio == "saco" or servicio == "ventas multicanal"):
+        comisiones_por_mes = next(x for x in ventas_multicanal if x.get("concepto") == "Comisión").get("meses") or []
         costos_variables_por_mes = next(x for x in ventas_multicanal if x.get("concepto") == "Costo Variable").get("meses") or []
     
     periods = []
@@ -421,7 +421,7 @@ def _build_from_v2_result(
         vals: Dict[str, Any] = m.get("valores", {})
         comision_ventas = 0
         costo_variable = 0
-        if(servicio == "saco" or servicio == "ventas_multicanal"):
+        if(servicio == "saco" or servicio == "ventas multicanal"):
             comision_ventas = next((x["valor"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
             costo_variable = next((x["valor"] for x in costos_variables_por_mes if x.get("mes") == str(mes_num)), 0)
         if(servicio == "cobranzas"):
@@ -445,7 +445,7 @@ def _build_from_v2_result(
     total_comision = 0
     total_costo_variable = 0
     
-    if(servicio == "saco" or servicio == "ventas_multicanal"):
+    if(servicio == "saco" or servicio == "ventas multicanal"):
         total_comision = sum(item.get("valor", 0) for item in comisiones_por_mes)
         total_costo_variable = sum(item.get("valor", 0) for item in costos_variables_por_mes)
     if(servicio == "cobranzas"):
