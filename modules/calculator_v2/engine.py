@@ -213,10 +213,11 @@ class MotorDeReglas:
         # Cadenas activas — controlan qué componentes se incluyen en el cálculo
         _vol_data = request_data.get("volumetria") or {}
 
-        # Cadena A — activa por defecto. Usa AND: si cualquier dirección la deshabilita → inactiva.
+        # Cadena A — activa si ALGUNA dirección la habilita (OR, consistente con B/C).
+        # AND era incorrecto: deals solo-inbound con outbound.cadena_a=false zerean nómina.
         _cadena_a_activa = (
             _vol_data.get("inbound", {}).get("cadenas_activas", {}).get("cadena_a", True)
-            and _vol_data.get("outbound", {}).get("cadenas_activas", {}).get("cadena_a", True)
+            or _vol_data.get("outbound", {}).get("cadenas_activas", {}).get("cadena_a", False)
         )
         if not _cadena_a_activa:
             # Zerear todos los componentes de Cadena A para que no afecten el P&G
