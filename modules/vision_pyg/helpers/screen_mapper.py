@@ -248,7 +248,7 @@ def _scale(base: float, actual: float, denom: float) -> Optional[float]:
     return base * (actual / denom)
 
 
-def _ingresos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
+def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float) -> Dict[str, Any]:
     ingreso_bruto    = vals.get("ingreso_bruto") or 0.0
     pct_imprevistos  = vals.get("pct_imprevistos") or 0.0
     cont_op          = vals.get("contingencia_op") or 0.0
@@ -276,7 +276,7 @@ def _ingresos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
         "descuento":           descuento or None,
         "imprevistos":         imprevistos,
         "ingreso_fijo":        ingreso_fijo,
-        "ingreso_por_comision": vals.get("ingreso_por_comision"),
+        "ingreso_por_comision": comision_ventas,
         "ingreso_variable":    vals.get("ingreso_variable"),
         "ingreso_neto":        vals.get("ingreso_neto"),
     }
@@ -315,7 +315,7 @@ def _cadena_c_costos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
+def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float], costo_variable: float) -> Dict[str, Any]:
     nomina   = vals.get("nomina_total_mensual") or 0.0
     nopayroll = vals.get("no_payroll_total_mensual") or 0.0
 
@@ -359,7 +359,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float]) -> Dict[str, Any]:
             "costos_financieros":      vals.get("costos_financiacion_mensual"),
             "total_componente_financiero": vals.get("componente_financiero_total"),
         },
-        "costo_por_comision": vals.get("costo_por_comision"),
+        "costo_por_comision": costo_variable,
     }
 
 
@@ -388,20 +388,51 @@ def _build_from_v2_result(
     Expone todos los campos de la Visión P&G (Excel V2-8 'Visión P&G' filas 18-88),
     incluyendo campos derivados del CTS y campos nulos donde no hay datos disponibles.
     """
+    
+    servicio = result_doc.get("servicio", "").lower()
     meses_data   = result_doc.get("meses", [])
     totales_vals: Dict[str, Any] = result_doc.get("totales", {})
     cts = _cts_breakdown(result_doc.get("vision_cts") or {})
-
+    vision_tarifas = result_doc.get("vision_tarifas")
+    
+    cobranzas = None  
+    ventas_multicanal = None
+    if(servicio == "saco" or servicio == "ventas_multicanal"):
+        ventas_multicanal = next((x["ventas_multicanal"] for x in vision_tarifas.get("escenarios", []) if x.get("ventas_multicanal") != [] and x.get("ventas_multicanal") != None), None)
+        if(ventas_multicanal == None):
+            ventas_multicanal = vision_tarifas.get("escenario_total").get("ventas_multicanal")
+    
+    if(servicio == "cobranzas"):
+        cobranzas = next((x["honorarios_totales"] for x in vision_tarifas.get("escenarios", []) if x.get("honorarios_totales") != [] and x.get("honorarios_totales") != None), None)
+        if(cobranzas == None):
+            cobranzas = vision_tarifas.get("escenario_total").get("honorarios_totales")
+        
+    comisiones_por_mes = []
+    costos_variables_por_mes = []
+    if(servicio == "cobranzas"):
+        comisiones_por_mes = next(x for x in cobranzas if x.get("concepto") == "Ingresos - Comisiones").get("meses") or []
+    if(servicio == "saco" or servicio == "ventas_multicanal"):
+        comisiones_por_mes = next(x for x in ventas_multicanal if x.get("concepto") == "Comisión SACO").get("meses") or []
+        costos_variables_por_mes = next(x for x in ventas_multicanal if x.get("concepto") == "Costo Variable").get("meses") or []
+    
     periods = []
     for m in meses_data:
         mes_num = m.get("mes", len(periods) + 1)
         vals: Dict[str, Any] = m.get("valores", {})
+        comision_ventas = 0
+        costo_variable = 0
+        if(servicio == "saco" or servicio == "ventas_multicanal"):
+            comision_ventas = next((x["valor"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
+            costo_variable = next((x["valor"] for x in costos_variables_por_mes if x.get("mes") == str(mes_num)), 0)
+        if(servicio == "cobranzas"):
+            comision_ventas = next((x["benchmark"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
+        
         periods.append({
             "index":    mes_num,
             "label":    f"Mes {mes_num}",
             "periodo":  mes_num,
-            "ingresos": _ingresos_mes(vals),
-            "costos":   _costos_mes(vals, cts),
+            "ingresos": _ingresos_mes(vals, comision_ventas),
+            "costos":   _costos_mes(vals, cts, costo_variable),
             "utilidad": _utilidad_mes(vals),
             "operativo": {"ramp_up": vals.get("ramp_up_mes")},
         })
@@ -411,10 +442,19 @@ def _build_from_v2_result(
     nomina_tot    = totales_vals.get("nomina_total_mensual") or 0.0
     nopayroll_tot = totales_vals.get("no_payroll_total_mensual") or 0.0
     cts_tot = {k: v for k, v in cts.items()}  # mismas bases
-
+    total_comision = 0
+    total_costo_variable = 0
+    
+    if(servicio == "saco" or servicio == "ventas_multicanal"):
+        total_comision = sum(item.get("valor", 0) for item in comisiones_por_mes)
+        total_costo_variable = sum(item.get("valor", 0) for item in costos_variables_por_mes)
+    if(servicio == "cobranzas"):
+        total_comision = sum(item.get("benchmark", 0) for item in comisiones_por_mes)
+    
+    
     totales = {
-        "ingresos": _ingresos_mes(totales_vals),
-        "costos":   _costos_mes(totales_vals, cts_tot),
+        "ingresos": _ingresos_mes(totales_vals, total_comision),
+        "costos":   _costos_mes(totales_vals, cts_tot, total_costo_variable),
         "utilidad": _utilidad_mes(totales_vals),
         "operativo": {},
     }

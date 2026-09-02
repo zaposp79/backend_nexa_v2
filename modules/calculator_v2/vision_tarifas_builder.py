@@ -222,7 +222,6 @@ def _build_escenario(
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
-    desglose_componente_fijo = {}
     pct_variable = perfil_input.get("pct_variable", 0.0)
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     if(servicio == "cobranzas"):
@@ -310,7 +309,6 @@ def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], ft
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
-    desglose_componente_fijo = {}
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)

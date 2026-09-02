@@ -27,7 +27,7 @@ def _period_ingresos(v: Dict[str, Any]) -> Dict[str, Any]:
         "descuento": _or_none(v.get("descuento_valor")),
         "imprevistos": v.get("imprevistos_valor"),
         "ingreso_fijo": v.get("ingreso_fijo"),
-        "ingreso_por_comision": None,
+        "ingreso_por_comision": None, #it's filling on the vision
         "ingreso_variable": v.get("ingreso_variable"),
         "ingreso_neto": v.get("ingreso_neto"),
     }
@@ -115,7 +115,7 @@ def _period_costos(v: Dict[str, Any]) -> Dict[str, Any]:
         },
         "cadena_c": _period_cadena_c(v),
         "componente_financiero": _period_componente_financiero(v),
-        "costo_por_comision": None,
+        "costo_por_comision": None, #it's filling on the vision
     }
 
 
