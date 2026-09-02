@@ -484,7 +484,15 @@ class MotorDeReglas:
                     for p in polizas_activas_mes
                     if "comisi" not in str(p.get("nombre", "")).lower()
                 )
-                ctx["ica_hm"] += _ingreso_c_unramped * _tasa_ica_c
+                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M215 · formula: =(CT!M91+M458)/fm_c×tasa_ica
+                # M458 = pol_factor × gross_billing_c → pólizas van en el numerador del billing ICA
+                # Factor corrector: (1 + pol_factor/fm_c); fm_c = 1-margen_c (NO el denom completo)
+                _fm_c = 1.0 - _margen_c_base
+                _ica_c_billing = (
+                    _ingreso_c_unramped * (1.0 + _tasa_pol_c_mes / _fm_c)
+                    if _fm_c > 0 else _ingreso_c_unramped
+                )
+                ctx["ica_hm"] += _ica_c_billing * _tasa_ica_c
                 ctx["gmf_hm"] += ctx["costo_cadena_c"] * _tasa_gmf_c
                 ctx["polizas_puras_hm"] += _ingreso_c_unramped * _tasa_pol_c_mes
 
