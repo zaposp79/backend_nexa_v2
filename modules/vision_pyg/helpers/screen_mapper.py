@@ -462,7 +462,7 @@ def _build_from_v2_result(
     # imprevistos e ingreso_fijo no pueden derivarse desde totales_vals porque
     # _calcular_totales acumula pct_imprevistos como suma de porcentajes (0.10 × N meses),
     # lo que hace que la fórmula de fallback produzca un valor N veces mayor.
-    # Se suman directamente los valores ya correctos de cada período mensual.
+    # Se suman directamente los valores ya correctos de cada período mensual. 
     _imp_total = sum((p["ingresos"].get("imprevistos") or 0.0) for p in periods)
     _if_total  = sum((p["ingresos"].get("ingreso_fijo") or 0.0) for p in periods)
     totales["ingresos"]["imprevistos"]  = _imp_total or None
