@@ -442,7 +442,7 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
             )
         else:
             aiu_value = (
-                total_to_cover / (variable_value - 1)
+                (total_to_cover / variable_value) - 1
                 if variable_value > 1
                 else 0
             )
