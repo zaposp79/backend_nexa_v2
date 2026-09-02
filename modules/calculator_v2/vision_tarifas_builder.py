@@ -219,6 +219,7 @@ def _build_escenario(
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
+    desglose_componente_fijo = {}
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
@@ -227,6 +228,7 @@ def _build_escenario(
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, perfil_input)
         
+    desglose_componente_fijo = _build_desglose_componente_fijo()
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -282,7 +284,8 @@ def _build_escenario(
         } if tarifa_variable is not None else None,
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
-        "ventas_multicanal": ventas_multicanal
+        "ventas_multicanal": ventas_multicanal,
+        "desglose_componente_fijo": desglose_componente_fijo
     }
 
 def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
@@ -494,6 +497,96 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, 
         
     return list(concepts.values())
 
+def _build_desglose_componente_fijo():
+    desglose = {}
+
+    # Configuración base
+    horas_semanales = 42
+    horas_formacion_mensuales = 8
+    semanas_mes = 4.33
+
+    desglose["configuracion"] = {
+        "horas_semanales": horas_semanales,
+        "horas_formacion_mensuales": horas_formacion_mensuales,
+        "semanas_mes": semanas_mes
+    }
+
+    # Minutos improductivos
+    minutos_improductivos = []
+
+    total_minutos_improductivos = 0
+    total_pct_improductivos = 0
+
+    items = [
+        ("2 break al día, cada uno de 15 minutos", 30, 0.071),
+        ("Promedio de capacitaciones al día", 20, 0.048),
+        ("Deslogueos", 5, 0.012),
+        ("Coaching al día", 5, 0.012),
+        ("Pausa activa al día", 5, 0.012),
+    ]
+
+    for concepto, minutos, porcentaje in items:
+        minutos_improductivos.append({
+            "concepto": concepto,
+            "tiempo_minutos": minutos,
+            "porcentaje": porcentaje
+        })
+
+        total_minutos_improductivos += minutos
+        total_pct_improductivos += porcentaje
+
+    desglose["minutos_improductivos"] = {
+        "detalle": minutos_improductivos,
+        "total_minutos": total_minutos_improductivos,
+        "total_porcentaje": total_pct_improductivos
+    }
+
+    # Tiempo Programado
+    tiempo_programado_horas = 3637
+    tiempo_programado_minutos = 218232
+
+    desglose["tiempo_programado"] = {
+        "horas": tiempo_programado_horas,
+        "minutos": tiempo_programado_minutos
+    }
+
+    # Resumen
+    resumen = []
+
+    rows = [
+        {
+            "concepto": "Horas pagadas",
+            "porcentaje": 0.00,
+            "horas": 3637,
+            "minutos": 218232
+        },
+        {
+            "concepto": "Horas de Ausentismo",
+            "porcentaje": 0.07,
+            "horas": 3401,
+            "minutos": 204047
+        },
+        {
+            "concepto": "Horas logueadas",
+            "porcentaje": 0.13,
+            "horas": 2955,
+            "minutos": 177326
+        },
+        {
+            "concepto": "Horas productivas",
+            "porcentaje": 0.02,
+            "horas": 2885,
+            "minutos": 173104
+        }
+    ]
+
+    for row in rows:
+        resumen.append(row)
+
+    desglose["resumen"] = resumen
+
+    return desglose
+    
 
 def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable: float) -> List[dict]:
     """Construye los honorarios por antigüedad desde la lista de cobranzas."""
