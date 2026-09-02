@@ -108,6 +108,41 @@ class TarifaComponenteVariable(BaseModel):
     comisiones_mi: float = 0
     ingreso_por_persona: float = 0
 
+class TiempoProgramado(BaseModel):
+    horas: float = 0
+    minutos: float = 0
+    
+class ResumenComponenteFijoRow(BaseModel):
+    concepto: str
+    porcentaje: float = 0
+    horas: float = 0
+    minutos: float = 0
+    
+class ConfiguracionComponenteFijo(BaseModel):
+    horas_semanales: float = 0
+    horas_formacion_mensuales: float = 0
+    semanas_mes: float = 0
+    
+class MinutoImproductivoRow(BaseModel):
+    concepto: str
+    tiempo_minutos: float = 0
+    porcentaje: float = 0
+    
+class MinutosImproductivos(BaseModel):
+    detalle: list[MinutoImproductivoRow] = Field(default_factory=list)
+    total_minutos: float = 0
+    total_porcentaje: float = 0
+    
+class DesgloseComponenteFijo(BaseModel):
+    configuracion: ConfiguracionComponenteFijo = Field(default_factory=ConfiguracionComponenteFijo)
+    minutos_improductivos: MinutosImproductivos = Field(
+        default_factory=MinutosImproductivos
+    )
+    tiempo_programado: TiempoProgramado = Field(
+        default_factory=TiempoProgramado
+    )
+    resumen: list[ResumenComponenteFijoRow] = Field(default_factory=list)
+
 
 class ModeloCobroDetail(BaseModel):
     escenario: Optional[str] = None
@@ -129,7 +164,9 @@ class ModeloCobroDetail(BaseModel):
     honorarios_cobranza: list[HonorarioCobranzaRow] = Field(default_factory=list)
     honorarios_totales: list[HonorarioTotalesRow] = Field(default_factory=list)
     ventas_multicanal: list[VentasMulticanalRow] = Field(default_factory=list)
+    desglose_componente_fijo: DesgloseComponenteFijo = Field(default_factory=DesgloseComponenteFijo)
 
+    
 
 class ResumenRow(BaseModel):
     escenario: str
