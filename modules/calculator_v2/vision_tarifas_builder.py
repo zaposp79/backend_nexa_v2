@@ -223,15 +223,15 @@ def _build_escenario(
     honorariosTotales = []
     ventas_multicanal = []
     desglose_componente_fijo = {}
+    pct_variable = perfil_input.get("pct_variable", 0.0)
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
         
     if(servicio == "saco" or servicio == "ventas multicanal"):
-        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, perfil_input)
+        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_variable)
         
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data)
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -288,11 +288,11 @@ def _build_escenario(
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
         "ventas_multicanal": ventas_multicanal,
-        "desglose_componente_fijo": desglose_componente_fijo
     }
 
-def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_total: float, escenarios: List[dict]) -> dict:
+def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], fte_total: float, escenarios: List[dict], facturacion_total: float) -> dict:
     
+    servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     componente_fijo = str(data.get("componente_fijo", "FTE")) if data.get("proporcion_componente_fijo", 0.0) > 0 else None
     pct_var = float(data.get("proporcion_componente_variable", 0.0))
     pct_fijo = float(data.get("proporcion_componente_fijo", 0.0))
@@ -305,6 +305,18 @@ def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_tota
         tarifa_fija = facturacion_directa / fte_total if fte_total > 0 else 0.0
     else:
         tarifa_fija = facturacion_directa
+    
+    ingreso_variable = facturacion_total * pct_var
+    honorariosCobranza = []
+    honorariosTotales = []
+    ventas_multicanal = []
+    desglose_componente_fijo = {}
+    if(servicio == "cobranzas"):
+        honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
+        honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
+            
+    if(servicio == "saco" or servicio == "ventas multicanal"):
+        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
         
     return {
         "escenario": "Total",
@@ -318,6 +330,9 @@ def _build_escenario_total(data: Dict[str, Any], vals0: Dict[str, Any], fte_tota
         "facturacion_directa": round(facturacion_directa, 2),
         "tarifa_componente_fijo": tarifa_fija,
         "tarifa_componente_variable": 0,
+        "honorarios_cobranza": honorariosCobranza,
+        "honorarios_totales": honorariosTotales,
+        "ventas_multicanal": ventas_multicanal
     }
 
 # ── Totales consolidados ──────────────────────────────────────────────────────
@@ -354,9 +369,9 @@ def add_month_value(concepts, concepto, mes, valor):
 def get_value_by_month(list, month):
     return next(x["valor"] for x in list if x["mes"] == month)
     
-def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, perfil_input: Dict[str, Any]) -> List[dict]:
+def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, pct_variable: float) -> List[dict]:
     """Construye los honorarios por antigüedad desde la lista de cobranzas."""
-    pct_variable = perfil_input.get("pct_variable", 0.0)
+
     nPersons = request_data.get("saco_multicanal", {}).get("numero_de_asesores")
     configurations = (request_data.get("saco_multicanal", {}) or {}).get("configuraciones", []) or []
     incomes_by_agent = next((x for x in configurations if x["concepto"] == "Ingreso Variable x Asesor"),{})
@@ -770,7 +785,8 @@ def build_vision_tarifas(
     fte_total_activos = sum(float(p.get("fte", 0) or 0) for p in perfiles_input)
 
     cts_map = _cts_map(cts_perfiles or [])
-
+    
+    
     escenarios = []
     for i, p_input in enumerate(perfiles_input):
         nombre = str(p_input.get("nombre", f"Escenario {i + 1}"))
@@ -816,10 +832,12 @@ def build_vision_tarifas(
         escenarios = all_5
 
     total = _build_total(escenarios, cts_perfiles or [])
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data)
     return {
         "escenarios": escenarios,
-        "escenario_total": _build_escenario_total(request_data["escenario_total"], vals0, fte_total_activos, escenarios), 
+        "escenario_total": _build_escenario_total(request_data["escenario_total"],request_data, fte_total_activos, escenarios, total.get("facturacion_mensual", 0.0)), 
         "total": total,
+        "desglose_componente_fijo": desglose_componente_fijo,
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
             "margen_cadena_b": margen_b,
