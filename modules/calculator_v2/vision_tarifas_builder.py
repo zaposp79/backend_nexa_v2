@@ -225,7 +225,7 @@ def _build_escenario(
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
         
     if(servicio == "saco" or servicio == "ventas multicanal"):
-        ventas_multicanal = _build_ventas_multicanal(request_data, cts_p, perfil_input)
+        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, perfil_input)
         
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
@@ -348,9 +348,8 @@ def add_month_value(concepts, concepto, mes, valor):
 def get_value_by_month(list, month):
     return next(x["valor"] for x in list if x["mes"] == month)
     
-def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], perfil_input: Dict[str, Any]) -> List[dict]:
+def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, perfil_input: Dict[str, Any]) -> List[dict]:
     """Construye los honorarios por antigüedad desde la lista de cobranzas."""
-    total_income = cts.get("ingreso_total")
     pct_variable = perfil_input.get("pct_variable", 0.0)
     nPersons = request_data.get("saco_multicanal", {}).get("numero_de_asesores")
     configurations = (request_data.get("saco_multicanal", {}) or {}).get("configuraciones", []) or []
@@ -472,6 +471,12 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
             if total_quantity_sales and nPersons
             else 0
         )
+        
+        minimum_sales = (
+            variable_value / cost_by_million
+            if cost_by_million > 0
+            else 0
+        )
             
         add_month_value(concepts, "Crecimiento del cobro a riesgo", item["mes"], growthRisk)
         add_month_value(concepts, "Valor fijo", item["mes"], fixed_value)
@@ -485,7 +490,7 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], cts: Dict[str, Any], 
         add_month_value(concepts, "Costo Total", item["mes"], total)
         add_month_value(concepts, "Ingreso por persona", item["mes"], income_by_person)
         add_month_value(concepts, "Costo por Millon Desembolsado", item["mes"], cost_by_million)
-        
+        add_month_value(concepts, "Mínimo de Ventas", item["mes"], minimum_sales)
         
     return list(concepts.values())
 
