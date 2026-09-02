@@ -138,6 +138,8 @@ class NominaCalculator:
             + self._nomina_estructura()
             + self._crucero()
             + self._capacitacion_rotacion()
+            + self._examenes_medicos()
+            + self._estudios_seguridad()
         )
 
     def calcular_detalle(self) -> dict:
@@ -156,6 +158,9 @@ class NominaCalculator:
             "nomina_loaded": nomina_loaded,
             "crucero_total": self._crucero(),
             "capacitacion_rotacion": self._capacitacion_rotacion(),
+            "capacitacion_inicial": self._capacitacion_inicial(),
+            "examenes_medicos": self._examenes_medicos(),
+            "estudios_seguridad": self._estudios_seguridad(),
             "salario_fijo": nomina_loaded - salario_variable,
             "salario_variable": salario_variable,
             "recargos_horas_extra": self._calcular_recargos_total(),
@@ -398,9 +403,13 @@ class NominaCalculator:
     def _capacitacion_rotacion(self) -> float:
         """Costo mensual de capacitación por rotación (Excel V2-8: 'Nomina Loaded'!E283-E299).
 
-        Por cada perfil con incluye_capacitacion_rotacion=True:
+        Por cada perfil con dias_capacitacion_perfil > 0:
           costo = fte × dias_capacitacion_perfil × tarifa_diaria_capacitacion × pct_rotacion
         Excel V2-8: 'Panel de Control General'!C20 = pct_rotacion; C16 = tarifa_diaria.
+
+        Activación: `incluye_capacitacion_rotacion` explícito (extra field) o bien
+        `dias_capacitacion_perfil > 0` como indicador implícito (patrón DTO v2).
+        # Excel V2-8: 'Condiciones Cadena A'!D58 — días de capacitación por perfil
         """
         datos_op = self._req.get("datos_operativos", {})
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
@@ -410,12 +419,184 @@ class NominaCalculator:
 
         total = 0.0
         for perfil in self._cadena_a.get("perfiles", []):
+            cap = perfil.get("capacitacion") or {}
+            dias = float(cap.get("dias_capacitacion_perfil") or 0)
+            # Activado si hay flag explícito O si hay días configurados
+            activo = cap.get("incluye_capacitacion_rotacion") if "incluye_capacitacion_rotacion" in cap else dias > 0
+            if not activo:
+                continue
+            fte = float(perfil.get("fte", 0))
+            total += fte * dias * tarifa_diaria * pct_rotacion
+        return total
+
+    def _capacitacion_inicial(self) -> float:
+        """Base mensual de capacitación inicial por perfil activo.
+
+        Por cada perfil con incluye_capacitacion_inicial=True:
+          base = fte × dias_capacitacion_perfil × tarifa_diaria_capacitacion
+        El motor coloca este valor × duracion_meses como costo total en el mes 1.
+        Excel V2-8: 'Nomina Loaded'!C255:BK273 (SUMPRODUCT); 'Visión P&G'!B40 (solo mes inicio).
+        """
+        datos_op = self._req.get("datos_operativos", {})
+        tarifa_diaria = float(datos_op.get("tarifa_diaria_capacitacion", 20_000.0))
+        if tarifa_diaria <= 0:
+            return 0.0
+
+        total = 0.0
+        for perfil in self._cadena_a.get("perfiles", []):
             cap = perfil.get("capacitacion", {})
-            if not cap.get("incluye_capacitacion_rotacion", False):
+            if not cap.get("incluye_capacitacion_inicial", False):
                 continue
             fte = float(perfil.get("fte", 0))
             dias = float(cap.get("dias_capacitacion_perfil", 0))
-            total += fte * dias * tarifa_diaria * pct_rotacion
+            total += fte * dias * tarifa_diaria
+        return total
+
+    # Excel V2-8 · 'Rot, Ausent y Rentabilidad'!B67:F67 — costo examen médico por ciudad
+    # SUMPRODUCT(costos × proporcion_ciudad): Bogotá=60800, resto=58000
+    # Fuente: GN parametrización, misma lógica que HR-Med-Seg (get_medical_exam_cost)
+    _COSTO_EXAMEN_POR_CIUDAD: Dict[str, float] = {
+        "bogota":       60_800.0,
+        "bogotá":       60_800.0,
+    }
+    _COSTO_EXAMEN_DEFAULT = 58_000.0  # Cali, Medellín, Bucaramanga, Barranquilla, etc.
+
+    @classmethod
+    def _costo_examen_ciudad(cls, ciudad: str) -> float:
+        """Devuelve costo unitario de examen médico según ciudad (GN rows 67-69)."""
+        return cls._COSTO_EXAMEN_POR_CIUDAD.get(
+            (ciudad or "").strip().lower(),
+            cls._COSTO_EXAMEN_DEFAULT,
+        )
+
+    def _examenes_medicos(self) -> float:
+        """Costo mensual de exámenes médicos para Cadena A.
+
+        Excel V2-8: 'Nomina Loaded'!C329:C331 — unit cost por ciudad (SUMPRODUCT GN rows 67-69).
+        Excel V2-8: 'Nomina Loaded'!C339:C341 — costo por perfil.
+        'Visión P&G'!B42 = Exámenes Médicos.
+
+        Los tres tipos tienen el mismo costo unitario (varía por ciudad, no por tipo):
+          iniciales: unit_cost × FTE / duracion_meses   (amortizado — Excel C339)
+          rotacion:  unit_cost × FTE × pct_rotacion     (Excel C340)
+          anual:     unit_cost × FTE × pct_anuales / 12 (Excel C341)
+
+        Flags (patrón DTO v2, bajo capacitacion{}):
+          iniciales → capacitacion.incluye_costo_examenes_ingreso   (CCA!E145)
+          rotacion  → capacitacion.incluye_costo_examenes_rotacion  (CCA!E146)
+          anual     → capacitacion.incluye_costo_capacitacion_anual (CCA!E147)
+        Backward-compat: si existe perfil.examenes_medicos (sub-objeto legacy), se usa directo.
+
+        Costo unitario: GN 'Rot, Ausent y Rentabilidad' filas 67-69 × proporcion_ciudad.
+          Bogotá=60800 / resto=58000 (override via datos_operativos.costo_examen_medico)
+        pct_anuales: CCA!E136 = 0.28 (override via datos_operativos.pct_examenes_anuales)
+        pct_rotacion: Panel!C20 (datos_operativos.pct_rotacion)
+        duracion_meses: Panel!C11 (datos_operativos.duracion_meses)
+        # Excel V2-8: 'Condiciones Cadena A'!D144:T147 — flags de exámenes por perfil
+        """
+        datos_op = self._req.get("datos_operativos", {})
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+        duracion_meses = float(datos_op.get("duracion_meses", 1.0))
+        if duracion_meses <= 0:
+            duracion_meses = 1.0
+        pct_anuales_global = float(datos_op.get("pct_examenes_anuales", 0.28))
+
+        # Costo unitario desde GN (mismo para los 3 tipos), selección por ciudad
+        # Excel V2-8 · 'Nomina Loaded'!C329 = SUMPRODUCT(GN!B67:F67 × GN!B66:F66)
+        ciudad = str(datos_op.get("ciudad") or "")
+        cu_ciudad = self._costo_examen_ciudad(ciudad)
+        # Permite override explícito por tipo si es necesario (compatibilidad futura)
+        cu_ini = float(datos_op.get("costo_examen_medico_inicial") or cu_ciudad)
+        cu_rot = float(datos_op.get("costo_examen_medico_rotacion") or cu_ciudad)
+        cu_anu = float(datos_op.get("costo_examen_medico_anual") or cu_ciudad)
+
+        total = 0.0
+        for perfil in self._cadena_a.get("perfiles", []):
+            fte = float(perfil.get("fte", 0.0))
+            if fte <= 0:
+                continue
+
+            # Backward-compat: sub-objeto legacy examenes_medicos (soporte tests/fixtures)
+            exam = perfil.get("examenes_medicos")
+            if exam:
+                pct_anuales = float(exam.get("pct_examenes_anuales", pct_anuales_global))
+                if exam.get("activo_iniciales", False):
+                    cu = float(exam.get("costo_unitario_iniciales") or cu_ini)
+                    total += cu * fte / duracion_meses
+                if exam.get("activo_rotacion", False):
+                    cu = float(exam.get("costo_unitario_rotacion") or cu_rot)
+                    total += cu * fte * pct_rotacion
+                if exam.get("activo_anual", False):
+                    cu = float(exam.get("costo_unitario_anual") or cu_anu)
+                    total += cu * fte * pct_anuales / 12.0
+                continue
+
+            # Patrón DTO v2: flags bajo capacitacion{} (CCA!E145:T147)
+            cap = perfil.get("capacitacion") or {}
+            # Excel V2-8 · 'Nomina Loaded'!C339 = IF(CCA!E145, C329×(FTE)/PCG!C11, 0)
+            if cap.get("incluye_costo_examenes_ingreso", False):
+                total += cu_ini * fte / duracion_meses
+            # Excel V2-8 · 'Nomina Loaded'!C340 = IF(CCA!E146, C330×(FTE)×PCG!C20, 0)
+            if cap.get("incluye_costo_examenes_rotacion", False):
+                total += cu_rot * fte * pct_rotacion
+            # Excel V2-8 · 'Nomina Loaded'!C341 = IF(CCA!E147, C331×(FTE)×CCA!E136/12, 0)
+            if cap.get("incluye_costo_capacitacion_anual", False):
+                total += cu_anu * fte * pct_anuales_global / 12.0
+
+        return total
+
+    def _estudios_seguridad(self) -> float:
+        """Costo mensual de estudios de seguridad para Cadena A.
+
+        Excel V2-8: 'Nomina Loaded'!C396:C399 (costo por perfil por tipo).
+        'Visión P&G'!B43 = Estudios de Seguridad.
+
+        Por cada perfil, cuatro tipos según flags activos en capacitacion{}:
+          prelim_iniciales:  costo_prelim_inicial × FTE / duracion_meses   (amortizado)
+          prelim_rotacion:   costo_prelim_rotacion × FTE × pct_rotacion
+          final_iniciales:   costo_final_inicial × FTE / duracion_meses    (amortizado)
+          final_rotacion:    costo_final_rotacion × FTE × pct_rotacion
+
+        Costos unitarios desde datos_operativos (fuente: GN 'Rot, Ausent y Rentabilidad' filas 70-73):
+          costo_estudio_prelim_inicial  (default 54,055)
+          costo_estudio_prelim_rotacion (default 54,055)
+          costo_estudio_final_inicial   (default 144,879)
+          costo_estudio_final_rotacion  (default 144,879)
+
+        # Excel V2-8: 'Condiciones Cadena A'!D149:T152 — checkboxes por perfil
+        # Excel V2-8: 'Nomina Loaded'!C390:C393 — unit costs (GN rows 70-73)
+        # Excel V2-8: 'Panel de Control General'!C11 = duracion_meses, C20 = pct_rotacion
+        """
+        datos_op = self._req.get("datos_operativos", {})
+        duracion_meses = float(datos_op.get("duracion_meses", 1.0))
+        if duracion_meses <= 0:
+            duracion_meses = 1.0
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+
+        # Excel V2-8 · 'Rot, Ausent y Rentabilidad'!B70:B73 — unit costs de GN
+        cu_prelim_ini = float(datos_op.get("costo_estudio_prelim_inicial", 54_055.0))
+        cu_prelim_rot = float(datos_op.get("costo_estudio_prelim_rotacion", 54_055.0))
+        cu_final_ini = float(datos_op.get("costo_estudio_final_inicial", 144_879.0))
+        cu_final_rot = float(datos_op.get("costo_estudio_final_rotacion", 144_879.0))
+
+        total = 0.0
+        for perfil in self._cadena_a.get("perfiles", []):
+            cap = perfil.get("capacitacion") or {}
+            fte = float(perfil.get("fte", 0.0))
+            if fte <= 0:
+                continue
+            # Excel V2-8 · 'Nomina Loaded'!C396 formula: IF(CCA!E149, C390×(FTE)/PCG!C11, 0)
+            if cap.get("incluye_estudio_seguridad_ingreso", False):
+                total += cu_prelim_ini * fte / duracion_meses
+            # Excel V2-8 · 'Nomina Loaded'!C397 formula: IF(CCA!E150, C391×FTE×PCG!C20, 0)
+            if cap.get("incluye_estudio_seguridad_rotacion", False):
+                total += cu_prelim_rot * fte * pct_rotacion
+            # Excel V2-8 · 'Nomina Loaded'!C398 formula: IF(CCA!E151, C392×(FTE)/PCG!C11, 0)
+            if cap.get("incluye_estudio_seguridad_final_ingreso", False):
+                total += cu_final_ini * fte / duracion_meses
+            # Excel V2-8 · 'Nomina Loaded'!C399 formula: IF(CCA!E152, C393×FTE×PCG!C20, 0)
+            if cap.get("incluye_estudio_seguridad_final_rotacion", False):
+                total += cu_final_rot * fte * pct_rotacion
         return total
 
     @staticmethod

@@ -54,6 +54,7 @@ _AGGREGATED_IDS = {
     "nomina_loaded_mensual",
     "salario_fijo_mensual",
     "salario_variable_mensual",
+    "estudios_seguridad_mensual",
     # Capital charge diferido: calculado en el loop (CT[k-1] × meses_cc × tasa × IPC_k) — no pisar con fórmula
     # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 × "Activado" × IPC_factor
     "costos_financiacion_mensual",
@@ -227,6 +228,11 @@ class MotorDeReglas:
             _no_payroll_detalle = {k: 0.0 for k in _no_payroll_detalle}
             _nomina_desglose_cargo = {}
             _nomina_grupos_por_perfil = {}
+
+        # Costo base de capacitación inicial por mes (fte × dias × tarifa).
+        # El motor lo coloca × duracion_meses en el mes 1 y 0 en los demás.
+        # Excel V2-8: 'Visión P&G'!B40 = SUMPRODUCT(NomLoaded!$D$255:$BK$273, Activado) en mes inicio.
+        _cap_inicial_base = float(_nomina_detalle.get("capacitacion_inicial", 0.0))
 
         # Cadena B — activa si alguna dirección tiene cadena_b: true en cadenas_activas
         _cadena_b_activa = (
@@ -413,7 +419,9 @@ class MotorDeReglas:
                 costo_op_mes, ctx_cost, for_pricing=False
             )
 
-            ctx["nomina_total_mensual"] = nomina_mes
+            # Excel V2-8: Payroll incluye capacitacion_inicial (evento único mes 1, costo fijo sin IPC).
+            # nomina_fija (recurrente) ya tiene double_h; cap_inicial no se indexa.
+            ctx["nomina_total_mensual"] = nomina_mes + (_cap_inicial_base if mes == 1 else 0.0)
             ctx["no_payroll_total_mensual"] = no_payroll_mes
             if _cadena_b_calc:
                 ctx.update(_cadena_b_calc.calcular_mes(double_h, double_t))
@@ -445,6 +453,12 @@ class MotorDeReglas:
             ctx["nomina_loaded_mensual"] = _nomina_detalle["nomina_loaded"] * double_h
             ctx["crucero_total_mensual"] = _nomina_detalle["crucero_total"] * double_h
             ctx["capacitacion_rotacion_mensual"] = _nomina_detalle["capacitacion_rotacion"] * double_h
+            # Excel V2-8: 'Visión P&G'!B40 = SUMPRODUCT(NomLoaded!$D$255:$BK$273, Activado×1) solo en mes 1.
+            # _cap_inicial_base = FTE × dias × tarifa (costo total, evento único al inicio).
+            # NO multiplicar por duracion_meses — eso causaba inflación 10×.
+            ctx["capacitacion_inicial_mensual"] = _cap_inicial_base if mes == 1 else 0.0
+            ctx["examenes_medicos_mensual"] = _nomina_detalle.get("examenes_medicos", 0.0) * double_h
+            ctx["estudios_seguridad_mensual"] = _nomina_detalle.get("estudios_seguridad", 0.0) * double_h
             ctx["salario_fijo_mensual"] = _nomina_detalle["salario_fijo"] * double_h
             ctx["salario_variable_mensual"] = _nomina_detalle["salario_variable"] * double_h
             # Informativo — mismo factor IPC que nómina; no suma a costo_total (igual que Excel col AM=col W)
