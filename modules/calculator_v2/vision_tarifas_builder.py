@@ -31,6 +31,9 @@ def _datos_op(request_data: Dict[str, Any]) -> Dict[str, Any]:
 def _get_cobranzas() -> Dict[str, Any]:
     return _resolver.get_active_op().get("cobranzarango", []) or []
 
+def _get_cost_parametrization() -> Dict[str, Any]:
+    return _resolver.get_active_op().get("costo", {}) or {}
+
 def _primer_mes_ramp1(meses: List[Dict]) -> Optional[Dict]:
     """Primer mes con ramp_up_mes >= 1.0 (régimen permanente pre-IPC)."""
     for m in meses:
@@ -228,7 +231,7 @@ def _build_escenario(
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, perfil_input)
         
-    desglose_componente_fijo = _build_desglose_componente_fijo()
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data)
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -370,7 +373,7 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, 
         "Valor Carga Prestacional": {"format": "currency", "type": "Normal"},
         "Valor Total (Comisión por asesor)": {"format": "currency", "type": "Normal"},
         "Comisión": {"format": "currency", "type": "Bold"},
-        "Costo Variable": {"format": "currency", "type": "Normal"},
+        "Costo Variable": {"format": "currency", "type": "Bold"},
         "Costo Total": {"format": "currency", "type": "Bold"},
         "Ingreso por persona": {"format": "currency", "type": "Bold"},
         "Costo por Millon Desembolsado": {"format": "currency", "type": "Bold"},
@@ -497,13 +500,18 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, 
         
     return list(concepts.values())
 
-def _build_desglose_componente_fijo():
+def _build_desglose_componente_fijo(request_data: Dict[str, Any]):
     desglose = {}
+    parametrization = _get_cost_parametrization()
+    datos_op = _datos_op(request_data)
+    pct_ausentismo = datos_op.get("pct_ausentismo", 0) or 0
+    fte = datos_op.get("interacciones_gestionadas_por_fte_promedio", 0) or 0
 
     # Configuración base
-    horas_semanales = 42
-    horas_formacion_mensuales = 8
-    semanas_mes = 4.33
+    horas_semanales = next((x["valor"] for x in parametrization if x["costooperativo"] == "Horas semanales"), 0)
+    horas_formacion_mensuales = datos_op.get("horas_formacion_mes", 0) or 0
+    semanas_mes = next((x["valor"] for x in parametrization if x["costooperativo"] == "Semanas al mes"), 0)
+    initial_break = 30
 
     desglose["configuracion"] = {
         "horas_semanales": horas_semanales,
@@ -516,13 +524,25 @@ def _build_desglose_componente_fijo():
 
     total_minutos_improductivos = 0
     total_pct_improductivos = 0
-
+    initial_average = (((horas_formacion_mensuales/4)/6)*60)
+    hours_calculated = ((horas_semanales / 6) * 60)
+    initial_coaching = 5
+    initial_active_pause = 5
+    initial_logout = 5
+    payed_hours_percent = 0.00
+    
+    break_pct = initial_break / hours_calculated
+    average_pct = initial_average / hours_calculated
+    logout_pct = initial_logout / hours_calculated
+    couching_pct = initial_coaching / hours_calculated
+    active_pause_pct = initial_active_pause / hours_calculated
+    
     items = [
-        ("2 break al día, cada uno de 15 minutos", 30, 0.071),
-        ("Promedio de capacitaciones al día", 20, 0.048),
-        ("Deslogueos", 5, 0.012),
-        ("Coaching al día", 5, 0.012),
-        ("Pausa activa al día", 5, 0.012),
+        ("2 break al día, cada uno de 15 minutos", initial_break, break_pct),
+        ("Promedio de capacitaciones al día", initial_average, average_pct),
+        ("Deslogueos", initial_logout, logout_pct),
+        ("Coaching al día", initial_coaching, couching_pct),
+        ("Pausa activa al día", initial_active_pause, active_pause_pct),
     ]
 
     for concepto, minutos, porcentaje in items:
@@ -542,8 +562,8 @@ def _build_desglose_componente_fijo():
     }
 
     # Tiempo Programado
-    tiempo_programado_horas = 3637
-    tiempo_programado_minutos = 218232
+    tiempo_programado_horas = horas_semanales * semanas_mes * fte
+    tiempo_programado_minutos = tiempo_programado_horas * 60
 
     desglose["tiempo_programado"] = {
         "horas": tiempo_programado_horas,
@@ -552,31 +572,41 @@ def _build_desglose_componente_fijo():
 
     # Resumen
     resumen = []
+    
+    
+    payed_hours = tiempo_programado_horas * (1-payed_hours_percent)
+    logged_hours_pct = break_pct + average_pct + logout_pct
+    
+    ausentismo_hours = payed_hours * (1-pct_ausentismo)
+    logged_hours = ausentismo_hours * (1-logged_hours_pct)
+    
+    productive_hours_pct = couching_pct + active_pause_pct
+    productive_hours = logged_hours * (1-productive_hours_pct)
 
     rows = [
         {
             "concepto": "Horas pagadas",
-            "porcentaje": 0.00,
-            "horas": 3637,
-            "minutos": 218232
+            "porcentaje": payed_hours_percent,
+            "horas": payed_hours,
+            "minutos": payed_hours * 60
         },
         {
             "concepto": "Horas de Ausentismo",
-            "porcentaje": 0.07,
-            "horas": 3401,
-            "minutos": 204047
+            "porcentaje": pct_ausentismo,
+            "horas": ausentismo_hours,
+            "minutos": ausentismo_hours * 60
         },
         {
             "concepto": "Horas logueadas",
-            "porcentaje": 0.13,
-            "horas": 2955,
-            "minutos": 177326
+            "porcentaje": logged_hours_pct,
+            "horas": logged_hours,
+            "minutos": logged_hours * 60
         },
         {
             "concepto": "Horas productivas",
-            "porcentaje": 0.02,
-            "horas": 2885,
-            "minutos": 173104
+            "porcentaje": productive_hours_pct,
+            "horas": productive_hours,
+            "minutos": productive_hours * 60
         }
     ]
 
