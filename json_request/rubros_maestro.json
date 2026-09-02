@@ -81,16 +81,18 @@
     "nombre": "Costo Operativo Total Cadena A",
     "bloque": "Costo Cadena A",
     "capa": 3,
-    "descripcion": "Suma de nómina y no-payroll. Representa el costo puro de operación ANTES de componentes financieros.",
+    "descripcion": "Suma de nómina, no-payroll y capacitación inicial (one-time mes 1). Costo puro ANTES de componentes financieros.",
     "orden_calculo": 30,
     "aplica_por_mes": true,
     "tipo_calculo": "formula",
     "formula": {
-      "expresion": "nomina_total_mensual + no_payroll_total_mensual"
+      "expresion": "nomina_total_mensual + no_payroll_total_mensual + capacitacion_inicial_mensual",
+      "notas": "Excel V2-8: capacitacion_inicial_mensual = 0 en meses 2-N; en mes 1 = base×duracion (SUMPRODUCT NomLoaded B40)."
     },
     "variables": [
       { "nombre": "nomina_total_mensual", "tipo": "computed", "rubro_fuente": "nomina_total_mensual" },
-      { "nombre": "no_payroll_total_mensual", "tipo": "computed", "rubro_fuente": "no_payroll_total_mensual" }
+      { "nombre": "no_payroll_total_mensual", "tipo": "computed", "rubro_fuente": "no_payroll_total_mensual" },
+      { "nombre": "capacitacion_inicial_mensual", "tipo": "computed", "rubro_fuente": "capacitacion_inicial_mensual" }
     ],
     "dependencias": ["nomina_total_mensual", "no_payroll_total_mensual"],
     "cadena": "A"
