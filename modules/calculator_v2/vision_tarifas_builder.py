@@ -690,9 +690,11 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
     return result
 
 def _build_desglose_producto_opex(
-    opex_rows: list[Any]
+    request_data: list[Any]
 ) -> list[dict]:
    
+   
+    products =request_data.get("condiciones_cadena_b",{}).get("opex",{}).get("items",[])
     result = [
         {
             "concepto": "Costo Directo",
@@ -712,11 +714,12 @@ def _build_desglose_producto_opex(
         },
     ]
 
-    for row in opex_rows:
+    for row in products:
         if not isinstance(row, dict):
             continue
 
         producto = row.get("producto") or ""
+        valor = row.get("valor") or 0.0
 
         result[0]["products"].append({
             "name": producto,
