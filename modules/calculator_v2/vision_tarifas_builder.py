@@ -719,7 +719,7 @@ def _build_desglose_producto_opex(
             continue
 
         producto = row.get("producto") or ""
-        valor = row.get("valor") or 0.0
+        valor = row.get("valor_total") or 0.0
 
         result[0]["products"].append({
             "name": producto,
