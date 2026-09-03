@@ -457,6 +457,7 @@ class MotorDeReglas:
             # _cap_inicial_base = FTE × dias × tarifa (costo total, evento único al inicio).
             # NO multiplicar por duracion_meses — eso causaba inflación 10×.
             ctx["capacitacion_inicial_mensual"] = _cap_inicial_base if mes == 1 else 0.0
+            ctx["cargos_adicionales_mensual"] = _nomina_detalle.get("cargos_adicionales", 0.0) * double_h
             ctx["examenes_medicos_mensual"] = _nomina_detalle.get("examenes_medicos", 0.0) * double_h
             ctx["estudios_seguridad_mensual"] = _nomina_detalle.get("estudios_seguridad", 0.0) * double_h
             ctx["salario_fijo_mensual"] = _nomina_detalle["salario_fijo"] * double_h

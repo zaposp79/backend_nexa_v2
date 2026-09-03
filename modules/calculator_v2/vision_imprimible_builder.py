@@ -229,15 +229,45 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
             "tarifa_variable": round(tarifa_variable, 2) if tarifa_variable else None,
         })
 
-    # Siempre retornar 5 slots cuando escenarios_comerciales está configurado
+    # Siempre retornar 5 slots cuando escenarios_comerciales está configurado.
+    # Slots sin perfil Cadena A muestran metadatos del escenario comercial (canal, modelo, etc.)
+    # pero con datos financieros en None (pueden ser canales de Cadena B o C únicamente).
     if esc_activos is not None:
-        all_5: List[dict] = [
-            {"id": f"Escenario {n}", "nombre": None, "perfil": None, "modalidad": None,
-             "canal": None, "modelo_cobro": None, "componente_fijo": None,
-             "componente_variable": None, "pct_fijo": None, "pct_variable": None,
-             "fte": None, "tarifa_fija": None, "tarifa_variable": None}
-            for n in range(1, 6)
-        ]
+        _esc_cfg_por_slot: Dict[int, Dict] = {}
+        for _cfg in (request_data.get("escenarios_comerciales") or []):
+            _n = int(_cfg.get("escenario") or 0)
+            if 1 <= _n <= 5 and str(_cfg.get("canal") or "").strip():
+                _esc_cfg_por_slot[_n] = _cfg
+
+        all_5: List[dict] = []
+        for n in range(1, 6):
+            cfg = _esc_cfg_por_slot.get(n)
+            if cfg:
+                prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
+                prop_fijo = round(1.0 - prop_var, 4)
+                all_5.append({
+                    "id": f"Escenario {n}",
+                    "nombre": f"Escenario {n}",
+                    "perfil": None,
+                    "modalidad": cfg.get("modalidad"),
+                    "canal": cfg.get("canal"),
+                    "modelo_cobro": cfg.get("modelo_cobro"),
+                    "componente_fijo": cfg.get("componente_fijo") if prop_fijo > 0 else None,
+                    "componente_variable": cfg.get("componente_variable") if prop_var > 0 else None,
+                    "pct_fijo": prop_fijo,
+                    "pct_variable": round(prop_var, 4),
+                    "fte": None,
+                    "tarifa_fija": None,
+                    "tarifa_variable": None,
+                })
+            else:
+                all_5.append({
+                    "id": f"Escenario {n}", "nombre": None, "perfil": None, "modalidad": None,
+                    "canal": None, "modelo_cobro": None, "componente_fijo": None,
+                    "componente_variable": None, "pct_fijo": None, "pct_variable": None,
+                    "fte": None, "tarifa_fija": None, "tarifa_variable": None,
+                })
+
         for esc in escenarios:
             esc_id = esc.get("id", "")
             try:
