@@ -689,11 +689,47 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
 
     return result
 
+def _get_value_business(data: Dict[str, Any]) -> float:
+    return data.get("valor",0.0)
+
 def _build_desglose_producto_opex(
     request_data: list[Any]
 ) -> list[dict]:
    
-   
+    business_rules = request_data.get("reglas_negocio",{})
+    objetive_margin = business_rules.get("margen_objetivo",{})
+    operative_contingency = business_rules.get("contingencia_operativa",{})
+    commercial_contingency = business_rules.get("contingencia_comercial",{})
+    markup = business_rules.get("markup",{})
+    volumen_discount = business_rules.get("descuento_volumen",{})
+    monthly_interes = request_data.get("volumetria", {}).get("indexacion", {}).get("tasa_interes_mensual", [])
+    datos_op = _datos_op(request_data)
+    ica = datos_op.get("tasa_ica",0)
+    gmf = datos_op.get("tasa_gmf",0)
+    payment_period = datos_op.get("periodo_pago")
+    margin_chain_b = objetive_margin.get("cadena_b",0) 
+    margin_chain_a = objetive_margin.get("cadena_a",0)
+    policies = request_data.get("polizas",[])
+    sumproductPolicies = sum(
+        (item.get("pct_poliza", 0) or 0) *
+        (item.get("pct_atribuible", 0) or 0)
+        for item in policies
+        if item.get("activa")
+    )
+    
+    factor_increase = {
+        30: 1.0,
+        45: 1.5,
+        60: 2.0,
+        90: 3.0,
+    }.get(payment_period, 4.0)
+    
+    business_rules_chain_a =  ((1-margin_chain_a)*
+                              (1-_get_value_business(operative_contingency))
+                              *(1-_get_value_business(commercial_contingency))
+                              *(1-_get_value_business(markup))
+                              *(1-_get_value_business(volumen_discount)))
+    
     products =request_data.get("condiciones_cadena_b",{}).get("opex",{}).get("items",[])
     result = [
         {
@@ -717,28 +753,41 @@ def _build_desglose_producto_opex(
     for row in products:
         if not isinstance(row, dict):
             continue
-
+        
         producto = row.get("producto") or ""
-        valor = row.get("valor_total") or 0.0
+        total_value = row.get("valor_total") or 0.0
+        financiation = total_value * factor_increase * float(monthly_interes) if monthly_interes else 0.0
+       
+        
+        policies_product = ((total_value + financiation) / 
+                business_rules_chain_a)*sumproductPolicies 
+        
+        ica_product = ((total_value + financiation + policies_product) /
+                 business_rules_chain_a)*ica 
+        
+        gmf_product = ((total_value + financiation + policies_product) * gmf)
+               
 
+        policies = policies_product + ica_product + gmf_product
+        
         result[0]["products"].append({
             "name": producto,
-            "valor": valor,  #Todo change this
+            "valor": total_value, 
         })
 
         result[1]["products"].append({
             "name": producto,
-            "valor": valor,  #Todo change this
+            "valor": financiation, 
         })
 
         result[2]["products"].append({
             "name": producto,
-            "valor": valor,  #Todo change this
+            "valor": policies,
         })
 
         result[3]["products"].append({
             "name": producto,
-            "valor": valor, #Todo change this
+            "valor": (total_value + financiation + policies) / (1 - margin_chain_b),
         })
 
     return result
