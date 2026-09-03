@@ -452,46 +452,27 @@ class NominaCalculator:
             total += fte * dias * tarifa_diaria
         return total
 
-    # Excel V2-8 · 'Rot, Ausent y Rentabilidad'!B67:F67 — costo examen médico por ciudad
-    # SUMPRODUCT(costos × proporcion_ciudad): Bogotá=60800, resto=58000
-    # Fuente: GN parametrización, misma lógica que HR-Med-Seg (get_medical_exam_cost)
-    _COSTO_EXAMEN_POR_CIUDAD: Dict[str, float] = {
-        "bogota":       60_800.0,
-        "bogotá":       60_800.0,
-    }
-    _COSTO_EXAMEN_DEFAULT = 58_000.0  # Cali, Medellín, Bucaramanga, Barranquilla, etc.
-
-    @classmethod
-    def _costo_examen_ciudad(cls, ciudad: str) -> float:
-        """Devuelve costo unitario de examen médico según ciudad (GN rows 67-69)."""
-        return cls._COSTO_EXAMEN_POR_CIUDAD.get(
-            (ciudad or "").strip().lower(),
-            cls._COSTO_EXAMEN_DEFAULT,
-        )
-
     def _examenes_medicos(self) -> float:
         """Costo mensual de exámenes médicos para Cadena A.
 
-        Excel V2-8: 'Nomina Loaded'!C329:C331 — unit cost por ciudad (SUMPRODUCT GN rows 67-69).
+        Excel V2-8: 'Nomina Loaded'!C329:C331 — unit cost por ciudad
+          = SUMPRODUCT(GN 'Rot, Ausent y Rentabilidad'!B67:F67 × proporcion_ciudad)
         Excel V2-8: 'Nomina Loaded'!C339:C341 — costo por perfil.
         'Visión P&G'!B42 = Exámenes Médicos.
 
-        Los tres tipos tienen el mismo costo unitario (varía por ciudad, no por tipo):
-          iniciales: unit_cost × FTE / duracion_meses   (amortizado — Excel C339)
-          rotacion:  unit_cost × FTE × pct_rotacion     (Excel C340)
-          anual:     unit_cost × FTE × pct_anuales / 12 (Excel C341)
+        Los costos unitarios vienen pre-inyectados en datos_operativos por el handler
+        desde HR-Med-Seg (InfrastructureParametrizationRepository.get_all_med_seg_costs):
+          costo_examen_medico_inicial    (HR-Med-Seg: "exámenes medicos nuevos (iniciales)")
+          costo_examen_medico_rotacion   (HR-Med-Seg: "exámenes medicos (rotación)")
+          costo_examen_medico_anual      (HR-Med-Seg: "exámenes medicos (anual)")
+        Default si no se inyecta: 58,000 (GN valor no-Bogotá).
 
         Flags (patrón DTO v2, bajo capacitacion{}):
           iniciales → capacitacion.incluye_costo_examenes_ingreso   (CCA!E145)
           rotacion  → capacitacion.incluye_costo_examenes_rotacion  (CCA!E146)
           anual     → capacitacion.incluye_costo_capacitacion_anual (CCA!E147)
-        Backward-compat: si existe perfil.examenes_medicos (sub-objeto legacy), se usa directo.
-
-        Costo unitario: GN 'Rot, Ausent y Rentabilidad' filas 67-69 × proporcion_ciudad.
-          Bogotá=60800 / resto=58000 (override via datos_operativos.costo_examen_medico)
         pct_anuales: CCA!E136 = 0.28 (override via datos_operativos.pct_examenes_anuales)
-        pct_rotacion: Panel!C20 (datos_operativos.pct_rotacion)
-        duracion_meses: Panel!C11 (datos_operativos.duracion_meses)
+        pct_rotacion: Panel!C20 / duracion_meses: Panel!C11
         # Excel V2-8: 'Condiciones Cadena A'!D144:T147 — flags de exámenes por perfil
         """
         datos_op = self._req.get("datos_operativos", {})
@@ -501,14 +482,11 @@ class NominaCalculator:
             duracion_meses = 1.0
         pct_anuales_global = float(datos_op.get("pct_examenes_anuales", 0.28))
 
-        # Costo unitario desde GN (mismo para los 3 tipos), selección por ciudad
-        # Excel V2-8 · 'Nomina Loaded'!C329 = SUMPRODUCT(GN!B67:F67 × GN!B66:F66)
-        ciudad = str(datos_op.get("ciudad") or "")
-        cu_ciudad = self._costo_examen_ciudad(ciudad)
-        # Permite override explícito por tipo si es necesario (compatibilidad futura)
-        cu_ini = float(datos_op.get("costo_examen_medico_inicial") or cu_ciudad)
-        cu_rot = float(datos_op.get("costo_examen_medico_rotacion") or cu_ciudad)
-        cu_anu = float(datos_op.get("costo_examen_medico_anual") or cu_ciudad)
+        # Costos inyectados desde HR-Med-Seg por ciudad (via calculate_handler._inject_med_seg_costs)
+        # Excel V2-8 · 'Nomina Loaded'!C329 = SUMPRODUCT(GN!B67:F67 × GN!B66:F66) por ciudad
+        cu_ini = float(datos_op.get("costo_examen_medico_inicial") or 58_000.0)
+        cu_rot = float(datos_op.get("costo_examen_medico_rotacion") or 58_000.0)
+        cu_anu = float(datos_op.get("costo_examen_medico_anual") or 58_000.0)
 
         total = 0.0
         for perfil in self._cadena_a.get("perfiles", []):
@@ -573,11 +551,12 @@ class NominaCalculator:
             duracion_meses = 1.0
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
 
-        # Excel V2-8 · 'Rot, Ausent y Rentabilidad'!B70:B73 — unit costs de GN
-        cu_prelim_ini = float(datos_op.get("costo_estudio_prelim_inicial", 54_055.0))
-        cu_prelim_rot = float(datos_op.get("costo_estudio_prelim_rotacion", 54_055.0))
-        cu_final_ini = float(datos_op.get("costo_estudio_final_inicial", 144_879.0))
-        cu_final_rot = float(datos_op.get("costo_estudio_final_rotacion", 144_879.0))
+        # Costos inyectados desde HR-Med-Seg por ciudad (via calculate_handler._inject_med_seg_costs)
+        # Excel V2-8 · 'Nomina Loaded'!C390 = SUMPRODUCT(GN!B70:F70 × GN!B66:F66) por ciudad
+        cu_prelim_ini = float(datos_op.get("costo_estudio_prelim_inicial") or 54_055.0)
+        cu_prelim_rot = float(datos_op.get("costo_estudio_prelim_rotacion") or 54_055.0)
+        cu_final_ini = float(datos_op.get("costo_estudio_final_inicial") or 144_879.0)
+        cu_final_rot = float(datos_op.get("costo_estudio_final_rotacion") or 144_879.0)
 
         total = 0.0
         for perfil in self._cadena_a.get("perfiles", []):

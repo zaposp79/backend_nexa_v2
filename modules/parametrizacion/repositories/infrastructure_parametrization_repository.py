@@ -256,6 +256,74 @@ class InfrastructureParametrizationRepository:
         logger.warning(f"Medical exam cost not found for {ciudad}, using default 58000")
         return 58000.0
 
+    def get_all_med_seg_costs(self, ciudad: str) -> Dict[str, float]:
+        """Get all Med-Seg costs for a city from HR-Med-Seg sheet.
+
+        Returns a dict with keys matching datos_operativos injection fields:
+          cu_examen_inicial, cu_examen_rotacion, cu_examen_anual,
+          cu_estudio_prelim_ini, cu_estudio_prelim_rot,
+          cu_estudio_final_ini, cu_estudio_final_rot
+
+        Defaults used if HR-Med-Seg not loaded or city not found:
+          examenes: 58_000 (GN/HR default for non-Bogotá cities)
+          estudios prelim: 54_055
+          estudios final:  144_879
+        """
+        # Keys match datos_operativos fields read by NominaCalculator
+        defaults: Dict[str, float] = {
+            "costo_examen_medico_inicial":   58_000.0,
+            "costo_examen_medico_rotacion":  58_000.0,
+            "costo_examen_medico_anual":     58_000.0,
+            "costo_estudio_prelim_inicial":  54_055.0,
+            "costo_estudio_prelim_rotacion": 54_055.0,
+            "costo_estudio_final_inicial":  144_879.0,
+            "costo_estudio_final_rotacion": 144_879.0,
+        }
+
+        self._ensure_hr_loaded()
+        med_seg = self._hr_data.get("med_seg", [])
+        if not med_seg:
+            logger.warning("HR-Med-Seg sheet is empty, using defaults for %s", ciudad)
+            return defaults
+
+        ciudad_norm = self._normalize_locality(ciudad, keep_compound=False)
+        result = dict(defaults)
+
+        for row in med_seg:
+            row_ciudad = self._normalize_locality(
+                row.get("ciudad") or row.get("localidad", ""), keep_compound=False
+            )
+            if row_ciudad != ciudad_norm:
+                continue
+
+            cc = (row.get("centrocosto") or "").lower()
+            valor = row.get("valor")
+            if valor is None:
+                continue
+            v = float(valor)
+
+            if "examen" in cc and "medico" in cc:
+                if "nuevos" in cc or ("inicial" in cc and "rotaci" not in cc):
+                    result["costo_examen_medico_inicial"] = v
+                elif "rotaci" in cc:
+                    result["costo_examen_medico_rotacion"] = v
+                elif "anual" in cc:
+                    result["costo_examen_medico_anual"] = v
+            elif "estudio" in cc and "seguridad" in cc:
+                if "preliminar" in cc or "prelim" in cc:
+                    if "rotaci" in cc:
+                        result["costo_estudio_prelim_rotacion"] = v
+                    else:
+                        result["costo_estudio_prelim_inicial"] = v
+                elif "final" in cc or "visita" in cc:
+                    if "rotaci" in cc:
+                        result["costo_estudio_final_rotacion"] = v
+                    else:
+                        result["costo_estudio_final_inicial"] = v
+
+        logger.info("[MED_SEG] Costs loaded for %s: %s", ciudad, result)
+        return result
+
     @staticmethod
     def _normalize_locality(name: str, keep_compound: bool = True) -> str:
         """Normalize locality name for lookups: strip accents, lowercase, normalize spaces.

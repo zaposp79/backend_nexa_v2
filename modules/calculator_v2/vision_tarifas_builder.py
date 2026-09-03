@@ -771,7 +771,6 @@ def build_vision_tarifas(
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
     all_perfiles = cadena_a.get("perfiles", []) or []
 
-    # Si hay escenarios_comerciales, mostrar solo los perfiles con escenario configurado
     esc_activos = get_escenarios_activos_keys(request_data)
     perfiles_input = list(all_perfiles)
     if esc_activos is not None:
@@ -780,46 +779,129 @@ def build_vision_tarifas(
             if _clave(p.get("canal"), p.get("modalidad")) in esc_activos
         ]
 
-    # FTE total de los escenarios configurados — base para distribución proporcional de Cadena B/C.
-    # Excel HME: Cadena B/C se distribuye entre los escenarios activos (no todos los perfiles del deal).
     fte_total_activos = sum(float(p.get("fte", 0) or 0) for p in perfiles_input)
 
+    # Pesos por canal para distribuir costos B/C entre escenarios.
+    # Primario: cadena_b/c.valor de volumetría. Fallback: canales que aparecen en
+    # condiciones (tarifa, opex, capex) pero sin volumetría reciben peso = media de existentes.
+    def _vol_por_canal(cadena_key: str) -> Dict:
+        result: Dict = {}
+        vol_data = request_data.get("volumetria") or {}
+        for direction in ["inbound", "outbound"]:
+            modalidad = direction.capitalize()
+            for c in vol_data.get(direction, {}).get("canales", []):
+                cn = str(c.get("canal") or "").strip()
+                if not cn:
+                    continue
+                val = float((c.get(cadena_key) or {}).get("valor", 0) or 0)
+                k = _clave(cn, modalidad)
+                result[k] = result.get(k, 0.0) + val
+
+        # Fallback: canales con datos en condiciones pero sin entrada en volumetría
+        cond = request_data.get(f"condiciones_{cadena_key}") or {}
+        if cadena_key == "cadena_c":
+            items_lists = [
+                cond.get("tarifa_proveedor_canal") or [],
+                cond.get("opex") or [],
+                cond.get("inversiones_capex") or [],
+            ]
+        else:  # cadena_b
+            items_lists = [
+                (cond.get("opex") or {}).get("items") or [],
+                cond.get("inversiones_capex") or [],
+            ]
+        new_keys: set = set()
+        for items in items_lists:
+            for item in (items if isinstance(items, list) else []):
+                cn = str(item.get("canal") or "").strip()
+                md = str(item.get("modalidad") or "").strip()
+                if cn and md and _clave(cn, md) not in result:
+                    new_keys.add(_clave(cn, md))
+        if new_keys:
+            existing = [v for v in result.values() if v > 0]
+            mean_vol = sum(existing) / len(existing) if existing else 1.0
+            for k in new_keys:
+                result[k] = mean_vol
+        return result
+
+    vol_b_by_canal = _vol_por_canal("cadena_b")
+    vol_c_by_canal = _vol_por_canal("cadena_c")
+    total_vol_b = max(sum(vol_b_by_canal.values()), 1.0)
+    total_vol_c = max(sum(vol_c_by_canal.values()), 1.0)
+
     cts_map = _cts_map(cts_perfiles or [])
-    
-    
+
+    # Índice canal → perfil Cadena A (detecta si un escenario es Cadena A o B/C)
+    perfil_por_canal: Dict = {
+        _clave(p.get("canal"), p.get("modalidad")): p for p in perfiles_input
+    }
+
     escenarios = []
-    for i, p_input in enumerate(perfiles_input):
-        nombre = str(p_input.get("nombre", f"Escenario {i + 1}"))
-        cts_p = cts_map.get(nombre)
 
-        # Distribución FTE-proporcional de costos Cadena B y C entre escenarios activos.
-        # Excel HME C27: costo_B_esc = SUMPRODUCT(CostoFijo filtrado por canal/modalidad)
-        # Aproximación: proporcional a FTE del escenario sobre FTE total activos.
-        fte_esc = float(p_input.get("fte", 0) or 0)
-        fte_weight = fte_esc / max(fte_total_activos, 1)
-        b_for_perfil = round(costo_b_mensual * fte_weight, 2)
-        c_for_perfil = round(costo_c_mensual * fte_weight, 2)
-
-        escenario = _build_escenario(
-            idx=i,
-            perfil_input=p_input,
-            cts_p=cts_p,
-            margen_a=margen_a,
-            margen_b=margen_b,
-            margen_c=margen_c,
-            cont_op=cont_op,
-            cont_com=cont_com,
-            markup=markup,
-            descuento=descuento,
-            costo_b_mensual=b_for_perfil,
-            costo_c_mensual=c_for_perfil,
-            request_data=request_data
-        )
-        escenarios.append(escenario)
-
-    # Siempre retornar 5 slots cuando escenarios_comerciales está configurado.
-    # Slots sin datos = {"id": "Escenario N", resto: None}
     if esc_activos is not None:
+        # Construir índice de escenarios_comerciales por slot
+        esc_cfg_por_slot: Dict[int, Dict] = {}
+        for _cfg in (request_data.get("escenarios_comerciales") or []):
+            _n = int(_cfg.get("escenario") or 0)
+            if 1 <= _n <= 5 and str(_cfg.get("canal") or "").strip():
+                esc_cfg_por_slot[_n] = _cfg
+
+        for n in sorted(esc_cfg_por_slot.keys()):
+            cfg = esc_cfg_por_slot[n]
+            canal_cfg = str(cfg.get("canal") or "").strip()
+            modalidad_cfg = str(cfg.get("modalidad") or "").strip()
+            canal_key = _clave(canal_cfg, modalidad_cfg)
+
+            # Distribución volumen-proporcional de Cadena B/C para este canal
+            weight_b = vol_b_by_canal.get(canal_key, 0.0) / total_vol_b
+            weight_c = vol_c_by_canal.get(canal_key, 0.0) / total_vol_c
+            b_for_esc = round(costo_b_mensual * weight_b, 2)
+            c_for_esc = round(costo_c_mensual * weight_c, 2)
+
+            p_input = perfil_por_canal.get(canal_key)
+            if p_input is not None:
+                # Canal con perfil Cadena A: cálculo completo con CTS
+                nombre = str(p_input.get("nombre", f"Escenario {n}"))
+                cts_p = cts_map.get(nombre)
+            else:
+                # Canal solo en Cadena B/C: perfil sintético con datos del escenario comercial
+                prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
+                prop_fijo = 1.0 - prop_var
+                # Volumen para cálculo de tarifa variable (Transacción)
+                vol_transacciones = vol_b_by_canal.get(canal_key, 0.0) or vol_c_by_canal.get(canal_key, 0.0)
+                p_input = {
+                    "nombre": f"Escenario {n}",
+                    "canal": canal_cfg,
+                    "modalidad": modalidad_cfg,
+                    "modelo_cobro": cfg.get("modelo_cobro"),
+                    "pct_variable": prop_var,
+                    "componente_fijo": cfg.get("componente_fijo") if prop_fijo > 0 else None,
+                    "componente_variable": cfg.get("componente_variable") if prop_var > 0 else None,
+                    "escenario_nombre": f"Escenario {n}",
+                    "fte": 0,
+                    "volumen_transacciones_mes": vol_transacciones,
+                    "commission_rate": float(cfg.get("commission_rate") or 0),
+                }
+                cts_p = None
+
+            escenario = _build_escenario(
+                idx=n - 1,
+                perfil_input=p_input,
+                cts_p=cts_p,
+                margen_a=margen_a,
+                margen_b=margen_b,
+                margen_c=margen_c,
+                cont_op=cont_op,
+                cont_com=cont_com,
+                markup=markup,
+                descuento=descuento,
+                costo_b_mensual=b_for_esc,
+                costo_c_mensual=c_for_esc,
+                request_data=request_data,
+            )
+            escenarios.append(escenario)
+
+        # Colocar en 5 slots fijos (slots sin escenario configurado → vacíos)
         all_5 = [_empty_escenario(n) for n in range(1, 6)]
         for esc in escenarios:
             esc_id = esc.get("id", "")
@@ -830,6 +912,32 @@ def build_vision_tarifas(
             except (ValueError, IndexError):
                 pass
         escenarios = all_5
+
+    else:
+        # Modo legacy (sin escenarios_comerciales): distribución FTE-proporcional sobre Cadena A
+        for i, p_input in enumerate(perfiles_input):
+            nombre = str(p_input.get("nombre", f"Escenario {i + 1}"))
+            cts_p = cts_map.get(nombre)
+            fte_esc = float(p_input.get("fte", 0) or 0)
+            fte_weight = fte_esc / max(fte_total_activos, 1)
+            b_for_perfil = round(costo_b_mensual * fte_weight, 2)
+            c_for_perfil = round(costo_c_mensual * fte_weight, 2)
+            escenario = _build_escenario(
+                idx=i,
+                perfil_input=p_input,
+                cts_p=cts_p,
+                margen_a=margen_a,
+                margen_b=margen_b,
+                margen_c=margen_c,
+                cont_op=cont_op,
+                cont_com=cont_com,
+                markup=markup,
+                descuento=descuento,
+                costo_b_mensual=b_for_perfil,
+                costo_c_mensual=c_for_perfil,
+                request_data=request_data,
+            )
+            escenarios.append(escenario)
 
     total = _build_total(escenarios, cts_perfiles or [])
     desglose_componente_fijo = _build_desglose_componente_fijo(request_data)

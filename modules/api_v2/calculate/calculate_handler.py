@@ -25,6 +25,42 @@ from nexa_engine.modules.api_v2.results.results_repository import V2SimulationRe
 logger = logging.getLogger("nexa.motor_reglas.handler")
 
 
+def _inject_med_seg_costs(request_data: Dict[str, Any], param_store: DocumentStore) -> None:
+    """Enriquece datos_operativos con costos de HR-Med-Seg para la ciudad del deal.
+
+    Lee HR-Med-Seg por ciudad y pre-inyecta los 7 costos unitarios en datos_operativos
+    para que NominaCalculator los use directamente sin acceder a la capa de parametrización.
+    Solo sobrescribe si el campo NO viene ya explícito en el request.
+    """
+    try:
+        from nexa_engine.modules.parametrizacion.hr.repositories.hr_active_parametrization_repository import (
+            HRActiveParametrizationRepository,
+        )
+        from nexa_engine.modules.parametrizacion.services.resolver import ParametrizationResolver
+        from nexa_engine.modules.parametrizacion.repositories.infrastructure_parametrization_repository import (
+            InfrastructureParametrizationRepository,
+        )
+
+        hr_repo = HRActiveParametrizationRepository(param_store)
+        resolver = ParametrizationResolver(hr_repo=hr_repo)
+        infra = InfrastructureParametrizationRepository(resolver)
+
+        datos_op = request_data.setdefault("datos_operativos", {})
+        ciudad = str(datos_op.get("ciudad") or "")
+        if not ciudad:
+            return
+
+        costs = infra.get_all_med_seg_costs(ciudad)
+        # Inyectar solo si no vienen explícitos en el request
+        for field, value in costs.items():
+            if datos_op.get(field) is None:
+                datos_op[field] = value
+
+        logger.info("[v2] Med-Seg costs injected for ciudad=%s: %s", ciudad, costs)
+    except Exception as exc:
+        logger.warning("[v2] No se pudieron cargar costos HR-Med-Seg (%s), el motor usará defaults", exc)
+
+
 def handle_calculate_v2(
     request_data: Dict[str, Any],
     param_store: DocumentStore,
@@ -33,6 +69,8 @@ def handle_calculate_v2(
     client_id: Optional[str] = None,
 ) -> ApiResponse:
     """Ejecuta el motor v2, persiste en Cosmos y retorna respuesta simple."""
+
+    _inject_med_seg_costs(request_data, param_store)
 
     rubros_repo = RubrosRepository(param_store)
     engine = MotorDeReglas(rubros_repo)
