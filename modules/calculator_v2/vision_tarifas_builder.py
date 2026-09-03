@@ -231,7 +231,8 @@ def _build_escenario(
         
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_variable)
-        
+    
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte)
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -288,6 +289,7 @@ def _build_escenario(
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
         "ventas_multicanal": ventas_multicanal,
+        "desglose_componente_fijo": desglose_componente_fijo
     }
 
 def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], fte_total: float, escenarios: List[dict], facturacion_total: float) -> dict:
@@ -318,6 +320,8 @@ def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], ft
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
         
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_total)
+        
     return {
         "escenario": "Total",
         "modalidad": None,
@@ -332,7 +336,8 @@ def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], ft
         "tarifa_componente_variable": 0,
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
-        "ventas_multicanal": ventas_multicanal
+        "ventas_multicanal": ventas_multicanal,
+        "desglose_componente_fijo": desglose_componente_fijo
     }
 
 # ── Totales consolidados ──────────────────────────────────────────────────────
@@ -515,12 +520,12 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, 
         
     return list(concepts.values())
 
-def _build_desglose_componente_fijo(request_data: Dict[str, Any]):
+def _build_desglose_componente_fijo(request_data: Dict[str, Any], fteEscenario: float) -> Dict[str, Any]:
     desglose = {}
     parametrization = _get_cost_parametrization()
     datos_op = _datos_op(request_data)
     pct_ausentismo = datos_op.get("pct_ausentismo", 0) or 0
-    fte = datos_op.get("interacciones_gestionadas_por_fte_promedio", 0) or 0
+    fte = fteEscenario
 
     # Configuración base
     horas_semanales = next((x["valor"] for x in parametrization if x["costooperativo"] == "Horas semanales"), 0)
@@ -681,6 +686,60 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
             / sum_product
             if sum_product > 0 else 0.0
         )
+
+    return result
+
+def _build_desglose_producto_opex(
+    request_data: list[Any]
+) -> list[dict]:
+   
+   
+    products =request_data.get("condiciones_cadena_b",{}).get("opex",{}).get("items",[])
+    result = [
+        {
+            "concepto": "Costo Directo",
+            "products": [],
+        },
+        {
+            "concepto": "Costo de financiación",
+            "products": [],
+        },
+        {
+            "concepto": "Polizas",
+            "products": [],
+        },
+        {
+            "concepto": "Ingreso por producto",
+            "products": [],
+        },
+    ]
+
+    for row in products:
+        if not isinstance(row, dict):
+            continue
+
+        producto = row.get("producto") or ""
+        valor = row.get("valor") or 0.0
+
+        result[0]["products"].append({
+            "name": producto,
+            "valor": valor,  #Todo change this
+        })
+
+        result[1]["products"].append({
+            "name": producto,
+            "valor": valor,  #Todo change this
+        })
+
+        result[2]["products"].append({
+            "name": producto,
+            "valor": valor,  #Todo change this
+        })
+
+        result[3]["products"].append({
+            "name": producto,
+            "valor": valor, #Todo change this
+        })
 
     return result
 
@@ -940,12 +999,12 @@ def build_vision_tarifas(
             escenarios.append(escenario)
 
     total = _build_total(escenarios, cts_perfiles or [])
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data)
+    desglose_producto_opex = _build_desglose_producto_opex(request_data)
     return {
         "escenarios": escenarios,
         "escenario_total": _build_escenario_total(request_data["escenario_total"],request_data, fte_total_activos, escenarios, total.get("facturacion_mensual", 0.0)), 
         "total": total,
-        "desglose_componente_fijo": desglose_componente_fijo,
+        "desglose_producto_opex": desglose_producto_opex,
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
             "margen_cadena_b": margen_b,

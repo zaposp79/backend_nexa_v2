@@ -164,6 +164,7 @@ class ModeloCobroDetail(BaseModel):
     honorarios_cobranza: list[HonorarioCobranzaRow] = Field(default_factory=list)
     honorarios_totales: list[HonorarioTotalesRow] = Field(default_factory=list)
     ventas_multicanal: list[VentasMulticanalRow] = Field(default_factory=list)
+    desglose_componente_fijo: DesgloseComponenteFijo = Field(default_factory=DesgloseComponenteFijo)
 
     
 
@@ -181,12 +182,14 @@ class ResumenRow(BaseModel):
     tarifa_componente_variable: float = 0
 
 
+class DesgloseProductoOpexItem(BaseModel):
+    name: str = ""
+    valor: Optional[float] = 0
+
+
 class DesgloseProductoOpexRow(BaseModel):
-    producto: str = ""
-    costo_directo: Optional[float] = 0
-    costo_financiacion: Optional[float] = 0
-    polizas: Optional[float] = 0
-    ingreso_por_producto: Optional[float] = 0
+    concepto: str = ""
+    products: list[DesgloseProductoOpexItem] = Field(default_factory=list)
 
 
 class HonorarioCobranzaRow(BaseModel):
@@ -225,7 +228,6 @@ class ModeloCobroPublicData(BaseModel):
     selected_view_id: Optional[str] = None
     resumen_resultado_escenario: list[ResumenRow] = Field(default_factory=list)
     modelo_cobro: list[ModeloCobroDetail] = Field(default_factory=list)
-    desglose_componente_fijo: DesgloseComponenteFijo = Field(default_factory=DesgloseComponenteFijo)
     desglose_producto_opex: list[DesgloseProductoOpexRow] = Field(default_factory=list)
 
 
