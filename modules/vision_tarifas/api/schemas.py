@@ -164,6 +164,7 @@ class ModeloCobroDetail(BaseModel):
     honorarios_cobranza: list[HonorarioCobranzaRow] = Field(default_factory=list)
     honorarios_totales: list[HonorarioTotalesRow] = Field(default_factory=list)
     ventas_multicanal: list[VentasMulticanalRow] = Field(default_factory=list)
+    desglose_componente_fijo: DesgloseComponenteFijo = Field(default_factory=DesgloseComponenteFijo)
 
     
 
@@ -225,7 +226,6 @@ class ModeloCobroPublicData(BaseModel):
     selected_view_id: Optional[str] = None
     resumen_resultado_escenario: list[ResumenRow] = Field(default_factory=list)
     modelo_cobro: list[ModeloCobroDetail] = Field(default_factory=list)
-    desglose_componente_fijo: DesgloseComponenteFijo = Field(default_factory=DesgloseComponenteFijo)
     desglose_producto_opex: list[DesgloseProductoOpexRow] = Field(default_factory=list)
 
 

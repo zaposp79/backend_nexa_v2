@@ -222,6 +222,7 @@ def _build_escenario(
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
+    desglose_componente_fijo = {}
     pct_variable = perfil_input.get("pct_variable", 0.0)
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     if(servicio == "cobranzas"):
@@ -230,7 +231,8 @@ def _build_escenario(
         
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_variable)
-        
+    
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte)
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -287,6 +289,7 @@ def _build_escenario(
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
         "ventas_multicanal": ventas_multicanal,
+        "desglose_componente_fijo": desglose_componente_fijo
     }
 
 def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], fte_total: float, escenarios: List[dict], facturacion_total: float) -> dict:
@@ -309,12 +312,15 @@ def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], ft
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
+    desglose_componente_fijo = {}
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
             
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
+        
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_total)
         
     return {
         "escenario": "Total",
@@ -330,7 +336,8 @@ def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], ft
         "tarifa_componente_variable": 0,
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
-        "ventas_multicanal": ventas_multicanal
+        "ventas_multicanal": ventas_multicanal,
+        "desglose_componente_fijo": desglose_componente_fijo
     }
 
 # ── Totales consolidados ──────────────────────────────────────────────────────
@@ -513,12 +520,12 @@ def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, 
         
     return list(concepts.values())
 
-def _build_desglose_componente_fijo(request_data: Dict[str, Any]):
+def _build_desglose_componente_fijo(request_data: Dict[str, Any], fteEscenario: float) -> Dict[str, Any]:
     desglose = {}
     parametrization = _get_cost_parametrization()
     datos_op = _datos_op(request_data)
     pct_ausentismo = datos_op.get("pct_ausentismo", 0) or 0
-    fte = datos_op.get("interacciones_gestionadas_por_fte_promedio", 0) or 0
+    fte = fteEscenario
 
     # Configuración base
     horas_semanales = next((x["valor"] for x in parametrization if x["costooperativo"] == "Horas semanales"), 0)
@@ -830,12 +837,10 @@ def build_vision_tarifas(
         escenarios = all_5
 
     total = _build_total(escenarios, cts_perfiles or [])
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data)
     return {
         "escenarios": escenarios,
         "escenario_total": _build_escenario_total(request_data["escenario_total"],request_data, fte_total_activos, escenarios, total.get("facturacion_mensual", 0.0)), 
         "total": total,
-        "desglose_componente_fijo": desglose_componente_fijo,
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
             "margen_cadena_b": margen_b,

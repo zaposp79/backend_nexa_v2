@@ -33,7 +33,6 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
     canales = vt_data.get("canales") or []
     raw_scenarios = vt_data.get("escenarios_detalle") or []
     opex_raw = vt_data.get("desglose_producto_opex") or []
-    desglose_componente_fijo = vt_data.get("desglose_componente_fijo") or {}
     
     scenario_map, scenario_sources = _index_scenarios(raw_scenarios, canales, vt_data)
 
@@ -63,7 +62,6 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
         "resumen_resultado_escenario": resumen,
         "modelo_cobro": modelo_cobro,
         "desglose_producto_opex": desglose_producto_opex,
-        "desglose_componente_fijo": desglose_componente_fijo,
     }
 
     omitted_invalid: list[str] = []
@@ -156,6 +154,7 @@ def _index_scenarios(
             "honorarios_cobranza": raw.get("honorarios_cobranza") or [],
             "honorarios_totales": raw.get("honorarios_totales") or [],
             "ventas_multicanal": raw.get("ventas_multicanal") or [],
+            "desglose_componente_fijo": raw.get("desglose_componente_fijo") or {},
             "cadena_a": raw.get("cadena_a") or {},
             "cadena_b": raw.get("cadena_b") or {},
             "cadena_c": raw.get("cadena_c") or {},
@@ -752,7 +751,6 @@ def _bridge_v2_to_v1(result: dict) -> dict:
     v2_vt = result.get("vision_tarifas") or {}
     v2_escenarios = v2_vt.get("escenarios") or []
     ajustes = v2_vt.get("ajustes_aplicados") or {}
-    desglose_componente_fijo = v2_vt.get("desglose_componente_fijo") or []
     total = v2_vt.get("total") or {}
     escenario_total: dict = v2_vt.get("escenario_total") or {}
     escenarios_detalle: list[dict] = []
@@ -848,6 +846,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "honorarios_cobranza": esc.get("honorarios_cobranza") or [],
             "honorarios_totales": esc.get("honorarios_totales") or [],
             "ventas_multicanal": esc.get("ventas_multicanal") or [],
+            "desglose_componente_fijo": esc.get("desglose_componente_fijo") or {},
             "cadena_a": cadena_a,
             "cadena_b": cadena_b,
             "cadena_c": cadena_c,
@@ -868,7 +867,6 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         "escenario_total": escenario_total,
         "escenarios_detalle": escenarios_detalle,
         "desglose_producto_opex": [],
-        "desglose_componente_fijo": desglose_componente_fijo,
         "ingreso_mensual": total.get("facturacion_mensual", 0),
         "costo_total": total.get("facturacion_mensual", 0),
     }
