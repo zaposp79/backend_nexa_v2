@@ -723,22 +723,22 @@ def _build_desglose_producto_opex(
 
         result[0]["products"].append({
             "name": producto,
-            "valor": "2",
+            "valor": valor,  #Todo change this
         })
 
         result[1]["products"].append({
             "name": producto,
-            "valor": "34",
+            "valor": valor,  #Todo change this
         })
 
         result[2]["products"].append({
             "name": producto,
-            "valor": "34",
+            "valor": valor,  #Todo change this
         })
 
         result[3]["products"].append({
             "name": producto,
-            "valor": "34",
+            "valor": valor, #Todo change this
         })
 
     return result
