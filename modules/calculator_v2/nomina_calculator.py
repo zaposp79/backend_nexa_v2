@@ -138,6 +138,7 @@ class NominaCalculator:
             + self._nomina_estructura()
             + self._crucero()
             + self._capacitacion_rotacion()
+            + self._cargos_adicionales()
             + self._examenes_medicos()
             + self._estudios_seguridad()
         )
@@ -159,6 +160,7 @@ class NominaCalculator:
             "crucero_total": self._crucero(),
             "capacitacion_rotacion": self._capacitacion_rotacion(),
             "capacitacion_inicial": self._capacitacion_inicial(),
+            "cargos_adicionales": self._cargos_adicionales(),
             "examenes_medicos": self._examenes_medicos(),
             "estudios_seguridad": self._estudios_seguridad(),
             "salario_fijo": nomina_loaded - salario_variable,
@@ -450,6 +452,34 @@ class NominaCalculator:
             fte = float(perfil.get("fte", 0))
             dias = float(cap.get("dias_capacitacion_perfil", 0))
             total += fte * dias * tarifa_diaria
+        return total
+
+    def _cargos_adicionales(self) -> float:
+        """Costo mensual de cargos adicionales configurados en Cadena A.
+
+        Excel V2-8: 'Condiciones Cadena A'!D25:S35 — hasta 3 cargos adicionales.
+        Cada cargo tiene por perfil: nombre (E25/E29/E33), salario (E26/E30/E34),
+        cantidad (E27/E31/E35 = FTE directo de ese cargo para el perfil, NO ratio 1:N).
+
+        'Nomina Loaded'!C69 = AM77 × cantidad = calcular_costo_empresa(smlv) × cantidad
+
+        Salario base por defecto = SMLV (fórmula Excel: =IF(nombre<>"", SMLV, 0)).
+        """
+        datos_op = self._req.get("datos_operativos", {})
+        smlv = float(datos_op.get("smlv", _SMLV_DEFAULT))
+
+        total = 0.0
+        for perfil in self._cadena_a.get("perfiles", []):
+            for cargo in perfil.get("cargos_adicionales") or []:
+                nombre = (cargo.get("nombre") or "").strip()
+                if not nombre:
+                    continue
+                cantidad = float(cargo.get("cantidad", 0.0))
+                if cantidad <= 0:
+                    continue
+                salario_base = float(cargo.get("salario_base") or smlv)
+                costo_unit = calcular_costo_empresa(salario_base, 0.0, smlv)
+                total += costo_unit * cantidad
         return total
 
     def _examenes_medicos(self) -> float:

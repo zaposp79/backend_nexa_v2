@@ -874,7 +874,7 @@ def build_vision_tarifas(
             for item in (items if isinstance(items, list) else []):
                 cn = str(item.get("canal") or "").strip()
                 md = str(item.get("modalidad") or "").strip()
-                if cn and md and _clave(cn, md) not in result:
+                if cn and md and result.get(_clave(cn, md), 0) == 0:
                     new_keys.add(_clave(cn, md))
         if new_keys:
             existing = [v for v in result.values() if v > 0]
