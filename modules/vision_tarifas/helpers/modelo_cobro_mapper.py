@@ -46,8 +46,6 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
         scenario_map, scenario_sources, vt_data, result, missing_fields
     )
 
-    desglose_producto_opex = _build_desglose_producto_opex(opex_raw, missing_fields)
-
     for key in ("cliente", "servicio", "ciudad"):
         if header.get(key) in (None, ""):
             missing_fields.append(f"header.{key}")
@@ -61,7 +59,7 @@ def build_modelo_cobro_from_result(pricing_result_dict: Optional[dict]) -> dict:
         "selected_view_id": selected_view_id,
         "resumen_resultado_escenario": resumen,
         "modelo_cobro": modelo_cobro,
-        "desglose_producto_opex": desglose_producto_opex,
+        "desglose_producto_opex": result.get("vision_tarifas").get("desglose_producto_opex") or [],
     }
 
     omitted_invalid: list[str] = []
@@ -751,6 +749,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
     v2_vt = result.get("vision_tarifas") or {}
     v2_escenarios = v2_vt.get("escenarios") or []
     ajustes = v2_vt.get("ajustes_aplicados") or {}
+    desglose_producto_opex = v2_vt.get("desglose_producto_opex") or []
     total = v2_vt.get("total") or {}
     escenario_total: dict = v2_vt.get("escenario_total") or {}
     escenarios_detalle: list[dict] = []
@@ -866,7 +865,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         "canales": canales,
         "escenario_total": escenario_total,
         "escenarios_detalle": escenarios_detalle,
-        "desglose_producto_opex": [],
+        "desglose_producto_opex": desglose_producto_opex,
         "ingreso_mensual": total.get("facturacion_mensual", 0),
         "costo_total": total.get("facturacion_mensual", 0),
     }

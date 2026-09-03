@@ -689,6 +689,57 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
 
     return result
 
+def _build_desglose_producto_opex(
+    opex_rows: list[Any]
+) -> list[dict]:
+   
+    result = [
+        {
+            "concepto": "Costo Directo",
+            "products": [],
+        },
+        {
+            "concepto": "Costo de financiación",
+            "products": [],
+        },
+        {
+            "concepto": "Polizas",
+            "products": [],
+        },
+        {
+            "concepto": "Ingreso por producto",
+            "products": [],
+        },
+    ]
+
+    for row in opex_rows:
+        if not isinstance(row, dict):
+            continue
+
+        producto = row.get("producto") or ""
+
+        result[0]["products"].append({
+            "name": producto,
+            "valor": "2",
+        })
+
+        result[1]["products"].append({
+            "name": producto,
+            "valor": "34",
+        })
+
+        result[2]["products"].append({
+            "name": producto,
+            "valor": "34",
+        })
+
+        result[3]["products"].append({
+            "name": producto,
+            "valor": "34",
+        })
+
+    return result
+
 def _build_honorarios_totales(honorarios: Dict[str, Any], request_data: Dict[str, Any]) -> List[dict]:
     cobranzas = request_data.get("cobranzas", {}) or {}
     porcentaje_cartera = cobranzas.get("porcentaje_considerando_caidas", 0.0) if isinstance(cobranzas, dict) else 0.0
@@ -837,10 +888,12 @@ def build_vision_tarifas(
         escenarios = all_5
 
     total = _build_total(escenarios, cts_perfiles or [])
+    desglose_producto_opex = _build_desglose_producto_opex(request_data)
     return {
         "escenarios": escenarios,
         "escenario_total": _build_escenario_total(request_data["escenario_total"],request_data, fte_total_activos, escenarios, total.get("facturacion_mensual", 0.0)), 
         "total": total,
+        "desglose_producto_opex": desglose_producto_opex,
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
             "margen_cadena_b": margen_b,

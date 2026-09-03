@@ -182,12 +182,14 @@ class ResumenRow(BaseModel):
     tarifa_componente_variable: float = 0
 
 
+class DesgloseProductoOpexItem(BaseModel):
+    name: str = ""
+    valor: Optional[float] = 0
+
+
 class DesgloseProductoOpexRow(BaseModel):
-    producto: str = ""
-    costo_directo: Optional[float] = 0
-    costo_financiacion: Optional[float] = 0
-    polizas: Optional[float] = 0
-    ingreso_por_producto: Optional[float] = 0
+    concepto: str = ""
+    products: list[DesgloseProductoOpexItem] = Field(default_factory=list)
 
 
 class HonorarioCobranzaRow(BaseModel):
