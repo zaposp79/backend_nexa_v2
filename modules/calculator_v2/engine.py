@@ -1077,19 +1077,22 @@ class MotorDeReglas:
             # Aproximación: porcentaje × ingreso_neto_total
             return round(ingreso_neto_total * pct, 0) if ingreso_neto_total > 0 else fallback
 
-        margen_a = _pct("margen_a", 0.18)
-        margen_b = _pct("margen_b", 0.30)
-        margen_c = _pct("margen_c", 0.18)
+        margen_a = _pct("margen_a", 0.00)
+        margen_b = _pct("margen_b", 0.00)
+        margen_c = _pct("margen_c", 0.00)
         cont_op = _pct("cont_op", 0.0)
         cont_com = _pct("cont_com", 0.0)
         markup = _pct("markup", 0.0)
         descuento = _pct("descuento", 0.0)
-        imprevistos = _pct("pct_imprevistos", 0.10)
+        imprevistos = _pct("pct_imprevistos", 0.00)
 
         # Cadenas B/C: porcentaje = 0 si no tienen costo en este deal
         costo_b = float(totales.get("costo_cadena_b", 0))
         costo_c = float(totales.get("costo_cadena_c", 0))
 
+        ingreso_cadena_a = float(totales.get("ingreso_cadena_a", 0.0))
+        ingreso_cadena_b = float(totales.get("ingreso_cadena_b", 0.0))
+        ingreso_cadena_c = float(totales.get("ingreso_cadena_c", 0.0))
         # imprevistos_valor reutilizado para derivar ingreso_bruto_total
         imprevistos_valor = _valor("imprevistos_valor", imprevistos)
 
@@ -1100,9 +1103,9 @@ class MotorDeReglas:
         return [
             # porcentaje en decimal (0.18, no 18) — el front aplica ×100 para mostrar %
             # Margen Cadena A valor = ingreso bruto total (antes de imprevistos)
-            {"concepto": "Margen Cadena A", "porcentaje": margen_a, "valor": round(ingreso_bruto_total, 0)},
-            {"concepto": "Margen Cadena B", "porcentaje": margen_b if costo_b > 0 else 0.0, "valor": round(costo_b * margen_b / max(1 - margen_b, 0.01), 0)},
-            {"concepto": "Margen Cadena C", "porcentaje": margen_c if costo_c > 0 else 0.0, "valor": round(costo_c * margen_c / max(1 - margen_c, 0.01), 0)},
+            {"concepto": "Margen Cadena A", "porcentaje": margen_a, "valor": round(ingreso_cadena_a, 0)},
+            {"concepto": "Margen Cadena B", "porcentaje": margen_b if costo_b > 0 else 0.0, "valor": round(ingreso_cadena_b, 0)},
+            {"concepto": "Margen Cadena C", "porcentaje": margen_c if costo_c > 0 else 0.0, "valor": round(ingreso_cadena_c, 0)},
             {"concepto": "Contingencia Operativa", "porcentaje": cont_op, "valor": _valor("contingencia_operativa_valor", cont_op)},
             {"concepto": "Contingencia Comercial", "porcentaje": cont_com, "valor": _valor("contingencia_comercial_valor", cont_com)},
             {"concepto": "Markup (complejidad, horarios)", "porcentaje": markup, "valor": _valor("markup_valor", markup)},
