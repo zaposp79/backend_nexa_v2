@@ -841,22 +841,30 @@ def build_vision_tarifas(
     fte_total_activos = sum(float(p.get("fte", 0) or 0) for p in perfiles_input)
 
     # Pesos por canal para distribuir costos B/C entre escenarios.
-    # Primario: cadena_b/c.valor de volumetría. Fallback: canales que aparecen en
-    # condiciones (tarifa, opex, capex) pero sin volumetría reciben peso = media de existentes.
+    # Primario: cadena_b/c.valor de volumetría.
+    # Fallback: canales en condiciones sin cadena_c.valor usan cadena_a.valor como proxy
+    # (replica el Excel: distribución 2 niveles Inbound/Outbound por volumen efectivo).
     def _vol_por_canal(cadena_key: str) -> Dict:
-        result: Dict = {}
         vol_data = request_data.get("volumetria") or {}
+        vol_primary: Dict = {}   # cadena_b/c.valor por canal
+        vol_proxy: Dict = {}     # cadena_a.valor por canal (proxy para outbound sin cadena_c)
+
         for direction in ["inbound", "outbound"]:
             modalidad = direction.capitalize()
             for c in vol_data.get(direction, {}).get("canales", []):
                 cn = str(c.get("canal") or "").strip()
                 if not cn:
                     continue
-                val = float((c.get(cadena_key) or {}).get("valor", 0) or 0)
                 k = _clave(cn, modalidad)
-                result[k] = result.get(k, 0.0) + val
+                vol_primary[k] = vol_primary.get(k, 0.0) + float(
+                    (c.get(cadena_key) or {}).get("valor", 0) or 0
+                )
+                vol_proxy[k] = vol_proxy.get(k, 0.0) + float(
+                    (c.get("cadena_a") or {}).get("valor", 0) or 0
+                )
 
-        # Fallback: canales con datos en condiciones pero sin entrada en volumetría
+        # Canales con datos en condiciones pero sin volumen primario:
+        # usan cadena_a.valor como proxy de participación (misma lógica que el Excel).
         cond = request_data.get(f"condiciones_{cadena_key}") or {}
         if cadena_key == "cadena_c":
             items_lists = [
@@ -869,18 +877,23 @@ def build_vision_tarifas(
                 (cond.get("opex") or {}).get("items") or [],
                 cond.get("inversiones_capex") or [],
             ]
-        new_keys: set = set()
+        cond_keys: set = set()
         for items in items_lists:
             for item in (items if isinstance(items, list) else []):
                 cn = str(item.get("canal") or "").strip()
                 md = str(item.get("modalidad") or "").strip()
-                if cn and md and result.get(_clave(cn, md), 0) == 0:
-                    new_keys.add(_clave(cn, md))
-        if new_keys:
-            existing = [v for v in result.values() if v > 0]
-            mean_vol = sum(existing) / len(existing) if existing else 1.0
-            for k in new_keys:
-                result[k] = mean_vol
+                if cn and md:
+                    cond_keys.add(_clave(cn, md))
+
+        result: Dict = {}
+        all_keys = set(vol_primary.keys()) | cond_keys
+        for k in all_keys:
+            prim = vol_primary.get(k, 0.0)
+            if prim > 0:
+                result[k] = prim
+            elif k in cond_keys:
+                # proxy: cadena_a.valor si existe, sino 1.0 para garantizar participación
+                result[k] = vol_proxy.get(k, 0.0) or 1.0
         return result
 
     vol_b_by_canal = _vol_por_canal("cadena_b")

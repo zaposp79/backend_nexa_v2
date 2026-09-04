@@ -638,19 +638,6 @@ class MotorDeReglas:
         meses_raw = [m.model_dump() for m in resultados_por_mes]
 
         try:
-            vision_imprimible = build_vision_imprimible(
-                request_data=request_data,
-                meses=meses_contrato_raw,
-                totales=totales,
-                duracion_meses=duracion_meses,
-                cts_perfiles=cts_perfiles_raw,
-                cts_mensual=vision_cts.cts_mensual if vision_cts else None,
-            )
-        except Exception as exc:
-            logger.warning("[motor-reglas] Error construyendo VisionImprimible: %s", exc)
-            vision_imprimible = None
-
-        try:
             vision_tarifas = build_vision_tarifas(
                 request_data=request_data,
                 meses=meses_contrato_raw,
@@ -661,6 +648,20 @@ class MotorDeReglas:
         except Exception as exc:
             logger.warning("[motor-reglas] Error construyendo VisionTarifas: %s", exc)
             vision_tarifas = None
+
+        try:
+            vision_imprimible = build_vision_imprimible(
+                request_data=request_data,
+                meses=meses_contrato_raw,
+                totales=totales,
+                duracion_meses=duracion_meses,
+                cts_perfiles=cts_perfiles_raw,
+                cts_mensual=vision_cts.cts_mensual if vision_cts else None,
+                vision_tarifas=vision_tarifas,
+            )
+        except Exception as exc:
+            logger.warning("[motor-reglas] Error construyendo VisionImprimible: %s", exc)
+            vision_imprimible = None
 
         return SimulationResultV2(
             simulation_id=simulation_id,

@@ -56,7 +56,8 @@ class CadenaCCalculator:
         capex         = b["capex"]         * double_t
         equipo_tranv  = b["equipo_transversal_personal"] * double_h
         disp_tranv    = b["equipo_transversal_dispositivos"] * double_t
-        tarifa_canal  = b["tarifa_canal"]  * double_t
+        # Excel V2-8: 'Visión P&G'!C60 · fórmula: =SUMPRODUCT(...)*(1+IPC)*(1+IPC) — factor tecnológico al cuadrado.
+        tarifa_canal  = b["tarifa_canal"]  * double_t * double_t
         tasa_escal    = b["tasa_escalamiento"] * double_t
         hitl_personal = b["hitl_personal"] * double_h
         hitl_disp     = b["hitl_dispositivos"] * double_t

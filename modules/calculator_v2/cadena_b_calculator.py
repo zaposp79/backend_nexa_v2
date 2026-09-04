@@ -5,7 +5,8 @@ Componentes del Fijo (OPEX + CAPEX + S&M):
   - OPEX Fijo:    ítems opex.items[] con tipo_gasto="Fijo"    → Componente Fijo
   - OPEX Variable: ítems opex.items[] con tipo_gasto="Variable" → Componente Variable
   - CAPEX:        inversiones_capex[].valor_mensual × (1+tasa) × double_t  → Componente Fijo
-  - S&M:          equipo_soporte_mantenimiento (solo personal, sin dispositivos) → Componente Fijo
+  - S&M personal:     equipo_soporte_mantenimiento.roles → calcular_costo_empresa(salario) × fte (double_h)
+  - S&M dispositivos: equipo_soporte_mantenimiento.dispositivos_requeridos → precio × cantidad (double_t)
 
 Componentes del Variable (Tarifa + Escalamiento + HITL):
   - Tarifa Canal:        precio × volumen Cadena B × IPC tecnológico  → Componente Variable
@@ -14,9 +15,9 @@ Componentes del Variable (Tarifa + Escalamiento + HITL):
 
 IPC:
   - Personal (S&M, HITL): aplica componente_humano (double_h)
-  - Tecnología (OPEX, tarifas, HITL dispositivos): aplica componente_tecnológico (double_t)
+  - Tecnología (OPEX, tarifas, HITL dispositivos, S&M dispositivos): aplica componente_tecnológico (double_t)
   - CAPEX: se aplica double_t; base = valor_mensual × (1 + tasa_interes_mensual)
-  - S&M: solo personal (dispositivos S&M excluidos del costo mensual — Excel 006 Costo Fijo E206=0)
+  - S&M dispositivos: Excel V2-8 'Costo Fijo'!D206 = SUMPRODUCT(C98:C103×D98:D103) — incluido desde V2-8
 
 Volúmenes Cadena B: volumetria.{inbound|outbound}.canales[i].cadena_b.valor
 Cadenas activas: validadas en engine.py antes de instanciar este calculador.
@@ -55,10 +56,10 @@ class CadenaBCalculator:
 
         # Componente Fijo = OPEX Fijo + CAPEX + S&M
         opex_fijo = b["opex_fijo"] * double_t
-        # Excel 006: CAPEX base = valor_mensual × (1+tasa); aplica double_t (IPC acumulado)
         capex = b["capex"] * double_t
-        # Excel 006: S&M = solo personal (dispositivos excluidos, Costo Fijo E206=0)
-        sm = b["sm_personal"] * double_h
+        # Excel V2-8: S&M = personal (double_h) + dispositivos (double_t)
+        # 'Costo Fijo'!D206 = SUMPRODUCT('Condiciones Cadena B'!C98:C103×D98:D103)
+        sm = b["sm_personal"] * double_h + b["sm_dispositivos"] * double_t
         comp_fijo = opex_fijo + capex + sm
 
         # Componente Variable = OPEX Variable + Tarifa Canal + Tasa Escalamiento + HITL
@@ -92,12 +93,12 @@ class CadenaBCalculator:
         tarifa_canal = self._calc_tarifa_canal()
         tasa_escal = self._calc_tasa_escalamiento()
         hitl_personal, hitl_dispositivos = self._calc_hitl()
-
+        sm_dispositivos = self._calc_sm_dispositivos()
         logger.debug(
             "[cadena-b] base: opex_fijo=%.0f opex_var=%.0f capex=%.0f "
-            "sm_p=%.0f tarifa=%.0f escal=%.0f hitl_p=%.0f hitl_d=%.0f",
+            "sm_p=%.0f sm_d=%.0f tarifa=%.0f escal=%.0f hitl_p=%.0f hitl_d=%.0f",
             opex_fijo, opex_variable, capex,
-            sm_personal,
+            sm_personal, sm_dispositivos,
             tarifa_canal, tasa_escal, hitl_personal, hitl_dispositivos,
         )
         return {
@@ -105,6 +106,7 @@ class CadenaBCalculator:
             "opex_variable": opex_variable,
             "capex": capex,
             "sm_personal": sm_personal,
+            "sm_dispositivos": sm_dispositivos,
             "tarifa_canal": tarifa_canal,
             "tasa_escalamiento": tasa_escal,
             "hitl_personal": hitl_personal,
@@ -138,15 +140,35 @@ class CadenaBCalculator:
         )
 
     def _calc_sm(self) -> float:
-        """Solo personal S&M (calcular_costo_empresa × FTE).
+        """Personal S&M: calcular_costo_empresa(salario) × fte para roles activos.
 
-        Excel 006 'Costo Fijo' E206=0: dispositivos del equipo S&M NO se incluyen
-        en el costo mensual — solo el gasto de personal.
+        Excel V2-8: 'Costo Fijo'!E187:E198 = costo_empresa × FTE por rol.
+        Campo activado: usa 'activado' (request) o 'activo' (legacy) con default True.
+        """
+        sm = self._cadena_b.get("equipo_soporte_mantenimiento", {})
+        total = 0.0
+        for r in sm.get("roles", []):
+            activo = r.get("activado", r.get("activo", True))
+            if not activo:
+                continue
+            total += calcular_costo_empresa(float(r.get("salario", 0)), 0.0) * float(r.get("fte", 0))
+        return total
+
+    def _calc_sm_dispositivos(self) -> float:
+        """OPEX de dispositivos del equipo S&M: precio × cantidad_atribuible_a_la_operacion.
+
+        Excel V2-8: 'Costo Fijo'!D206 = SUMPRODUCT('Condiciones Cadena B'!$C$98:$C$103×$D$98:$D$103)
+        Dispositivos: Dispositivo Principal, Monitores, Headset, MS365, Power BI, Costo Puesto.
+        IPC tecnológico (double_t) se aplica en calcular_mes().
         """
         sm = self._cadena_b.get("equipo_soporte_mantenimiento", {})
         return sum(
-            calcular_costo_empresa(float(r.get("salario", 0)), 0.0) * float(r.get("fte", 0))
-            for r in sm.get("roles", []) if r.get("activo", True)
+            float(d.get("precio", 0)) * float(
+                d.get("cantidad_atribuible_a_la_operacion",
+                      d.get("cantidad_atribuible_operacion",
+                            d.get("cantidad", 0)))
+            )
+            for d in sm.get("dispositivos_requeridos", [])
         )
 
     def _calc_tarifa_canal(self) -> float:

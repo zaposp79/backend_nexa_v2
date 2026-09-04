@@ -175,17 +175,58 @@ def _build_margen_historico() -> dict:
 
 # ── Sección 04 — Comparativo de Escenarios ───────────────────────────────────
 
-def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) -> List[dict]:
+def _build_escenarios(
+    request_data: Dict[str, Any],
+    cts_perfiles: List[Dict],
+    vision_tarifas_escenarios: Optional[List[Dict]] = None,
+) -> List[dict]:
     """
-    Un escenario por perfil de Cadena A.
-    tarifa_fte proviene del CTS (ingreso_teorico / fte).
-    Excel 'Hoja Maestra Escenarios' — Escenario 1: tarifa = 5,021,494.42 / FTE.
-    Cuando escenarios_comerciales está configurado, siempre retorna 5 slots (vacíos con None).
+    Siempre retorna 5 slots.
+    Si vision_tarifas_escenarios está disponible, usa sus valores financieros (facturación,
+    tarifa_fija, tarifa_variable, fte) y los metadatos correctos por canal/modalidad.
+    Fallback: perfiles Cadena A + CTS cuando vision_tarifas no está disponible.
     """
+    # ── Cuando hay vision_tarifas: usar sus escenarios como fuente principal ──
+    if vision_tarifas_escenarios is not None:
+        all_5: List[dict] = []
+        for n in range(1, 6):
+            vt_esc = next(
+                (e for e in vision_tarifas_escenarios if str(e.get("id", "")) == f"Escenario {n}"),
+                None,
+            )
+            if vt_esc and vt_esc.get("canal"):
+                tf = vt_esc.get("tarifa_componente_fijo") or {}
+                tv = vt_esc.get("tarifa_componente_variable") or {}
+                facturacion = float(vt_esc.get("facturacion_mensual") or 0.0)
+                all_5.append({
+                    "id": f"Escenario {n}",
+                    "nombre": f"Escenario {n}",
+                    "perfil": vt_esc.get("nombre"),
+                    "modalidad": vt_esc.get("modalidad"),
+                    "canal": vt_esc.get("canal"),
+                    "modelo_cobro": vt_esc.get("modelo_cobro"),
+                    "componente_fijo": vt_esc.get("componente_fijo"),
+                    "componente_variable": vt_esc.get("componente_variable"),
+                    "pct_fijo": float(vt_esc.get("pct_fijo") or 0.0),
+                    "pct_variable": float(vt_esc.get("pct_variable") or 0.0),
+                    "fte": int(float(vt_esc.get("fte") or 0)),
+                    "facturacion": round(facturacion, 2) if facturacion else None,
+                    "tarifa_fija": tf.get("valor"),
+                    "tarifa_variable": tv.get("valor"),
+                })
+            else:
+                all_5.append({
+                    "id": f"Escenario {n}", "nombre": None, "perfil": None, "modalidad": None,
+                    "canal": None, "modelo_cobro": None, "componente_fijo": None,
+                    "componente_variable": None, "pct_fijo": None, "pct_variable": None,
+                    "fte": None, "facturacion": None, "tarifa_fija": None, "tarifa_variable": None,
+                })
+        return all_5
+
+    # ── Fallback legacy: perfiles Cadena A + CTS (sin escenarios_comerciales) ──
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
     perfiles_input = cadena_a.get("perfiles", []) or []
 
-    # Si hay escenarios_comerciales, mostrar solo los perfiles con escenario configurado
     esc_activos = get_escenarios_activos_keys(request_data)
     if esc_activos is not None:
         perfiles_input = [
@@ -209,10 +250,8 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
         comp_var = p.get("componente_variable")
         fte = int(float(p.get("fte", 0)))
         ingreso = tarifa_por_nombre.get(nombre, 0.0)
-        tarifa = (ingreso * pct_fijo)
-        tarifa_variable = (ingreso * pct_var)
-
-
+        tarifa = ingreso * pct_fijo
+        tarifa_variable = ingreso * pct_var
         escenarios.append({
             "id": escenario_nombre,
             "nombre": escenario_nombre,
@@ -225,13 +264,11 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
             "pct_fijo": pct_fijo,
             "pct_variable": round(pct_var, 4),
             "fte": fte,
-            "tarifa_fija": round(tarifa, 2) if tarifa is not None else None,
+            "facturacion": None,
+            "tarifa_fija": round(tarifa, 2) if tarifa else None,
             "tarifa_variable": round(tarifa_variable, 2) if tarifa_variable else None,
         })
 
-    # Siempre retornar 5 slots cuando escenarios_comerciales está configurado.
-    # Slots sin perfil Cadena A muestran metadatos del escenario comercial (canal, modelo, etc.)
-    # pero con datos financieros en None (pueden ser canales de Cadena B o C únicamente).
     if esc_activos is not None:
         _esc_cfg_por_slot: Dict[int, Dict] = {}
         for _cfg in (request_data.get("escenarios_comerciales") or []):
@@ -239,13 +276,13 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
             if 1 <= _n <= 5 and str(_cfg.get("canal") or "").strip():
                 _esc_cfg_por_slot[_n] = _cfg
 
-        all_5: List[dict] = []
+        all_5_fallback: List[dict] = []
         for n in range(1, 6):
             cfg = _esc_cfg_por_slot.get(n)
             if cfg:
                 prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
                 prop_fijo = round(1.0 - prop_var, 4)
-                all_5.append({
+                all_5_fallback.append({
                     "id": f"Escenario {n}",
                     "nombre": f"Escenario {n}",
                     "perfil": None,
@@ -256,16 +293,14 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
                     "componente_variable": cfg.get("componente_variable") if prop_var > 0 else None,
                     "pct_fijo": prop_fijo,
                     "pct_variable": round(prop_var, 4),
-                    "fte": None,
-                    "tarifa_fija": None,
-                    "tarifa_variable": None,
+                    "fte": None, "facturacion": None, "tarifa_fija": None, "tarifa_variable": None,
                 })
             else:
-                all_5.append({
+                all_5_fallback.append({
                     "id": f"Escenario {n}", "nombre": None, "perfil": None, "modalidad": None,
                     "canal": None, "modelo_cobro": None, "componente_fijo": None,
                     "componente_variable": None, "pct_fijo": None, "pct_variable": None,
-                    "fte": None, "tarifa_fija": None, "tarifa_variable": None,
+                    "fte": None, "facturacion": None, "tarifa_fija": None, "tarifa_variable": None,
                 })
 
         for esc in escenarios:
@@ -273,10 +308,10 @@ def _build_escenarios(request_data: Dict[str, Any], cts_perfiles: List[Dict]) ->
             try:
                 slot = int(esc_id.split()[-1]) - 1
                 if 0 <= slot < 5:
-                    all_5[slot] = esc
+                    all_5_fallback[slot] = esc
             except (ValueError, IndexError):
                 pass
-        return all_5
+        return all_5_fallback
 
     return escenarios
 
@@ -569,17 +604,22 @@ def build_vision_imprimible(
     duracion_meses: int,
     cts_perfiles: Optional[List[Dict]] = None,
     cts_mensual: Optional[float] = None,
+    vision_tarifas: Optional[Dict] = None,
 ) -> dict:
-    """Construye el dict completo de Visión Imprimible desde los resultados del motor v2.
+    """Construye el dict completo de Visión Imprimible desde los resultados del motor v2."""
+    vt_escenarios = None
+    vt_total = None
+    if vision_tarifas:
+        vt_escenarios = vision_tarifas.get("escenarios") or None
+        raw_total = vision_tarifas.get("total") or {}
+        if raw_total:
+            vt_total = {
+                "fte": raw_total.get("fte_total"),
+                "facturacion": raw_total.get("facturacion_mensual"),
+                "tarifa_fija": raw_total.get("tarifa_fija"),
+                "tarifa_variable": raw_total.get("ingreso_variable_mensual"),
+            }
 
-    Args:
-        request_data: Dict original de la petición (datos_operativos + condiciones_cadena_*).
-        meses: Lista de dicts {mes: int, valores: Dict[str, float]} del motor.
-        totales: Acumulado del motor (ingreso_bruto, ingreso_neto, costo_cadena_a, ...).
-        duracion_meses: Número de meses del contrato.
-        cts_perfiles: Perfiles de VisionCostToServe (para tarifas en Sección 04).
-        cts_mensual: CTS mensual de VisionCostToServe para la Sección 02.
-    """
     return {
         "seccion_01_ficha": _build_ficha(request_data, duracion_meses),
         "seccion_02_economics": _build_economics(meses, totales, cts_mensual),
@@ -589,7 +629,8 @@ def build_vision_imprimible(
             "margen_historico": _build_margen_historico(),
         },
         "seccion_04_escenarios": {
-            "escenarios": _build_escenarios(request_data, cts_perfiles or []),
+            "escenarios": _build_escenarios(request_data, cts_perfiles or [], vt_escenarios),
+            "total": vt_total,
         },
         "seccion_05_control": _build_control(request_data, meses, totales),
         "seccion_06_contingencias": {
