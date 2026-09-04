@@ -310,24 +310,33 @@ class MotorDeReglas:
             _avg_nomina + _avg_no_payroll, _ctx_base, for_pricing=True
         )
 
-        # Ingreso Cadena B base — Excel 'Pólizas-FC'!M458 formula:
-        # billing_b = costo_b / (1-margen_b)  [fórmula simple, sin circular ICA/GMF]
-        # Excel V2-8: Pólizas-FC rows 458-460 usan (CT_cost + pol) / (1-margen_c) × tasa_ica
-        # La fórmula analítica previa (×(1+gmf) / (denom-ica-pol)) sobreestimaba billing ~2.86%
-        _ingreso_b_base = 0.0
+        # Ingreso Cadena B base — Excel 'Hoja Maestra Escenarios'!C304 = C303/(1-margen_b)
+        # C303 = C268 = Op_B + Pol_B + ICA_B + GMF_B (todos los costos, incluye financieros).
+        # Pólizas-FC!E188: ICA_B = (Op_B+Pol_B)/fm_b × tasa_ica.
+        # Pólizas-FC!E269: GMF_B = (Op_B+Pol_B) × tasa_gmf (diferente de Cadena C que usa solo Op_C).
+        _ingreso_b_base = 0.0   # = C304, base para fila "Ingreso Cadena B" del P&G
+        _billing_b_base = 0.0   # = B = Op_B/fm_b, base para cálculo de ICA/GMF/Pol del P&G
+        _fm_b = 0.0
         if _cadena_b_calc:
             _costo_b_op = _cadena_b_calc.calcular_mes(1.0, 1.0)["costo_cadena_b"]
             _margen_b_base = float(_ctx_base.get("margen_b", 0.30))
-            _denom_b = (
-                (1.0 - _margen_b_base)
-                * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
-                * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
-                * (1.0 - float(_ctx_base.get("markup", 0.0)))
-                * (1.0 + float(_ctx_base.get("descuento", 0.0)))
-            )
-            if _denom_b > 0:
-                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M458 · formula: =costo/(1-margen_b)
-                _ingreso_b_base = _costo_b_op / _denom_b
+            _fm_b = 1.0 - _margen_b_base
+            if _fm_b > 0:
+                _billing_b_base = _costo_b_op / _fm_b
+                _tasa_pol_b0 = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                    for p in _ctx_base.get("polizas_activas", [])
+                    if "comisi" not in str(p.get("nombre", "")).lower()
+                )
+                _tasa_ica_b0 = float(_ctx_base.get("tasa_ica", 0.01))
+                _tasa_gmf_b0 = float(_ctx_base.get("tasa_gmf", 0.004))
+                _pol_b0 = _billing_b_base * _tasa_pol_b0
+                # Excel Pólizas-FC!E188: ICA_B = (Op_B+Pol_B)/fm_b × tasa_ica
+                _ica_b0 = _billing_b_base * (1.0 + _tasa_pol_b0 / _fm_b) * _tasa_ica_b0
+                # Excel Pólizas-FC!E269: GMF_B = (Op_B+Pol_B) × tasa_gmf
+                _gmf_b0 = (_costo_b_op + _pol_b0) * _tasa_gmf_b0
+                # Excel V2-8 · 'Hoja Maestra Escenarios'!C304 · formula: =C303/(1-$G$254)
+                _ingreso_b_base = (_costo_b_op + _pol_b0 + _ica_b0 + _gmf_b0) / _fm_b
 
         # Ingreso Cadena C base — Excel 'Hoja Maestra Escenarios'!C312 = C311/(1-margen_c)
         # C311 = Op_C + ICA + GMF + Pol (todos los costos incluyendo componentes financieros).
@@ -486,12 +495,11 @@ class MotorDeReglas:
             ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
             ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
             ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
-            # Excel V2-8: ICA/GMF/Pólizas de Cadena B (billing A+B+C en Pólizas-FC M162:M233).
-            # ICA_b = ingreso_b_unramped × tasa_ica (on billing, mirrors Pólizas sheet row)
-            # GMF_b = costo_b_op_mes × tasa_gmf (on operational cost, NOT on ingreso)
-            # Pol_b = ingreso_b_unramped × tasa_pol (on billing, same as ICA)
-            if _cadena_b_calc and _ingreso_b_base > 0:
-                _ingreso_b_unramped = _ingreso_b_base * (1.0 + ipc_incremental)
+            # ICA/GMF/Pólizas de Cadena B — sobre _billing_b_base (B = Op_B/fm_b), NO sobre C304.
+            # Pólizas-FC!E188: ICA_B = (Op_B+Pol_B)/fm_b × ica = billing_b × (1+pol/fm_b) × ica
+            # Pólizas-FC!E269: GMF_B = (Op_B+Pol_B) × gmf (base incluye Pol, diferente de Cadena C)
+            if _cadena_b_calc and _billing_b_base > 0:
+                _billing_b_unramped = _billing_b_base * (1.0 + ipc_incremental)
                 _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
                 _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
                 _tasa_pol_b_mes = sum(
@@ -499,9 +507,16 @@ class MotorDeReglas:
                     for p in polizas_activas_mes
                     if "comisi" not in str(p.get("nombre", "")).lower()
                 )
-                ctx["ica_hm"] += _ingreso_b_unramped * _tasa_ica_b
-                ctx["gmf_hm"] += ctx["costo_cadena_b"] * _tasa_gmf_b
-                ctx["polizas_puras_hm"] += _ingreso_b_unramped * _tasa_pol_b_mes
+                # Excel Pólizas-FC!M188: ICA_B = billing_b × (1 + tasa_pol/fm_b) × tasa_ica
+                _ica_b_billing = (
+                    _billing_b_unramped * (1.0 + _tasa_pol_b_mes / _fm_b)
+                    if _fm_b > 0 else _billing_b_unramped
+                )
+                ctx["ica_hm"] += _ica_b_billing * _tasa_ica_b
+                # Excel Pólizas-FC!M269: GMF_B = (costo_b_mes + Pol_billing_mes) × tasa_gmf
+                _pol_b_billing_mes = _billing_b_unramped * _tasa_pol_b_mes
+                ctx["gmf_hm"] += (ctx["costo_cadena_b"] + _pol_b_billing_mes) * _tasa_gmf_b
+                ctx["polizas_puras_hm"] += _billing_b_unramped * _tasa_pol_b_mes
 
             # ICA/GMF/Pólizas de Cadena C — sobre _billing_c_base (B = Op_C/fm_c), NO sobre C312.
             # C312 incorpora la recuperación de financieros en el ingreso bruto; las filas de
