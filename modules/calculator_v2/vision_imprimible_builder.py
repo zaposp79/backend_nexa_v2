@@ -171,6 +171,7 @@ def _build_margen_historico(service, client) -> dict:
         float(m.get("margenbruto", 0) or 0)
         for m in client_margin
         if m.get("categoriaservicio", "").lower() == service.lower()
+        and m.get("margenbruto", 0) > 0
     )
 
     q1, q2, q3 = quantiles(service_margins, n=4, method="inclusive")
