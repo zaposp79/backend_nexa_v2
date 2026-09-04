@@ -704,6 +704,7 @@ def _build_desglose_producto_opex(
     volumen_discount = business_rules.get("descuento_volumen",{})
     monthly_interes = request_data.get("volumetria", {}).get("indexacion", {}).get("tasa_interes_mensual", [])
     datos_op = _datos_op(request_data)
+    isFinanciationEnabled = datos_op.get("cons_costo_de_financiacion", 0)
     ica = datos_op.get("tasa_ica",0)
     gmf = datos_op.get("tasa_gmf",0)
     payment_period = datos_op.get("periodo_pago")
@@ -728,7 +729,7 @@ def _build_desglose_producto_opex(
                               (1-_get_value_business(operative_contingency))
                               *(1-_get_value_business(commercial_contingency))
                               *(1-_get_value_business(markup))
-                              *(1-_get_value_business(volumen_discount)))
+                              *(1+_get_value_business(volumen_discount)))
     
     products =request_data.get("condiciones_cadena_b",{}).get("opex",{}).get("items",[])
     result = [
@@ -756,7 +757,9 @@ def _build_desglose_producto_opex(
         
         producto = row.get("producto") or ""
         total_value = row.get("valor_total") or 0.0
-        financiation = total_value * factor_increase * float(monthly_interes) if monthly_interes else 0.0
+        financiation = 0
+        if(isFinanciationEnabled == 1):
+            financiation = total_value * factor_increase * float(monthly_interes) if monthly_interes else 0.0
        
         
         policies_product = ((total_value + financiation) / 
