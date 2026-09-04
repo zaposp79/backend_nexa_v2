@@ -25,12 +25,28 @@ from nexa_engine.modules.api_v2.results.results_repository import V2SimulationRe
 logger = logging.getLogger("nexa.motor_reglas.handler")
 
 
-def _inject_med_seg_costs(request_data: Dict[str, Any], param_store: DocumentStore) -> None:
-    """Enriquece datos_operativos con costos de HR-Med-Seg para la ciudad del deal.
+_MED_SEG_COST_KEYS = [
+    "costo_examen_medico_inicial",
+    "costo_examen_medico_rotacion",
+    "costo_examen_medico_anual",
+    "costo_estudio_prelim_inicial",
+    "costo_estudio_prelim_rotacion",
+    "costo_estudio_final_inicial",
+    "costo_estudio_final_rotacion",
+]
 
-    Lee HR-Med-Seg por ciudad y pre-inyecta los 7 costos unitarios en datos_operativos
-    para que NominaCalculator los use directamente sin acceder a la capa de parametrización.
-    Solo sobrescribe si el campo NO viene ya explícito en el request.
+
+def _inject_med_seg_costs(request_data: Dict[str, Any], param_store: DocumentStore) -> None:
+    """Enriquece datos_operativos con costos HR-Med-Seg ponderados por ciudad.
+
+    Replica la fórmula Excel:
+      NL!C329 = SUMPRODUCT(Rot!B67:F67 × Rot!B66:F66)
+    donde Rot!B66:F66 = proporciones de ciudad desde PCG!B28:C31.
+
+    Para cada ciudad en ciudades_recurso, obtiene los 7 costos de HR-Med-Seg
+    y calcula el promedio ponderado: cost = Σ(costo_ciudad × proporcion).
+    Fallback: si ciudades_recurso está vacío, usa datos_operativos.ciudad al 100%.
+    Solo inyecta si el campo NO viene ya explícito en el request.
     """
     try:
         from nexa_engine.modules.parametrizacion.hr.repositories.hr_active_parametrization_repository import (
@@ -46,17 +62,40 @@ def _inject_med_seg_costs(request_data: Dict[str, Any], param_store: DocumentSto
         infra = InfrastructureParametrizationRepository(resolver)
 
         datos_op = request_data.setdefault("datos_operativos", {})
-        ciudad = str(datos_op.get("ciudad") or "")
-        if not ciudad:
+
+        # Leer tabla de ciudades con proporciones (PCG!B28:C31)
+        ciudades_recurso = datos_op.get("ciudades_recurso") or []
+        if not ciudades_recurso:
+            ciudad = str(datos_op.get("ciudad") or "")
+            if ciudad:
+                ciudades_recurso = [{"ciudad": ciudad, "proporcion": 1.0}]
+
+        if not ciudades_recurso:
             return
 
-        costs = infra.get_all_med_seg_costs(ciudad)
-        # Inyectar solo si no vienen explícitos en el request
-        for field, value in costs.items():
-            if datos_op.get(field) is None:
-                datos_op[field] = value
+        # Normalizar proporciones (por si no suman exactamente 1.0)
+        total_prop = sum(float(c.get("proporcion") or 0) for c in ciudades_recurso)
+        if total_prop <= 0:
+            logger.warning("[v2] ciudades_recurso tiene proporciones en 0, sin inyección Med-Seg")
+            return
 
-        logger.info("[v2] Med-Seg costs injected for ciudad=%s: %s", ciudad, costs)
+        # SUMPRODUCT: Σ(costo_ciudad × proporcion) para cada tipo de costo
+        weighted: Dict[str, float] = {k: 0.0 for k in _MED_SEG_COST_KEYS}
+        for entry in ciudades_recurso:
+            ciudad = str(entry.get("ciudad") or "")
+            prop = float(entry.get("proporcion") or 0.0)
+            if prop <= 0 or not ciudad:
+                continue
+            city_costs = infra.get_all_med_seg_costs(ciudad)
+            for key in _MED_SEG_COST_KEYS:
+                weighted[key] += city_costs[key] * (prop / total_prop)
+
+        # Inyectar solo si no vienen explícitos en el request
+        for field, value in weighted.items():
+            if datos_op.get(field) is None:
+                datos_op[field] = round(value, 4)
+
+        logger.info("[v2] Med-Seg costs (SUMPRODUCT ponderado) inyectados: %s", weighted)
     except Exception as exc:
         logger.warning("[v2] No se pudieron cargar costos HR-Med-Seg (%s), el motor usará defaults", exc)
 

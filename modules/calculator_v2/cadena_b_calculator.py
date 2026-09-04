@@ -166,7 +166,8 @@ class CadenaBCalculator:
             float(d.get("precio", 0)) * float(
                 d.get("cantidad_atribuible_a_la_operacion",
                       d.get("cantidad_atribuible_operacion",
-                            d.get("cantidad", 0)))
+                            d.get("cantidad",
+                                  d.get("cantidad_total", 0))))
             )
             for d in sm.get("dispositivos_requeridos", [])
         )
