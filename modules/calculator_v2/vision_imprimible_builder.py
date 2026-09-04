@@ -164,13 +164,23 @@ def _build_margen_historico(service, client) -> dict:
     service_margin = _resolver.get_active_gn()["margenservicio"]
     client_margin = _resolver.get_active_gn()["margencliente"]
     service_margin_value = next((m.get("margenbruto") for m in service_margin if m.get("categoriaservicio").lower() == service.lower()), 0.0)
-    client_margin_value = next((m.get("margenbruto") for m in client_margin if m.get("categoriaservicio").lower() == service.lower() and m.get("cliente").lower() == client.lower()), 0.0)
+    client_margin_value = next(
+        (
+            float(m["margenbruto"])
+            for m in client_margin
+            if m.get("categoriaservicio", "").lower() == service.lower()
+            and m.get("cliente", "").lower() == client.lower()
+            and m.get("margenbruto") not in (None, "")
+        ),
+        0.0,
+    )
     from statistics import quantiles
 
     service_margins = sorted(
         float(m.get("margenbruto", 0) or 0)
         for m in client_margin
         if m.get("categoriaservicio", "").lower() == service.lower()
+        and m.get("margenbruto") not in (None, "")
     )
 
     q1, q2, q3 = quantiles(service_margins, n=4, method="inclusive")
