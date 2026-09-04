@@ -277,7 +277,7 @@ def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float) -> Dict[str, Any
         "imprevistos":         imprevistos,
         "ingreso_fijo":        ingreso_fijo,
         "ingreso_por_comision": comision_ventas,
-        "ingreso_variable":    vals.get("ingreso_variable"),
+        "ingreso_variable":    comision_ventas,
         "ingreso_neto":        vals.get("ingreso_neto"),
     }
 
