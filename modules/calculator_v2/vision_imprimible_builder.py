@@ -159,16 +159,32 @@ def _build_evolucion(meses: List[Dict]) -> List[dict]:
     ]
 
 
-def _build_margen_historico() -> dict:
+def _build_margen_historico(service, client) -> dict:
     """Construye el margen histórico temporal del servicio SAC."""
+    service_margin = _resolver.get_active_gn()["margenservicio"]
+    client_margin = _resolver.get_active_gn()["margencliente"]
+    service_margin_value = next((m.get("margenbruto") for m in service_margin if m.get("categoriaservicio").lower() == service.lower()), 0.0)
+    client_margin_value = next((m.get("margenbruto") for m in client_margin if m.get("categoriaservicio").lower() == service.lower() and m.get("cliente").lower() == client.lower()), 0.0)
+    from statistics import quantiles
+
+    service_margins = sorted(
+        float(m.get("margenbruto", 0) or 0)
+        for m in client_margin
+        if m.get("categoriaservicio", "").lower() == service.lower()
+    )
+
+    q1, q2, q3 = quantiles(service_margins, n=4, method="inclusive")
+    q4 = max(service_margins)
+
     return {
-        "servicio": "SAC",
-        "margen_servicio": 0.17,
+        "servicio": service,
+        "margen_servicio": service_margin_value,
+        "margen_cliente": client_margin_value,
         "items": {
-            "q1": 0.13,
-            "q2": 0.17,
-            "q3": 0.27,
-            "q4": 0.96,
+            "q1": q1,
+            "q2": q2,
+            "q3": q3,
+            "q4": q4,
         },
     }
 
@@ -609,6 +625,8 @@ def build_vision_imprimible(
     """Construye el dict completo de Visión Imprimible desde los resultados del motor v2."""
     vt_escenarios = None
     vt_total = None
+    service = _datos_op(request_data).get("servicio", "")
+    client = _datos_op(request_data).get("cliente", "")
     if vision_tarifas:
         vt_escenarios = vision_tarifas.get("escenarios") or None
         raw_total = vision_tarifas.get("total") or {}
@@ -626,7 +644,7 @@ def build_vision_imprimible(
         "seccion_03_grafico": {
             "waterfall": _build_waterfall(meses, totales),
             "evolucion_mensual": _build_evolucion(meses),
-            "margen_historico": _build_margen_historico(),
+            "margen_historico": _build_margen_historico(service, client),
         },
         "seccion_04_escenarios": {
             "escenarios": _build_escenarios(request_data, cts_perfiles or [], vt_escenarios),
