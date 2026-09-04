@@ -710,12 +710,16 @@ def _build_desglose_producto_opex(
     payment_period = datos_op.get("periodo_pago")
     margin_chain_b = objetive_margin.get("cadena_b",0) 
     margin_chain_a = objetive_margin.get("cadena_a",0)
-    policies = request_data.get("polizas",[])
+    policies = [
+        item
+        for item in request_data.get("polizas", [])
+        if item.get("nombre") != "Comisión de Administración (1,18% sobre ventas Gcomercial-Operaciones)"
+    ]
     sumproductPolicies = sum(
         (item.get("pct_poliza", 0) or 0) *
         (item.get("pct_atribuible", 0) or 0)
         for item in policies
-        if item.get("activa")
+        if item.get("activa") 
     )
     
     factor_increase = {
