@@ -959,10 +959,29 @@ def build_vision_tarifas(
 
     cts_map = _cts_map(cts_perfiles or [])
 
-    # Índice canal → perfil Cadena A (detecta si un escenario es Cadena A o B/C)
-    perfil_por_canal: Dict = {
-        _clave(p.get("canal"), p.get("modalidad")): p for p in perfiles_input
-    }
+    # Aggregate CTS costs and FTE per (canal, modalidad).
+    # Multiple Cadena A perfiles can share the same canal (e.g., P1 FTE=10 and P2 FTE=30
+    # both for "Voz 1 Inbound"). A dict comprehension would keep only the last one and lose
+    # P1's costs entirely. The Excel shows both escenarios for the same canal use identical
+    # underlying costs (sum of all perfiles for that canal), differing only in billing model.
+    cts_agg_by_canal: Dict = {}
+    fte_agg_by_canal: Dict = {}
+    for pf in all_perfiles:
+        k = _clave(pf.get("canal"), pf.get("modalidad"))
+        fte_agg_by_canal[k] = fte_agg_by_canal.get(k, 0) + int(float(pf.get("fte", 0) or 0))
+        cts_pf = cts_map.get(str(pf.get("nombre", "")))
+        if cts_pf is None:
+            continue
+        if k not in cts_agg_by_canal:
+            cts_agg_by_canal[k] = dict(cts_pf)
+        else:
+            agg = cts_agg_by_canal[k]
+            for field in ["ingreso", "fte", "costo_total", "payroll", "no_payroll",
+                           "ica", "gmf", "polizas", "comision_administracion",
+                           "costo_financiacion", "financiero"]:
+                agg[field] = float(agg.get(field, 0)) + float(cts_pf.get(field, 0))
+
+    cadena_a_canales: set = {_clave(p.get("canal"), p.get("modalidad")) for p in all_perfiles}
 
     escenarios = []
 
@@ -986,31 +1005,34 @@ def build_vision_tarifas(
             b_for_esc = round(costo_b_mensual * weight_b, 2)
             c_for_esc = round(costo_c_mensual * weight_c, 2)
 
-            p_input = perfil_por_canal.get(canal_key)
-            if p_input is not None:
-                # Canal con perfil Cadena A: cálculo completo con CTS
-                nombre = str(p_input.get("nombre", f"Escenario {n}"))
-                cts_p = cts_map.get(nombre)
+            prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
+            prop_fijo = 1.0 - prop_var
+            vol_transacciones = vol_b_by_canal.get(canal_key, 0.0) or vol_c_by_canal.get(canal_key, 0.0)
+
+            if canal_key in cadena_a_canales:
+                # Canal con Cadena A: usa CTS agregado de todos los perfiles del canal.
+                # escenario_nombre se fija como f"Escenario {n}" (slot correcto) para evitar
+                # que el nombre del perfil enriquecido desplace el resultado al slot equivocado.
+                cts_p = cts_agg_by_canal.get(canal_key)
+                fte_canal = fte_agg_by_canal.get(canal_key, 0)
             else:
-                # Canal solo en Cadena B/C: perfil sintético con datos del escenario comercial
-                prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
-                prop_fijo = 1.0 - prop_var
-                # Volumen para cálculo de tarifa variable (Transacción)
-                vol_transacciones = vol_b_by_canal.get(canal_key, 0.0) or vol_c_by_canal.get(canal_key, 0.0)
-                p_input = {
-                    "nombre": f"Escenario {n}",
-                    "canal": canal_cfg,
-                    "modalidad": modalidad_cfg,
-                    "modelo_cobro": cfg.get("modelo_cobro"),
-                    "pct_variable": prop_var,
-                    "componente_fijo": cfg.get("componente_fijo") if prop_fijo > 0 else None,
-                    "componente_variable": cfg.get("componente_variable") if prop_var > 0 else None,
-                    "escenario_nombre": f"Escenario {n}",
-                    "fte": 0,
-                    "volumen_transacciones_mes": vol_transacciones,
-                    "commission_rate": float(cfg.get("commission_rate") or 0),
-                }
+                # Canal solo en Cadena B/C: sin costos de Cadena A
                 cts_p = None
+                fte_canal = 0
+
+            p_input = {
+                "nombre": f"Escenario {n}",
+                "canal": canal_cfg,
+                "modalidad": modalidad_cfg,
+                "modelo_cobro": cfg.get("modelo_cobro"),
+                "pct_variable": prop_var,
+                "componente_fijo": cfg.get("componente_fijo") if prop_fijo > 0 else None,
+                "componente_variable": cfg.get("componente_variable") if prop_var > 0 else None,
+                "escenario_nombre": f"Escenario {n}",
+                "fte": fte_canal,
+                "volumen_transacciones_mes": vol_transacciones,
+                "commission_rate": float(cfg.get("commission_rate") or 0),
+            }
 
             escenario = _build_escenario(
                 idx=n - 1,
