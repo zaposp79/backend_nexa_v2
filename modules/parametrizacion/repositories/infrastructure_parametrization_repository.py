@@ -289,14 +289,30 @@ class InfrastructureParametrizationRepository:
         ciudad_norm = self._normalize_locality(ciudad, keep_compound=False)
         result = dict(defaults)
 
+        def _cities_match(a: str, b: str) -> bool:
+            """Exact match first; prefix fallback for cities ≥5 chars (handles
+            'bogota' vs 'bogota - toberin', mojibake remnants, etc.)."""
+            if a == b:
+                return True
+            # Prefix match: both share at least the first 5 chars
+            prefix_len = 5
+            if len(a) >= prefix_len and len(b) >= prefix_len:
+                return a[:prefix_len] == b[:prefix_len]
+            return False
+
         for row in med_seg:
             row_ciudad = self._normalize_locality(
                 row.get("ciudad") or row.get("localidad", ""), keep_compound=False
             )
-            if row_ciudad != ciudad_norm:
+            if not _cities_match(row_ciudad, ciudad_norm):
                 continue
 
-            cc = (row.get("centrocosto") or "").lower()
+            cc_raw = (row.get("centrocosto") or "").lower()
+            # Strip accents so "exámenes" matches "examen" after NFKD normalization.
+            cc = "".join(
+                c for c in unicodedata.normalize("NFKD", cc_raw)
+                if not unicodedata.combining(c)
+            )
             valor = row.get("valor")
             if valor is None:
                 continue
