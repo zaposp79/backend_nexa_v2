@@ -346,6 +346,14 @@ class InfrastructureParametrizationRepository:
         if not isinstance(name, str):
             name = str(name) if name is not None else ""
 
+        # Repair mojibake: UTF-8 bytes decoded as Latin-1 (e.g. "BogotÃ¡" → "Bogotá").
+        # This happens when the client serialises the JSON with UTF-8 bytes but the
+        # intermediate layer interprets them as Latin-1 (Windows-1252 / ISO-8859-1).
+        try:
+            name = name.encode("latin-1").decode("utf-8")
+        except (UnicodeDecodeError, UnicodeEncodeError):
+            pass  # not mojibake — use original string
+
         # Strip accents via NFKD decomposition (canonical compatibility)
         nfkd = unicodedata.normalize("NFKD", name)
         ascii_str = "".join(c for c in nfkd if not unicodedata.combining(c))
