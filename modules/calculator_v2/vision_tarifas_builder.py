@@ -735,7 +735,12 @@ def _build_desglose_producto_opex(
                               *(1-_get_value_business(markup))
                               *(1+_get_value_business(volumen_discount)))
     
-    products =request_data.get("condiciones_cadena_b",{}).get("opex",{}).get("items",[])
+    products = (
+        (((request_data.get("condiciones_cadena_b") or {})
+        .get("opex") or {})
+        .get("items"))
+        or []
+    )
     result = [
         {
             "concepto": "Costo Directo",
