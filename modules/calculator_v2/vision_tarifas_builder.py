@@ -983,6 +983,38 @@ def build_vision_tarifas(
 
     cadena_a_canales: set = {_clave(p.get("canal"), p.get("modalidad")) for p in all_perfiles}
 
+    # Per-canal B/C cost distribution using configured item values (valor_total / valor_mensual).
+    # Excel: each escenario computes SUMPRODUCT(B/C items filtered by canal) — a canal without
+    # B items gets 0 B cost, not a proportional share. Volume-based distribution is wrong here.
+    # Fallback to vol_b/c_by_canal only when no items are configured (backward compat).
+    def _raw_cost_by_canal(cadena_key: str) -> Dict:
+        raw: Dict = {}
+        if cadena_key == "cadena_b":
+            cond = request_data.get("condiciones_cadena_b") or {}
+            for item in (cond.get("opex") or {}).get("items", []):
+                k = _clave(item.get("canal"), item.get("modalidad"))
+                raw[k] = raw.get(k, 0.0) + float(item.get("valor_total") or 0)
+            for item in (cond.get("inversiones_capex") or []):
+                k = _clave(item.get("canal"), item.get("modalidad"))
+                raw[k] = raw.get(k, 0.0) + float(item.get("valor_mensual") or 0)
+        else:  # cadena_c
+            cond = request_data.get("condiciones_cadena_c") or {}
+            for item in (cond.get("opex") or []):
+                k = _clave(item.get("canal"), item.get("modalidad"))
+                raw[k] = raw.get(k, 0.0) + float(item.get("valor_total") or 0)
+            for item in (cond.get("inversiones_capex") or []):
+                k = _clave(item.get("canal"), item.get("modalidad"))
+                raw[k] = raw.get(k, 0.0) + float(item.get("valor_mensual") or 0)
+            for item in (cond.get("tarifa_proveedor_canal") or []):
+                k = _clave(item.get("canal"), item.get("modalidad"))
+                raw[k] = raw.get(k, 0.0) + float(item.get("valor_total") or 0)
+        return raw
+
+    b_raw_by_canal = _raw_cost_by_canal("cadena_b") or vol_b_by_canal
+    c_raw_by_canal = _raw_cost_by_canal("cadena_c") or vol_c_by_canal
+    total_b_raw = max(sum(b_raw_by_canal.values()), 1.0)
+    total_c_raw = max(sum(c_raw_by_canal.values()), 1.0)
+
     escenarios = []
 
     if esc_activos is not None:
@@ -999,11 +1031,10 @@ def build_vision_tarifas(
             modalidad_cfg = str(cfg.get("modalidad") or "").strip()
             canal_key = _clave(canal_cfg, modalidad_cfg)
 
-            # Distribución volumen-proporcional de Cadena B/C para este canal
-            weight_b = vol_b_by_canal.get(canal_key, 0.0) / total_vol_b
-            weight_c = vol_c_by_canal.get(canal_key, 0.0) / total_vol_c
-            b_for_esc = round(costo_b_mensual * weight_b, 2)
-            c_for_esc = round(costo_c_mensual * weight_c, 2)
+            # Costo B/C para este canal: distribución por item configurado, no por volumen.
+            # Canales sin items en Cadena B/C reciben 0 (comportamiento correcto del Excel).
+            b_for_esc = round(costo_b_mensual * (b_raw_by_canal.get(canal_key, 0.0) / total_b_raw), 2)
+            c_for_esc = round(costo_c_mensual * (c_raw_by_canal.get(canal_key, 0.0) / total_c_raw), 2)
 
             prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
             prop_fijo = 1.0 - prop_var
