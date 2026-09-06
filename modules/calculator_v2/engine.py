@@ -421,7 +421,11 @@ class MotorDeReglas:
             double_t = ipc_factor * _extra_ipc if comp_tecnologico == "IPC" else 1.0
             nomina_mes = nomina_fija * double_h
             no_payroll_mes = no_payroll_fijo * double_t
-            costo_op_mes = nomina_mes + no_payroll_mes
+            # Excel V2-8: 'Nomina Loaded'!E234:E235 amortiza cap_inicial en todos los meses
+            # (dias × tarifa × FTEs / duracion_meses). Incluirla en la base de costo_op_mes
+            # es necesario para que ICA/GMF/Pólizas se calculen sobre la base correcta.
+            _cap_inicial_amortizada = _cap_inicial_base / duracion_meses if duracion_meses > 0 else 0.0
+            costo_op_mes = nomina_mes + no_payroll_mes + _cap_inicial_amortizada
 
             # Ingreso: HM × (1 + IPC_incremental) — IPC simple siempre aplica al ingreso
             # Excel V2-8: 'Visión P&G'!R20 = HM!C296 × ramp × (1 + INDEX(Tasas!J8:O16,...))
