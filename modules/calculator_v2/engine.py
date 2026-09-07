@@ -309,8 +309,13 @@ class MotorDeReglas:
         )
         _avg_nomina = nomina_fija * (_avg_ipc if comp_humano == "IPC" else 1.0)
         _avg_no_payroll = no_payroll_fijo * (_avg_ipc if comp_tecnologico == "IPC" else 1.0)
+        # Excel V2-8: 'Hoja Maestra Escenarios'!C259 promedia el costo de cap_ini sobre todos los
+        # meses del deal (cap_ini_total / duracion_meses). La base de pricing incluye este costo
+        # amortizado para que la tarifa cubra la capacitación inicial distribuida en el contrato.
+        # Ejemplo: cap_ini=3M, duración=10M → +300K/mes en base de pricing → ingreso ≈ +376K.
+        _cap_ini_amortizada_pricing = _cap_inicial_base / duracion_meses if duracion_meses > 0 else 0.0
         ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
-            _avg_nomina + _avg_no_payroll, _ctx_base, for_pricing=True
+            _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing, _ctx_base, for_pricing=True
         )
 
         # Ingreso Cadena B base — Excel 'Hoja Maestra Escenarios'!C304 = C303/(1-margen_b)
