@@ -316,17 +316,16 @@ def _cadena_c_costos_mes(vals: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float], costo_variable: float) -> Dict[str, Any]:
-    nomina   = vals.get("nomina_total_mensual") or 0.0
+    nomina    = vals.get("nomina_total_mensual") or 0.0
     nopayroll = vals.get("no_payroll_total_mensual") or 0.0
-    # cap_inicial es un evento único (mes 1) incluido en nomina_total_mensual pero exhibido
-    # como línea separada. Excluirlo antes del _scale evita inflar crucero en mes 1.
-    cap_ini  = vals.get("capacitacion_inicial_mensual") or 0.0
-    nomina_recurrente = nomina - cap_ini
+    # nomina_total_mensual = nómina recurrente (sin cap_inicial).
+    # payroll display = nomina + cap_ini (evento único mes 1).
+    cap_ini   = vals.get("capacitacion_inicial_mensual") or 0.0
 
     return {
         "costo_total": vals.get("costo_total"),
         "cadena_a": {
-            "payroll":              nomina or None,
+            "payroll":              (nomina + cap_ini) or None,
             "nomina_loaded":        vals.get("nomina_loaded_mensual"),
             "salario_fijo":         vals.get("salario_fijo_mensual"),
             "salario_variable":     vals.get("salario_variable_mensual"),
@@ -334,7 +333,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float], costo_variable: flo
             "capacitacion_rotacion": vals.get("capacitacion_rotacion_mensual") or None,
             "examenes_medicos":     vals.get("examenes_medicos_mensual") or None,
             "estudios_seguridad":   vals.get("estudios_seguridad_mensual") or None,
-            "crucero":              _scale(cts["crucero_base"], nomina_recurrente, cts["payroll_base"]),
+            "crucero":              _scale(cts["crucero_base"], nomina, cts["payroll_base"]),
             "no_payroll":           nopayroll or None,
             "opex_fijo":            _scale(cts["opex_fijo_base"], nopayroll, cts["no_payroll_base"]),
             "inversiones":          _scale(cts["inversiones_base"], nopayroll, cts["no_payroll_base"]),
