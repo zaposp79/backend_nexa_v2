@@ -34,8 +34,12 @@ def _period_ingresos(v: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _period_cadena_a(v: Dict[str, Any]) -> Dict[str, Any]:
+    # payroll = nómina recurrente + capacitación inicial (evento único mes 1)
+    # nomina_total_mensual NO incluye cap_ini (para que costo_cadena_a no lo duplique).
+    _nomina = v.get("nomina_total_mensual") or 0.0
+    _cap_ini = v.get("capacitacion_inicial_mensual") or 0.0
     return {
-        "payroll": v.get("nomina_total_mensual"),
+        "payroll": _nomina + _cap_ini or None,
         "nomina_loaded": v.get("nomina_loaded_mensual"),
         "salario_fijo": v.get("salario_fijo_mensual"),
         "salario_variable": v.get("salario_variable_mensual"),

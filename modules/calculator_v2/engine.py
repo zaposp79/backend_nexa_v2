@@ -445,9 +445,10 @@ class MotorDeReglas:
                 costo_op_mes, ctx_cost, for_pricing=False
             )
 
-            # Excel V2-8: Payroll incluye capacitacion_inicial (evento único mes 1, costo fijo sin IPC).
-            # nomina_fija (recurrente) ya tiene double_h; cap_inicial no se indexa.
-            ctx["nomina_total_mensual"] = nomina_mes + (_cap_inicial_base if mes == 1 else 0.0)
+            # nomina_total_mensual = nómina recurrente mensual (sin cap_inicial).
+            # La fórmula del rubro costo_cadena_a ya agrega capacitacion_inicial_mensual
+            # por separado: nomina_total + no_payroll + cap_ini → no duplicar aquí.
+            ctx["nomina_total_mensual"] = nomina_mes
             ctx["no_payroll_total_mensual"] = no_payroll_mes
             if _cadena_b_calc:
                 ctx.update(_cadena_b_calc.calcular_mes(double_h, double_t))
