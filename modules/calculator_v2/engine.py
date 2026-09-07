@@ -43,6 +43,9 @@ logger = logging.getLogger("nexa.motor_reglas.engine")
 _AGGREGATED_IDS = {
     "nomina_total_mensual",
     "no_payroll_total_mensual",
+    # costo_cadena_a: computado directamente en el loop (nomina_mes + no_payroll_mes + cap_ini_mes1).
+    # Proteger contra rubros desactualizados en storage que omitan capacitacion_inicial_mensual.
+    "costo_cadena_a",
     "ingreso_cadena_a",
     "costo_cadena_b",
     "costo_cadena_c",
@@ -484,6 +487,10 @@ class MotorDeReglas:
             # _cap_inicial_base = FTE × dias × tarifa (costo total, evento único al inicio).
             # NO multiplicar por duracion_meses — eso causaba inflación 10×.
             ctx["capacitacion_inicial_mensual"] = _cap_inicial_base if mes == 1 else 0.0
+            # Excel V2-8: 'Visión P&G'!K35 = K36 + K45 = Payroll + NoPayroll (Costos Cadena A).
+            # Computado directamente para evitar dependencia de rubros desactualizados en storage
+            # que omitan capacitacion_inicial_mensual (causaría 3M de diferencia en mes 1).
+            ctx["costo_cadena_a"] = nomina_mes + no_payroll_mes + ctx["capacitacion_inicial_mensual"]
             ctx["cargos_adicionales_mensual"] = _nomina_detalle.get("cargos_adicionales", 0.0) * double_h
             ctx["examenes_medicos_mensual"] = _nomina_detalle.get("examenes_medicos", 0.0) * double_h
             ctx["estudios_seguridad_mensual"] = _nomina_detalle.get("estudios_seguridad", 0.0) * double_h
