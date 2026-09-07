@@ -409,8 +409,9 @@ class NominaCalculator:
           costo = fte × dias_capacitacion_perfil × tarifa_diaria_capacitacion × pct_rotacion
         Excel V2-8: 'Panel de Control General'!C20 = pct_rotacion; C16 = tarifa_diaria.
 
-        Activación: `incluye_capacitacion_rotacion` explícito (extra field) o bien
-        `dias_capacitacion_perfil > 0` como indicador implícito (patrón DTO v2).
+        Activación: dias_capacitacion_perfil > 0 (equivalente a CCA!E143=True en Excel).
+        El flag incluye_capacitacion_rotacion corresponde al CARGO Analista de Selección
+        (filas 91-92 CCA), no al activador de este costo — no se usa aquí.
         # Excel V2-8: 'Condiciones Cadena A'!D58 — días de capacitación por perfil
         """
         datos_op = self._req.get("datos_operativos", {})
@@ -423,9 +424,8 @@ class NominaCalculator:
         for perfil in self._cadena_a.get("perfiles", []):
             cap = perfil.get("capacitacion") or {}
             dias = float(cap.get("dias_capacitacion_perfil") or 0)
-            # Activado si hay flag explícito O si hay días configurados
-            activo = cap.get("incluye_capacitacion_rotacion") if "incluye_capacitacion_rotacion" in cap else dias > 0
-            if not activo:
+            # Excel CCA!E143=True cuando el perfil tiene días configurados.
+            if dias <= 0:
                 continue
             fte = float(perfil.get("fte", 0))
             total += fte * dias * tarifa_diaria * pct_rotacion
@@ -518,11 +518,38 @@ class NominaCalculator:
         cu_rot = float(datos_op.get("costo_examen_medico_rotacion") or 58_000.0)
         cu_anu = float(datos_op.get("costo_examen_medico_anual") or 58_000.0)
 
+        perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
+        ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
+
         total = 0.0
-        for perfil in self._cadena_a.get("perfiles", []):
-            fte = float(perfil.get("fte", 0.0))
-            if fte <= 0:
+        for i, perfil in enumerate(perfiles):
+            fte_agente = float(perfil.get("fte", 0.0))
+            if fte_agente <= 0:
                 continue
+
+            # FTE total para exámenes = agente + estructura del perfil.
+            # Excel: NominaLoaded!C339 = C329 × SUMPRODUCT(CCA!E94:S98 × (E77:S77=perfil)) / C11
+            # Las filas 94-98 incluyen agente (fila 97) + Formadores/Monitor/Supervisor/Validador.
+            fte_exam = fte_agente
+            for fila in ratios_filas:
+                if not fila.get("incluido", False):
+                    continue
+                for pr in fila.get("por_perfil", []):
+                    if pr.get("indice_perfil", -1) != i:
+                        continue
+                    try:
+                        personalizado = float(pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        personalizado = 0.0
+                    if personalizado > 0:
+                        fte_exam += personalizado
+                    else:
+                        try:
+                            ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                        except ValueError:
+                            ratio = 0.0
+                        if ratio > 0:
+                            fte_exam += fte_agente / ratio
 
             # Backward-compat: sub-objeto legacy examenes_medicos (soporte tests/fixtures)
             exam = perfil.get("examenes_medicos")
@@ -530,26 +557,26 @@ class NominaCalculator:
                 pct_anuales = float(exam.get("pct_examenes_anuales", pct_anuales_global))
                 if exam.get("activo_iniciales", False):
                     cu = float(exam.get("costo_unitario_iniciales") or cu_ini)
-                    total += cu * fte / duracion_meses
+                    total += cu * fte_exam / duracion_meses
                 if exam.get("activo_rotacion", False):
                     cu = float(exam.get("costo_unitario_rotacion") or cu_rot)
-                    total += cu * fte * pct_rotacion
+                    total += cu * fte_exam * pct_rotacion
                 if exam.get("activo_anual", False):
                     cu = float(exam.get("costo_unitario_anual") or cu_anu)
-                    total += cu * fte * pct_anuales / 12.0
+                    total += cu * fte_exam * pct_anuales / 12.0
                 continue
 
             # Patrón DTO v2: flags bajo capacitacion{} (CCA!E145:T147)
             cap = perfil.get("capacitacion") or {}
-            # Excel V2-8 · 'Nomina Loaded'!C339 = IF(CCA!E145, C329×(FTE)/PCG!C11, 0)
+            # Excel V2-8 · 'Nomina Loaded'!C339 = IF(CCA!E145, C329×(FTE_total)/PCG!C11, 0)
             if cap.get("incluye_costo_examenes_ingreso", False):
-                total += cu_ini * fte / duracion_meses
-            # Excel V2-8 · 'Nomina Loaded'!C340 = IF(CCA!E146, C330×(FTE)×PCG!C20, 0)
+                total += cu_ini * fte_exam / duracion_meses
+            # Excel V2-8 · 'Nomina Loaded'!C340 = IF(CCA!E146, C330×(FTE_total)×PCG!C20, 0)
             if cap.get("incluye_costo_examenes_rotacion", False):
-                total += cu_rot * fte * pct_rotacion
-            # Excel V2-8 · 'Nomina Loaded'!C341 = IF(CCA!E147, C331×(FTE)×CCA!E136/12, 0)
+                total += cu_rot * fte_exam * pct_rotacion
+            # Excel V2-8 · 'Nomina Loaded'!C341 = IF(CCA!E147, C331×(FTE_total)×CCA!E136/12, 0)
             if cap.get("incluye_costo_capacitacion_anual", False):
-                total += cu_anu * fte * pct_anuales_global / 12.0
+                total += cu_anu * fte_exam * pct_anuales_global / 12.0
 
         return total
 
