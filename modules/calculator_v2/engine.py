@@ -1040,7 +1040,7 @@ class MotorDeReglas:
 
             reglas_negocio = self._build_reglas_negocio(ctx_base, totales, ingreso_neto_total)
             cadenas = self._build_cadenas(request_data, totales)
-            vision_por_canal = self._build_vision_por_canal(perfiles_cts)
+            vision_por_canal = self._build_vision_por_canal(self,perfiles_cts, request_data)
 
             return VisionCostToServe(
                 cts_mensual=round(cts_total, 2),
@@ -1178,15 +1178,77 @@ class MotorDeReglas:
             })
 
         return cadenas
+    
+    @staticmethod
+    def _build_participaciones_canales(
+        cadenas_activas: dict,
+        canales: list[dict],
+        factor_fte: float = 0,
+    ) -> list[dict]:
+
+        resultado = []
+
+        for canal in canales:
+
+            valores = {}
+
+            for cadena in ["cadena_a","cadena_b","cadena_c"]:
+
+                if not cadenas_activas.get(cadena, False):
+                    valores[cadena] = 0
+                    continue
+
+                info = canal.get(cadena, {}) or {}
+
+                valor = float(info.get("valor", 0) or 0)
+                unidad = (info.get("unidad", "") or "").upper()
+
+                if unidad == "FTE":
+                    valor *= factor_fte
+
+                valores[cadena] = valor
+
+            total = sum(valores.values())
+
+            resultado.append({
+                "canal": canal.get("canal"),
+                "participacion_a": valores["cadena_a"] / total if total else 0,
+                "participacion_b": valores["cadena_b"] / total if total else 0,
+                "participacion_c": valores["cadena_c"] / total if total else 0,
+            })
+
+        return resultado
 
     @staticmethod
-    def _build_vision_por_canal(perfiles: List["PerfilCTS"]) -> Dict[str, Any]:
+    def _build_vision_por_canal( self,perfiles: List["PerfilCTS"], request_data: Dict[str, Any]) -> Dict[str, Any]:
         """Agrupa perfiles por modalidad → canal para la visión detallada y general.
 
         Excel V2-8: 'Visión Cost To Serve' — Sección 04/05 (canales Inbound/Outbound)
         """
         # Agrupar por (modalidad, canal)
         from collections import defaultdict
+        
+        fte = request_data.get("datos_operativos", {}).get("interacciones_gestionadas_por_fte_promedio", 0) or 0
+        volumetria = request_data.get("volumetria", {})
+        inbound_vol = volumetria.get("inbound", {})
+        outbound_vol = volumetria.get("outbound", {})
+        cadenas_activas_inbound = inbound_vol.get("cadenas_activas", {})
+        cadenas_activas_outbound = outbound_vol.get("cadenas_activas", {})
+        canales_inbound = inbound_vol.get("canales", {})
+        canales_outbound = outbound_vol.get("canales", {})
+        
+        participaciones_inbound = self._build_participaciones_canales(
+            cadenas_activas_inbound,
+            canales_inbound,
+            fte
+        )
+
+        participaciones_outbound = self._build_participaciones_canales(
+            cadenas_activas_outbound,
+            canales_outbound,
+            fte
+        )
+        
         grupos: Dict = defaultdict(lambda: {"perfiles": [], "fte": 0, "cts": 0.0})
 
         for p in perfiles:
@@ -1200,14 +1262,58 @@ class MotorDeReglas:
         result: Dict[str, List[Dict]] = {"inbound": [], "outbound": []}
         for (modalidad, canal), g in grupos.items():
             modalidad_key = "inbound" if "inbound" in modalidad else "outbound"
+            participations = participaciones_inbound if modalidad_key == "inbound" else participaciones_outbound
+            nwParticipation = next((p for p in participations if p["canal"] == canal), None)
             result[modalidad_key].append({
                 "canal": canal,
+                "participacion": nwParticipation,
                 "fte": g["fte"],
                 "cts_total": round(g["cts"], 2),
                 "perfiles": g["perfiles"],
             })
 
         return result
+
+    @staticmethod
+    def _calcular_participaciones(
+        canal_info: dict,
+        cadenas_activas: dict,
+        factor_fte: float = 100,
+    ) -> dict:
+
+        valores = {}
+
+        for cadena in ["cadena_a", "cadena_b", "cadena_c"]:
+
+            if not cadenas_activas.get(cadena, False):
+                valores[cadena] = 0
+                continue
+
+            info = canal_info.get(cadena, {}) or {}
+
+            valor = float(info.get("valor", 0) or 0)
+            unidad = (info.get("unidad", "") or "").upper()
+
+            # convertir FTE a volumen
+            if unidad == "FTE":
+                valor *= factor_fte
+
+            valores[cadena] = valor
+
+        total = sum(valores.values())
+
+        if total == 0:
+            return {
+                "participacion_a": 0,
+                "participacion_b": 0,
+                "participacion_c": 0,
+            }
+
+        return {
+            "participacion_a": valores["cadena_a"] / total,
+            "participacion_b": valores["cadena_b"] / total,
+            "participacion_c": valores["cadena_c"] / total,
+        }
 
     # ── Agregación post-cálculo ────────────────────────────────────────────
 

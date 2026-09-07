@@ -370,6 +370,10 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
     for modalidad_key in ("inbound", "outbound"):
         for canal_data in (vision_por_canal.get(modalidad_key) or []):
             canal = canal_data.get("canal", "")
+            participacion = canal_data.get("participacion", {})
+            participation_a = participacion.get("participacion_a", 0)
+            participation_b = participacion.get("participacion_b", 0)
+            participation_c = participacion.get("participacion_c", 0)
             fte_raw = float(canal_data.get("fte", 0))
             perfiles = canal_data.get("perfiles") or []
 
@@ -400,7 +404,8 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
                 result.append({"modalidad": modalidad_key.capitalize(), "canal": canal, "data": data_items})
                 continue
 
-            fte = fte_raw
+            fte = fte_raw   
+         
             prl_total    = sum(float(p.get("payroll",        0)) for p in perfiles)
             npl_total    = sum(float(p.get("no_payroll",     0)) for p in perfiles)
             cts_base     = prl_total + npl_total
@@ -411,6 +416,7 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
             opex_it      = sum(float(p.get("opex_it",        0)) for p in perfiles)
             inversiones  = sum(float(p.get("inversiones",    0)) for p in perfiles)
             costos_fijos = sum(float(p.get("costos_fijos",   0)) for p in perfiles)
+            cts_ponderado = (cts_base * participation_a) + (0 * participation_b) + (0 * participation_c)   # TODO: calcular CTS ponderado por canal (Excel: =(C34*C31)+(G34*G31)+(K34*K31))
 
             def _item(total: float, base_for_pct: float, _fte: float = fte, _base: float = cts_base) -> Dict[str, Any]:
                 pct = (base_for_pct / _base) if _base > 0 else 0.0
@@ -420,7 +426,7 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
             data_items = [
                 {
                     "nombre": "cadena_a",
-                    "participacion": "1.00",
+                    "participacion": participation_a,
                     "cost_to_serve":            _item(cts_base,    cts_base),
                     "payroll":                  _item(prl_total,   prl_total),
                     "nomina_loaded":            _item(nom_loaded,  nom_loaded),
@@ -436,12 +442,13 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
                     "inversiones":              _item(inversiones, inversiones),
                     "costos_fijos_x_estacion":  _item(costos_fijos, costos_fijos),
                 },
-                {"nombre": "cadena_b", "participacion": "0.00"},
-                {"nombre": "cadena_c", "participacion": "0.00"},
+                {"nombre": "cadena_b", "participacion": participation_b},
+                {"nombre": "cadena_c", "participacion": participation_c},
             ]
             result.append({
                 "modalidad": modalidad_key.capitalize(),
                 "canal": canal,
+                "ctsPonderado": cts_ponderado,
                 "data": data_items,
             })
     return result
