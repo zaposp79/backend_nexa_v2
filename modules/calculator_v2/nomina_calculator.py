@@ -527,12 +527,17 @@ class NominaCalculator:
             if fte_agente <= 0:
                 continue
 
-            # FTE total para exámenes = agente + estructura del perfil.
+            # FTE total para exámenes = agente (fila 97) + estructura operativa del perfil.
             # Excel: NominaLoaded!C339 = C329 × SUMPRODUCT(CCA!E94:S98 × (E77:S77=perfil)) / C11
-            # Las filas 94-98 incluyen agente (fila 97) + Formadores/Monitor/Supervisor/Validador.
+            # Filas 94-98: Formadores, Monitor, Supervisor, Agente Básico 1, Validador.
+            # El agente (fila 97, tipo="Agente") ya está en fte_agente — no sumar de ratios_filas.
+            # Los cargos Administrativos (Directors, etc.) NO son filas de examen — excluir.
+            # Solo cargos tipo="Operativo" corresponden a estructura de examen (filas 94-96, 98).
             fte_exam = fte_agente
             for fila in ratios_filas:
                 if not fila.get("incluido", False):
+                    continue
+                if fila.get("tipo", "").lower() != "operativo":
                     continue
                 for pr in fila.get("por_perfil", []):
                     if pr.get("indice_perfil", -1) != i:
