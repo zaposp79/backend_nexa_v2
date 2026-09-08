@@ -527,7 +527,11 @@ def _build_from_v2_result(
     if _ingreso_neto_total:
         totales["utilidad"]["porcentaje_contribucion"]  = _contribucion_total / _ingreso_neto_total
         totales["utilidad"]["porcentaje_utilidad_neta"] = _utilidad_neta_total / _ingreso_neto_total
-
+        
+    if(servicio == "cobranzas"):
+         totales["utilidad"]["porcentaje_contribucion"] =  totales["utilidad"]["porcentaje_contribucion"] * 100
+         totales["utilidad"]["porcentaje_utilidad_neta"] =  totales["utilidad"]["porcentaje_utilidad_neta"] * 100
+         
     return {
         "version": "v2",
         "simulation_id": simulation_id or result_doc.get("simulation_id"),
