@@ -50,6 +50,13 @@ _AGGREGATED_IDS = {
     "costo_cadena_b",
     "costo_cadena_c",
     "comision_admin_mensual",
+    # Waterfall comercial: calculados secuencialmente en el loop (cont_op → cont_com → markup → descuento).
+    # Los rubros del JSON usan ingreso_bruto como base, lo cual es incorrecto cuando hay pasos anteriores.
+    # Excel V2-8: 'Visión P&G'!K23-K26 = deltas secuenciales del waterfall HME!C296→C300.
+    "contingencia_operativa_valor",
+    "contingencia_comercial_valor",
+    "markup_valor",
+    "descuento_valor",
     # Computado en context_builder desde perfiles.estaciones_presenciales — no pisar con fórmula
     "estaciones_trabajo",
     # Sub-componentes de nómina: calculados en NominaCalculator × double_h — no pisar con fórmula
@@ -321,6 +328,19 @@ class MotorDeReglas:
         ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
             _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing, _ctx_base, for_pricing=True
         )
+        # ingreso_cadena_a_base = precio completo (HME!C300: después de margen+cont_op+cont_com+markup+descuento).
+        # ingreso_cadena_a (P&G K20) = HME!C296 = solo después del margen.
+        # Los ajustes comerciales se registran como deltas secuenciales en K23-K26.
+        _cont_op_pr   = float(_ctx_base.get("cont_op", 0.0))
+        _cont_com_pr  = float(_ctx_base.get("cont_com", 0.0))
+        _markup_pr    = float(_ctx_base.get("markup", 0.0))
+        _descuento_pr = float(_ctx_base.get("descuento", 0.0))
+        _adj_factor = (
+            (1.0 - _cont_op_pr) * (1.0 - _cont_com_pr)
+            * (1.0 - _markup_pr) * (1.0 + _descuento_pr)
+        )
+        # HME!C296 = HME!C300 × (1-cont_op) × (1-cont_com) × (1-markup) × (1+descuento)
+        ingreso_cadena_a_hm = ingreso_cadena_a_base * _adj_factor
 
         # Ingreso Cadena B base — Excel 'Hoja Maestra Escenarios'!C304 = C303/(1-margen_b)
         # C303 = C268 = Op_B + Pol_B + ICA_B + GMF_B (todos los costos, incluye financieros).
@@ -447,10 +467,9 @@ class MotorDeReglas:
             # Excel V2-8: P&G aplica (1+AumentoXAño) a toda la base NL incluyendo cap_ini
             costo_op_mes = nomina_mes + no_payroll_mes + _cap_inicial_amortizada * double_h
 
-            # Ingreso: HM × (1 + IPC_incremental) — IPC simple siempre aplica al ingreso
-            # Excel V2-8: 'Visión P&G'!R20 = HM!C296 × ramp × (1 + INDEX(Tasas!J8:O16,...))
-            # La diferencia entre aplica=True/False está en el HM base (avg vs base costs).
-            ingreso_mes = ingreso_cadena_a_base * (1.0 + ipc_incremental)
+            # Ingreso: HME!C296 × (1 + IPC_incremental) — solo después del margen (sin ajustes comerciales)
+            # Excel V2-8: 'Visión P&G'!K20 = HME!C296 × ramp × (1 + INDEX(Tasas!J8:O16,...))
+            ingreso_mes = ingreso_cadena_a_hm * (1.0 + ipc_incremental)
 
             # Pólizas con extensión: aplican durante todo el contrato (meses_extension = meses EXTRA
             # más allá del fin del contrato, no el total de meses activos).
@@ -593,8 +612,25 @@ class MotorDeReglas:
                 ctx["ica_hm"] + ctx["gmf_hm"] + ctx["comision_admin_hm"] + ctx["polizas_puras_hm"]
             )
 
-            # Ingreso Cadena A: ingreso HM (pricing, ponderado) × ramp_up del mes
+            # Ingreso Cadena A: HME!C296 × IPC × ramp_up (solo después del margen)
             ctx["ingreso_cadena_a"] = ingreso_mes * ramp_up
+
+            # Waterfall comercial secuencial: cont_op → cont_com → markup → descuento
+            # Excel V2-8: 'Visión P&G'!K23 = D297×ramp, K24 = D298×ramp, K25 = D299×ramp, K26 = D300×ramp
+            # HME!D297 = C297-C296, D298 = C298-C297, D299 = C299-C298, D300 = C299-C300 (descuento resta)
+            _co = float(ctx.get("cont_op", 0.0))
+            _cc = float(ctx.get("cont_com", 0.0))
+            _mu = float(ctx.get("markup", 0.0))
+            _dc = float(ctx.get("descuento", 0.0))
+            _i0 = ctx["ingreso_cadena_a"]                                         # HME!C296 × ramp
+            _i1 = _i0 / (1.0 - _co) if _co < 1.0 else _i0                        # HME!C297 × ramp
+            _i2 = _i1 / (1.0 - _cc) if _cc < 1.0 else _i1                        # HME!C298 × ramp
+            _i3 = _i2 / (1.0 - _mu) if _mu < 1.0 else _i2                        # HME!C299 × ramp
+            _i4 = _i3 / (1.0 + _dc) if _dc > -1.0 else _i3                       # HME!C300 × ramp
+            ctx["contingencia_operativa_valor"] = (_i1 - _i0) if _co > 0 else 0.0
+            ctx["contingencia_comercial_valor"] = (_i2 - _i1) if _cc > 0 else 0.0
+            ctx["markup_valor"]                 = (_i3 - _i2) if _mu > 0 else 0.0
+            ctx["descuento_valor"]              = (_i3 - _i4) if _dc > 0 else 0.0
 
             # Ingreso Cadena B: base × IPC_incremental × ramp_up (mirrors ingreso_cadena_a).
             # Excel V2-8: 'Visión P&G'!J21 = C304 × J15(ramp_up) × (1+IPC_anual)
