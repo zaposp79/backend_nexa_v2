@@ -562,7 +562,9 @@ class MotorDeReglas:
                     if _fm_c > 0 else _billing_c_unramped
                 )
                 ctx["ica_hm"] += _ica_c_billing * _tasa_ica_c
-                ctx["gmf_hm"] += ctx["costo_cadena_c"] * _tasa_gmf_c
+                # Excel Pólizas-FC: GMF_C usa B × fm_c = Op_C con IPC simple (1+ipc_incremental),
+                # no costo_cadena_c que lleva tarifa_canal × double_t² (P&G display, no billing).
+                ctx["gmf_hm"] += _billing_c_unramped * _fm_c * _tasa_gmf_c
                 ctx["polizas_puras_hm"] += _billing_c_unramped * _tasa_pol_c_mes
 
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
