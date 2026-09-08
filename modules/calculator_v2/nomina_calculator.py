@@ -620,24 +620,70 @@ class NominaCalculator:
         cu_final_ini = float(datos_op.get("costo_estudio_final_inicial") or 144_879.0)
         cu_final_rot = float(datos_op.get("costo_estudio_final_rotacion") or 144_879.0)
 
+        perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
+        ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
+
         total = 0.0
-        for perfil in self._cadena_a.get("perfiles", []):
+        for i, perfil in enumerate(perfiles):
             cap = perfil.get("capacitacion") or {}
-            fte = float(perfil.get("fte", 0.0))
-            if fte <= 0:
+            fte_agente = float(perfil.get("fte", 0.0))
+            if fte_agente <= 0:
                 continue
-            # Excel V2-8 · 'Nomina Loaded'!C396 formula: IF(CCA!E149, C390×(FTE)/PCG!C11, 0)
+
+            # C230: FTE directo de cargos adicionales (CCA!E27/E31/E35 — cantidad, no ratio 1:N).
+            # Excel V2-8 · 'Nomina Loaded'!C230 = SUMPRODUCT(CCA!E25:S35 × (D="Ratio") × (E8:S8=perfil))
+            cargos_add_fte = sum(
+                float(cargo.get("cantidad", 0.0))
+                for cargo in (perfil.get("cargos_adicionales") or [])
+                if (cargo.get("nombre") or "").strip()
+            )
+
+            # Base FTE para numerador de estructura = agente + cargos adicionales.
+            # Excel V2-8: CCA!E94=(E$9+E$27+E$31+E$35)/ratio; fila 97 usa solo E9 (sin cargos_adic).
+            fte_base = fte_agente + cargos_add_fte
+
+            # FTE total estudios = agente (fila 97) + estructura operativa + C230.
+            # Excel V2-8 · 'Nomina Loaded'!C396 = C390×(SUMPRODUCT(CCA!E94:S98×mask)+C230)/C11
+            # SUMPRODUCT incluye: Formadores(94)+Monitor(95)+Supervisor(96)+Agente(97)+Validador(98).
+            # Agente (fila 97) ya está en fte_agente. Operativo estructura usa fte_base/ratio.
+            # Administrativo (Directors, etc.) NO son filas de estudios — excluir.
+            # Agente Básico 1 (tipo="Agente") ya en fte_agente — excluir para evitar doble conteo.
+            fte_exam = fte_agente
+            for fila in ratios_filas:
+                if not fila.get("incluido", False):
+                    continue
+                if fila.get("tipo", "").lower() != "operativo":
+                    continue
+                for pr in fila.get("por_perfil", []):
+                    if pr.get("indice_perfil", -1) != i:
+                        continue
+                    try:
+                        personalizado = float(pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        personalizado = 0.0
+                    if personalizado > 0:
+                        fte_exam += personalizado
+                    else:
+                        try:
+                            ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                        except ValueError:
+                            ratio = 0.0
+                        if ratio > 0:
+                            fte_exam += fte_base / ratio
+            fte_exam += cargos_add_fte  # C230: suma directa de cargos adicionales
+
+            # Excel V2-8 · 'Nomina Loaded'!C396 formula: IF(CCA!E149, C390×fte_exam/PCG!C11, 0)
             if cap.get("incluye_estudio_seguridad_ingreso", False):
-                total += cu_prelim_ini * fte / duracion_meses
-            # Excel V2-8 · 'Nomina Loaded'!C397 formula: IF(CCA!E150, C391×FTE×PCG!C20, 0)
+                total += cu_prelim_ini * fte_exam / duracion_meses
+            # Excel V2-8 · 'Nomina Loaded'!C397 formula: IF(CCA!E150, C391×fte_exam×PCG!C20, 0)
             if cap.get("incluye_estudio_seguridad_rotacion", False):
-                total += cu_prelim_rot * fte * pct_rotacion
-            # Excel V2-8 · 'Nomina Loaded'!C398 formula: IF(CCA!E151, C392×(FTE)/PCG!C11, 0)
+                total += cu_prelim_rot * fte_exam * pct_rotacion
+            # Excel V2-8 · 'Nomina Loaded'!C398 formula: IF(CCA!E151, C392×fte_exam/PCG!C11, 0)
             if cap.get("incluye_estudio_seguridad_final_ingreso", False):
-                total += cu_final_ini * fte / duracion_meses
-            # Excel V2-8 · 'Nomina Loaded'!C399 formula: IF(CCA!E152, C393×FTE×PCG!C20, 0)
+                total += cu_final_ini * fte_exam / duracion_meses
+            # Excel V2-8 · 'Nomina Loaded'!C399 formula: IF(CCA!E152, C393×fte_exam×PCG!C20, 0)
             if cap.get("incluye_estudio_seguridad_final_rotacion", False):
-                total += cu_final_rot * fte * pct_rotacion
+                total += cu_final_rot * fte_exam * pct_rotacion
         return total
 
     @staticmethod
