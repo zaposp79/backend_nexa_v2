@@ -421,7 +421,7 @@ def _build_from_v2_result(
     periods = []
     for m in meses_data:
         mes_num = m.get("mes", len(periods) + 1)
-        vals: Dict[str, Any] = m.get("valores", {})
+        vals: Dict[str, Any] = dict(m.get("valores", {}))  # copia mutable
         comision_ventas = 0
         costo_variable = 0
         if(servicio == "saco" or servicio == "ventas multicanal"):
@@ -429,7 +429,14 @@ def _build_from_v2_result(
             costo_variable = next((x["valor"] for x in costos_variables_por_mes if x.get("mes") == str(mes_num)), 0)
         if(servicio == "cobranzas"):
             comision_ventas = next((x["benchmark"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
-        
+
+        # Inyectar ingreso_variable y ajustar ingreso_neto ANTES de cualquier cálculo.
+        # Excel P&G J31: =IF(servicio="Cobranzas", J30, J28+J30)
+        # Todos los consumidores de vals (ingresos, utilidad, ratios) leen el valor correcto.
+        vals["ingreso_variable"] = comision_ventas
+        if servicio == "cobranzas":
+            vals["ingreso_neto"] = comision_ventas
+
         periods.append({
             "index":    mes_num,
             "label":    f"Mes {mes_num}",
@@ -447,14 +454,19 @@ def _build_from_v2_result(
     cts_tot = {k: v for k, v in cts.items()}  # mismas bases
     total_comision = 0
     total_costo_variable = 0
-    
+
     if(servicio == "saco" or servicio == "ventas multicanal"):
         total_comision = sum(item.get("valor", 0) for item in comisiones_por_mes)
         total_costo_variable = sum(item.get("valor", 0) for item in costos_variables_por_mes)
     if(servicio == "cobranzas"):
         total_comision = sum(item.get("benchmark", 0) for item in comisiones_por_mes)
-    
-    
+
+    # Mismo override en totales para que ratios y pct_utilidad_neta sean consistentes.
+    totales_vals = dict(totales_vals)
+    totales_vals["ingreso_variable"] = total_comision
+    if servicio == "cobranzas":
+        totales_vals["ingreso_neto"] = total_comision
+
     totales = {
         "ingresos": _ingresos_mes(totales_vals, total_comision),
         "costos":   _costos_mes(totales_vals, cts_tot, total_costo_variable),
