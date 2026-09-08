@@ -286,6 +286,8 @@ class NominaCalculator:
         detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
+        # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
+        pct_rotacion = float(self._req.get("datos_operativos", {}).get("pct_rotacion", 0.0))
 
         result: Dict[str, float] = {}
         for fila in ratios_filas:
@@ -300,6 +302,10 @@ class NominaCalculator:
                 result.setdefault(nombre, 0.0)
                 continue
             cantidad = self._calcular_cantidad(fila, perfiles)
+            # Cargos de Rotación multiplican su cantidad por pct_rotacion.
+            # Excel V2-8: 'Condiciones Cadena A'!E91:E92 = (FTE/ratio) × Panel!C20
+            if "otaci" in nombre.lower() and "(" in nombre:
+                cantidad *= pct_rotacion
             if cantidad <= 0:
                 result.setdefault(nombre, 0.0)
                 continue
@@ -364,6 +370,12 @@ class NominaCalculator:
                         ratio = 0.0
                     fte = float(perfiles[indice].get("fte", 0))
                     cantidad = fte / ratio if ratio > 0 else 0.0
+                    # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
+                    if "otaci" in cargo_nombre.lower() and "(" in cargo_nombre:
+                        pct_rotacion = float(
+                            self._req.get("datos_operativos", {}).get("pct_rotacion", 0.0)
+                        )
+                        cantidad *= pct_rotacion
 
                 result[perfil_nombre][cargo_nombre] = (
                     result[perfil_nombre].get(cargo_nombre, 0.0) + costo_unit * cantidad
