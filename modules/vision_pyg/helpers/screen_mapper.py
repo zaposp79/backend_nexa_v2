@@ -251,10 +251,10 @@ def _scale(base: float, actual: float, denom: float) -> Optional[float]:
 def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float) -> Dict[str, Any]:
     ingreso_bruto    = vals.get("ingreso_bruto") or 0.0
     pct_imprevistos  = vals.get("pct_imprevistos") or 0.0
-    cont_op          = vals.get("contingencia_op") or 0.0
-    cont_com         = vals.get("contingencia_com") or 0.0
-    markup           = vals.get("markup_ingreso") or 0.0
-    descuento        = vals.get("descuento_ingreso") or 0.0
+    cont_op          = vals.get("contingencia_operativa_valor") or vals.get("contingencia_op") or 0.0
+    cont_com         = vals.get("contingencia_comercial_valor") or vals.get("contingencia_com") or 0.0
+    markup           = vals.get("markup_valor") or vals.get("markup_ingreso") or 0.0
+    descuento        = vals.get("descuento_valor") or vals.get("descuento_ingreso") or 0.0
 
     imprevistos = vals.get("imprevistos_valor")
     if imprevistos is None and pct_imprevistos:
