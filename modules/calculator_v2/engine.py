@@ -911,8 +911,18 @@ class MotorDeReglas:
         # Paso 2: N (base para ICA y GMF)
         N = costo_op + pol_pricing + admin_pricing
 
-        # Paso 3: ICA_p y GMF_p con sus fórmulas exactas de la hoja Pólizas-FC
-        ica_pricing = (N / factor_margen) * tasa_ica
+        # Paso 3: denominador completo — debe calcularse antes del ICA.
+        # Excel V2-8: 'Pólizas - Costo Financiacion'!E162 usa el denominador completo
+        # (1-margen)*(1-cont_op)*(1-cont_com)*(1-markup)*(1+descuento) como base del ICA.
+        # Con markup=0: denominador = factor_margen → resultado idéntico al anterior.
+        denominador = factor_margen * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento)
+        if denominador <= 0:
+            return 0.0, {}
+
+        # Excel V2-8 · 'Pólizas - Costo Financiacion'!E162 · ICA = (N / denominador_completo) × tasa_ica
+        # Antes: N / factor_margen (solo margen) → subestimaba ICA cuando markup > 0.
+        ica_pricing = (N / denominador) * tasa_ica
+        # Excel V2-8 · 'Pólizas - Costo Financiacion'!E243 · GMF = N × tasa_gmf (sin division de margen)
         gmf_pricing = N * tasa_gmf
 
         # Paso 3b: costo amortizado de meses de extensión más allá del contrato
@@ -936,9 +946,6 @@ class MotorDeReglas:
 
         # Paso 4: numerador = N + ICA + GMF + costo extensión amortizado
         numerador = N + ica_pricing + gmf_pricing + pol_ext_amortized
-        denominador = factor_margen * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento)
-        if denominador <= 0:
-            return 0.0, {}
 
         # Excel V2-8: pol_ext_amortized contribuye al numerador (y al ingreso_cadena_a_base)
         # pero también debe incluirse en polizas_puras_hm para que el CTS financiero sea correcto.
