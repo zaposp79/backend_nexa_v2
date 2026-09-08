@@ -1080,6 +1080,21 @@ class MotorDeReglas:
             margen = float(ctx_base.get("margen_a", 0.18))
             fte_total = int(ctx_base.get("fte_total_cadena_a", 0))
 
+            # Cadenas se construyen primero para extraer humano_b/c usados en staffing por perfil
+            cadenas = self._build_cadenas(request_data, totales)
+            _total_b = _humano_b = _total_c = _humano_c = 0.0
+            for _c in cadenas:
+                if _c.get("cadena") == "CADENA B":
+                    _total_b = _c.get("total", 0.0)
+                    for _comp in _c.get("componentes", []):
+                        if _comp.get("concepto") == "Componente Humano":
+                            _humano_b = _comp.get("total", 0.0)
+                elif _c.get("cadena") == "CADENA C":
+                    _total_c = _c.get("total", 0.0)
+                    for _comp in _c.get("componentes", []):
+                        if _comp.get("concepto") == "Componente Humano":
+                            _humano_c = _comp.get("total", 0.0)
+
             cts_calc = CTSCalculator(request_data, costo_fijo_estacion)
             perfiles_raw = cts_calc.calcular(
                 margen, componente_financiero_base, nomina_base,
@@ -1088,6 +1103,21 @@ class MotorDeReglas:
 
             if not perfiles_raw:
                 return None
+
+            # Excel V2-8 · 'Vision Cost To Serve'!I165:I170
+            # Staffing: qué % del costo total deal es staff humano (Cadena A + B + C)
+            # denominador = total_b + total_c + costo_directo_a (varía por perfil)
+            for _p in perfiles_raw:
+                _cd = _p.get("costo_directo", 0.0)
+                _nl = _p.get("nomina_loaded", 0.0)
+                _na = _p.get("nomina", 0.0)  # costo empresa agente sin overhead (I173)
+                _den = _total_b + _total_c + _cd
+                if _den > 0:
+                    _p["peso_staff_agente"]     = round((_nl + _humano_b + _humano_c) / _den, 6)
+                    _p["peso_staff_sin_agente"] = round((_nl + _humano_b + _humano_c - _na) / _den, 6)
+                    _p["staff_cadena_a"]        = round(_nl / _den, 6)
+                    _p["staff_cadena_b"]        = round(_humano_b / _den, 6)
+                    _p["staff_cadena_c"]        = round(_humano_c / _den, 6)
 
             perfiles_cts = [PerfilCTS(**p) for p in perfiles_raw]
 
@@ -1110,7 +1140,6 @@ class MotorDeReglas:
             valor_total_contrato = ingreso_neto_total
 
             reglas_negocio = self._build_reglas_negocio(ctx_base, totales, ingreso_neto_total)
-            cadenas = self._build_cadenas(request_data, totales)
             vision_por_canal = self._build_vision_por_canal(self,perfiles_cts, request_data)
 
             return VisionCostToServe(
