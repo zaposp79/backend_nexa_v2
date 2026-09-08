@@ -144,6 +144,16 @@ class NoPayrollCalculator:
             return costo
 
         formula = item.get("formula_cantidad")
+        # Auto-detect: ítems cuyo nombre termina en "(Rotaci..." usan FTE × pct_rotacion como
+        # cantidad dinámica. Excel V2-8: 'Condiciones Cadena A'!G168 = E9 × Panel!$C$20.
+        # El frontend no envía formula_cantidad para estos ítems — se detecta por el concepto.
+        if formula is None:
+            _concepto = str(
+                item.get("concepto") or item.get("descripcion") or item.get("nombre") or ""
+            )
+            if "otaci" in _concepto.lower() and "(" in _concepto:
+                formula = "rotacion"
+
         if formula == "horas_productivas":
             # Excel V2-8: 'Condiciones Cadena A'!G166 = semanas×horas×(1−ausent)×FTE×60×uso×min
             # pct_ausentismo viene de Panel!C19 (datos_operativos) — siempre actualizado.
