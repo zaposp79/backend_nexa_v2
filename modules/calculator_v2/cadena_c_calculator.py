@@ -52,13 +52,23 @@ class CadenaCCalculator:
         b = self._base
 
         opex_fijo     = b["opex_fijo"]     * double_t
+        opex_fijo_in  = b["opex_fijo_in"]  * double_t
+        opex_fijo_out = b["opex_fijo_out"] * double_t
         opex_variable = b["opex_variable"] * double_t
+        opex_var_in   = b["opex_var_in"]   * double_t
+        opex_var_out  = b["opex_var_out"]  * double_t
         capex         = b["capex"]         * double_t
+        capex_in      = b["capex_in"]      * double_t
+        capex_out     = b["capex_out"]     * double_t
         equipo_tranv  = b["equipo_transversal_personal"] * double_h
         disp_tranv    = b["equipo_transversal_dispositivos"] * double_t
         # Excel V2-8: 'Visión P&G'!C60 · fórmula: =SUMPRODUCT(...)*(1+IPC)*(1+IPC) — factor tecnológico al cuadrado.
-        tarifa_canal  = b["tarifa_canal"]  * double_t * double_t
-        tasa_escal    = b["tasa_escalamiento"] * double_t
+        tarifa_canal     = b["tarifa_canal"]     * double_t * double_t
+        tarifa_canal_in  = b["tarifa_canal_in"]  * double_t * double_t
+        tarifa_canal_out = b["tarifa_canal_out"] * double_t * double_t
+        escal_in      = b["tasa_escal_in"]  * double_t
+        escal_out     = b["tasa_escal_out"] * double_t
+        tasa_escal    = escal_in + escal_out
         hitl_personal = b["hitl_personal"] * double_h
         hitl_disp     = b["hitl_dispositivos"] * double_t
 
@@ -82,11 +92,21 @@ class CadenaCCalculator:
             "componente_fijo_cadena_c":    opex_fijo + capex + equipo_tranv + disp_tranv,
             "componente_variable_cadena_c": opex_variable + tarifa_canal + tasa_escal + hitl_personal + hitl_disp,
             "opex_fijo_cadena_c":          opex_fijo,
+            "opex_fijo_inbound_cadena_c":  opex_fijo_in,
+            "opex_fijo_outbound_cadena_c": opex_fijo_out,
             "opex_variable_cadena_c":      opex_variable,
+            "opex_var_inbound_cadena_c":   opex_var_in,
+            "opex_var_outbound_cadena_c":  opex_var_out,
             "capex_cadena_c":              capex,
+            "capex_inbound_cadena_c":      capex_in,
+            "capex_outbound_cadena_c":     capex_out,
             "equipo_transversal_cadena_c": equipo_tranv + disp_tranv,
-            "tarifa_canal_cadena_c":       tarifa_canal,
-            "tasa_escalamiento_cadena_c":  tasa_escal,
+            "tarifa_canal_cadena_c":            tarifa_canal,
+            "tarifa_canal_inbound_cadena_c":    tarifa_canal_in,
+            "tarifa_canal_outbound_cadena_c":   tarifa_canal_out,
+            "tasa_escalamiento_cadena_c":          tasa_escal,
+            "tasa_escalamiento_inbound_cadena_c":  escal_in,
+            "tasa_escalamiento_outbound_cadena_c": escal_out,
             "hitl_cadena_c":               hitl_personal + hitl_disp,
             # Componente humano: solo costos de personal (IPC double_h) — para vision CTS
             "equipo_personal_cadena_c":    equipo_tranv,
@@ -96,52 +116,82 @@ class CadenaCCalculator:
     # ── Cálculo base (sin IPC, una vez en __init__) ───────────────────────────
 
     def _compute_base(self) -> Dict[str, float]:
-        opex_fijo, opex_variable = self._calc_opex_por_tipo()
-        capex = self._calc_capex()
+        opex_fijo_in, opex_fijo_out, opex_var_in, opex_var_out = self._calc_opex_directional()
+        capex_in, capex_out = self._calc_capex_directional()
         tranv_personal, tranv_dispositivos = self._calc_equipo_transversal()
-        tarifa_canal = self._calc_tarifa_canal()
-        tasa_escal = self._calc_tasa_escalamiento()
+        tarifa_in, tarifa_out = self._calc_tarifa_canal()
+        escal_in, escal_out = self._calc_tasa_escalamiento()
         hitl_personal, hitl_dispositivos = self._calc_hitl()
 
         logger.debug(
             "[cadena-c] base: opex_f=%.0f opex_v=%.0f capex=%.0f "
-            "tranv_p=%.0f tranv_d=%.0f tarifa=%.0f escal=%.0f hitl_p=%.0f hitl_d=%.0f",
-            opex_fijo, opex_variable, capex,
+            "tranv_p=%.0f tranv_d=%.0f tarifa=%.0f escal_in=%.0f escal_out=%.0f hitl_p=%.0f hitl_d=%.0f",
+            opex_fijo_in + opex_fijo_out, opex_var_in + opex_var_out, capex_in + capex_out,
             tranv_personal, tranv_dispositivos,
-            tarifa_canal, tasa_escal, hitl_personal, hitl_dispositivos,
+            tarifa_in + tarifa_out, escal_in, escal_out, hitl_personal, hitl_dispositivos,
         )
         return {
-            "opex_fijo":                       opex_fijo,
-            "opex_variable":                   opex_variable,
-            "capex":                           capex,
+            "opex_fijo":                       opex_fijo_in + opex_fijo_out,
+            "opex_fijo_in":                    opex_fijo_in,
+            "opex_fijo_out":                   opex_fijo_out,
+            "opex_variable":                   opex_var_in + opex_var_out,
+            "opex_var_in":                     opex_var_in,
+            "opex_var_out":                    opex_var_out,
+            "capex":                           capex_in + capex_out,
+            "capex_in":                        capex_in,
+            "capex_out":                       capex_out,
             "equipo_transversal_personal":     tranv_personal,
             "equipo_transversal_dispositivos": tranv_dispositivos,
-            "tarifa_canal":                    tarifa_canal,
-            "tasa_escalamiento":               tasa_escal,
+            "tarifa_canal":                    tarifa_in + tarifa_out,
+            "tarifa_canal_in":                 tarifa_in,
+            "tarifa_canal_out":                tarifa_out,
+            "tasa_escal_in":                   escal_in,
+            "tasa_escal_out":                  escal_out,
             "hitl_personal":                   hitl_personal,
             "hitl_dispositivos":               hitl_dispositivos,
         }
 
     def _calc_opex_por_tipo(self) -> Tuple[float, float]:
         """Separa OPEX por tipo_gasto: Fijo / Variable. valor_total pre-calculado por el frontend."""
+        fi, fo, vi, vo = self._calc_opex_directional()
+        return fi + fo, vi + vo
+
+    def _calc_opex_directional(self) -> Tuple[float, float, float, float]:
+        """(fijo_in, fijo_out, var_in, var_out) por modalidad de item."""
         items = self._cadena_c.get("opex", [])
-        fijo = 0.0
-        variable = 0.0
+        fijo_in = fijo_out = var_in = var_out = 0.0
         for item in items:
             valor = float(item.get("valor_total", 0))
-            if str(item.get("tipo_gasto", "Fijo")).strip().lower() == "variable":
-                variable += valor
+            is_var = str(item.get("tipo_gasto", "Fijo")).strip().lower() == "variable"
+            is_in = str(item.get("modalidad", "")).strip().lower() == "inbound"
+            if is_var:
+                if is_in:
+                    var_in += valor
+                else:
+                    var_out += valor
             else:
-                fijo += valor
-        return fijo, variable
+                if is_in:
+                    fijo_in += valor
+                else:
+                    fijo_out += valor
+        return fijo_in, fijo_out, var_in, var_out
 
     def _calc_capex(self) -> float:
         """Base CAPEX: valor_mensual × (1+tasa). IPC (double_t) se aplica en calcular_mes()."""
+        ci, co = self._calc_capex_directional()
+        return ci + co
+
+    def _calc_capex_directional(self) -> Tuple[float, float]:
+        """(capex_in, capex_out) por modalidad de item. Base = valor_mensual × (1+tasa)."""
         tasa = self._tasa_interes
-        return sum(
-            float(i.get("valor_mensual", 0)) * (1.0 + tasa)
-            for i in self._cadena_c.get("inversiones_capex", [])
-        )
+        capex_in = capex_out = 0.0
+        for i in self._cadena_c.get("inversiones_capex", []):
+            valor = float(i.get("valor_mensual", 0)) * (1.0 + tasa)
+            if str(i.get("modalidad", "")).strip().lower() == "inbound":
+                capex_in += valor
+            else:
+                capex_out += valor
+        return capex_in, capex_out
 
     def _calc_equipo_transversal(self) -> Tuple[float, float]:
         """Personal y dispositivos del equipo transversal de Cadena C.
@@ -161,8 +211,8 @@ class CadenaCCalculator:
         )
         return personal, dispositivos
 
-    def _calc_tarifa_canal(self) -> float:
-        """Tarifa proveedor por canal. valor_total pre-calculado por el frontend.
+    def _calc_tarifa_canal(self) -> Tuple[float, float]:
+        """Tarifa proveedor por canal, split por modalidad. Retorna (tarifa_in, tarifa_out).
 
         Formato nuevo: tarifa_proveedor_canal = [{...}]  (lista directa)
         Formato legacy: tarifa_proveedor_canal = {"items": [{...}]}
@@ -172,22 +222,29 @@ class CadenaCCalculator:
             items = raw.get("items", [])
         else:
             items = raw if isinstance(raw, list) else []
-        return sum(float(i.get("valor_total", 0)) for i in items)
+        tarifa_in = tarifa_out = 0.0
+        for i in items:
+            valor = float(i.get("valor_total", 0))
+            if str(i.get("modalidad", "")).strip().lower() == "inbound":
+                tarifa_in += valor
+            else:
+                tarifa_out += valor
+        return tarifa_in, tarifa_out
 
-    def _calc_tasa_escalamiento(self) -> float:
-        """precio × volumen_cadena_c × tasa para inbound y outbound."""
+    def _calc_tasa_escalamiento(self) -> tuple[float, float]:
+        """precio × volumen_cadena_c × tasa. Retorna (escal_inbound, escal_outbound)."""
         escalamiento = self._cadena_c.get("costo_variable", {}).get("tasa_escalamiento", {})
         vol_in = self._get_volumenes("inbound")
         vol_out = self._get_volumenes("outbound")
-        total = sum(
+        escal_in = sum(
             float(i.get("precio", 0)) * vol_in.get(i.get("canal", ""), 0.0) * float(i.get("tasa", 0))
             for i in escalamiento.get("inbound", [])
         )
-        total += sum(
+        escal_out = sum(
             float(i.get("precio", 0)) * vol_out.get(i.get("canal", ""), 0.0) * float(i.get("tasa", 0))
             for i in escalamiento.get("outbound", [])
         )
-        return total
+        return escal_in, escal_out
 
     def _calc_hitl(self) -> Tuple[float, float]:
         """Personal HITL (calcular_costo_empresa) y dispositivos HITL."""

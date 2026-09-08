@@ -1233,65 +1233,136 @@ class MotorDeReglas:
                 return 0.0, 1.0
             return vol_in / total, vol_out / total
 
-        cadena_b = request_data.get("condiciones_cadena_b")
-        cadena_c = request_data.get("condiciones_cadena_c")
+        cadena_b_conds = request_data.get("condiciones_cadena_b")
+        cadena_c_conds = request_data.get("condiciones_cadena_c")
 
-        if cadena_b is not None and _cadena_activa("cadena_b"):
-            total_b = round(float(totales.get("costo_cadena_b", 0.0)), 2)
+        # CTS muestra costos mensuales base (igual que perfiles Cadena A).
+        # Usamos calcular_mes(1.0, 1.0) — sin IPC — para obtener el costo mensual de referencia.
+        if cadena_b_conds is not None and _cadena_activa("cadena_b"):
+            vals_b = CadenaBCalculator(request_data).calcular_mes(1.0, 1.0)
+            total_b = round(vals_b["costo_cadena_b"], 2)
             humano_b = round(
-                float(totales.get("sm_personal_cadena_b", 0.0))
-                + float(totales.get("hitl_personal_cadena_b", 0.0)),
+                vals_b.get("sm_personal_cadena_b", 0.0) + vals_b.get("hitl_personal_cadena_b", 0.0),
                 2,
             )
             tech_b = round(total_b - humano_b, 2)
             r_in_b, r_out_b = _ratios("cadena_b")
+            # Humano: no tiene componente direccional → ratio de volumen
+            b_hum_in  = round(humano_b * r_in_b, 2)
+            b_hum_out = round(humano_b * r_out_b, 2)
+            # Tech: componentes no-direccionales (OPEX, CAPEX, SM_disp, OPEX_var, HITL_disp) → ratio de volumen
+            #       tarifa y escalamiento tienen split real inbound/outbound desde el calculador
+            tarifa_in_b  = vals_b.get("tarifa_canal_inbound_cadena_b", 0.0)
+            tarifa_out_b = vals_b.get("tarifa_canal_outbound_cadena_b", 0.0)
+            escal_in_b   = vals_b.get("tasa_escalamiento_inbound_cadena_b", 0.0)
+            escal_out_b  = vals_b.get("tasa_escalamiento_outbound_cadena_b", 0.0)
+            _sm_p_b   = vals_b.get("sm_personal_cadena_b", 0.0)
+            _hitl_p_b = vals_b.get("hitl_personal_cadena_b", 0.0)
+            _sm_tot_b   = vals_b.get("sm_cadena_b", 0.0)
+            _hitl_tot_b = vals_b.get("hitl_cadena_b", 0.0)
+            # Dispositivos S&M e HITL no tienen tag canal → ratio de volumen
+            _sm_disp_b   = _sm_tot_b - _sm_p_b
+            _hitl_disp_b = _hitl_tot_b - _hitl_p_b
+            # OPEX y CAPEX usan tags modalidad por item; dispositivos usan ratio
+            b_tech_in = round(
+                vals_b.get("opex_fijo_inbound_cadena_b", 0.0)
+                + vals_b.get("opex_var_inbound_cadena_b", 0.0)
+                + vals_b.get("capex_inbound_cadena_b", 0.0)
+                + (_sm_disp_b + _hitl_disp_b) * r_in_b
+                + tarifa_in_b + escal_in_b, 2)
+            b_tech_out = round(
+                vals_b.get("opex_fijo_outbound_cadena_b", 0.0)
+                + vals_b.get("opex_var_outbound_cadena_b", 0.0)
+                + vals_b.get("capex_outbound_cadena_b", 0.0)
+                + (_sm_disp_b + _hitl_disp_b) * r_out_b
+                + tarifa_out_b + escal_out_b, 2)
+            logger.debug(
+                "[CTS cadena-B] total=%.2f humano=%.2f tech=%.2f r_in=%.6f | "
+                "tarifa_in=%.2f tarifa_out=%.2f escal_in=%.2f escal_out=%.2f | "
+                "tech_in=%.2f tech_out=%.2f",
+                total_b, humano_b, tech_b, r_in_b,
+                tarifa_in_b, tarifa_out_b, escal_in_b, escal_out_b,
+                b_tech_in, b_tech_out,
+            )
             cadenas.append({
                 "cadena": "CADENA B",
                 "total": total_b,
-                "inbound": round(total_b * r_in_b, 2),
-                "outbound": round(total_b * r_out_b, 2),
+                "inbound": round(b_hum_in + b_tech_in, 2),
+                "outbound": round(b_hum_out + b_tech_out, 2),
                 "componentes": [
                     {
                         "concepto": "Componente Humano",
                         "total": humano_b,
-                        "inbound": round(humano_b * r_in_b, 2),
-                        "outbound": round(humano_b * r_out_b, 2),
+                        "inbound": b_hum_in,
+                        "outbound": b_hum_out,
                     },
                     {
                         "concepto": "Componente Tecnológico",
                         "total": tech_b,
-                        "inbound": round(tech_b * r_in_b, 2),
-                        "outbound": round(tech_b * r_out_b, 2),
+                        "inbound": b_tech_in,
+                        "outbound": b_tech_out,
                     },
                 ],
             })
 
-        if cadena_c is not None and _cadena_activa("cadena_c"):
-            total_c = round(float(totales.get("costo_cadena_c", 0.0)), 2)
+        if cadena_c_conds is not None and _cadena_activa("cadena_c"):
+            vals_c = CadenaCCalculator(request_data).calcular_mes(1.0, 1.0)
+            total_c = round(vals_c["costo_cadena_c"], 2)
             humano_c = round(
-                float(totales.get("equipo_personal_cadena_c", 0.0))
-                + float(totales.get("hitl_personal_cadena_c", 0.0)),
+                vals_c.get("equipo_personal_cadena_c", 0.0) + vals_c.get("hitl_personal_cadena_c", 0.0),
                 2,
             )
             tech_c = round(total_c - humano_c, 2)
             r_in_c, r_out_c = _ratios("cadena_c")
+            c_hum_in  = round(humano_c * r_in_c, 2)
+            c_hum_out = round(humano_c * r_out_c, 2)
+            escal_in_c   = vals_c.get("tasa_escalamiento_inbound_cadena_c", 0.0)
+            escal_out_c  = vals_c.get("tasa_escalamiento_outbound_cadena_c", 0.0)
+            _eq_p_c   = vals_c.get("equipo_personal_cadena_c", 0.0)
+            _hitl_p_c = vals_c.get("hitl_personal_cadena_c", 0.0)
+            _hitl_tot_c = vals_c.get("hitl_cadena_c", 0.0)
+            _eq_tot_c   = vals_c.get("equipo_transversal_cadena_c", 0.0)
+            # Dispositivos equipo transversal e HITL no tienen tag canal → ratio de volumen
+            _eq_disp_c   = _eq_tot_c - _eq_p_c
+            _hitl_disp_c = _hitl_tot_c - _hitl_p_c
+            # OPEX, CAPEX y tarifa_canal usan tags modalidad por item; dispositivos usan ratio
+            c_tech_in = round(
+                vals_c.get("opex_fijo_inbound_cadena_c", 0.0)
+                + vals_c.get("opex_var_inbound_cadena_c", 0.0)
+                + vals_c.get("capex_inbound_cadena_c", 0.0)
+                + vals_c.get("tarifa_canal_inbound_cadena_c", 0.0)
+                + (_eq_disp_c + _hitl_disp_c) * r_in_c
+                + escal_in_c, 2)
+            c_tech_out = round(
+                vals_c.get("opex_fijo_outbound_cadena_c", 0.0)
+                + vals_c.get("opex_var_outbound_cadena_c", 0.0)
+                + vals_c.get("capex_outbound_cadena_c", 0.0)
+                + vals_c.get("tarifa_canal_outbound_cadena_c", 0.0)
+                + (_eq_disp_c + _hitl_disp_c) * r_out_c
+                + escal_out_c, 2)
+            logger.debug(
+                "[CTS cadena-C] total=%.2f humano=%.2f tech=%.2f r_in=%.6f | "
+                "escal_in=%.2f escal_out=%.2f tech_in=%.2f tech_out=%.2f",
+                total_c, humano_c, tech_c, r_in_c,
+                escal_in_c, escal_out_c, c_tech_in, c_tech_out,
+            )
             cadenas.append({
                 "cadena": "CADENA C",
                 "total": total_c,
-                "inbound": round(total_c * r_in_c, 2),
-                "outbound": round(total_c * r_out_c, 2),
+                "inbound": round(c_hum_in + c_tech_in, 2),
+                "outbound": round(c_hum_out + c_tech_out, 2),
                 "componentes": [
                     {
                         "concepto": "Componente Humano",
                         "total": humano_c,
-                        "inbound": round(humano_c * r_in_c, 2),
-                        "outbound": round(humano_c * r_out_c, 2),
+                        "inbound": c_hum_in,
+                        "outbound": c_hum_out,
                     },
                     {
                         "concepto": "Componente Tecnológico",
                         "total": tech_c,
-                        "inbound": round(tech_c * r_in_c, 2),
-                        "outbound": round(tech_c * r_out_c, 2),
+                        "inbound": c_tech_in,
+                        "outbound": c_tech_out,
                     },
                 ],
             })
