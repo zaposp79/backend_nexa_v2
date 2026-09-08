@@ -421,19 +421,27 @@ class MotorDeReglas:
             )
 
             # Factor de escala para costos:
-            # - aplica_indexacion_tarifa=True  → doble IPC (NL-level × P&G-level incremental)
-            # - aplica_indexacion_tarifa=False → solo IPC simple del NL (factor acumulado)
-            # Excel V2-8: P&G R38 formula aplica el extra IPC solo cuando la tarifa está indexada.
-            _extra_ipc = (1.0 + ipc_incremental) if aplica_indexacion_tarifa else 1.0
-            double_h = ipc_factor * _extra_ipc if comp_humano == "IPC" else 1.0
-            double_t = ipc_factor * _extra_ipc if comp_tecnologico == "IPC" else 1.0
+            # Excel V2-8: 'Tasas, TRM, Polizas' — dos modos según indexación de tarifa:
+            # - aplica_indexacion_tarifa=True  → doble IPC: NL acumulado × P&G incremental
+            #   Aumento Acumulado ≠ 1 → NL ya tiene IPC; P&G aplica tasa del año encima.
+            # - aplica_indexacion_tarifa=False → solo "Aumento x Año" del año calendario.
+            #   Aumento Acumulado = 1 (Excel fuerza 100%) → NL sin IPC; P&G aplica tasa directa.
+            #   NO acumular ipc_factor: las tasas en ipc_rates son ya las tasas por año (no base).
+            if aplica_indexacion_tarifa:
+                double_h = ipc_factor * (1.0 + ipc_incremental) if comp_humano == "IPC" else 1.0
+                double_t = ipc_factor * (1.0 + ipc_incremental) if comp_tecnologico == "IPC" else 1.0
+            else:
+                double_h = (1.0 + ipc_incremental) if comp_humano == "IPC" else 1.0
+                double_t = (1.0 + ipc_incremental) if comp_tecnologico == "IPC" else 1.0
             nomina_mes = nomina_fija * double_h
             no_payroll_mes = no_payroll_fijo * double_t
             # Excel V2-8: 'Nomina Loaded'!E234:E235 amortiza cap_inicial en todos los meses
             # (dias × tarifa × FTEs / duracion_meses). Incluirla en la base de costo_op_mes
             # es necesario para que ICA/GMF/Pólizas se calculen sobre la base correcta.
             _cap_inicial_amortizada = _cap_inicial_base / duracion_meses if duracion_meses > 0 else 0.0
-            costo_op_mes = nomina_mes + no_payroll_mes + _cap_inicial_amortizada
+            # cap_ini es parte de nómina en Excel (NominaLoaded) → escala con comp_humano IPC
+            # Excel V2-8: P&G aplica (1+AumentoXAño) a toda la base NL incluyendo cap_ini
+            costo_op_mes = nomina_mes + no_payroll_mes + _cap_inicial_amortizada * double_h
 
             # Ingreso: HM × (1 + IPC_incremental) — IPC simple siempre aplica al ingreso
             # Excel V2-8: 'Visión P&G'!R20 = HM!C296 × ramp × (1 + INDEX(Tasas!J8:O16,...))
