@@ -71,6 +71,8 @@ _AGGREGATED_IDS = {
     "tarifa_canal_cadena_b",
     "tasa_escalamiento_cadena_b",
     "hitl_cadena_b",
+    "sm_personal_cadena_b",
+    "hitl_personal_cadena_b",
     # ingreso_cadena_b: computado en el loop con ramp_up × IPC_incremental (mirrors ingreso_cadena_a)
     "ingreso_cadena_b",
     # Cadena C: calculados por CadenaCCalculator × IPC — no pisar con fórmula de rubros
@@ -81,6 +83,8 @@ _AGGREGATED_IDS = {
     "tarifa_canal_cadena_c",
     "tasa_escalamiento_cadena_c",
     "hitl_cadena_c",
+    "equipo_personal_cadena_c",
+    "hitl_personal_cadena_c",
     # ingreso_cadena_c: computado en el loop con ramp_up × IPC_incremental
     "ingreso_cadena_c",
 }
@@ -479,6 +483,8 @@ class MotorDeReglas:
                 ctx["tarifa_canal_cadena_b"] = 0.0
                 ctx["tasa_escalamiento_cadena_b"] = 0.0
                 ctx["hitl_cadena_b"] = 0.0
+                ctx["sm_personal_cadena_b"] = 0.0
+                ctx["hitl_personal_cadena_b"] = 0.0
             if _cadena_c_calc:
                 ctx.update(_cadena_c_calc.calcular_mes(double_h, double_t))
             else:
@@ -490,6 +496,8 @@ class MotorDeReglas:
                 ctx["tarifa_canal_cadena_c"] = 0.0
                 ctx["tasa_escalamiento_cadena_c"] = 0.0
                 ctx["hitl_cadena_c"] = 0.0
+                ctx["equipo_personal_cadena_c"] = 0.0
+                ctx["hitl_personal_cadena_c"] = 0.0
             ctx["comision_admin_mensual"] = 0.0  # ya incluida en polizas_mensual
 
             # Sub-componentes para formato periods — mismo factor doble IPC que el total
@@ -537,11 +545,17 @@ class MotorDeReglas:
                     _billing_b_unramped * (1.0 + _tasa_pol_b_mes / _fm_b)
                     if _fm_b > 0 else _billing_b_unramped
                 )
-                ctx["ica_hm"] += _ica_b_billing * _tasa_ica_b
-                # Excel Pólizas-FC!M269: GMF_B = (costo_b_mes + Pol_billing_mes) × tasa_gmf
+                _ica_b = _ica_b_billing * _tasa_ica_b
                 _pol_b_billing_mes = _billing_b_unramped * _tasa_pol_b_mes
-                ctx["gmf_hm"] += (ctx["costo_cadena_b"] + _pol_b_billing_mes) * _tasa_gmf_b
-                ctx["polizas_puras_hm"] += _billing_b_unramped * _tasa_pol_b_mes
+                _gmf_b = (ctx["costo_cadena_b"] + _pol_b_billing_mes) * _tasa_gmf_b
+                _pol_b = _billing_b_unramped * _tasa_pol_b_mes
+                ctx["ica_hm"] += _ica_b
+                # Excel Pólizas-FC!M269: GMF_B = (costo_b_mes + Pol_billing_mes) × tasa_gmf
+                ctx["gmf_hm"] += _gmf_b
+                ctx["polizas_puras_hm"] += _pol_b
+                ctx["ica_cadena_b"] = _ica_b
+                ctx["gmf_cadena_b"] = _gmf_b
+                ctx["polizas_cadena_b"] = _pol_b
 
             # ICA/GMF/Pólizas de Cadena C — sobre _billing_c_base (B = Op_C/fm_c), NO sobre C312.
             # C312 incorpora la recuperación de financieros en el ingreso bruto; las filas de
@@ -561,11 +575,17 @@ class MotorDeReglas:
                     _billing_c_unramped * (1.0 + _tasa_pol_c_mes / _fm_c)
                     if _fm_c > 0 else _billing_c_unramped
                 )
-                ctx["ica_hm"] += _ica_c_billing * _tasa_ica_c
+                _ica_c = _ica_c_billing * _tasa_ica_c
+                _gmf_c = _billing_c_unramped * _fm_c * _tasa_gmf_c
+                _pol_c = _billing_c_unramped * _tasa_pol_c_mes
+                ctx["ica_hm"] += _ica_c
                 # Excel Pólizas-FC: GMF_C usa B × fm_c = Op_C con IPC simple (1+ipc_incremental),
                 # no costo_cadena_c que lleva tarifa_canal × double_t² (P&G display, no billing).
-                ctx["gmf_hm"] += _billing_c_unramped * _fm_c * _tasa_gmf_c
-                ctx["polizas_puras_hm"] += _billing_c_unramped * _tasa_pol_c_mes
+                ctx["gmf_hm"] += _gmf_c
+                ctx["polizas_puras_hm"] += _pol_c
+                ctx["ica_cadena_c"] = _ica_c
+                ctx["gmf_cadena_c"] = _gmf_c
+                ctx["polizas_cadena_c"] = _pol_c
 
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
             # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
@@ -1161,34 +1181,82 @@ class MotorDeReglas:
                 or _vol.get("outbound", {}).get("cadenas_activas", {}).get(nombre, False)
             )
 
+        def _vol_direccion(direction: str, cadena_key: str) -> float:
+            canales = _vol.get(direction, {}).get("canales", [])
+            return sum(
+                float(c.get(cadena_key, {}).get("valor", 0))
+                for c in canales
+                if isinstance(c.get(cadena_key), dict)
+            )
+
+        def _ratios(cadena_key: str):
+            vol_in = _vol_direccion("inbound", cadena_key)
+            vol_out = _vol_direccion("outbound", cadena_key)
+            total = vol_in + vol_out
+            if total <= 0:
+                return 0.0, 1.0
+            return vol_in / total, vol_out / total
+
         cadena_b = request_data.get("condiciones_cadena_b")
         cadena_c = request_data.get("condiciones_cadena_c")
 
         if cadena_b is not None and _cadena_activa("cadena_b"):
             total_b = round(float(totales.get("costo_cadena_b", 0.0)), 2)
-            comp_fijo_b = round(float(totales.get("componente_fijo_b", 0.0)), 2)
-            comp_var_b = round(float(totales.get("componente_variable_b", 0.0)), 2)
+            humano_b = round(
+                float(totales.get("sm_personal_cadena_b", 0.0))
+                + float(totales.get("hitl_personal_cadena_b", 0.0)),
+                2,
+            )
+            tech_b = round(total_b - humano_b, 2)
+            r_in_b, r_out_b = _ratios("cadena_b")
             cadenas.append({
                 "cadena": "CADENA B",
                 "total": total_b,
-                "inbound": 0,
-                "outbound": total_b,
+                "inbound": round(total_b * r_in_b, 2),
+                "outbound": round(total_b * r_out_b, 2),
                 "componentes": [
-                    {"concepto": "Componente Humano", "total": comp_fijo_b, "inbound": 0, "outbound": comp_fijo_b},
-                    {"concepto": "Componente Tecnológico", "total": comp_var_b, "inbound": 0, "outbound": comp_var_b},
+                    {
+                        "concepto": "Componente Humano",
+                        "total": humano_b,
+                        "inbound": round(humano_b * r_in_b, 2),
+                        "outbound": round(humano_b * r_out_b, 2),
+                    },
+                    {
+                        "concepto": "Componente Tecnológico",
+                        "total": tech_b,
+                        "inbound": round(tech_b * r_in_b, 2),
+                        "outbound": round(tech_b * r_out_b, 2),
+                    },
                 ],
             })
 
         if cadena_c is not None and _cadena_activa("cadena_c"):
             total_c = round(float(totales.get("costo_cadena_c", 0.0)), 2)
+            humano_c = round(
+                float(totales.get("equipo_personal_cadena_c", 0.0))
+                + float(totales.get("hitl_personal_cadena_c", 0.0)),
+                2,
+            )
+            tech_c = round(total_c - humano_c, 2)
+            r_in_c, r_out_c = _ratios("cadena_c")
             cadenas.append({
                 "cadena": "CADENA C",
                 "total": total_c,
-                "inbound": 0,
-                "outbound": total_c,
+                "inbound": round(total_c * r_in_c, 2),
+                "outbound": round(total_c * r_out_c, 2),
                 "componentes": [
-                    {"concepto": "Componente Humano", "total": total_c, "inbound": 0, "outbound": total_c},
-                    {"concepto": "Componente Tecnológico", "total": 0, "inbound": 0, "outbound": 0},
+                    {
+                        "concepto": "Componente Humano",
+                        "total": humano_c,
+                        "inbound": round(humano_c * r_in_c, 2),
+                        "outbound": round(humano_c * r_out_c, 2),
+                    },
+                    {
+                        "concepto": "Componente Tecnológico",
+                        "total": tech_c,
+                        "inbound": round(tech_c * r_in_c, 2),
+                        "outbound": round(tech_c * r_out_c, 2),
+                    },
                 ],
             })
 

@@ -82,6 +82,9 @@ class CadenaBCalculator:
             "tarifa_canal_cadena_b":   tarifa,
             "tasa_escalamiento_cadena_b": escal,
             "hitl_cadena_b":           hitl,
+            # Componente humano: solo costos de personal (IPC double_h) — para vision CTS
+            "sm_personal_cadena_b":    b["sm_personal"] * double_h,
+            "hitl_personal_cadena_b":  b["hitl_personal"] * double_h,
         }
 
     # ── Cálculo base (sin IPC, una vez en __init__) ───────────────────────────

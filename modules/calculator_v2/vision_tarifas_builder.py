@@ -101,7 +101,9 @@ def _build_escenario(
     descuento: float,
     costo_b_mensual: float,
     costo_c_mensual: float,
-    request_data: Dict[str, Any]
+    request_data: Dict[str, Any],
+    b_vals_ramp1: Dict[str, Any] = {},
+    c_vals_ramp1: Dict[str, Any] = {},
 ) -> dict:
     """
     Construye el objeto de un escenario (= un perfil de Cadena A).
@@ -137,25 +139,31 @@ def _build_escenario(
     polizas = float(cts_p.get("polizas", 0.0)) if cts_p else 0.0
     costo_a = float(cts_p.get("costo_total", 0.0)) if cts_p else (payroll + no_payroll + financiero)
     
-    # Costos Cadena B (del CTS) TODO Fix these values
-    componente_fijo_b = float(cts_p.get("componente_fijo_b", 0.0)) if cts_p else 0.0
-    componente_variable_b = float(cts_p.get("componente_variable_b", 0.0)) if cts_p else 0.0
-    financiero_b = float(cts_p.get("financiero_b", 0.0)) if cts_p else 0.0
-    ica_b = float(cts_p.get("ica_b", 0.0)) if cts_p else 0.0
-    gmf_b = float(cts_p.get("gmf_b", 0.0)) if cts_p else 0.0
-    comision_por_administracion_b = float(cts_p.get("comision_administracion_b", 0.0)) if cts_p else 0.0
-    polizas_b = float(cts_p.get("polizas_b", 0.0)) if cts_p else 0.0
-    costo_b = float(cts_p.get("costo_total_b", 0.0)) if cts_p else (componente_fijo_b + componente_variable_b + financiero_b)
+    # Costos Cadena B — proporcional al peso del canal respecto al total deal-level (ramp1)
+    _b_total_ramp1 = float(b_vals_ramp1.get("costo_cadena_b", 0.0))
+    _ratio_b = (costo_b_mensual / _b_total_ramp1) if _b_total_ramp1 > 0 else 0.0
+    componente_fijo_b = float(b_vals_ramp1.get("componente_fijo_b", 0.0)) * _ratio_b
+    componente_variable_b = float(b_vals_ramp1.get("componente_variable_b", 0.0)) * _ratio_b
+    ica_b = float(b_vals_ramp1.get("ica_cadena_b", 0.0)) * _ratio_b
+    gmf_b = float(b_vals_ramp1.get("gmf_cadena_b", 0.0)) * _ratio_b
+    polizas_b = float(b_vals_ramp1.get("polizas_cadena_b", 0.0)) * _ratio_b
+    comision_por_administracion_b = 0.0
+    financiero_b = ica_b + gmf_b + polizas_b
+    # costo_total_b incluye costos operativos + financieros (ICA+GMF+polizas)
+    costo_b = costo_b_mensual + financiero_b
 
-    # Costos Cadena C (del CTS) TODO Fix these values
-    componente_fijo_c = float(cts_p.get("componente_fijo_c", 0.0)) if cts_p else 0.0
-    componente_variable_c = float(cts_p.get("componente_variable_c", 0.0)) if cts_p else 0.0
-    financiero_c = float(cts_p.get("financiero_c", 0.0)) if cts_p else 0.0
-    ica_c = float(cts_p.get("ica_c", 0.0)) if cts_p else 0.0
-    gmf_c = float(cts_p.get("gmf_c", 0.0)) if cts_p else 0.0
-    comision_por_administracion_c = float(cts_p.get("comision_administracion_c", 0.0)) if cts_p else 0.0
-    polizas_c = float(cts_p.get("polizas_c", 0.0)) if cts_p else 0.0
-    costo_c = float(cts_p.get("costo_total_c", 0.0)) if cts_p else (componente_fijo_c + componente_variable_c + financiero_c)
+    # Costos Cadena C — proporcional al peso del canal respecto al total deal-level (ramp1)
+    _c_total_ramp1 = float(c_vals_ramp1.get("costo_cadena_c", 0.0))
+    _ratio_c = (costo_c_mensual / _c_total_ramp1) if _c_total_ramp1 > 0 else 0.0
+    componente_fijo_c = float(c_vals_ramp1.get("componente_fijo_cadena_c", 0.0)) * _ratio_c
+    componente_variable_c = float(c_vals_ramp1.get("componente_variable_cadena_c", 0.0)) * _ratio_c
+    ica_c = float(c_vals_ramp1.get("ica_cadena_c", 0.0)) * _ratio_c
+    gmf_c = float(c_vals_ramp1.get("gmf_cadena_c", 0.0)) * _ratio_c
+    polizas_c = float(c_vals_ramp1.get("polizas_cadena_c", 0.0)) * _ratio_c
+    comision_por_administracion_c = 0.0
+    financiero_c = ica_c + gmf_c + polizas_c
+    # costo_total_c incluye costos operativos + financieros (ICA+GMF+polizas)
+    costo_c = costo_c_mensual + financiero_c
 
     # Ingreso Cadena A: desde CTS (ya resuelve circularidad HM)
     # Excel 'Vision Tarifas_Modelo_Cobro'!C48: ingreso_a = costo_a / denominador
@@ -164,17 +172,17 @@ def _build_escenario(
         denom_a = _denominador_ingreso(margen_a, cont_op, cont_com, markup, descuento)
         ingreso_a = costo_a / denom_a
 
-    # Cadena B y C (para este perfil se asume 0 — los costos B/C son deal-level, no por perfil)
-    # Excel 'Vision Tarifas_Modelo_Cobro'!C59: ingreso_b = costo_b / denominador_b
+    # Excel 'Vision Tarifas_Modelo_Cobro'!C59: ingreso_b = costo_b_total / denominador_b
+    # costo_b ya incluye financiero (ICA+GMF+polizas) → ingreso cubre margen sobre costo completo
     ingreso_b = 0.0
-    if costo_b_mensual > 0:
+    if costo_b > 0:
         denom_b = _denominador_ingreso(margen_b, cont_op, cont_com, markup, descuento)
-        ingreso_b = costo_b_mensual / denom_b
+        ingreso_b = costo_b / denom_b
 
     ingreso_c = 0.0
-    if costo_c_mensual > 0:
+    if costo_c > 0:
         denom_c = _denominador_ingreso(margen_c, cont_op, cont_com, markup, descuento)
-        ingreso_c = costo_c_mensual / denom_c
+        ingreso_c = costo_c / denom_c
 
     facturacion_total = ingreso_a + ingreso_b + ingreso_c
 
@@ -275,6 +283,9 @@ def _build_escenario(
             "polizas": round(polizas_c, 2),
         },
         "facturacion_mensual": round(facturacion_total, 2),
+        "ingreso_mensual_a": round(ingreso_a, 2),
+        "ingreso_mensual_b": round(ingreso_b, 2),
+        "ingreso_mensual_c": round(ingreso_c, 2),
         "ingreso_fijo_mensual": round(ingreso_fijo, 2),
         "ingreso_variable_mensual": round(ingreso_variable, 2),
         "tarifa_componente_fijo": {
@@ -1015,8 +1026,12 @@ def build_vision_tarifas(
                 raw[k] = raw.get(k, 0.0) + float(item.get("valor_total") or 0)
         return raw
 
-    b_raw_by_canal = _raw_cost_by_canal("cadena_b") or vol_b_by_canal
-    c_raw_by_canal = _raw_cost_by_canal("cadena_c") or vol_c_by_canal
+    # Distribución por volumen (cadena_b/c.valor de volumetría) — el motor escala costos de
+    # SM, HITL y capex por volumen real, no por valor de items opex/capex del request.
+    # Raw items (valor_total/valor_mensual) tienen magnitudes dispares por canal y producen
+    # pesos incorrectos. Fallback a raw solo si no hay volumetría configurada.
+    b_raw_by_canal = vol_b_by_canal or _raw_cost_by_canal("cadena_b")
+    c_raw_by_canal = vol_c_by_canal or _raw_cost_by_canal("cadena_c")
     total_b_raw = max(sum(b_raw_by_canal.values()), 1.0)
     total_c_raw = max(sum(c_raw_by_canal.values()), 1.0)
 
@@ -1084,6 +1099,8 @@ def build_vision_tarifas(
                 costo_b_mensual=b_for_esc,
                 costo_c_mensual=c_for_esc,
                 request_data=request_data,
+                b_vals_ramp1=vals_ramp1,
+                c_vals_ramp1=vals_ramp1,
             )
             escenarios.append(escenario)
 
@@ -1122,6 +1139,8 @@ def build_vision_tarifas(
                 costo_b_mensual=b_for_perfil,
                 costo_c_mensual=c_for_perfil,
                 request_data=request_data,
+                b_vals_ramp1=vals_ramp1,
+                c_vals_ramp1=vals_ramp1,
             )
             escenarios.append(escenario)
 
