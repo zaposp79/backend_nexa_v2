@@ -436,6 +436,15 @@ def _build_from_v2_result(
         vals["ingreso_variable"] = comision_ventas
         if servicio == "cobranzas":
             vals["ingreso_neto"] = comision_ventas
+            # Recalcular derivados: contribucion = ingreso_neto - costo_total (K82)
+            _costo_total = vals.get("costo_total") or 0.0
+            _contribucion = comision_ventas - _costo_total
+            _estaciones = vals.get("estaciones_trabajo") or 0.0
+            vals["contribucion"]            = _contribucion
+            vals["contribucion_por_puesto"] = _contribucion / _estaciones if _estaciones else 0.0
+            vals["pct_contribucion"]        = _contribucion / comision_ventas if comision_ventas else 0.0
+            vals["utilidad_neta"]           = _contribucion
+            vals["pct_utilidad_neta"]       = _contribucion / comision_ventas if comision_ventas else 0.0
 
         periods.append({
             "index":    mes_num,
@@ -466,6 +475,14 @@ def _build_from_v2_result(
     totales_vals["ingreso_variable"] = total_comision
     if servicio == "cobranzas":
         totales_vals["ingreso_neto"] = total_comision
+        _costo_total_t = totales_vals.get("costo_total") or 0.0
+        _contribucion_t = total_comision - _costo_total_t
+        _estaciones_t = totales_vals.get("estaciones_trabajo") or 0.0
+        totales_vals["contribucion"]            = _contribucion_t
+        totales_vals["contribucion_por_puesto"] = _contribucion_t / _estaciones_t if _estaciones_t else 0.0
+        totales_vals["pct_contribucion"]        = _contribucion_t / total_comision if total_comision else 0.0
+        totales_vals["utilidad_neta"]           = _contribucion_t
+        totales_vals["pct_utilidad_neta"]       = _contribucion_t / total_comision if total_comision else 0.0
 
     totales = {
         "ingresos": _ingresos_mes(totales_vals, total_comision),
