@@ -32,6 +32,20 @@ class CTSCalculator:
         # Tarifa global por estación (Panel de Control General C17)
         # Excel V2-8: 'Condiciones Cadena A'!E153 = Panel!C17 × FTE
         self._crucero_base = float(request_data.get("datos_operativos", {}).get("crucero", 0.0))
+        # Reglas de negocio (Panel de Control General C67-C70)
+        # Excel V2-8 · 'Visión Cost To Serve'!I160 = I159/((1-C63)*(1-C67)*(1-C68)*(1-C69)*(1-C70))
+        reglas = request_data.get("reglas_negocio", {})
+        self._cont_op = self._extract_regla(reglas.get("contingencia_operativa", 0))
+        self._cont_com = self._extract_regla(reglas.get("contingencia_comercial", 0))
+        self._markup = self._extract_regla(reglas.get("markup", 0))
+        dv = reglas.get("descuento_volumen", {})
+        self._descuento = float(dv.get("valor", 0)) if isinstance(dv, dict) else float(dv or 0)
+
+    @staticmethod
+    def _extract_regla(field: Any) -> float:
+        if isinstance(field, dict):
+            return float(field.get("valor", 0))
+        return float(field) if field is not None else 0.0
 
     def calcular(
         self,
@@ -147,7 +161,17 @@ class CTSCalculator:
             })
 
         # Segunda pasada: financiero asignado pro-rata + totales por perfil
-        fm = 1.0 - margen if margen < 1.0 else 1.0
+        # Excel V2-8 · 'Visión Cost To Serve'!I160 = I159/((1-C63)*(1-C67)*(1-C68)*(1-C69)*(1-C70))
+        # C63=margen, C67=cont_op, C68=cont_com, C69=markup, C70=descuento (Panel de Control General)
+        fm = (
+            (1.0 - margen)
+            * (1.0 - self._cont_op)
+            * (1.0 - self._cont_com)
+            * (1.0 - self._markup)
+            * (1.0 - self._descuento)
+        )
+        if fm <= 0:
+            fm = 1.0 - margen if margen < 1.0 else 1.0
 
         for p in perfiles_cts:
             weight = (p["_costo_directo_raw"] / costo_directo_total) if costo_directo_total > 0 else 0.0
