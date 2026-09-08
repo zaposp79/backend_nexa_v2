@@ -805,31 +805,31 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "no_payroll": costos.get("no_payroll", 0),
             "costos_financiacion": costos.get("financiero", 0),
             "total": costos.get("costo_total", 0),
-            "ingreso_mensual": esc.get("facturacion_mensual", 0),
+            "ingreso_mensual": esc.get("ingreso_mensual_a", esc.get("facturacion_mensual", 0)),
             "ica": costos.get("ica", 0),
             "gmf": costos.get("gmf", 0),
             "comision_por_administracion": costos.get("comision_por_administracion", 0),
             "polizas": costos.get("polizas", 0),
         }
-        
+
         cadena_b = {
             "componente_fijo": costos_b.get("componente_fijo", 0),
             "componente_variable": costos_b.get("componente_variable", 0),
             "costos_financiacion": costos_b.get("financiero", 0),
-            "total": costos_b.get("costo_total_b", 0),
-            "ingreso_mensual": esc.get("facturacion_mensual_b", 0),
-            "ica": costos_b.get("ica_b", 0),
-            "gmf": costos_b.get("gmf_b", 0),
+            "total": costos_b.get("costo_total", 0),
+            "ingreso_mensual": esc.get("ingreso_mensual_b", 0),
+            "ica": costos_b.get("ica", 0),
+            "gmf": costos_b.get("gmf", 0),
             "comision_por_administracion": costos_b.get("comision_por_administracion", 0),
-            "polizas": costos_b.get("polizas_b", 0),
+            "polizas": costos_b.get("polizas", 0),
         }
-        
+
         cadena_c = {
             "componente_fijo": costos_c.get("componente_fijo", 0),
             "componente_variable": costos_c.get("componente_variable", 0),
             "costos_financiacion": costos_c.get("financiero", 0),
             "total": costos_c.get("costo_total", 0),
-            "ingreso_mensual": esc.get("facturacion_mensual", 0),
+            "ingreso_mensual": esc.get("ingreso_mensual_c", 0),
             "ica": costos_c.get("ica", 0),
             "gmf": costos_c.get("gmf", 0),
             "comision_por_administracion": costos_c.get("comision_por_administracion", 0),

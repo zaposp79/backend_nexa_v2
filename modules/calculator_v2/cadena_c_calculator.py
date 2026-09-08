@@ -79,6 +79,8 @@ class CadenaCCalculator:
 
         return {
             "costo_cadena_c":              costo_total,
+            "componente_fijo_cadena_c":    opex_fijo + capex + equipo_tranv + disp_tranv,
+            "componente_variable_cadena_c": opex_variable + tarifa_canal + tasa_escal + hitl_personal + hitl_disp,
             "opex_fijo_cadena_c":          opex_fijo,
             "opex_variable_cadena_c":      opex_variable,
             "capex_cadena_c":              capex,
@@ -86,6 +88,9 @@ class CadenaCCalculator:
             "tarifa_canal_cadena_c":       tarifa_canal,
             "tasa_escalamiento_cadena_c":  tasa_escal,
             "hitl_cadena_c":               hitl_personal + hitl_disp,
+            # Componente humano: solo costos de personal (IPC double_h) — para vision CTS
+            "equipo_personal_cadena_c":    equipo_tranv,
+            "hitl_personal_cadena_c":      hitl_personal,
         }
 
     # ── Cálculo base (sin IPC, una vez en __init__) ───────────────────────────
