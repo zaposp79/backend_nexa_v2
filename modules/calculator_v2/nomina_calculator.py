@@ -405,14 +405,12 @@ class NominaCalculator:
     def _capacitacion_rotacion(self) -> float:
         """Costo mensual de capacitación por rotación (Excel V2-8: 'Nomina Loaded'!E283-E299).
 
-        Por cada perfil con dias_capacitacion_perfil > 0:
+        Por cada perfil con incluye_capacitacion_rotacion=True Y dias_capacitacion_perfil > 0:
           costo = fte × dias_capacitacion_perfil × tarifa_diaria_capacitacion × pct_rotacion
         Excel V2-8: 'Panel de Control General'!C20 = pct_rotacion; C16 = tarifa_diaria.
 
-        Activación: dias_capacitacion_perfil > 0 (equivalente a CCA!E143=True en Excel).
-        El flag incluye_capacitacion_rotacion corresponde al CARGO Analista de Selección
-        (filas 91-92 CCA), no al activador de este costo — no se usa aquí.
-        # Excel V2-8: 'Condiciones Cadena A'!D58 — días de capacitación por perfil
+        Activación: CCA!E143:T143 → incluye_capacitacion_rotacion por perfil.
+        Sin este flag en True el perfil no aporta al costo, aunque tenga días configurados.
         """
         datos_op = self._req.get("datos_operativos", {})
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
@@ -423,8 +421,10 @@ class NominaCalculator:
         total = 0.0
         for perfil in self._cadena_a.get("perfiles", []):
             cap = perfil.get("capacitacion") or {}
+            # Excel V2-8: 'Condiciones Cadena A'!E143:T143 — checkbox por perfil
+            if not cap.get("incluye_capacitacion_rotacion", False):
+                continue
             dias = float(cap.get("dias_capacitacion_perfil") or 0)
-            # Excel CCA!E143=True cuando el perfil tiene días configurados.
             if dias <= 0:
                 continue
             fte = float(perfil.get("fte", 0))
