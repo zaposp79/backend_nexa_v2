@@ -271,7 +271,7 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     """Vision general por servicio (Cadena A) para la sección del mismo nombre.
 
     Excel 'Cost to Serve'!C36 = SUM(C37:C38) = Payroll + No Payroll (sin financiero).
-    Nómina Loaded = Salario Fijo + Salario Variable (crucero es fila separada).
+    Nómina Loaded  = Salario Fijo + Salario Variable (crucero es fila separada).
     Participación (%) = componente / (Payroll + No Payroll).
     """
     fte = max(int(vision_cts.get("n_fte_total") or 1), 1)
