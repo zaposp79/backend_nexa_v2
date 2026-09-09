@@ -275,7 +275,6 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     Participacion (%): fraccion del componente sobre el CTS total de su propia cadena.
     Participacion de cadena: fraccion volumetrica global (Panel!W32/X32/Y32).
     """
-    fte = max(int(vision_cts.get("n_fte_total") or 1), 1)
     perfiles = vision_cts.get("perfiles") or []
     cadenas_list = vision_cts.get("cadenas") or []
 
@@ -296,6 +295,23 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     cap_rot    = sum(float(p.get("capacitacion_rotacion", 0))  for p in perfiles)
     examenes   = sum(float(p.get("examenes", 0))               for p in perfiles)
     estudios   = sum(float(p.get("estudios_seguridad", 0))     for p in perfiles)
+
+    # Divisor: por perfil, si unidad == "FTE" → fte × igf (volumen); si no → fte crudo.
+    # Esto permite mezclar canales con unidad FTE y canales con unidad Volumen.
+    _igf = float(vision_cts.get("igf") or 0.0)
+    _fte_stored = int(vision_cts.get("n_fte_total") or 0)
+    if perfiles:
+        _divisor = 0.0
+        for _p in perfiles:
+            _p_fte = int(_p.get("fte", 0) or 0)
+            _p_unidad = (_p.get("unidad") or "FTE").upper()
+            if _p_unidad == "FTE" and _igf > 0:
+                _divisor += _p_fte * _igf
+            else:
+                _divisor += _p_fte
+        fte = max(_divisor, 1)
+    else:
+        fte = max(_fte_stored, 1)
 
     # Participaciones volumetricas globales (almacenadas en engine._build_cadenas)
     _b_data = next((c for c in cadenas_list if c.get("cadena") == "CADENA B"), None)
@@ -438,7 +454,7 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
     for modalidad_key in ("inbound", "outbound"):
         for canal_data in (vision_por_canal.get(modalidad_key) or []):
             canal = canal_data.get("canal", "")
-            participacion = canal_data.get("participacion", {})
+            participacion = canal_data.get("participacion") or {}
             participation_a = participacion.get("participacion_a", 0)
             participation_b = participacion.get("participacion_b", 0)
             participation_c = participacion.get("participacion_c", 0)

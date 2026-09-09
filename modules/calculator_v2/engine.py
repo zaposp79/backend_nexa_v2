@@ -1142,6 +1142,18 @@ class MotorDeReglas:
                     _p["staff_cadena_b"]        = round(_humano_b / _den, 6)
                     _p["staff_cadena_c"]        = round(_humano_c / _den, 6)
 
+            # Enriquecer con unidad volumétrica del canal (FTE o Volumen) para que
+            # screen_mapper pueda decidir si multiplicar por igf al calcular el divisor.
+            _vol_enr = request_data.get("volumetria") or {}
+            for _p in perfiles_raw:
+                _pcanal = _p.get("canal", "")
+                _pmod = (_p.get("modalidad") or "").lower()
+                _pdir = "inbound" if "inbound" in _pmod else "outbound"
+                _pcanales = (_vol_enr.get(_pdir) or {}).get("canales") or []
+                _pch = next((c for c in _pcanales if c.get("canal") == _pcanal), None)
+                _pa = (_pch or {}).get("cadena_a") or {}
+                _p["unidad"] = ((_pa.get("unidad") or "FTE")).upper()
+
             perfiles_cts = [PerfilCTS(**p) for p in perfiles_raw]
 
             payroll_total = sum(p.payroll for p in perfiles_cts)
@@ -1165,12 +1177,16 @@ class MotorDeReglas:
             reglas_negocio = self._build_reglas_negocio(ctx_base, totales, ingreso_neto_total)
             vision_por_canal = self._build_vision_por_canal(self,perfiles_cts, request_data)
 
+            _datos_op_cts = request_data.get("datos_operativos") or {}
+            _igf_cts = float(_datos_op_cts.get("interacciones_gestionadas_por_fte_promedio", 0.0))
+
             return VisionCostToServe(
                 cts_mensual=round(cts_total, 2),
                 ingreso_mensual=round(ingreso_mensual, 2),
                 margen=margen,
                 valor_total_contrato=round(valor_total_contrato, 2),
                 n_fte_total=fte_total,
+                igf=_igf_cts,
                 payroll_total=round(payroll_total, 2),
                 no_payroll_total=round(no_payroll_total, 2),
                 costo_directo_total=round(costo_directo_total, 2),
@@ -1289,15 +1305,15 @@ class MotorDeReglas:
         cadena_c_conds = request_data.get("condiciones_cadena_c")
 
         # Participación volumétrica global por cadena (Panel!W32/X32/Y32 en Excel CTS).
-        # Cadena A inbound: FTE × igf → interactions; outbound: volumen directo.
+        # Si unidad == "FTE", convertir a volumen: valor × igf (aplica inbound y outbound).
         _datos_op = request_data.get("datos_operativos") or {}
         _igf = float(_datos_op.get("interacciones_gestionadas_por_fte_promedio", 150))
         _tvol_a = _tvol_b = _tvol_c = 0.0
-        for _dir_key, _fte_conv in [("inbound", True), ("outbound", False)]:
+        for _dir_key in ("inbound", "outbound"):
             for _ch in (_vol.get(_dir_key, {}).get("canales") or []):
                 _a_ch = _ch.get("cadena_a") or {}
                 _av = float(_a_ch.get("valor", 0))
-                if _fte_conv and _a_ch.get("unidad") == "FTE":
+                if (_a_ch.get("unidad") or "").upper() == "FTE":
                     _av *= _igf
                 _tvol_a += _av
                 _tvol_b += float((_ch.get("cadena_b") or {}).get("valor", 0))

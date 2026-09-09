@@ -50,6 +50,7 @@ class PerfilCTS(BaseModel):
     canal: str
     modalidad: str
     fte: int
+    unidad: str = "FTE"  # unidad volumétrica del canal en volumetria ("FTE" o "Volumen")
     # Payroll detallado
     nomina_loaded: float = 0.0   # salario_cargado + overhead_staff (sin crucero)
     salario_fijo: float = 0.0    # nomina_loaded - salario_variable
@@ -103,6 +104,7 @@ class VisionCostToServe(BaseModel):
     margen: float               # Margen objetivo Cadena A
     valor_total_contrato: float # Suma de ingreso_bruto de todos los meses del deal
     n_fte_total: int
+    igf: float = 0.0  # interacciones_gestionadas_por_fte_promedio (para convertir FTE → volumen)
 
     # Totales Cadena A (filas 35-48 del Excel CTS)
     payroll_total: float
