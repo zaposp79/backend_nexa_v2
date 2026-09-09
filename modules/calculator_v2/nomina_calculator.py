@@ -32,11 +32,15 @@ _CARGO_GRUPO_MAP: Dict[str, str] = {
     "cargos adicionales":                             "Operaciones",
     "monitor de calidad":                             "Operaciones",
     "supervisor":                                     "Operaciones",
-    # Recursos humanos (6 cargos)
+    # Recursos humanos (10 cargos — incluye variantes (Rotación) e (Inicial) de Excel Graficos!AM5:AN28)
     "lider de entrenamiento":                         "Recursos humanos",
     "formadores":                                     "Recursos humanos",
     "analista prof. de selección":                    "Recursos humanos",
+    "analista prof. de selección (rotación)":         "Recursos humanos",
+    "analista prof. de selección (inicial)":          "Recursos humanos",
     "analista 1 de reclutamiento":                    "Recursos humanos",
+    "analista 1 de reclutamiento (rotación)":         "Recursos humanos",
+    "analista 1 de reclutamiento (inicial)":          "Recursos humanos",
     "aprendiz sena":                                  "Recursos humanos",
     "inclusión":                                      "Recursos humanos",
     # Otros (2 cargos)
