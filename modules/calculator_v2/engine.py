@@ -903,24 +903,24 @@ class MotorDeReglas:
             else:
                 tasa_pol_excl_admin += pct
 
-        # Paso 1: pol y admin sobre base = costo_op / (1-margen)
-        base_ingreso = costo_op / factor_margen
-        pol_pricing = base_ingreso * tasa_pol_excl_admin
-        admin_pricing = base_ingreso * tasa_admin_pricing
-
-        # Paso 2: N (base para ICA y GMF)
-        N = costo_op + pol_pricing + admin_pricing
-
-        # Paso 3: denominador completo — debe calcularse antes del ICA.
-        # Excel V2-8: 'Pólizas - Costo Financiacion'!E162 usa el denominador completo
-        # (1-margen)*(1-cont_op)*(1-cont_com)*(1-markup)*(1+descuento) como base del ICA.
-        # Con markup=0: denominador = factor_margen → resultado idéntico al anterior.
+        # Paso 1: denominador completo — necesario antes de calcular pólizas.
+        # Excel V2-8: 'Pólizas - Costo Financiacion'!E348 usa el denominador completo
+        # (1-margen)*(1-cont_op)*(1-cont_com)*(1-markup)*(1+descuento) como base de pólizas.
         denominador = factor_margen * (1 - cont_op) * (1 - cont_com) * (1 - markup) * (1 + descuento)
         if denominador <= 0:
             return 0.0, {}
 
+        # Paso 2: pol y admin sobre base = costo_op / denominador_completo
+        # Excel V2-8 · 'Pólizas-FC'!E348 · Pólizas = SUMPRODUCT(tasas) × CT / ((1-m)*(1-co)*(1-cc)*(1-mu)*(1+dc))
+        # Antes: base_ingreso = CT / factor_margen → subestimaba pólizas cuando cont_op/cont_com > 0.
+        base_ingreso = costo_op / denominador
+        pol_pricing = base_ingreso * tasa_pol_excl_admin
+        admin_pricing = base_ingreso * tasa_admin_pricing
+
+        # Paso 3: N (base para ICA y GMF)
+        N = costo_op + pol_pricing + admin_pricing
+
         # Excel V2-8 · 'Pólizas - Costo Financiacion'!E162 · ICA = (N / denominador_completo) × tasa_ica
-        # Antes: N / factor_margen (solo margen) → subestimaba ICA cuando markup > 0.
         ica_pricing = (N / denominador) * tasa_ica
         # Excel V2-8 · 'Pólizas - Costo Financiacion'!E243 · GMF = N × tasa_gmf (sin division de margen)
         gmf_pricing = N * tasa_gmf

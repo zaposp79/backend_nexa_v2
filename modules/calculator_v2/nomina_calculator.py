@@ -287,7 +287,10 @@ class NominaCalculator:
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
         # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
-        pct_rotacion = float(self._req.get("datos_operativos", {}).get("pct_rotacion", 0.0))
+        # Excel NL!C54:D55 = costo_empresa × (FTE/ratio) × (1/Panel!C11) para cargos "(Inicial)".
+        datos_op = self._req.get("datos_operativos", {})
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+        duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
 
         result: Dict[str, float] = {}
         for fila in ratios_filas:
@@ -302,16 +305,22 @@ class NominaCalculator:
                 result.setdefault(nombre, 0.0)
                 continue
             cantidad = self._calcular_cantidad(fila, perfiles)
+            nombre_lower = nombre.lower()
             # Cargos de Rotación multiplican su cantidad por pct_rotacion.
             # Excel V2-8: 'Condiciones Cadena A'!E91:E92 = (FTE/ratio) × Panel!C20
-            if "otaci" in nombre.lower() and "(" in nombre:
+            if "otaci" in nombre_lower and "(" in nombre:
                 cantidad *= pct_rotacion
             if cantidad <= 0:
                 result.setdefault(nombre, 0.0)
                 continue
             salario = float(cargo_data.get("salario", 0))
             comision = float(cargo_data.get("comision", 0))
-            result[nombre] = result.get(nombre, 0.0) + calcular_costo_empresa(salario, comision) * cantidad
+            costo = calcular_costo_empresa(salario, comision) * cantidad
+            # Cargos de Inicial amortizan su costo entre los meses del contrato.
+            # Excel NL!C54 = costo_empresa × (FTE/ratio) × (1/Panel!C11)
+            if "nicial" in nombre_lower and "(" in nombre:
+                costo /= duracion_meses
+            result[nombre] = result.get(nombre, 0.0) + costo
 
         return result
 
@@ -331,10 +340,15 @@ class NominaCalculator:
             p.get("nombre", f"perfil{i+1}"): {} for i, p in enumerate(perfiles)
         }
 
+        datos_op = self._req.get("datos_operativos", {})
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+        duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
+
         for fila in ratios_filas:
             cargo_nombre = fila.get("position_name") or fila.get("position_id", "")
             if not cargo_nombre:
                 continue
+            cargo_nombre_lower = cargo_nombre.lower()
 
             costo_unit = 0.0
             if fila.get("incluido", False):
@@ -371,14 +385,16 @@ class NominaCalculator:
                     fte = float(perfiles[indice].get("fte", 0))
                     cantidad = fte / ratio if ratio > 0 else 0.0
                     # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
-                    if "otaci" in cargo_nombre.lower() and "(" in cargo_nombre:
-                        pct_rotacion = float(
-                            self._req.get("datos_operativos", {}).get("pct_rotacion", 0.0)
-                        )
+                    if "otaci" in cargo_nombre_lower and "(" in cargo_nombre:
                         cantidad *= pct_rotacion
 
+                costo = costo_unit * cantidad
+                # Excel NL!C54:D55 = costo_empresa × (FTE/ratio) × (1/Panel!C11) para "(Inicial)".
+                if "nicial" in cargo_nombre_lower and "(" in cargo_nombre:
+                    costo /= duracion_meses
+
                 result[perfil_nombre][cargo_nombre] = (
-                    result[perfil_nombre].get(cargo_nombre, 0.0) + costo_unit * cantidad
+                    result[perfil_nombre].get(cargo_nombre, 0.0) + costo
                 )
 
         return result
