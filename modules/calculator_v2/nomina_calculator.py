@@ -286,41 +286,115 @@ class NominaCalculator:
         detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
-        # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
-        # Excel NL!C54:D55 = costo_empresa × (FTE/ratio) × (1/Panel!C11) para cargos "(Inicial)".
         datos_op = self._req.get("datos_operativos", {})
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
         duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
 
+        total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
+        complejidad_str = (self._cadena_a.get("ratios", {}).get("complejidad") or "").strip().lower()
+        # Excel CCA!B101: "Alta"→1.0, "Media"→0.5 (confirmado), "Baja"→0.25
+        complejidad_factor = {"alta": 1.0, "media": 0.5, "baja": 0.25}.get(complejidad_str, 0.5)
+
+        # Cantidad directa de cargos adicionales (CCA!E27/E31/E35) sumada de todos los perfiles.
+        cargos_add_hc = sum(
+            sum(float(c.get("cantidad", 0)) for c in (p.get("cargos_adicionales") or [])
+                if (c.get("nombre") or "").strip())
+            for p in perfiles
+        )
+
         result: Dict[str, float] = {}
+        fila_aprendiz = fila_inclusion = fila_especialista = None
+        # Headcount total de cargos regulares activos (espejo de CCA SUM(E78:E98)).
+        regular_hc = 0.0
+
         for fila in ratios_filas:
             nombre = fila.get("position_name") or fila.get("position_id", "")
             if not nombre:
                 continue
+            nombre_lower = nombre.lower()
+
+            # Defer cargos especiales — se procesan en fases posteriores.
+            if "aprendiz sena" in nombre_lower:
+                fila_aprendiz = fila
+                result.setdefault(nombre, 0.0)
+                continue
+            if "inclus" in nombre_lower:
+                fila_inclusion = fila
+                result.setdefault(nombre, 0.0)
+                continue
+            if "especialista" in nombre_lower:
+                fila_especialista = fila
+                result.setdefault(nombre, 0.0)
+                continue
+
             if not fila.get("incluido", False):
                 result.setdefault(nombre, 0.0)
                 continue
-            cargo_data = self._resolver_cargo(fila, detalle_map)
-            if not cargo_data:
-                result.setdefault(nombre, 0.0)
-                continue
+
+            # Cantidad (con ajuste de rotación si aplica).
             cantidad = self._calcular_cantidad(fila, perfiles)
-            nombre_lower = nombre.lower()
-            # Cargos de Rotación multiplican su cantidad por pct_rotacion.
-            # Excel V2-8: 'Condiciones Cadena A'!E91:E92 = (FTE/ratio) × Panel!C20
+            # Excel CCA!E91:E92 = (FTE/ratio) × Panel!C20 para cargos "(Rotación)".
             if "otaci" in nombre_lower and "(" in nombre:
                 cantidad *= pct_rotacion
-            if cantidad <= 0:
+
+            # Acumular headcount para Aprendiz/Inclusión (incluye Agente Básico 1 ratio=1).
+            if cantidad > 0:
+                regular_hc += cantidad
+
+            cargo_data = self._resolver_cargo(fila, detalle_map)
+            if not cargo_data or cantidad <= 0:
                 result.setdefault(nombre, 0.0)
                 continue
             salario = float(cargo_data.get("salario", 0))
             comision = float(cargo_data.get("comision", 0))
             costo = calcular_costo_empresa(salario, comision) * cantidad
-            # Cargos de Inicial amortizan su costo entre los meses del contrato.
-            # Excel NL!C54 = costo_empresa × (FTE/ratio) × (1/Panel!C11)
+            # Excel NL!C54 = costo_empresa × (FTE/ratio) × (1/Panel!C11) para "(Inicial)".
             if "nicial" in nombre_lower and "(" in nombre:
                 costo /= duracion_meses
             result[nombre] = result.get(nombre, 0.0) + costo
+
+        # ── Aprendiz SENA ─────────────────────────────────────────────────────
+        # Excel CCA!E99 = (SUM(E78:E98) + E27+E31+E35) / E126
+        # Quantity = (regular_headcount + cargos_adicionales) / ratio
+        aprendiz_cantidad = 0.0
+        if fila_aprendiz is not None:
+            nombre_ap = fila_aprendiz.get("position_name") or fila_aprendiz.get("position_id", "")
+            if fila_aprendiz.get("incluido", False):
+                ratio_ap = self._get_ratio_global(fila_aprendiz)
+                if ratio_ap > 0:
+                    aprendiz_cantidad = (regular_hc + cargos_add_hc) / ratio_ap
+                    cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
+                    if cargo_data and aprendiz_cantidad > 0:
+                        salario = float(cargo_data.get("salario", 0))
+                        comision = float(cargo_data.get("comision", 0))
+                        result[nombre_ap] = calcular_costo_empresa(salario, comision) * aprendiz_cantidad
+
+        # ── Inclusión ─────────────────────────────────────────────────────────
+        # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127  (incluye Aprendiz SENA)
+        if fila_inclusion is not None:
+            nombre_inc = fila_inclusion.get("position_name") or fila_inclusion.get("position_id", "")
+            if fila_inclusion.get("incluido", False):
+                ratio_inc = self._get_ratio_global(fila_inclusion)
+                if ratio_inc > 0:
+                    inclusion_cantidad = (regular_hc + cargos_add_hc + aprendiz_cantidad) / ratio_inc
+                    cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
+                    if cargo_data and inclusion_cantidad > 0:
+                        salario = float(cargo_data.get("salario", 0))
+                        comision = float(cargo_data.get("comision", 0))
+                        result[nombre_inc] = calcular_costo_empresa(salario, comision) * inclusion_cantidad
+
+        # ── Especialista de Proyectos ─────────────────────────────────────────
+        # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
+        # sum(pct_i) = 1 → total = costo_empresa × complejidad × 3 / duracion_meses
+        if fila_especialista is not None:
+            nombre_esp = fila_especialista.get("position_name") or fila_especialista.get("position_id", "")
+            if fila_especialista.get("incluido", False) and total_fte > 0:
+                cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
+                if cargo_data:
+                    salario = float(cargo_data.get("salario", 0))
+                    comision = float(cargo_data.get("comision", 0))
+                    costo_esp = calcular_costo_empresa(salario, comision)
+                    result[nombre_esp] = costo_esp * complejidad_factor * 3.0 / duracion_meses
 
         return result
 
@@ -343,12 +417,36 @@ class NominaCalculator:
         datos_op = self._req.get("datos_operativos", {})
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
         duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
+        total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
+        complejidad_str = (self._cadena_a.get("ratios", {}).get("complejidad") or "").strip().lower()
+        complejidad_factor = {"alta": 1.0, "media": 0.5, "baja": 0.25}.get(complejidad_str, 0.5)
+
+        fila_aprendiz = fila_inclusion = fila_especialista = None
+        # Headcount acumulado por índice de perfil para base de Aprendiz/Inclusión.
+        regular_hc_pp: Dict[int, float] = {i: 0.0 for i in range(len(perfiles))}
 
         for fila in ratios_filas:
             cargo_nombre = fila.get("position_name") or fila.get("position_id", "")
             if not cargo_nombre:
                 continue
             cargo_nombre_lower = cargo_nombre.lower()
+
+            # Defer cargos especiales.
+            if "aprendiz sena" in cargo_nombre_lower:
+                fila_aprendiz = fila
+                for pn in result:
+                    result[pn].setdefault(cargo_nombre, 0.0)
+                continue
+            if "inclus" in cargo_nombre_lower:
+                fila_inclusion = fila
+                for pn in result:
+                    result[pn].setdefault(cargo_nombre, 0.0)
+                continue
+            if "especialista" in cargo_nombre_lower:
+                fila_especialista = fila
+                for pn in result:
+                    result[pn].setdefault(cargo_nombre, 0.0)
+                continue
 
             costo_unit = 0.0
             if fila.get("incluido", False):
@@ -366,7 +464,7 @@ class NominaCalculator:
                 if perfil_nombre not in result:
                     result[perfil_nombre] = {}
 
-                if costo_unit <= 0:
+                if not fila.get("incluido", False):
                     result[perfil_nombre].setdefault(cargo_nombre, 0.0)
                     continue
 
@@ -388,6 +486,14 @@ class NominaCalculator:
                     if "otaci" in cargo_nombre_lower and "(" in cargo_nombre:
                         cantidad *= pct_rotacion
 
+                # Acumular headcount por perfil (incluye Agente Básico 1 ratio=1).
+                if cantidad > 0:
+                    regular_hc_pp[indice] = regular_hc_pp.get(indice, 0.0) + cantidad
+
+                if costo_unit <= 0:
+                    result[perfil_nombre].setdefault(cargo_nombre, 0.0)
+                    continue
+
                 costo = costo_unit * cantidad
                 # Excel NL!C54:D55 = costo_empresa × (FTE/ratio) × (1/Panel!C11) para "(Inicial)".
                 if "nicial" in cargo_nombre_lower and "(" in cargo_nombre:
@@ -396,6 +502,114 @@ class NominaCalculator:
                 result[perfil_nombre][cargo_nombre] = (
                     result[perfil_nombre].get(cargo_nombre, 0.0) + costo
                 )
+
+        # ── Aprendiz SENA (por perfil) ────────────────────────────────────────
+        # Excel CCA!E99 = (SUM(E78:E98) + E27+E31+E35) / E126 — por cada columna de perfil
+        aprendiz_hc_pp: Dict[int, float] = {}
+        if fila_aprendiz is not None:
+            nombre_ap = fila_aprendiz.get("position_name") or fila_aprendiz.get("position_id", "")
+            costo_unit_ap = 0.0
+            if fila_aprendiz.get("incluido", False):
+                cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
+                if cargo_data:
+                    salario = float(cargo_data.get("salario", 0))
+                    comision = float(cargo_data.get("comision", 0))
+                    costo_unit_ap = calcular_costo_empresa(salario, comision)
+
+            for pr in fila_aprendiz.get("por_perfil", []):
+                indice = pr.get("indice_perfil", 0)
+                if indice >= len(perfiles):
+                    continue
+                perfil_nombre = perfiles[indice].get("nombre", f"perfil{indice+1}")
+                if perfil_nombre not in result:
+                    result[perfil_nombre] = {}
+
+                if not fila_aprendiz.get("incluido", False):
+                    result[perfil_nombre].setdefault(nombre_ap, 0.0)
+                    aprendiz_hc_pp[indice] = 0.0
+                    continue
+
+                try:
+                    ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                except (TypeError, ValueError):
+                    ratio = 0.0
+
+                cargos_add_i = sum(
+                    float(c.get("cantidad", 0))
+                    for c in (perfiles[indice].get("cargos_adicionales") or [])
+                    if (c.get("nombre") or "").strip()
+                )
+                aprendiz_q_i = (regular_hc_pp.get(indice, 0.0) + cargos_add_i) / ratio if ratio > 0 else 0.0
+                aprendiz_hc_pp[indice] = aprendiz_q_i
+
+                costo = costo_unit_ap * aprendiz_q_i if costo_unit_ap > 0 else 0.0
+                result[perfil_nombre][nombre_ap] = result[perfil_nombre].get(nombre_ap, 0.0) + costo
+
+        # ── Inclusión (por perfil) ────────────────────────────────────────────
+        # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127 — incluye Aprendiz SENA
+        if fila_inclusion is not None:
+            nombre_inc = fila_inclusion.get("position_name") or fila_inclusion.get("position_id", "")
+            costo_unit_inc = 0.0
+            if fila_inclusion.get("incluido", False):
+                cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
+                if cargo_data:
+                    salario = float(cargo_data.get("salario", 0))
+                    comision = float(cargo_data.get("comision", 0))
+                    costo_unit_inc = calcular_costo_empresa(salario, comision)
+
+            for pr in fila_inclusion.get("por_perfil", []):
+                indice = pr.get("indice_perfil", 0)
+                if indice >= len(perfiles):
+                    continue
+                perfil_nombre = perfiles[indice].get("nombre", f"perfil{indice+1}")
+                if perfil_nombre not in result:
+                    result[perfil_nombre] = {}
+
+                if not fila_inclusion.get("incluido", False):
+                    result[perfil_nombre].setdefault(nombre_inc, 0.0)
+                    continue
+
+                try:
+                    ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                except (TypeError, ValueError):
+                    ratio = 0.0
+
+                cargos_add_i = sum(
+                    float(c.get("cantidad", 0))
+                    for c in (perfiles[indice].get("cargos_adicionales") or [])
+                    if (c.get("nombre") or "").strip()
+                )
+                inclusion_q_i = (
+                    regular_hc_pp.get(indice, 0.0) + cargos_add_i + aprendiz_hc_pp.get(indice, 0.0)
+                ) / ratio if ratio > 0 else 0.0
+
+                costo = costo_unit_inc * inclusion_q_i if costo_unit_inc > 0 else 0.0
+                result[perfil_nombre][nombre_inc] = result[perfil_nombre].get(nombre_inc, 0.0) + costo
+
+        # ── Especialista de Proyectos (por perfil) ────────────────────────────
+        # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
+        # pct_perfil = fte_i / total_fte (proporción de agentes de este perfil)
+        if fila_especialista is not None:
+            nombre_esp = fila_especialista.get("position_name") or fila_especialista.get("position_id", "")
+            costo_unit_esp = 0.0
+            if fila_especialista.get("incluido", False) and total_fte > 0:
+                cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
+                if cargo_data:
+                    salario = float(cargo_data.get("salario", 0))
+                    comision = float(cargo_data.get("comision", 0))
+                    costo_unit_esp = calcular_costo_empresa(salario, comision)
+
+            for i, perfil in enumerate(perfiles):
+                perfil_nombre = perfil.get("nombre", f"perfil{i+1}")
+                if perfil_nombre not in result:
+                    result[perfil_nombre] = {}
+                if costo_unit_esp <= 0 or total_fte <= 0:
+                    result[perfil_nombre].setdefault(nombre_esp, 0.0)
+                    continue
+                fte_i = float(perfil.get("fte", 0))
+                pct_i = fte_i / total_fte
+                costo_i = costo_unit_esp * complejidad_factor * 3.0 * pct_i / duracion_meses
+                result[perfil_nombre][nombre_esp] = result[perfil_nombre].get(nombre_esp, 0.0) + costo_i
 
         return result
 
@@ -713,6 +927,18 @@ class NominaCalculator:
             if cap.get("incluye_estudio_seguridad_final_rotacion", False):
                 total += cu_final_rot * fte_exam * pct_rotacion
         return total
+
+    @staticmethod
+    def _get_ratio_global(fila: Dict) -> float:
+        """Retorna el primer ratio no-cero de por_perfil (asume ratio uniforme entre perfiles)."""
+        for pr in fila.get("por_perfil", []):
+            try:
+                r = float(str(pr.get("ratio", "0")).strip() or "0")
+                if r > 0:
+                    return r
+            except (TypeError, ValueError):
+                pass
+        return 0.0
 
     @staticmethod
     def _resolver_cargo(fila: Dict, detalle_map: Dict) -> Dict:
