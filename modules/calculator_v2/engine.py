@@ -218,6 +218,9 @@ class MotorDeReglas:
         _nomina_detalle = _nomina_calc.calcular_detalle()
         _nomina_desglose_cargo = _nomina_calc.desglose_por_cargo()
         _nomina_grupos_por_perfil = _nomina_calc.proporcion_nomina_por_grupo()
+        _estructura_por_perfil = _nomina_calc.costo_estructura_por_perfil()
+        _comisiones_estructura_pp = _nomina_calc.comisiones_estructura_por_perfil()
+        _costos_nominalizados_pp = _nomina_calc.costos_nominalizados_por_perfil()
         ciudad = datos_op.get("ciudad", "")
         sede = datos_op.get("sede", "")
         costo_fijo_estacion = self._repo.get_hr_costo_fijo_estacion(ciudad, localidad=sede)
@@ -741,6 +744,9 @@ class MotorDeReglas:
             componentes_pricing_fin=componentes_pricing_fin,
             nomina_desglose_cargo=_nomina_desglose_cargo,
             nomina_grupos_por_perfil=_nomina_grupos_por_perfil,
+            estructura_por_perfil=_estructura_por_perfil,
+            comisiones_estructura_por_perfil=_comisiones_estructura_pp,
+            costos_nominalizados_por_perfil=_costos_nominalizados_pp,
         )
 
         cts_perfiles_raw = (
@@ -1078,6 +1084,9 @@ class MotorDeReglas:
         componentes_pricing_fin: Optional[Dict[str, float]] = None,
         nomina_desglose_cargo: Optional[Dict[str, float]] = None,
         nomina_grupos_por_perfil: Optional[Dict[str, Any]] = None,
+        estructura_por_perfil: Optional[Dict[str, float]] = None,
+        comisiones_estructura_por_perfil: Optional[Dict[str, float]] = None,
+        costos_nominalizados_por_perfil: Optional[Dict[str, Dict[str, float]]] = None,
     ) -> Optional[VisionCostToServe]:
         """Construye la Visión Cost-to-Serve.
 
@@ -1110,6 +1119,9 @@ class MotorDeReglas:
             perfiles_raw = cts_calc.calcular(
                 margen, componente_financiero_base, nomina_base,
                 componentes_fin=componentes_pricing_fin,
+                estructura_por_perfil=estructura_por_perfil,
+                comisiones_estructura_pp=comisiones_estructura_por_perfil,
+                costos_nominalizados_pp=costos_nominalizados_por_perfil,
             )
 
             if not perfiles_raw:
@@ -1129,6 +1141,18 @@ class MotorDeReglas:
                     _p["staff_cadena_a"]        = round(_nl / _den, 6)
                     _p["staff_cadena_b"]        = round(_humano_b / _den, 6)
                     _p["staff_cadena_c"]        = round(_humano_c / _den, 6)
+
+            # Enriquecer con unidad volumétrica del canal (FTE o Volumen) para que
+            # screen_mapper pueda decidir si multiplicar por igf al calcular el divisor.
+            _vol_enr = request_data.get("volumetria") or {}
+            for _p in perfiles_raw:
+                _pcanal = _p.get("canal", "")
+                _pmod = (_p.get("modalidad") or "").lower()
+                _pdir = "inbound" if "inbound" in _pmod else "outbound"
+                _pcanales = (_vol_enr.get(_pdir) or {}).get("canales") or []
+                _pch = next((c for c in _pcanales if c.get("canal") == _pcanal), None)
+                _pa = (_pch or {}).get("cadena_a") or {}
+                _p["unidad"] = ((_pa.get("unidad") or "FTE")).upper()
 
             perfiles_cts = [PerfilCTS(**p) for p in perfiles_raw]
 
@@ -1153,12 +1177,16 @@ class MotorDeReglas:
             reglas_negocio = self._build_reglas_negocio(ctx_base, totales, ingreso_neto_total)
             vision_por_canal = self._build_vision_por_canal(self,perfiles_cts, request_data)
 
+            _datos_op_cts = request_data.get("datos_operativos") or {}
+            _igf_cts = float(_datos_op_cts.get("interacciones_gestionadas_por_fte_promedio", 0.0))
+
             return VisionCostToServe(
                 cts_mensual=round(cts_total, 2),
                 ingreso_mensual=round(ingreso_mensual, 2),
                 margen=margen,
                 valor_total_contrato=round(valor_total_contrato, 2),
                 n_fte_total=fte_total,
+                igf=_igf_cts,
                 payroll_total=round(payroll_total, 2),
                 no_payroll_total=round(no_payroll_total, 2),
                 costo_directo_total=round(costo_directo_total, 2),
@@ -1276,6 +1304,24 @@ class MotorDeReglas:
         cadena_b_conds = request_data.get("condiciones_cadena_b")
         cadena_c_conds = request_data.get("condiciones_cadena_c")
 
+        # Participación volumétrica global por cadena (Panel!W32/X32/Y32 en Excel CTS).
+        # Si unidad == "FTE", convertir a volumen: valor × igf (aplica inbound y outbound).
+        _datos_op = request_data.get("datos_operativos") or {}
+        _igf = float(_datos_op.get("interacciones_gestionadas_por_fte_promedio", 150))
+        _tvol_a = _tvol_b = _tvol_c = 0.0
+        for _dir_key in ("inbound", "outbound"):
+            for _ch in (_vol.get(_dir_key, {}).get("canales") or []):
+                _a_ch = _ch.get("cadena_a") or {}
+                _av = float(_a_ch.get("valor", 0))
+                if (_a_ch.get("unidad") or "").upper() == "FTE":
+                    _av *= _igf
+                _tvol_a += _av
+                _tvol_b += float((_ch.get("cadena_b") or {}).get("valor", 0))
+                _tvol_c += float((_ch.get("cadena_c") or {}).get("valor", 0))
+        _grand_vol = _tvol_a + _tvol_b + _tvol_c or 1.0
+        _part_b_vol = _tvol_b / _grand_vol
+        _part_c_vol = _tvol_c / _grand_vol
+
         # CTS muestra costos mensuales base (igual que perfiles Cadena A).
         # Usamos calcular_mes(1.0, 1.0) — sin IPC — para obtener el costo mensual de referencia.
         if cadena_b_conds is not None and _cadena_activa("cadena_b"):
@@ -1326,6 +1372,8 @@ class MotorDeReglas:
             )
             cadenas.append({
                 "cadena": "CADENA B",
+                "participacion": round(_part_b_vol, 6),
+                "volumen": round(_tvol_b, 6),
                 "total": total_b,
                 "inbound": round(b_hum_in + b_tech_in, 2),
                 "outbound": round(b_hum_out + b_tech_out, 2),
@@ -1343,6 +1391,15 @@ class MotorDeReglas:
                         "outbound": b_tech_out,
                     },
                 ],
+                "desglose": {
+                    "opex_fijo":          round(vals_b.get("opex_fijo_cadena_b", 0.0), 2),
+                    "capex":              round(vals_b.get("capex_cadena_b", 0.0), 2),
+                    "sm":                 round(vals_b.get("sm_cadena_b", 0.0), 2),
+                    "tarifa":             round(vals_b.get("tarifa_canal_cadena_b", 0.0), 2),
+                    "opex_variable":      round(vals_b.get("opex_variable_cadena_b", 0.0), 2),
+                    "tasa_escalamiento":  round(vals_b.get("tasa_escalamiento_cadena_b", 0.0), 2),
+                    "hitl":               round(vals_b.get("hitl_cadena_b", 0.0), 2),
+                },
             })
 
         if cadena_c_conds is not None and _cadena_activa("cadena_c"):
@@ -1388,6 +1445,8 @@ class MotorDeReglas:
             )
             cadenas.append({
                 "cadena": "CADENA C",
+                "participacion": round(_part_c_vol, 6),
+                "volumen": round(_tvol_c, 6),
                 "total": total_c,
                 "inbound": round(c_hum_in + c_tech_in, 2),
                 "outbound": round(c_hum_out + c_tech_out, 2),
@@ -1405,6 +1464,15 @@ class MotorDeReglas:
                         "outbound": c_tech_out,
                     },
                 ],
+                "desglose": {
+                    "tarifa_proveedor":   round(vals_c.get("tarifa_canal_cadena_c", 0.0), 2),
+                    "opex_fijo":          round(vals_c.get("opex_fijo_cadena_c", 0.0), 2),
+                    "capex":              round(vals_c.get("capex_cadena_c", 0.0), 2),
+                    "equipo_integracion": round(vals_c.get("equipo_transversal_cadena_c", 0.0), 2),
+                    "tasa_escalamiento":  round(vals_c.get("tasa_escalamiento_cadena_c", 0.0), 2),
+                    "opex_variable":      round(vals_c.get("opex_variable_cadena_c", 0.0), 2),
+                    "hitl":               round(vals_c.get("hitl_cadena_c", 0.0), 2),
+                },
             })
 
         return cadenas

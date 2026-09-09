@@ -268,21 +268,22 @@ def _compute_cts_ponderado_from_items(items: List[Dict[str, Any]]) -> float:
 
 
 def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Vision general por servicio (Cadena A) para la sección del mismo nombre.
+    """Vision general por servicio por Cadena (A/B/C).
 
-    Excel 'Cost to Serve'!C36 = SUM(C37:C38) = Payroll + No Payroll (sin financiero).
-    Nómina Loaded = Salario Fijo + Salario Variable (crucero es fila separada).
-    Participación (%) = componente / (Payroll + No Payroll).
+    Excel 'Cost to Serve'!C34/G34/K34 — CTS por cadena con desglose de componentes.
+    Cadena A: valores per-FTE. Cadenas B/C: totales mensuales absolutos.
+    Participacion (%): fraccion del componente sobre el CTS total de su propia cadena.
+    Participacion de cadena: fraccion volumetrica global (Panel!W32/X32/Y32).
     """
-    fte = max(int(vision_cts.get("n_fte_total") or 1), 1)
     perfiles = vision_cts.get("perfiles") or []
+    cadenas_list = vision_cts.get("cadenas") or []
 
     prl_total  = float(vision_cts.get("payroll_total") or 0)
     npl_total  = float(vision_cts.get("no_payroll_total") or 0)
-    # Excel CTS = Payroll + No Payroll (excluye ICA/GMF/pólizas/comisión/financiación)
+    # Excel CTS = Payroll + No Payroll (excluye ICA/GMF/polizas/comision/financiacion)
     cts_base   = prl_total + npl_total
 
-    # Nómina Loaded = Salario Fijo + Salario Variable (crucero es ítem separado)
+    # Nomina Loaded = Salario Fijo + Salario Variable (crucero es item separado)
     sal_fijo   = sum(float(p.get("salario_fijo", 0))   for p in perfiles)
     sal_var    = sum(float(p.get("salario_variable", 0)) for p in perfiles)
     nom_loaded = sal_fijo + sal_var
@@ -290,6 +291,34 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     opex_it    = sum(float(p.get("opex_it", 0))         for p in perfiles)
     inversiones = sum(float(p.get("inversiones", 0))    for p in perfiles)
     costos_fijos = sum(float(p.get("costos_fijos", 0))  for p in perfiles)
+    cap_ini    = sum(float(p.get("capacitacion_inicial", 0))   for p in perfiles)
+    cap_rot    = sum(float(p.get("capacitacion_rotacion", 0))  for p in perfiles)
+    examenes   = sum(float(p.get("examenes", 0))               for p in perfiles)
+    estudios   = sum(float(p.get("estudios_seguridad", 0))     for p in perfiles)
+
+    # Divisor: por perfil, si unidad == "FTE" → fte × igf (volumen); si no → fte crudo.
+    # Esto permite mezclar canales con unidad FTE y canales con unidad Volumen.
+    _igf = float(vision_cts.get("igf") or 0.0)
+    _fte_stored = int(vision_cts.get("n_fte_total") or 0)
+    if perfiles:
+        _divisor = 0.0
+        for _p in perfiles:
+            _p_fte = int(_p.get("fte", 0) or 0)
+            _p_unidad = (_p.get("unidad") or "FTE").upper()
+            if _p_unidad == "FTE" and _igf > 0:
+                _divisor += _p_fte * _igf
+            else:
+                _divisor += _p_fte
+        fte = max(_divisor, 1)
+    else:
+        fte = max(_fte_stored, 1)
+
+    # Participaciones volumetricas globales (almacenadas en engine._build_cadenas)
+    _b_data = next((c for c in cadenas_list if c.get("cadena") == "CADENA B"), None)
+    _c_data = next((c for c in cadenas_list if c.get("cadena") == "CADENA C"), None)
+    _part_b = float((_b_data or {}).get("participacion", 0.0))
+    _part_c = float((_c_data or {}).get("participacion", 0.0))
+    _part_a = max(0.0, 1.0 - _part_b - _part_c)
 
     def _item(total: float, base_for_pct: float) -> Dict[str, Any]:
         pct = (base_for_pct / cts_base) if cts_base > 0 else 0.0
@@ -297,18 +326,18 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
 
     cadena_a = {
         "nombre": "cadena_a",
-        "participacion": _pct_str(1.0),
+        "participacion": round(_part_a, 6),
         # CTS = Payroll + No Payroll (sin financiero)
         "cost_to_serve":        _item(cts_base,    cts_base),
         "payroll":              _item(prl_total,   prl_total),
-        # Nómina Loaded = Salario Fijo + Salario Variable
+        # Nomina Loaded = Salario Fijo + Salario Variable
         "nomina_loaded":        _item(nom_loaded,  nom_loaded),
         "salario_fijo":         _item(sal_fijo,    sal_fijo),
         "salario_variable":     _item(sal_var,     sal_var),
-        "capacitacion_inicial": _item(0, 0),
-        "capacitacion_rotacion":_item(0, 0),
-        "examenes_medicos":     _item(0, 0),
-        "estudios_seguridad":   _item(0, 0),
+        "capacitacion_inicial": _item(cap_ini,     cap_ini),
+        "capacitacion_rotacion":_item(cap_rot,     cap_rot),
+        "examenes_medicos":     _item(examenes,    examenes),
+        "estudios_seguridad":   _item(estudios,    estudios),
         "crucero":              _item(crucero,     crucero),
         "no_payroll":           _item(npl_total,   npl_total),
         "opex_fijo":            _item(opex_it,     opex_it),
@@ -317,34 +346,93 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     }
 
     _z = {"total": 0.0, "participacion": "0.00"}
-    cadena_b = {
-        "nombre": "cadena_b",
-        "participacion": "0.00",
-        "cost_to_serve":       _z,
-        "componente_fijo":     _z,
-        "opex":                _z,
-        "inversiones":         _z,
-        "s_y_m":               _z,
-        "componente_variable": _z,
-        "tarifa":              _z,
-        "opex_variable":       _z,
-        "tasa_escalamiento":   _z,
-        "hitl":                _z,
-    }
-    cadena_c = {
-        "nombre": "cadena_c",
-        "participacion": "0.00",
-        "cost_to_serve":       _z,
-        "tarifa_proveedor":    _z,
-        "costo_integracion":   _z,
-        "opex":                _z,
-        "inversiones":         _z,
-        "equipo_integracion":  _z,
-        "costo_variable":      _z,
-        "tasa_escalamiento":   _z,
-        "opex_variable":       _z,
-        "hitl":                _z,
-    }
+
+    # Cadena B — componentes desde desglose almacenado en engine._build_cadenas
+    if _b_data:
+        _b_total = float(_b_data.get("total", 0))
+        _b_vol   = float(_b_data.get("volumen") or 0)  # X31: volumen mensual Cadena B
+        _b_div   = max(_b_vol, 1)                       # divisor: volumen (interacciones/mes)
+        _b_des = _b_data.get("desglose") or {}
+        _b_opex      = float(_b_des.get("opex_fijo", 0))
+        _b_cap       = float(_b_des.get("capex", 0))
+        _b_sm        = float(_b_des.get("sm", 0))
+        _b_comp_fijo = _b_opex + _b_cap + _b_sm
+        _b_tarifa    = float(_b_des.get("tarifa", 0))
+        _b_opex_var  = float(_b_des.get("opex_variable", 0))
+        _b_escal     = float(_b_des.get("tasa_escalamiento", 0))
+        _b_hitl      = float(_b_des.get("hitl", 0))
+        _b_comp_var  = _b_tarifa + _b_opex_var + _b_escal + _b_hitl
+
+        def _bi(val: float, base: float) -> Dict[str, Any]:
+            pct = (base / _b_total) if _b_total > 0 else 0.0
+            return {"total": round(val / _b_div, 2), "participacion": _pct_str(pct)}
+
+        cadena_b = {
+            "nombre": "cadena_b",
+            "participacion": round(_part_b, 6),
+            "cost_to_serve":       _bi(_b_total,     _b_total),
+            "componente_fijo":     _bi(_b_comp_fijo, _b_comp_fijo),
+            "opex":                _bi(_b_opex,      _b_opex),
+            "inversiones":         _bi(_b_cap,       _b_cap),
+            "s_y_m":               _bi(_b_sm,        _b_sm),
+            "componente_variable": _bi(_b_comp_var,  _b_comp_var),
+            "tarifa":              _bi(_b_tarifa,    _b_tarifa),
+            "opex_variable":       _bi(_b_opex_var,  _b_opex_var),
+            "tasa_escalamiento":   _bi(_b_escal,     _b_escal),
+            "hitl":                _bi(_b_hitl,      _b_hitl),
+        }
+    else:
+        cadena_b = {
+            "nombre": "cadena_b",
+            "participacion": "0.00",
+            "cost_to_serve": _z, "componente_fijo": _z, "opex": _z, "inversiones": _z,
+            "s_y_m": _z, "componente_variable": _z, "tarifa": _z, "opex_variable": _z,
+            "tasa_escalamiento": _z, "hitl": _z,
+        }
+
+    # Cadena C — componentes desde desglose almacenado en engine._build_cadenas
+    if _c_data:
+        _c_total = float(_c_data.get("total", 0))
+        _c_vol   = float(_c_data.get("volumen") or 0)  # Y31: volumen mensual Cadena C
+        _c_div   = max(_c_vol, 1)                       # divisor: volumen (interacciones/mes)
+        _c_des = _c_data.get("desglose") or {}
+        _c_tar_prov  = float(_c_des.get("tarifa_proveedor", 0))
+        _c_opex      = float(_c_des.get("opex_fijo", 0))
+        _c_cap       = float(_c_des.get("capex", 0))
+        _c_equipo    = float(_c_des.get("equipo_integracion", 0))
+        _c_costo_int = _c_opex + _c_cap + _c_equipo
+        _c_escal     = float(_c_des.get("tasa_escalamiento", 0))
+        _c_opex_var  = float(_c_des.get("opex_variable", 0))
+        _c_hitl      = float(_c_des.get("hitl", 0))
+        _c_costo_var = _c_escal + _c_opex_var + _c_hitl
+
+        def _ci(val: float, base: float) -> Dict[str, Any]:
+            pct = (base / _c_total) if _c_total > 0 else 0.0
+            return {"total": round(val / _c_div, 2), "participacion": _pct_str(pct)}
+
+        cadena_c = {
+            "nombre": "cadena_c",
+            "participacion": round(_part_c, 6),
+            "cost_to_serve":      _ci(_c_total,     _c_total),
+            "tarifa_proveedor":   _ci(_c_tar_prov,  _c_tar_prov),
+            "costo_integracion":  _ci(_c_costo_int, _c_costo_int),
+            "opex":               _ci(_c_opex,      _c_opex),
+            "inversiones":        _ci(_c_cap,       _c_cap),
+            "equipo_integracion": _ci(_c_equipo,    _c_equipo),
+            "costo_variable":     _ci(_c_costo_var, _c_costo_var),
+            "tasa_escalamiento":  _ci(_c_escal,     _c_escal),
+            "opex_variable":      _ci(_c_opex_var,  _c_opex_var),
+            "hitl":               _ci(_c_hitl,      _c_hitl),
+        }
+    else:
+        cadena_c = {
+            "nombre": "cadena_c",
+            "participacion": "0.00",
+            "cost_to_serve": _z, "tarifa_proveedor": _z, "costo_integracion": _z,
+            "opex": _z, "inversiones": _z, "equipo_integracion": _z,
+            "costo_variable": _z, "tasa_escalamiento": _z, "opex_variable": _z, "hitl": _z,
+        }
+
     return [cadena_a, cadena_b, cadena_c]
 
 
@@ -370,7 +458,7 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
     for modalidad_key in ("inbound", "outbound"):
         for canal_data in (vision_por_canal.get(modalidad_key) or []):
             canal = canal_data.get("canal", "")
-            participacion = canal_data.get("participacion", {})
+            participacion = canal_data.get("participacion") or {}
             participation_a = participacion.get("participacion_a", 0)
             participation_b = participacion.get("participacion_b", 0)
             participation_c = participacion.get("participacion_c", 0)
@@ -416,6 +504,10 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
             opex_it      = sum(float(p.get("opex_it",        0)) for p in perfiles)
             inversiones  = sum(float(p.get("inversiones",    0)) for p in perfiles)
             costos_fijos = sum(float(p.get("costos_fijos",   0)) for p in perfiles)
+            cap_ini      = sum(float(p.get("capacitacion_inicial",  0)) for p in perfiles)
+            cap_rot      = sum(float(p.get("capacitacion_rotacion", 0)) for p in perfiles)
+            examenes     = sum(float(p.get("examenes",              0)) for p in perfiles)
+            estudios     = sum(float(p.get("estudios_seguridad",    0)) for p in perfiles)
             cts_ponderado = (cts_base * participation_a) + (0 * participation_b) + (0 * participation_c)   # TODO: calcular CTS ponderado por canal (Excel: =(C34*C31)+(G34*G31)+(K34*K31))
 
             def _item(total: float, base_for_pct: float, _fte: float = fte, _base: float = cts_base) -> Dict[str, Any]:
@@ -432,10 +524,10 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
                     "nomina_loaded":            _item(nom_loaded,  nom_loaded),
                     "salario_fijo":             _item(sal_fijo,    sal_fijo),
                     "salario_variable":         _item(sal_var,     sal_var),
-                    "capacitacion_inicial":     _item(0, 0),
-                    "capacitacion_rotacion":    _item(0, 0),
-                    "examenes_medicos":         _item(0, 0),
-                    "estudios_seguridad":       _item(0, 0),
+                    "capacitacion_inicial":     _item(cap_ini,     cap_ini),
+                    "capacitacion_rotacion":    _item(cap_rot,     cap_rot),
+                    "examenes_medicos":         _item(examenes,    examenes),
+                    "estudios_seguridad":       _item(estudios,    estudios),
                     "crucero":                  _item(crucero,     crucero),
                     "no_payroll":               _item(npl_total,   npl_total),
                     "opex_fijo":                _item(opex_it,     opex_it),
