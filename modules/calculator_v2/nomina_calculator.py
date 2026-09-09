@@ -978,6 +978,149 @@ class NominaCalculator:
                 total += cu_final_rot * fte_exam * pct_rotacion
         return total
 
+    def costos_nominalizados_por_perfil(self) -> Dict[str, Dict[str, float]]:
+        """Costos de cap_inicial, cap_rotacion, examenes_medicos y estudios_seguridad por perfil.
+
+        Extrae los mismos valores que _capacitacion_inicial/_rotacion/_examenes_medicos/_estudios_seguridad
+        pero devuelve un dict {perfil_nombre: {campo: valor}} para uso en CTSCalculator.
+        # Excel V2-8: 'Nomina Loaded' filas 255-273 (cap ini), 283-299 (cap rot), 329-341 (exam), 390-399 (seg)
+        """
+        perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
+        ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
+        datos_op = self._req.get("datos_operativos", {})
+
+        tarifa_diaria = float(datos_op.get("tarifa_diaria_capacitacion", 20_000.0))
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+        duracion_meses = float(datos_op.get("duracion_meses", 1.0)) or 1.0
+        pct_anuales_global = float(datos_op.get("pct_examenes_anuales", 0.28))
+        smlv = float(datos_op.get("smlv", _SMLV_DEFAULT))
+
+        cu_exam_ini = float(datos_op.get("costo_examen_medico_inicial") or 58_000.0)
+        cu_exam_rot = float(datos_op.get("costo_examen_medico_rotacion") or 58_000.0)
+        cu_exam_anu = float(datos_op.get("costo_examen_medico_anual") or 58_000.0)
+        cu_prelim_ini = float(datos_op.get("costo_estudio_prelim_inicial") or 54_055.0)
+        cu_prelim_rot = float(datos_op.get("costo_estudio_prelim_rotacion") or 54_055.0)
+        cu_final_ini = float(datos_op.get("costo_estudio_final_inicial") or 144_879.0)
+        cu_final_rot = float(datos_op.get("costo_estudio_final_rotacion") or 144_879.0)
+
+        result: Dict[str, Dict[str, float]] = {}
+        for i, perfil in enumerate(perfiles):
+            nombre = perfil.get("nombre", f"perfil{i+1}")
+            cap = perfil.get("capacitacion") or {}
+            fte = float(perfil.get("fte", 0.0))
+            if fte <= 0:
+                result[nombre] = {"capacitacion_inicial": 0.0, "capacitacion_rotacion": 0.0,
+                                  "examenes_medicos": 0.0, "estudios_seguridad": 0.0}
+                continue
+
+            # Capacitación inicial — amortizada mensualmente para vista CTS
+            # Excel NL C255:BK273 muestra costo total; CTS muestra total / duracion_meses
+            cap_ini = 0.0
+            if tarifa_diaria > 0 and cap.get("incluye_capacitacion_inicial", False):
+                dias = float(cap.get("dias_capacitacion_perfil", 0))
+                cap_ini = fte * dias * tarifa_diaria / duracion_meses
+
+            # Capacitación rotación
+            cap_rot = 0.0
+            if tarifa_diaria > 0 and cap.get("incluye_capacitacion_rotacion", False):
+                dias = float(cap.get("dias_capacitacion_perfil") or 0)
+                cap_rot = fte * dias * tarifa_diaria * pct_rotacion
+
+            # FTE examinable = agente + operativos de estructura del perfil
+            fte_exam = fte
+            for fila in ratios_filas:
+                if not fila.get("incluido", False):
+                    continue
+                if fila.get("tipo", "").lower() != "operativo":
+                    continue
+                for pr in fila.get("por_perfil", []):
+                    if pr.get("indice_perfil", -1) != i:
+                        continue
+                    try:
+                        personalizado = float(pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        personalizado = 0.0
+                    if personalizado > 0:
+                        fte_exam += personalizado
+                    else:
+                        try:
+                            ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                        except ValueError:
+                            ratio = 0.0
+                        if ratio > 0:
+                            fte_exam += fte / ratio
+
+            # Exámenes médicos
+            exams = 0.0
+            exam_legacy = perfil.get("examenes_medicos")
+            if exam_legacy:
+                pct_an = float(exam_legacy.get("pct_examenes_anuales", pct_anuales_global))
+                if exam_legacy.get("activo_iniciales", False):
+                    cu = float(exam_legacy.get("costo_unitario_iniciales") or cu_exam_ini)
+                    exams += cu * fte_exam / duracion_meses
+                if exam_legacy.get("activo_rotacion", False):
+                    cu = float(exam_legacy.get("costo_unitario_rotacion") or cu_exam_rot)
+                    exams += cu * fte_exam * pct_rotacion
+                if exam_legacy.get("activo_anual", False):
+                    cu = float(exam_legacy.get("costo_unitario_anual") or cu_exam_anu)
+                    exams += cu * fte_exam * pct_an / 12.0
+            else:
+                if cap.get("incluye_costo_examenes_ingreso", False):
+                    exams += cu_exam_ini * fte_exam / duracion_meses
+                if cap.get("incluye_costo_examenes_rotacion", False):
+                    exams += cu_exam_rot * fte_exam * pct_rotacion
+                if cap.get("incluye_costo_capacitacion_anual", False):
+                    exams += cu_exam_anu * fte_exam * pct_anuales_global / 12.0
+
+            # Estudios de seguridad — fte_exam base idéntica pero incluye cargos_adicionales
+            cargos_add_fte = sum(
+                float(c.get("cantidad", 0.0))
+                for c in (perfil.get("cargos_adicionales") or [])
+                if (c.get("nombre") or "").strip()
+            )
+            fte_base = fte + cargos_add_fte
+            fte_estudio = fte
+            for fila in ratios_filas:
+                if not fila.get("incluido", False):
+                    continue
+                if fila.get("tipo", "").lower() != "operativo":
+                    continue
+                for pr in fila.get("por_perfil", []):
+                    if pr.get("indice_perfil", -1) != i:
+                        continue
+                    try:
+                        personalizado = float(pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        personalizado = 0.0
+                    if personalizado > 0:
+                        fte_estudio += personalizado
+                    else:
+                        try:
+                            ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                        except ValueError:
+                            ratio = 0.0
+                        if ratio > 0:
+                            fte_estudio += fte_base / ratio
+            fte_estudio += cargos_add_fte
+
+            seg = 0.0
+            if cap.get("incluye_estudio_seguridad_ingreso", False):
+                seg += cu_prelim_ini * fte_estudio / duracion_meses
+            if cap.get("incluye_estudio_seguridad_rotacion", False):
+                seg += cu_prelim_rot * fte_estudio * pct_rotacion
+            if cap.get("incluye_estudio_seguridad_final_ingreso", False):
+                seg += cu_final_ini * fte_estudio / duracion_meses
+            if cap.get("incluye_estudio_seguridad_final_rotacion", False):
+                seg += cu_final_rot * fte_estudio * pct_rotacion
+
+            result[nombre] = {
+                "capacitacion_inicial": cap_ini,
+                "capacitacion_rotacion": cap_rot,
+                "examenes_medicos": exams,
+                "estudios_seguridad": seg,
+            }
+        return result
+
     @staticmethod
     def _get_ratio_global(fila: Dict) -> float:
         """Retorna el primer ratio no-cero de por_perfil (asume ratio uniforme entre perfiles)."""

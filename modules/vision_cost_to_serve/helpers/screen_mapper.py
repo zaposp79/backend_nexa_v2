@@ -292,6 +292,10 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     opex_it    = sum(float(p.get("opex_it", 0))         for p in perfiles)
     inversiones = sum(float(p.get("inversiones", 0))    for p in perfiles)
     costos_fijos = sum(float(p.get("costos_fijos", 0))  for p in perfiles)
+    cap_ini    = sum(float(p.get("capacitacion_inicial", 0))   for p in perfiles)
+    cap_rot    = sum(float(p.get("capacitacion_rotacion", 0))  for p in perfiles)
+    examenes   = sum(float(p.get("examenes", 0))               for p in perfiles)
+    estudios   = sum(float(p.get("estudios_seguridad", 0))     for p in perfiles)
 
     # Participaciones volumetricas globales (almacenadas en engine._build_cadenas)
     _b_data = next((c for c in cadenas_list if c.get("cadena") == "CADENA B"), None)
@@ -314,10 +318,10 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
         "nomina_loaded":        _item(nom_loaded,  nom_loaded),
         "salario_fijo":         _item(sal_fijo,    sal_fijo),
         "salario_variable":     _item(sal_var,     sal_var),
-        "capacitacion_inicial": _item(0, 0),
-        "capacitacion_rotacion":_item(0, 0),
-        "examenes_medicos":     _item(0, 0),
-        "estudios_seguridad":   _item(0, 0),
+        "capacitacion_inicial": _item(cap_ini,     cap_ini),
+        "capacitacion_rotacion":_item(cap_rot,     cap_rot),
+        "examenes_medicos":     _item(examenes,    examenes),
+        "estudios_seguridad":   _item(estudios,    estudios),
         "crucero":              _item(crucero,     crucero),
         "no_payroll":           _item(npl_total,   npl_total),
         "opex_fijo":            _item(opex_it,     opex_it),
@@ -480,6 +484,10 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
             opex_it      = sum(float(p.get("opex_it",        0)) for p in perfiles)
             inversiones  = sum(float(p.get("inversiones",    0)) for p in perfiles)
             costos_fijos = sum(float(p.get("costos_fijos",   0)) for p in perfiles)
+            cap_ini      = sum(float(p.get("capacitacion_inicial",  0)) for p in perfiles)
+            cap_rot      = sum(float(p.get("capacitacion_rotacion", 0)) for p in perfiles)
+            examenes     = sum(float(p.get("examenes",              0)) for p in perfiles)
+            estudios     = sum(float(p.get("estudios_seguridad",    0)) for p in perfiles)
             cts_ponderado = (cts_base * participation_a) + (0 * participation_b) + (0 * participation_c)   # TODO: calcular CTS ponderado por canal (Excel: =(C34*C31)+(G34*G31)+(K34*K31))
 
             def _item(total: float, base_for_pct: float, _fte: float = fte, _base: float = cts_base) -> Dict[str, Any]:
@@ -496,10 +504,10 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
                     "nomina_loaded":            _item(nom_loaded,  nom_loaded),
                     "salario_fijo":             _item(sal_fijo,    sal_fijo),
                     "salario_variable":         _item(sal_var,     sal_var),
-                    "capacitacion_inicial":     _item(0, 0),
-                    "capacitacion_rotacion":    _item(0, 0),
-                    "examenes_medicos":         _item(0, 0),
-                    "estudios_seguridad":       _item(0, 0),
+                    "capacitacion_inicial":     _item(cap_ini,     cap_ini),
+                    "capacitacion_rotacion":    _item(cap_rot,     cap_rot),
+                    "examenes_medicos":         _item(examenes,    examenes),
+                    "estudios_seguridad":       _item(estudios,    estudios),
                     "crucero":                  _item(crucero,     crucero),
                     "no_payroll":               _item(npl_total,   npl_total),
                     "opex_fijo":                _item(opex_it,     opex_it),

@@ -220,6 +220,7 @@ class MotorDeReglas:
         _nomina_grupos_por_perfil = _nomina_calc.proporcion_nomina_por_grupo()
         _estructura_por_perfil = _nomina_calc.costo_estructura_por_perfil()
         _comisiones_estructura_pp = _nomina_calc.comisiones_estructura_por_perfil()
+        _costos_nominalizados_pp = _nomina_calc.costos_nominalizados_por_perfil()
         ciudad = datos_op.get("ciudad", "")
         sede = datos_op.get("sede", "")
         costo_fijo_estacion = self._repo.get_hr_costo_fijo_estacion(ciudad, localidad=sede)
@@ -745,6 +746,7 @@ class MotorDeReglas:
             nomina_grupos_por_perfil=_nomina_grupos_por_perfil,
             estructura_por_perfil=_estructura_por_perfil,
             comisiones_estructura_por_perfil=_comisiones_estructura_pp,
+            costos_nominalizados_por_perfil=_costos_nominalizados_pp,
         )
 
         cts_perfiles_raw = (
@@ -1084,6 +1086,7 @@ class MotorDeReglas:
         nomina_grupos_por_perfil: Optional[Dict[str, Any]] = None,
         estructura_por_perfil: Optional[Dict[str, float]] = None,
         comisiones_estructura_por_perfil: Optional[Dict[str, float]] = None,
+        costos_nominalizados_por_perfil: Optional[Dict[str, Dict[str, float]]] = None,
     ) -> Optional[VisionCostToServe]:
         """Construye la Visión Cost-to-Serve.
 
@@ -1118,6 +1121,7 @@ class MotorDeReglas:
                 componentes_fin=componentes_pricing_fin,
                 estructura_por_perfil=estructura_por_perfil,
                 comisiones_estructura_pp=comisiones_estructura_por_perfil,
+                costos_nominalizados_pp=costos_nominalizados_por_perfil,
             )
 
             if not perfiles_raw:

@@ -55,6 +55,7 @@ class CTSCalculator:
         componentes_fin: Optional[Dict[str, float]] = None,
         estructura_por_perfil: Optional[Dict[str, float]] = None,
         comisiones_estructura_pp: Optional[Dict[str, float]] = None,
+        costos_nominalizados_pp: Optional[Dict[str, Dict[str, float]]] = None,
     ) -> List[Dict[str, Any]]:
         """Desglose CTS por perfil.
 
@@ -150,25 +151,38 @@ class CTSCalculator:
             # Pesos de staffing: participación del perfil en el equipo total
             peso_staff_agente = round(fte / fte_total_deal, 4) if fte_total_deal > 0 else 0.0
 
+            _nom_pp = (costos_nominalizados_pp or {}).get(perfil_nombre, {})
+            _cap_ini  = _nom_pp.get("capacitacion_inicial", 0.0)
+            _cap_rot  = _nom_pp.get("capacitacion_rotacion", 0.0)
+            _examenes = _nom_pp.get("examenes_medicos", 0.0)
+            _estudios = _nom_pp.get("estudios_seguridad", 0.0)
+            # Excel Payroll = Nomina Loaded + Cap Ini + Cap Rot + Exámenes + Estudios + Crucero
+            payroll_total = nomina_loaded + crucero + _cap_ini + _cap_rot + _examenes + _estudios
+            costo_directo_real = payroll_total + no_payroll
+            costo_directo_total += costo_directo_real - costo_directo  # ajustar acumulado
             perfiles_cts.append({
-                "nombre": str(perfil.get("nombre", f"perfil{i + 1}")),
+                "nombre": perfil_nombre,
                 "canal": str(perfil.get("canal", "")),
                 "modalidad": str(perfil.get("modalidad", "")),
                 "fte": int(fte),
                 "nomina_loaded": round(nomina_loaded, 2),
                 "salario_fijo": round(salario_fijo, 2),
                 "salario_variable": round(salario_variable, 2),
+                "capacitacion_inicial": round(_cap_ini, 2),
+                "capacitacion_rotacion": round(_cap_rot, 2),
+                "examenes": round(_examenes, 2),
+                "estudios_seguridad": round(_estudios, 2),
                 "crucero": round(crucero, 2),
                 "salario_cargado": round(salario_cargado, 2),
-                "payroll": round(payroll, 2),
+                "payroll": round(payroll_total, 2),
                 "nomina": round(salario_cargado, 2),  # costo empresa agente (sin overhead)
                 "opex_it": round(opex_it, 2),
                 "inversiones": round(inv, 2),
                 "costos_fijos": round(costos_fijos, 2),
                 "no_payroll": round(no_payroll, 2),
-                "costo_directo": round(costo_directo, 2),
+                "costo_directo": round(costo_directo_real, 2),
                 "peso_staff_agente": peso_staff_agente,
-                "_costo_directo_raw": costo_directo,
+                "_costo_directo_raw": costo_directo_real,
             })
 
         # Segunda pasada: financiero asignado pro-rata + totales por perfil
