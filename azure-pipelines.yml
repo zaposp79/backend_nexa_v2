@@ -1,0 +1,277 @@
+# azure-pipelines.yml — CI/CD para pricing_simulator_backend
+#
+# Deploy: Azure App Service (Linux, Python 3.12) via zipdeploy.
+#
+# VARIABLES REQUERIDAS — configurar en Azure DevOps > Pipelines > Edit > Variables:
+#
+#   Desarrollo:
+#   AZURE_SERVICE_CONNECTION   Service Connection del Web App de desarrollo
+#   AZURE_WEBAPP_NAME          Nombre del Azure Web App de desarrollo
+#   AZURE_RESOURCE_GROUP       Resource group del Web App de desarrollo
+#
+#   Producción:
+#   AZURE_SERVICE_CONNECTION-PRD   Service Connection del Web App de producción
+#   AZURE_WEBAPP_NAME-PRD          Nombre del Azure Web App de producción
+#   AZURE_RESOURCE_GROUP-PRD       Resource group del Web App de producción
+#
+# APROBACIÓN PARA PRODUCCIÓN:
+#   Configurar en Azure DevOps > Pipelines > Environments > 'production-prd'
+#   > Approvals and checks > Approvals > agregar aprobadores.
+#   El pipeline se pausa en el stage de producción hasta recibir aprobación manual.
+#
+# Variables de aplicación (APP_ENV, DB_PROVIDER, COSMOS_*, etc.) se configuran
+# directamente en Azure Portal > App Service > Configuración. El pipeline NO las toca.
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr: none
+
+variables:
+  PYTHON_VERSION: '3.12'
+  PACKAGE_NAME: 'pricing_simulator_backend'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  # ---------------------------------------------------------------------------
+  # Stage 1: Build & Test
+  #
+  # Los tests de seguridad/configuración corren con DB_PROVIDER=json porque el
+  # agente de build no tiene acceso a Cosmos. Las variables de la app se
+  # gestionan en Azure Portal, no en el pipeline.
+  # ---------------------------------------------------------------------------
+  - stage: BuildTest
+    displayName: 'Build & Test'
+    jobs:
+      - job: SecurityConfigGate
+        displayName: 'Security & Config Gate'
+        steps:
+          - checkout: self
+            path: $(PACKAGE_NAME)
+
+          - task: UsePythonVersion@0
+            displayName: 'Setup Python $(PYTHON_VERSION)'
+            inputs:
+              versionSpec: $(PYTHON_VERSION)
+              addToPath: true
+
+          - script: |
+              python -m pip install --upgrade pip
+              pip install -r requirements-dev.txt
+            workingDirectory: $(Pipeline.Workspace)/$(PACKAGE_NAME)
+            displayName: 'Install dependencies'
+
+          - script: |
+              pytest \
+                tests/api/test_sec_p0_2_env_consistency.py \
+                tests/api/test_sec_p0_1_production_hardening.py \
+                tests/api/test_app_factory.py \
+                --tb=short -v
+            workingDirectory: $(Pipeline.Workspace)/$(PACKAGE_NAME)
+            displayName: 'Run config & security gate'
+            env:
+              APP_ENV: test
+              DB_PROVIDER: json
+              COSMOS_ENDPOINT: ''
+              COSMOS_KEY: ''
+              COSMOS_DATABASE: ''
+              PYTHONPATH: $(Pipeline.Workspace)
+
+  # ---------------------------------------------------------------------------
+  # Stage 2: Deploy a Desarrollo
+  # Se ejecuta automáticamente si los tests pasan.
+  # ---------------------------------------------------------------------------
+  - stage: DeployDev
+    displayName: 'Deploy to Dev'
+    dependsOn: BuildTest
+    condition: succeeded()
+    jobs:
+      - deployment: DeployWebAppDev
+        displayName: 'Deploy to Dev Web App'
+        environment: 'development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - script: |
+                    mkdir -p deploy_pkg/$(PACKAGE_NAME)
+                    rsync -a \
+                      --exclude='.git' \
+                      --exclude='.github' \
+                      --exclude='venv' \
+                      --exclude='.venv' \
+                      --exclude='antenv' \
+                      --exclude='tests' \
+                      --exclude='docs' \
+                      --exclude='storage' \
+                      --exclude='__pycache__' \
+                      --exclude='.pytest_cache' \
+                      --exclude='*.pyc' \
+                      --exclude='.env' \
+                      --exclude='.env.*' \
+                      --exclude='azure-pipelines.yml' \
+                      --exclude='deploy_pkg' \
+                      ./ deploy_pkg/$(PACKAGE_NAME)/
+                    pip install -r requirements.txt \
+                      --target deploy_pkg/.python_packages/lib/site-packages \
+                      --no-cache-dir -q
+                    pip install cryptography==40.0.2 \
+                      --target deploy_pkg/.python_packages/lib/site-packages \
+                      --platform manylinux2014_x86_64 \
+                      --python-version 3.12 \
+                      --only-binary=:all: \
+                      --implementation cp \
+                      --force-reinstall \
+                      --no-cache-dir -q
+                    cd deploy_pkg
+                    zip -r ../deploy_package.zip . -x "*.pyc" -x "*/__pycache__/*"
+                    cd ..
+                    echo "=== Top-level del zip ==="
+                    unzip -l deploy_package.zip | awk 'NR>3 && NF>1 {print $NF}' | cut -d'/' -f1 | sort -u
+                    echo "=== Total archivos en zip ==="
+                    unzip -l deploy_package.zip | tail -1
+                  displayName: 'Build deployment package + zip'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Dev Web App'
+                  inputs:
+                    azureSubscription: $(AZURE_SERVICE_CONNECTION)
+                    appType: webAppLinux
+                    appName: $(AZURE_WEBAPP_NAME)
+                    resourceGroupName: $(AZURE_RESOURCE_GROUP)
+                    package: '$(System.DefaultWorkingDirectory)/deploy_package.zip'
+                    runtimeStack: 'PYTHON|3.12'
+                    deploymentMethod: zipDeploy
+                    startUpCommand: 'bash /home/site/wwwroot/$(PACKAGE_NAME)/run_api.sh'
+
+                - task: AzureCLI@2
+                  displayName: 'Diagnóstico de arranque Dev (no bloqueante)'
+                  condition: always()
+                  inputs:
+                    azureSubscription: $(AZURE_SERVICE_CONNECTION)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set +e
+                      APP="$(AZURE_WEBAPP_NAME)"
+                      RG="$(AZURE_RESOURCE_GROUP)"
+                      echo "Esperando 60s para cold start..."
+                      sleep 60
+                      HOST=$(az webapp show -n "$APP" -g "$RG" --query defaultHostName -o tsv 2>/dev/null || echo "")
+                      STATE=$(az webapp show -n "$APP" -g "$RG" --query state -o tsv 2>/dev/null || echo "unknown")
+                      echo "Estado: $STATE  |  Hostname: ${HOST:-desconocido}"
+                      if [ -n "$HOST" ]; then
+                        echo "=== /health ==="
+                        curl -sS -m 30 -w "\nHTTP %{http_code}\n" "https://$HOST/health" || true
+                        echo "=== Logs (últimas 200 líneas) ==="
+                        az webapp log download -n "$APP" -g "$RG" --log-file /tmp/applogs.zip 2>/dev/null || true
+                        if [ -f /tmp/applogs.zip ]; then
+                          mkdir -p /tmp/applogs && unzip -o -q /tmp/applogs.zip -d /tmp/applogs
+                          find /tmp/applogs -iname '*docker*.log' -exec cat {} + 2>/dev/null | tail -n 200
+                        fi
+                      fi
+                      exit 0
+
+  # ---------------------------------------------------------------------------
+  # Stage 3: Deploy a Producción
+  # Requiere aprobación manual en Azure DevOps > Environments > 'production-prd'.
+  # Se ejecuta solo si el deploy de desarrollo fue exitoso.
+  # ---------------------------------------------------------------------------
+  - stage: DeployPrd
+    displayName: 'Deploy to Production'
+    dependsOn: DeployDev
+    condition: succeeded()
+    jobs:
+      - deployment: DeployWebAppPrd
+        displayName: 'Deploy to Production Web App'
+        environment: 'production-prd'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - script: |
+                    mkdir -p deploy_pkg/$(PACKAGE_NAME)
+                    rsync -a \
+                      --exclude='.git' \
+                      --exclude='.github' \
+                      --exclude='venv' \
+                      --exclude='.venv' \
+                      --exclude='antenv' \
+                      --exclude='tests' \
+                      --exclude='docs' \
+                      --exclude='storage' \
+                      --exclude='__pycache__' \
+                      --exclude='.pytest_cache' \
+                      --exclude='*.pyc' \
+                      --exclude='.env' \
+                      --exclude='.env.*' \
+                      --exclude='azure-pipelines.yml' \
+                      --exclude='deploy_pkg' \
+                      ./ deploy_pkg/$(PACKAGE_NAME)/
+                    pip install -r requirements.txt \
+                      --target deploy_pkg/.python_packages/lib/site-packages \
+                      --no-cache-dir -q
+                    pip install cryptography==40.0.2 \
+                      --target deploy_pkg/.python_packages/lib/site-packages \
+                      --platform manylinux2014_x86_64 \
+                      --python-version 3.12 \
+                      --only-binary=:all: \
+                      --implementation cp \
+                      --force-reinstall \
+                      --no-cache-dir -q
+                    cd deploy_pkg
+                    zip -r ../deploy_package.zip . -x "*.pyc" -x "*/__pycache__/*"
+                    cd ..
+                    echo "=== Top-level del zip ==="
+                    unzip -l deploy_package.zip | awk 'NR>3 && NF>1 {print $NF}' | cut -d'/' -f1 | sort -u
+                    echo "=== Total archivos en zip ==="
+                    unzip -l deploy_package.zip | tail -1
+                  displayName: 'Build deployment package + zip'
+
+                - task: AzureWebApp@1
+                  displayName: 'Deploy to Production Web App'
+                  inputs:
+                    azureSubscription: $(AZURE_SERVICE_CONNECTION-PRD)
+                    appType: webAppLinux
+                    appName: $(AZURE_WEBAPP_NAME-PRD)
+                    resourceGroupName: $(AZURE_RESOURCE_GROUP-PRD)
+                    package: '$(System.DefaultWorkingDirectory)/deploy_package.zip'
+                    runtimeStack: 'PYTHON|3.12'
+                    deploymentMethod: zipDeploy
+                    startUpCommand: 'bash /home/site/wwwroot/$(PACKAGE_NAME)/run_api.sh'
+
+                - task: AzureCLI@2
+                  displayName: 'Diagnóstico de arranque Prod (no bloqueante)'
+                  condition: always()
+                  inputs:
+                    azureSubscription: $(AZURE_SERVICE_CONNECTION-PRD)
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      set +e
+                      APP="$(AZURE_WEBAPP_NAME-PRD)"
+                      RG="$(AZURE_RESOURCE_GROUP-PRD)"
+                      echo "Esperando 60s para cold start..."
+                      sleep 60
+                      HOST=$(az webapp show -n "$APP" -g "$RG" --query defaultHostName -o tsv 2>/dev/null || echo "")
+                      STATE=$(az webapp show -n "$APP" -g "$RG" --query state -o tsv 2>/dev/null || echo "unknown")
+                      echo "Estado: $STATE  |  Hostname: ${HOST:-desconocido}"
+                      if [ -n "$HOST" ]; then
+                        echo "=== /health ==="
+                        curl -sS -m 30 -w "\nHTTP %{http_code}\n" "https://$HOST/health" || true
+                        echo "=== Logs (últimas 200 líneas) ==="
+                        az webapp log download -n "$APP" -g "$RG" --log-file /tmp/applogs.zip 2>/dev/null || true
+                        if [ -f /tmp/applogs.zip ]; then
+                          mkdir -p /tmp/applogs && unzip -o -q /tmp/applogs.zip -d /tmp/applogs
+                          find /tmp/applogs -iname '*docker*.log' -exec cat {} + 2>/dev/null | tail -n 200
+                        fi
+                      fi
+                      exit 0

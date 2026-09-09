@@ -156,8 +156,11 @@ def _make_lifespan(
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        ensure_storage_dirs()
-        logger.info("[NEXA] Storage directories initialised")
+        if os.environ.get("DB_PROVIDER", "json") != "cosmos":
+            ensure_storage_dirs()
+            logger.info("[NEXA] Storage directories initialised")
+        else:
+            logger.info("[NEXA] Storage directories omitidos (DB_PROVIDER=cosmos, wwwroot es read-only)")
         app.state.container = build_container()
         logger.info(
             "[NEXA] Persistence container ready (provider=%s)",

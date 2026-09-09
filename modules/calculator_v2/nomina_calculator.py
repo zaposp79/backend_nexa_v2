@@ -291,7 +291,10 @@ class NominaCalculator:
         duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
 
         total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
-        complejidad_str = (self._cadena_a.get("ratios", {}).get("complejidad") or "").strip().lower()
+        _cplx = self._cadena_a.get("ratios", {}).get("complejidad") or ""
+        if isinstance(_cplx, dict):
+            _cplx = _cplx.get("valor") or ""
+        complejidad_str = str(_cplx).strip().lower()
         # Excel CCA!B101: "Alta"→1.0, "Media"→0.5 (confirmado), "Baja"→0.25
         complejidad_factor = {"alta": 1.0, "media": 0.5, "baja": 0.25}.get(complejidad_str, 0.5)
 
@@ -418,7 +421,10 @@ class NominaCalculator:
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
         duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
         total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
-        complejidad_str = (self._cadena_a.get("ratios", {}).get("complejidad") or "").strip().lower()
+        _cplx = self._cadena_a.get("ratios", {}).get("complejidad") or ""
+        if isinstance(_cplx, dict):
+            _cplx = _cplx.get("valor") or ""
+        complejidad_str = str(_cplx).strip().lower()
         complejidad_factor = {"alta": 1.0, "media": 0.5, "baja": 0.25}.get(complejidad_str, 0.5)
 
         fila_aprendiz = fila_inclusion = fila_especialista = None
