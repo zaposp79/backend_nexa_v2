@@ -625,17 +625,29 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         "sede":               result.get("sede"),
     }
 
+    # Excel 'Vision Cost To Serve'!B19 — ingreso_neto del primer mes al 100% ramp
+    _economics = (result.get("vision_imprimible") or {}).get("seccion_02_economics") or {}
+    ingreso_b19 = _economics.get("ingreso_mensual") or vision_cts.get("ingreso_mensual", 0.0)
+
+    # Excel 'Vision Cost To Serve'!H19 — CTS Mensual = HME!C258 + C268 + C278
+    # Cadena A: cts_mensual (payroll + no_payroll + financiero — tal como lo reporta HME)
+    # Cadenas B/C: total de vision_cts.cadenas[] (ya incluye todos sus componentes)
+    _cadenas_list = vision_cts.get("cadenas") or []
+    _cts_b = next((c.get("total", 0.0) for c in _cadenas_list if c.get("cadena") == "CADENA B"), 0.0)
+    _cts_c = next((c.get("total", 0.0) for c in _cadenas_list if c.get("cadena") == "CADENA C"), 0.0)
+    cts_mensual_h19 = vision_cts.get("cts_mensual", 0.0) + _cts_b + _cts_c
+
     summary_cards = [
         {
             "key": "ingreso",
             "label": "Ingreso",
-            "value": vision_cts.get("ingreso_mensual", 0.0),
+            "value": ingreso_b19,
             "format": "currency",
         },
         {
             "key": "costo",
             "label": "CTS Mensual",
-            "value": vision_cts.get("cts_mensual", 0.0),
+            "value": cts_mensual_h19,
             "format": "currency",
         },
         {
@@ -647,7 +659,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         {
             "key": "cts",
             "label": "CTS por FTE",
-            "value": vision_cts.get("costo_directo_por_fte", 0.0),
+            "value": vision_cts.get("cts_por_fte", 0.0),
             "format": "currency",
         },
         {
