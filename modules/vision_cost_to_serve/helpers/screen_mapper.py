@@ -566,14 +566,75 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         },
     ]
 
-    # Sección: factor_de_riesgo (evaluación resumida — stub basado en valor contrato)
-    valor_contrato = float(vision_cts.get("valor_total_contrato") or 0)
-    if valor_contrato > 5_000_000_000:
-        nivel_riesgo, detalle_riesgo = "Alto", "El contrato requiere aprobación por valor superior a 5000 SMLV"
-    elif valor_contrato > 1_000_000_000:
-        nivel_riesgo, detalle_riesgo = "Medio", "El contrato requiere revisión: valor entre 1000 y 5000 SMLV"
-    else:
-        nivel_riesgo, detalle_riesgo = "Bajo", "No requiere aprobación: impacto absorbible dentro de márgenes normales"
+    # Scores de riesgo vienen de vision_imprimible.seccion_05_control (calculado en _build_control)
+    control_riesgo: Dict[str, Any] = (result.get("vision_imprimible") or {}).get("seccion_05_control") or {}
+
+    # Sección: factor_de_riesgo — 10 ítems desde seccion_05_control.preguntas
+    # Excel V2-8: 'Vision Cost To Serve'!G213:G241 + lookup Riesgo!V2:Y12
+    _RIESGO_DETALLE: Dict[str, Dict[str, str]] = {
+        "Clasificación de oportunidad": {
+            "Alto": "Negocio encima de 1000 SMLV (facturación mensual): exposición financiera significativa, mayor responsabilidad operativa",
+            "Medio": "",
+            "Bajo": "No requiere aprobación: impacto absorbible dentro de márgenes normales",
+        },
+        "Tipo de cliente": {
+            "Alto": "Externo sin vínculo con Nexa ni Grupo Aval: comportamiento comercial incierto",
+            "Medio": "",
+            "Bajo": "Grupo Aval: relación conocida, respaldo institucional, condiciones estándar",
+        },
+        "Período de pago": {
+            "Alto": "Pago mayor a 60 días: impacto directo en flujo de caja, mayor necesidad de capital de trabajo",
+            "Medio": "Pago entre 30 y 60 días: presión moderada sobre flujo de caja, manejable con planeación",
+            "Bajo": "Pago a 30 días o menos: flujo de caja predecible, menor presión sobre capital de trabajo",
+        },
+        "Experiencia con el cliente": {
+            "Alto": "Sin historial: riesgo alto de desalineación en expectativas, procesos y SLAs",
+            "Medio": "",
+            "Bajo": "Con historial: patrones operativos y comerciales conocidos, menor probabilidad de sorpresas",
+        },
+        "Presupuesto de imprevistos": {
+            "Alto": "Sí (>$0): el cliente reconoce incertidumbre — señal de mayor complejidad o alcance no definido",
+            "Medio": "",
+            "Bajo": "No (=$0): alcance bien definido, sin colchón para desviaciones — exige mayor control de cambios",
+        },
+        "Alertas activadas": {
+            "Alto": "3 alertas: concentración de riesgos críticos, requiere revisión antes de avanzar",
+            "Medio": "1-2 alertas: riesgo manejable con mitigadores definidos por factor",
+            "Bajo": "No se generan alertas: perfil de riesgo bajo, proceder con condiciones estándar",
+        },
+        "Complejidad": {
+            "Alto": "Alta complejidad multicanal (≥10): agentes especializados, mayor costo de error y recontacto",
+            "Medio": "Complejidad moderada (≥5): proceso definido con variabilidad y excepciones recurrentes",
+            "Bajo": "Baja complejidad (≤4): proceso estandarizado, repetitivo, alto potencial de automatización",
+        },
+        "Capacitaciones": {
+            "Alto": "Mayor a 20 días: ramp-up prolongado, mayor costo de habilitación y retraso en productividad",
+            "Medio": "Entre 10 y 20 días: tiempo manejable, requiere planificación de recursos de formación",
+            "Bajo": "Menor a 10 días: ramp-up corto, inicio rápido y costo de habilitación bajo",
+        },
+        "Rotación": {
+            "Alto": "Superior a 10%: inestabilidad operativa, costo recurrente de reposición y riesgo de SLA",
+            "Medio": "Entre 5% y 10%: impacto manejable con plan de retención y protocolo de reposición activo",
+            "Bajo": "Menor a 5%: operación estable, bajo costo de reposición, alta continuidad del conocimiento",
+        },
+        "Dependencia de terceros": {
+            "Alto": "Mayor a 50%: fallas externas impactan SLAs directamente sin control de Nexa",
+            "Medio": "Entre 10% y 50%: dependencia moderada, gestionable con acuerdos de servicio definidos",
+            "Bajo": "Menor a 10%: ejecución bajo control directo de Nexa, mínima exposición externa",
+        },
+    }
+
+    # preguntas vienen en orden 1-10; el campo `factor` es la pregunta textual de OP (no el nombre canónico).
+    # Mapeamos por id (1-10) para relacionar cada pregunta con el nombre canónico de _RIESGO_DETALLE.
+    _preguntas_by_id = {_p.get("id"): _p for _p in (control_riesgo.get("preguntas") or [])}
+    _factor_riesgo_items = []
+    for _pid, (_fname, _niveles) in enumerate(_RIESGO_DETALLE.items(), start=1):
+        _nivel = (_preguntas_by_id.get(_pid) or {}).get("nivel", "")
+        _factor_riesgo_items.append({
+            "factor": _fname,
+            "detalle": _niveles.get(_nivel, ""),
+            "riesgo": _nivel,
+        })
 
     _vgs_items = _build_vision_por_servicio(vision_cts)
     _cts_ponderado = _compute_cts_ponderado_from_items(_vgs_items)
@@ -603,13 +664,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             "key": "factor_de_riesgo",
             "label": "Factor de riesgo",
             "source": "vision_cts",
-            "items": [
-                {
-                    "factor": "Clasificación de oportunidad",
-                    "detalle": detalle_riesgo,
-                    "riesgo": nivel_riesgo,
-                }
-            ],
+            "items": _factor_riesgo_items,
         },
         {
             "key": "detalle_factor_riesgos",
@@ -680,8 +735,6 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         for p in perfiles
     ]
 
-    # Scores de riesgo vienen de vision_imprimible.seccion_05_control (calculado en _build_control)
-    control_riesgo: Dict[str, Any] = (result.get("vision_imprimible") or {}).get("seccion_05_control") or {}
     score_total = round(float(control_riesgo.get("score_deal", 0.0)), 2)
     score_cliente = round(float(control_riesgo.get("score_cliente", 0.0)), 2)
     score_operativo = round(float(control_riesgo.get("score_operativo", 0.0)), 2)
