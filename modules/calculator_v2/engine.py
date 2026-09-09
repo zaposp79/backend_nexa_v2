@@ -1373,6 +1373,7 @@ class MotorDeReglas:
             cadenas.append({
                 "cadena": "CADENA B",
                 "participacion": round(_part_b_vol, 6),
+                "volumen": round(_tvol_b, 6),
                 "total": total_b,
                 "inbound": round(b_hum_in + b_tech_in, 2),
                 "outbound": round(b_hum_out + b_tech_out, 2),
@@ -1445,6 +1446,7 @@ class MotorDeReglas:
             cadenas.append({
                 "cadena": "CADENA C",
                 "participacion": round(_part_c_vol, 6),
+                "volumen": round(_tvol_c, 6),
                 "total": total_c,
                 "inbound": round(c_hum_in + c_tech_in, 2),
                 "outbound": round(c_hum_out + c_tech_out, 2),

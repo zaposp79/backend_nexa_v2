@@ -350,6 +350,8 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     # Cadena B — componentes desde desglose almacenado en engine._build_cadenas
     if _b_data:
         _b_total = float(_b_data.get("total", 0))
+        _b_vol   = float(_b_data.get("volumen") or 0)  # X31: volumen mensual Cadena B
+        _b_div   = max(_b_vol, 1)                       # divisor: volumen (interacciones/mes)
         _b_des = _b_data.get("desglose") or {}
         _b_opex      = float(_b_des.get("opex_fijo", 0))
         _b_cap       = float(_b_des.get("capex", 0))
@@ -363,7 +365,7 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
 
         def _bi(val: float, base: float) -> Dict[str, Any]:
             pct = (base / _b_total) if _b_total > 0 else 0.0
-            return {"total": round(val, 2), "participacion": _pct_str(pct)}
+            return {"total": round(val / _b_div, 2), "participacion": _pct_str(pct)}
 
         cadena_b = {
             "nombre": "cadena_b",
@@ -391,6 +393,8 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     # Cadena C — componentes desde desglose almacenado en engine._build_cadenas
     if _c_data:
         _c_total = float(_c_data.get("total", 0))
+        _c_vol   = float(_c_data.get("volumen") or 0)  # Y31: volumen mensual Cadena C
+        _c_div   = max(_c_vol, 1)                       # divisor: volumen (interacciones/mes)
         _c_des = _c_data.get("desglose") or {}
         _c_tar_prov  = float(_c_des.get("tarifa_proveedor", 0))
         _c_opex      = float(_c_des.get("opex_fijo", 0))
@@ -404,7 +408,7 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
 
         def _ci(val: float, base: float) -> Dict[str, Any]:
             pct = (base / _c_total) if _c_total > 0 else 0.0
-            return {"total": round(val, 2), "participacion": _pct_str(pct)}
+            return {"total": round(val / _c_div, 2), "participacion": _pct_str(pct)}
 
         cadena_c = {
             "nombre": "cadena_c",
