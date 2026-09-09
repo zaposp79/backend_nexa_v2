@@ -328,19 +328,15 @@ class MotorDeReglas:
         ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
             _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing, _ctx_base, for_pricing=True
         )
-        # ingreso_cadena_a_base = precio completo (HME!C300: después de margen+cont_op+cont_com+markup+descuento).
-        # ingreso_cadena_a (P&G K20) = HME!C296 = solo después del margen.
-        # Los ajustes comerciales se registran como deltas secuenciales en K23-K26.
-        _cont_op_pr   = float(_ctx_base.get("cont_op", 0.0))
-        _cont_com_pr  = float(_ctx_base.get("cont_com", 0.0))
-        _markup_pr    = float(_ctx_base.get("markup", 0.0))
-        _descuento_pr = float(_ctx_base.get("descuento", 0.0))
-        _adj_factor = (
-            (1.0 - _cont_op_pr) * (1.0 - _cont_com_pr)
-            * (1.0 - _markup_pr) * (1.0 + _descuento_pr)
-        )
-        # HME!C296 = HME!C300 × (1-cont_op) × (1-cont_com) × (1-markup) × (1+descuento)
-        ingreso_cadena_a_hm = ingreso_cadena_a_base * _adj_factor
+        # Excel V2-8: 'Hoja Maestra Escenarios'!C296 = C295/(1-margen)
+        # K20 = C296 × K15(ramp) × (1+IPC) — solo costo operacional/(1-margen), sin ICA/GMF/pólizas.
+        # Los financieros se recuperan mes a mes desde componentes_cost_mes.
+        # Los ajustes comerciales (cont_op, cont_com, markup, descuento) se registran como deltas
+        # secuenciales en K23-K26 del P&G a partir de ingreso_cadena_a (= C296×IPC×ramp).
+        _margen_a_hm = float(_ctx_base.get("margen_a", 0.18))
+        _fm_a_hm = 1.0 - _margen_a_hm
+        _costo_op_avg = _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing
+        ingreso_cadena_a_hm = _costo_op_avg / _fm_a_hm if _fm_a_hm > 0 else 0.0
 
         # Ingreso Cadena B base — Excel 'Hoja Maestra Escenarios'!C304 = C303/(1-margen_b)
         # C303 = C268 = Op_B + Pol_B + ICA_B + GMF_B (todos los costos, incluye financieros).
