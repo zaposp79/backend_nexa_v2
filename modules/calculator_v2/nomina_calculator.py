@@ -372,9 +372,7 @@ class NominaCalculator:
                     aprendiz_cantidad = (regular_hc + cargos_add_hc) / ratio_ap
                     cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
                     if cargo_data and aprendiz_cantidad > 0:
-                        salario = float(cargo_data.get("salario", 0))
-                        comision = float(cargo_data.get("comision", 0))
-                        result[nombre_ap] = calcular_costo_empresa(salario, comision) * aprendiz_cantidad
+                        result[nombre_ap] = self._get_costo_empresa(cargo_data) * aprendiz_cantidad
 
         # ── Inclusión ─────────────────────────────────────────────────────────
         # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127  (incluye Aprendiz SENA)
@@ -386,9 +384,7 @@ class NominaCalculator:
                     inclusion_cantidad = (regular_hc + cargos_add_hc + aprendiz_cantidad) / ratio_inc
                     cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                     if cargo_data and inclusion_cantidad > 0:
-                        salario = float(cargo_data.get("salario", 0))
-                        comision = float(cargo_data.get("comision", 0))
-                        result[nombre_inc] = calcular_costo_empresa(salario, comision) * inclusion_cantidad
+                        result[nombre_inc] = self._get_costo_empresa(cargo_data) * inclusion_cantidad
 
         # ── Especialista de Proyectos ─────────────────────────────────────────
         # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
@@ -398,9 +394,7 @@ class NominaCalculator:
             if fila_especialista.get("incluido", False) and total_fte > 0:
                 cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
                 if cargo_data:
-                    salario = float(cargo_data.get("salario", 0))
-                    comision = float(cargo_data.get("comision", 0))
-                    costo_esp = calcular_costo_empresa(salario, comision)
+                    costo_esp = self._get_costo_empresa(cargo_data)
                     result[nombre_esp] = costo_esp * complejidad_factor * 3.0 / duracion_meses
 
         return result
@@ -522,9 +516,7 @@ class NominaCalculator:
             if fila_aprendiz.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
                 if cargo_data:
-                    salario = float(cargo_data.get("salario", 0))
-                    comision = float(cargo_data.get("comision", 0))
-                    costo_unit_ap = calcular_costo_empresa(salario, comision)
+                    costo_unit_ap = self._get_costo_empresa(cargo_data)
 
             for pr in fila_aprendiz.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
@@ -563,9 +555,7 @@ class NominaCalculator:
             if fila_inclusion.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                 if cargo_data:
-                    salario = float(cargo_data.get("salario", 0))
-                    comision = float(cargo_data.get("comision", 0))
-                    costo_unit_inc = calcular_costo_empresa(salario, comision)
+                    costo_unit_inc = self._get_costo_empresa(cargo_data)
 
             for pr in fila_inclusion.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
@@ -605,9 +595,7 @@ class NominaCalculator:
             if fila_especialista.get("incluido", False) and total_fte > 0:
                 cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
                 if cargo_data:
-                    salario = float(cargo_data.get("salario", 0))
-                    comision = float(cargo_data.get("comision", 0))
-                    costo_unit_esp = calcular_costo_empresa(salario, comision)
+                    costo_unit_esp = self._get_costo_empresa(cargo_data)
 
             for i, perfil in enumerate(perfiles):
                 perfil_nombre = perfil.get("nombre", f"perfil{i+1}")
@@ -1126,6 +1114,21 @@ class NominaCalculator:
                 "estudios_seguridad": seg,
             }
         return result
+
+    @staticmethod
+    def _get_costo_empresa(cargo_data: Dict) -> float:
+        """Retorna costo_empresa usando override si está en detalle_nomina, sino calcula."""
+        override = cargo_data.get("costo_empresa")
+        if override is not None:
+            try:
+                v = float(override)
+                if v > 0:
+                    return v
+            except (TypeError, ValueError):
+                pass
+        salario = float(cargo_data.get("salario", 0))
+        comision = float(cargo_data.get("comision", 0))
+        return calcular_costo_empresa(salario, comision)
 
     @staticmethod
     def _get_ratio_global(fila: Dict) -> float:
