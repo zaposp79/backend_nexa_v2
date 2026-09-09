@@ -53,6 +53,8 @@ class CTSCalculator:
         componente_financiero_total: float,
         nomina_base: float = 0.0,
         componentes_fin: Optional[Dict[str, float]] = None,
+        estructura_por_perfil: Optional[Dict[str, float]] = None,
+        comisiones_estructura_pp: Optional[Dict[str, float]] = None,
     ) -> List[Dict[str, Any]]:
         """Desglose CTS por perfil.
 
@@ -114,14 +116,23 @@ class CTSCalculator:
             comision = float(perfil.get("comision_mensual", 0))
             cap = perfil.get("capacitacion") or {}
             crucero_unit = self._crucero_base or float(cap.get("crucero_mensual", 0))
+            perfil_nombre = str(perfil.get("nombre", f"perfil{i + 1}"))
 
             costo_fte = calcular_costo_empresa(salario, comision)
             salario_cargado = costo_fte * fte
-            nomina_loaded = salario_cargado + overhead_per_fte * fte
+            # Excel NL SUM(C43:C80) per perfil: usar costo real de estructura por perfil cuando
+            # está disponible; si no, fallback a distribución uniforme por FTE.
+            if estructura_por_perfil is not None:
+                estructura = estructura_por_perfil.get(perfil_nombre, 0.0)
+                nomina_loaded = salario_cargado + estructura
+            else:
+                nomina_loaded = salario_cargado + overhead_per_fte * fte
             crucero = crucero_unit * fte
             payroll = nomina_loaded + crucero
-            # salario_variable = comisiones brutas sin cargas sociales (Excel CTS F205)
-            salario_variable = comision * fte
+            # salario_variable = comisiones brutas agente + comisiones de estructura por perfil
+            # Excel CTS I141: incluye comisiones de todos los cargos del perfil, no solo agentes
+            com_estructura = (comisiones_estructura_pp or {}).get(perfil_nombre, 0.0)
+            salario_variable = comision * fte + com_estructura
             salario_fijo = nomina_loaded - salario_variable
 
             opex_items = perfil.get("opex_fijo", {}).get("items", [])

@@ -617,6 +617,52 @@ class NominaCalculator:
 
         return result
 
+    def costo_estructura_por_perfil(self) -> Dict[str, float]:
+        """Costo cargado total de cargos de estructura por perfil (suma de desglose_por_cargo_por_perfil).
+
+        Usado en CTSCalculator para reemplazar la distribución uniforme de overhead.
+        # Excel Nomina Loaded: SUM(C43:C80) por perfil = costo estructura real por perfil
+        """
+        desglose = self.desglose_por_cargo_por_perfil()
+        return {perfil: sum(costos.values()) for perfil, costos in desglose.items()}
+
+    def comisiones_estructura_por_perfil(self) -> Dict[str, float]:
+        """Comisiones brutas de cargos de estructura por perfil (sin cargas sociales).
+
+        Calcula com_frac = comision / calcular_costo_empresa(salario, comision) para cada cargo
+        y lo aplica al costo ya calculado en desglose_por_cargo_por_perfil.
+        Matemáticamente equivalente a iterar con comision × cantidad.
+        # Excel CTS I141: salario_variable incluye comisiones de estructura, no solo agentes
+        """
+        desglose = self.desglose_por_cargo_por_perfil()
+        detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
+        ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
+        detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
+
+        result: Dict[str, float] = {perfil: 0.0 for perfil in desglose}
+
+        for fila in ratios_filas:
+            cargo_nombre = fila.get("position_name") or fila.get("position_id", "")
+            if not cargo_nombre or not fila.get("incluido", False):
+                continue
+            cargo_data = self._resolver_cargo(fila, detalle_map)
+            if not cargo_data:
+                continue
+            salario = float(cargo_data.get("salario", 0))
+            comision = float(cargo_data.get("comision", 0))
+            if comision <= 0:
+                continue
+            costo_empresa = calcular_costo_empresa(salario, comision)
+            if costo_empresa <= 0:
+                continue
+            com_frac = comision / costo_empresa
+            for perfil, cargos in desglose.items():
+                costo_cargo = cargos.get(cargo_nombre, 0.0)
+                if costo_cargo > 0:
+                    result[perfil] = result.get(perfil, 0.0) + costo_cargo * com_frac
+
+        return result
+
     def proporcion_nomina_por_grupo(self) -> Dict[str, List[dict]]:
         """Proporción de nómina de estructura agrupada por grupo y por perfil.
 
