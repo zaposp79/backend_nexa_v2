@@ -630,12 +630,12 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     ingreso_b19 = _economics.get("ingreso_mensual") or vision_cts.get("ingreso_mensual", 0.0)
 
     # Excel 'Vision Cost To Serve'!H19 — CTS Mensual = HME!C258 + C268 + C278
-    # Cadena A: cts_mensual (payroll + no_payroll + financiero — tal como lo reporta HME)
-    # Cadenas B/C: total de vision_cts.cadenas[] (ya incluye todos sus componentes)
+    # Cadena A: cts_mensual (payroll + no_payroll + financiero — tal como lo reporta HME!C258)
+    # Cadenas B/C: total_hme = Op + Pol + ICA + GMF (HME!C268 / C278, incluye financieros)
     _cadenas_list = vision_cts.get("cadenas") or []
-    _cts_b = next((c.get("total", 0.0) for c in _cadenas_list if c.get("cadena") == "CADENA B"), 0.0)
-    _cts_c = next((c.get("total", 0.0) for c in _cadenas_list if c.get("cadena") == "CADENA C"), 0.0)
-    cts_mensual_h19 = vision_cts.get("cts_mensual", 0.0) + _cts_b + _cts_c
+    _cts_b = next((c.get("total_hme", c.get("total", 0.0)) for c in _cadenas_list if c.get("cadena") == "CADENA B"), 0.0)
+    _cts_c = next((c.get("total_hme", c.get("total", 0.0)) for c in _cadenas_list if c.get("cadena") == "CADENA C"), 0.0)
+    cts_mensual = vision_cts.get("cts_mensual", 0.0) + _cts_b + _cts_c
 
     summary_cards = [
         {
@@ -647,7 +647,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         {
             "key": "costo",
             "label": "CTS Mensual",
-            "value": cts_mensual_h19,
+            "value": cts_mensual,
             "format": "currency",
         },
         {

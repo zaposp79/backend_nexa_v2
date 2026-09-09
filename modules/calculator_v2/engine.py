@@ -1327,6 +1327,25 @@ class MotorDeReglas:
         if cadena_b_conds is not None and _cadena_activa("cadena_b"):
             vals_b = CadenaBCalculator(request_data).calcular_mes(1.0, 1.0)
             total_b = round(vals_b["costo_cadena_b"], 2)
+            # HME!C268 = Op_B + Pol_B + ICA_B + GMF_B (incluye financieros) — para summary_cards H19
+            _margen_b = float((request_data.get("reglas_negocio", {}).get("margen_objetivo") or {}).get("cadena_b", 0.30))
+            _fm_b = 1.0 - _margen_b
+            if _fm_b > 0:
+                _pol_activas_b = [p for p in (request_data.get("polizas") or []) if p.get("activa", False)]
+                _tasa_pol_b = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                    for p in _pol_activas_b
+                    if "comisi" not in str(p.get("nombre", "")).lower()
+                )
+                _tasa_ica_b = float((request_data.get("datos_operativos") or {}).get("tasa_ica", 0.01))
+                _tasa_gmf_b = float((request_data.get("datos_operativos") or {}).get("tasa_gmf", 0.004))
+                _bill_b = total_b / _fm_b
+                _pol_b = _bill_b * _tasa_pol_b
+                _ica_b = _bill_b * (1.0 + _tasa_pol_b / _fm_b) * _tasa_ica_b
+                _gmf_b = (total_b + _pol_b) * _tasa_gmf_b
+                total_hme_b = round(total_b + _pol_b + _ica_b + _gmf_b, 2)
+            else:
+                total_hme_b = total_b
             humano_b = round(
                 vals_b.get("sm_personal_cadena_b", 0.0) + vals_b.get("hitl_personal_cadena_b", 0.0),
                 2,
@@ -1375,6 +1394,7 @@ class MotorDeReglas:
                 "participacion": round(_part_b_vol, 6),
                 "volumen": round(_tvol_b, 6),
                 "total": total_b,
+                "total_hme": total_hme_b,
                 "inbound": round(b_hum_in + b_tech_in, 2),
                 "outbound": round(b_hum_out + b_tech_out, 2),
                 "componentes": [
@@ -1405,6 +1425,25 @@ class MotorDeReglas:
         if cadena_c_conds is not None and _cadena_activa("cadena_c"):
             vals_c = CadenaCCalculator(request_data).calcular_mes(1.0, 1.0)
             total_c = round(vals_c["costo_cadena_c"], 2)
+            # HME!C278 = Op_C + Pol_C + ICA_C + GMF_C (incluye financieros) — para summary_cards H19
+            _margen_c = float((request_data.get("reglas_negocio", {}).get("margen_objetivo") or {}).get("cadena_c", 0.18))
+            _fm_c = 1.0 - _margen_c
+            if _fm_c > 0:
+                _pol_activas_c = [p for p in (request_data.get("polizas") or []) if p.get("activa", False)]
+                _tasa_pol_c = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                    for p in _pol_activas_c
+                    if "comisi" not in str(p.get("nombre", "")).lower()
+                )
+                _tasa_ica_c = float((request_data.get("datos_operativos") or {}).get("tasa_ica", 0.01))
+                _tasa_gmf_c = float((request_data.get("datos_operativos") or {}).get("tasa_gmf", 0.004))
+                _bill_c = total_c / _fm_c
+                _pol_c = _bill_c * _tasa_pol_c
+                _ica_c = _bill_c * (1.0 + _tasa_pol_c / _fm_c) * _tasa_ica_c
+                _gmf_c = total_c * _tasa_gmf_c  # GMF_C usa Op_C directamente (no Op_C + Pol_C)
+                total_hme_c = round(total_c + _pol_c + _ica_c + _gmf_c, 2)
+            else:
+                total_hme_c = total_c
             humano_c = round(
                 vals_c.get("equipo_personal_cadena_c", 0.0) + vals_c.get("hitl_personal_cadena_c", 0.0),
                 2,
@@ -1448,6 +1487,7 @@ class MotorDeReglas:
                 "participacion": round(_part_c_vol, 6),
                 "volumen": round(_tvol_c, 6),
                 "total": total_c,
+                "total_hme": total_hme_c,
                 "inbound": round(c_hum_in + c_tech_in, 2),
                 "outbound": round(c_hum_out + c_tech_out, 2),
                 "componentes": [
