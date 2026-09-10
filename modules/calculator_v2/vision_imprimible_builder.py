@@ -221,11 +221,11 @@ def _total_slot(total: Dict) -> Dict:
         "nombre": "Total",
         "canal": None,
         "modalidad": None,
-        "modelo_cobro": None,
-        "componente_fijo": None,
-        "componente_variable": None,
-        "pct_fijo": None,
-        "pct_variable": None,
+        "modelo_cobro": total.get("modelo_cobro"),
+        "componente_fijo": total.get("componente_fijo"),
+        "componente_variable": total.get("componente_variable"),
+        "pct_fijo": total.get("pct_fijo"),
+        "pct_variable": total.get("pct_variable"),
         "fte": total.get("fte"),
         "facturacion": total.get("facturacion"),
         "tarifa_fija": total.get("tarifa_fija"),
@@ -679,12 +679,18 @@ def build_vision_imprimible(
     if vision_tarifas:
         vt_escenarios = vision_tarifas.get("escenarios") or None
         raw_total = vision_tarifas.get("total") or {}
+        raw_esc_total = vision_tarifas.get("escenario_total") or {}
         if raw_total:
             vt_total = {
                 "fte": raw_total.get("fte_total"),
                 "facturacion": raw_total.get("facturacion_mensual"),
                 "tarifa_fija": raw_total.get("tarifa_fija"),
                 "tarifa_variable": raw_total.get("ingreso_variable_mensual"),
+                "modelo_cobro": raw_esc_total.get("modelo_cobro"),
+                "componente_fijo": raw_esc_total.get("componente_fijo"),
+                "componente_variable": raw_esc_total.get("componente_variable"),
+                "pct_fijo": raw_esc_total.get("proporcion_componente_fijo_pct"),
+                "pct_variable": raw_esc_total.get("proporcion_componente_variable_pct"),
             }
 
     return {
