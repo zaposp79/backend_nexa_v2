@@ -125,6 +125,8 @@ def _build_waterfall(meses: List[Dict], totales: Dict[str, float]) -> List[dict]
         ("Ingreso Neto", ingreso_neto, False),
         ("Payroll", total("nomina_total_mensual"), True),
         ("No Payroll", total("no_payroll_total_mensual"), True),
+        ("Capacitación Inicial", total("capacitacion_inicial_mensual"), True),
+        ("Componente Financiero", total("polizas_adicionales_hm"), True),
         ("Componente Fijo", total("componente_fijo_b"), True),
         ("Componente Variable", total("componente_variable_b"), True),
         ("Tarifa Proveedor", total("tarifa_proveedor_c"), True),
