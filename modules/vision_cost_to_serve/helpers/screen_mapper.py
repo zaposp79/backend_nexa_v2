@@ -712,7 +712,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     elif(valor_contrato/periodo_pago >= 200000000):
         requiere_aprobacion = True
     elif(valor_contrato/periodo_pago >= 100000000):
-            requiere_aprobacion = True
+        requiere_aprobacion = True
 
     summary_cards = [
         {
@@ -749,7 +749,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             "key": "requiere_aprobacion",
             "label": "Requiere aprobacion",
             "value": requiere_aprobacion,
-            "format": "bolean",
+            "format": "boolean",
         }
     ]
 
