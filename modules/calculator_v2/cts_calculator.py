@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from .nomina_calculator import calcular_costo_empresa
+from .nomina_calculator import calcular_costo_empresa, NominaCalculator
 
 
 class CTSCalculator:
@@ -119,7 +119,8 @@ class CTSCalculator:
             crucero_unit = self._crucero_base or float(cap.get("crucero_mensual", 0))
             perfil_nombre = str(perfil.get("nombre", f"perfil{i + 1}"))
 
-            costo_fte = calcular_costo_empresa(salario, comision)
+            recargo_fte = NominaCalculator._recargo_perfil(perfil)
+            costo_fte = calcular_costo_empresa(salario, comision, recargos=recargo_fte)
             salario_cargado = costo_fte * fte
             # Excel NL SUM(C43:C80) per perfil: usar costo real de estructura por perfil cuando
             # está disponible; si no, fallback a distribución uniforme por FTE.

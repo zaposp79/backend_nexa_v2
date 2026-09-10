@@ -1553,6 +1553,9 @@ class MotorDeReglas:
                 "participacion_a": valores["cadena_a"] / total if total else 0,
                 "participacion_b": valores["cadena_b"] / total if total else 0,
                 "participacion_c": valores["cadena_c"] / total if total else 0,
+                "vol_cadena_a": round(valores.get("cadena_a", 0), 4),
+                "vol_cadena_b": round(valores.get("cadena_b", 0), 4),
+                "vol_cadena_c": round(valores.get("cadena_c", 0), 4),
             })
 
         return resultado

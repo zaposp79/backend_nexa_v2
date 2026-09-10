@@ -296,11 +296,20 @@ def _build_vision_por_servicio(vision_cts: Dict[str, Any]) -> List[Dict[str, Any
     examenes   = sum(float(p.get("examenes", 0))               for p in perfiles)
     estudios   = sum(float(p.get("estudios_seguridad", 0))     for p in perfiles)
 
-    # Divisor: por perfil, si unidad == "FTE" → fte × igf (volumen); si no → fte crudo.
-    # Esto permite mezclar canales con unidad FTE y canales con unidad Volumen.
+    # Divisor = total vol_cadena_a across all canals and directions (interaction volume from volumetria).
+    # Using stored vol_cadena_a avoids confusing agent headcount (perfil.fte) with interaction volume,
+    # which diverge when the same channel appears in multiple modalities with different FTE/Volume ratios.
     _igf = float(vision_cts.get("igf") or 0.0)
     _fte_stored = int(vision_cts.get("n_fte_total") or 0)
-    if perfiles:
+    _vision_por_canal = vision_cts.get("vision_por_canal") or {}
+    _divisor_vol = 0.0
+    for _dir in ("inbound", "outbound"):
+        for _cd in (_vision_por_canal.get(_dir) or []):
+            _pd = _cd.get("participacion") or {}
+            _divisor_vol += float(_pd.get("vol_cadena_a", 0))
+    if _divisor_vol > 0:
+        fte = _divisor_vol
+    elif perfiles:
         _divisor = 0.0
         for _p in perfiles:
             _p_fte = int(_p.get("fte", 0) or 0)
@@ -562,29 +571,35 @@ def _build_vision_general_canal(
     cadena_b_obj = next((c for c in cadenas_list if c.get("cadena") == "CADENA B"), {})
     cadena_c_obj = next((c for c in cadenas_list if c.get("cadena") == "CADENA C"), {})
 
-    # First pass: derive vol_b and vol_c per canal using stored participacion ratios
+    # First pass: read volumes directly from participacion dict (stored by engine from volumetria).
+    # vol_cadena_a/b/c are the interaction counts from volumetria — correct regardless of whether
+    # the perfil fte (agent headcount) matches the volumetria FTE/Volumen value.
     canal_volumes: Dict[tuple, Dict[str, float]] = {}
     for dir_key in ("inbound", "outbound"):
         for cd in (vision_por_canal.get(dir_key) or []):
             canal_name = cd.get("canal", "")
-            fte = float(cd.get("fte", 0))
-            # FTE → volume using IGF; if unidad=Volumen the perfiles store it directly
-            perfs = cd.get("perfiles") or []
-            unidad = next((p.get("unidad", "FTE") for p in perfs if p.get("unidad")), "FTE")
-            vol_a = fte * igf if unidad == "FTE" else fte
-
             part_dict = cd.get("participacion") or {}
             part_a = float(part_dict.get("participacion_a", 0))
             part_b = float(part_dict.get("participacion_b", 0))
             part_c = float(part_dict.get("participacion_c", 0))
 
-            if part_a > 0 and vol_a > 0:
-                vol_total = vol_a / part_a
-                vol_b = part_b * vol_total
-                vol_c = part_c * vol_total
+            # Prefer pre-computed volumes from engine; fall back to deriving via participacion
+            if "vol_cadena_a" in part_dict:
+                vol_a = float(part_dict.get("vol_cadena_a", 0))
+                vol_b = float(part_dict.get("vol_cadena_b", 0))
+                vol_c = float(part_dict.get("vol_cadena_c", 0))
             else:
-                vol_b = 0.0
-                vol_c = 0.0
+                fte = float(cd.get("fte", 0))
+                perfs = cd.get("perfiles") or []
+                unidad = next((p.get("unidad", "FTE") for p in perfs if p.get("unidad")), "FTE")
+                vol_a = fte * igf if unidad == "FTE" else fte
+                if part_a > 0 and vol_a > 0:
+                    vol_total = vol_a / part_a
+                    vol_b = part_b * vol_total
+                    vol_c = part_c * vol_total
+                else:
+                    vol_b = 0.0
+                    vol_c = 0.0
 
             canal_volumes[(dir_key, canal_name)] = {
                 "vol_a": vol_a, "vol_b": vol_b, "vol_c": vol_c,
@@ -712,7 +727,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     elif(valor_contrato/periodo_pago >= 200000000):
         requiere_aprobacion = True
     elif(valor_contrato/periodo_pago >= 100000000):
-            requiere_aprobacion = True
+        requiere_aprobacion = True
 
     summary_cards = [
         {
@@ -749,7 +764,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             "key": "requiere_aprobacion",
             "label": "Requiere aprobacion",
             "value": requiere_aprobacion,
-            "format": "bolean",
+            "format": "boolean",
         }
     ]
 
