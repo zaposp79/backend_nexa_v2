@@ -564,7 +564,7 @@ def _build_vision_general_canal(
 
     Excel C64: volumen = vol_a + vol_b + vol_c (total interactions per canal).
     Excel D/E: Cadena A participacion = valor_canal / total_valor_direction; valor = costo_directo/fte.
-    Excel F/G: Cadena B participacion = vol_b_canal / tvol_b_direction; valor = cadena_b_monthly_dir / tvol_b_direction.
+    Excel F/G: Cadena B participacion = vol_b_canal / tvol_b_direction; valor = cadena_b_monthly_dir × participacion.
     Excel H/I: Cadena C — same pattern as B.
     Excel J: ctsPonderado = valor_a * part_a + valor_b * part_b + valor_c * part_c.
     """
@@ -604,20 +604,47 @@ def _build_vision_general_canal(
             canal_volumes[(dir_key, canal_name)] = {
                 "vol_a": vol_a, "vol_b": vol_b, "vol_c": vol_c,
                 "part_a": part_a, "part_b": part_b, "part_c": part_c,
+                "tarifa_b": float(cd.get("cadena_b_tarifa_rate", 0)),
+                "escal_b": float(cd.get("cadena_b_escal_rate", 0)),
+                "tarifa_c_total": float(cd.get("cadena_c_tarifa_total", 0)),
+                "opex_c_total": float(cd.get("cadena_c_opex_total", 0)),
+                "capex_c_total": float(cd.get("cadena_c_capex_total", 0)),
+                "escal_c": float(cd.get("cadena_c_escal_rate", 0)),
             }
 
-    # Aggregate totals per direction
+    # Aggregate totals per direction.
+    # valor_a divisor = volumetria FTE/Volume value (not agent headcount):
+    #   FTE units:    vol_a / igf  (e.g. 1950 / 150 = 13, matching the volumetria FTE count)
+    #   Volumen units: vol_a directly (e.g. 25, the raw volumetria volume)
     tvol_b: Dict[str, float] = {}
     tvol_c: Dict[str, float] = {}
+    total_var_b: Dict[str, float] = {}
+    total_var_c: Dict[str, float] = {}
     total_valor_dir: Dict[str, float] = {}
     for dir_key in ("inbound", "outbound"):
         tvol_b[dir_key] = sum(v["vol_b"] for k, v in canal_volumes.items() if k[0] == dir_key)
         tvol_c[dir_key] = sum(v["vol_c"] for k, v in canal_volumes.items() if k[0] == dir_key)
-        total_valor_dir[dir_key] = sum(
-            _costo_directo_per_fte(cd)
-            for cd in (vision_por_canal.get(dir_key) or [])
-            if float(cd.get("fte", 0)) > 0
+        total_var_b[dir_key] = sum(
+            (v["tarifa_b"] + v["escal_b"]) * v["vol_b"]
+            for k, v in canal_volumes.items() if k[0] == dir_key
         )
+        total_var_c[dir_key] = sum(
+            v["tarifa_c_total"] + v["opex_c_total"] + v["capex_c_total"] + v["escal_c"] * v["vol_c"]
+            for k, v in canal_volumes.items() if k[0] == dir_key
+        )
+        _ta = 0.0
+        for _cd in (vision_por_canal.get(dir_key) or []):
+            if float(_cd.get("fte", 0)) <= 0:
+                continue
+            _cn = _cd.get("canal", "")
+            _vols = canal_volumes.get((dir_key, _cn), {})
+            _vol_a = _vols.get("vol_a", 0.0)
+            _perfs = _cd.get("perfiles") or []
+            _unid = (next((p.get("unidad", "FTE") for p in _perfs if p.get("unidad")), "FTE")).upper()
+            _cd_total = sum(float(p.get("costo_directo", 0)) for p in _perfs)
+            _div = (_vol_a / igf) if (_unid == "FTE" and igf > 0) else _vol_a
+            _ta += _cd_total / _div if _div > 0 else 0.0
+        total_valor_dir[dir_key] = _ta
 
     result = []
     for dir_key in ("inbound", "outbound"):
@@ -633,9 +660,6 @@ def _build_vision_general_canal(
             fte = float(cd.get("fte", 0))
             activo = fte > 0
 
-            valor_a = round(_costo_directo_per_fte(cd), 2) if activo else 0.0
-            pct_a = round(valor_a / _total_valor_a, 10) if (activo and _total_valor_a > 0) else 0.0
-
             vols = canal_volumes.get((dir_key, canal_name), {})
             vol_a = vols.get("vol_a", 0.0)
             vol_b = vols.get("vol_b", 0.0)
@@ -643,14 +667,36 @@ def _build_vision_general_canal(
             part_a = vols.get("part_a", 0.0)
             part_b = vols.get("part_b", 0.0)
             part_c = vols.get("part_c", 0.0)
+            tarifa_b = vols.get("tarifa_b", 0.0)
+            escal_b = vols.get("escal_b", 0.0)
+            tarifa_c_total = vols.get("tarifa_c_total", 0.0)
+            opex_c_total = vols.get("opex_c_total", 0.0)
+            capex_c_total = vols.get("capex_c_total", 0.0)
+            escal_c = vols.get("escal_c", 0.0)
+
+            perfs = cd.get("perfiles") or []
+            unidad_canal = (next((p.get("unidad", "FTE") for p in perfs if p.get("unidad")), "FTE")).upper()
+            cd_total = sum(float(p.get("costo_directo", 0)) for p in perfs)
+            val_a_div = (vol_a / igf) if (unidad_canal == "FTE" and igf > 0) else vol_a
+            valor_a = round(cd_total / val_a_div, 2) if (activo and val_a_div > 0) else 0.0
+            pct_a = round(valor_a / _total_valor_a, 10) if (activo and _total_valor_a > 0) else 0.0
 
             has_b = vol_b > 0 and _tvol_b > 0
-            valor_b = round(cadena_b_monthly / _tvol_b, 2) if has_b else 0.0
             pct_b = round(vol_b / _tvol_b, 10) if has_b else 0.0
+            if has_b:
+                _shared_b = cadena_b_monthly - total_var_b[dir_key]
+                valor_b = round((tarifa_b + escal_b) + _shared_b / _tvol_b, 2)
+            else:
+                valor_b = 0.0
 
             has_c = vol_c > 0 and _tvol_c > 0
-            valor_c = round(cadena_c_monthly / _tvol_c, 2) if has_c else 0.0
             pct_c = round(vol_c / _tvol_c, 10) if has_c else 0.0
+            if has_c:
+                _shared_c = cadena_c_monthly - total_var_c[dir_key]
+                _canal_specific_c = tarifa_c_total + opex_c_total + capex_c_total + escal_c * vol_c
+                valor_c = round(_canal_specific_c / vol_c + _shared_c / _tvol_c, 2)
+            else:
+                valor_c = 0.0
 
             cts_ponderado = round(valor_a * part_a + valor_b * part_b + valor_c * part_c, 2)
 

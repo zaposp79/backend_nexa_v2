@@ -1599,18 +1599,72 @@ class MotorDeReglas:
             g["fte"] += p.fte
             g["cts"] += p.costo_total
 
+        # Build per-canal variable rate lookups for cadena B/C (used in vision_general_por_canal)
+        cond_b = request_data.get("condiciones_cadena_b") or {}
+        cond_c = request_data.get("condiciones_cadena_c") or {}
+        costo_var_b = (cond_b.get("costo_variable") or {}) if isinstance(cond_b, dict) else {}
+        costo_var_c = (cond_c.get("costo_variable") or {}) if isinstance(cond_c, dict) else {}
+
+        def _rates_b(dir_key: str, canal: str):
+            tarifas = (costo_var_b.get("tarifas_por_canal") or {}).get(dir_key, [])
+            escals = (costo_var_b.get("tasa_escalamiento") or {}).get(dir_key, [])
+            tarifa = next((float(t.get("precio", 0)) for t in tarifas if t.get("canal") == canal), 0.0)
+            escal_e = next((e for e in escals if e.get("canal") == canal), None)
+            escal = float(escal_e.get("precio", 0)) * float(escal_e.get("tasa", 0)) if escal_e else 0.0
+            return tarifa, escal
+
+        def _rate_c(dir_key: str, canal: str) -> float:
+            escals = (costo_var_c.get("tasa_escalamiento") or {}).get(dir_key, [])
+            escal_e = next((e for e in escals if e.get("canal") == canal), None)
+            return float(escal_e.get("precio", 0)) * float(escal_e.get("tasa", 0)) if escal_e else 0.0
+
+        def _canal_specific_c(dir_key: str, canal: str) -> tuple:
+            # tarifa_proveedor_canal: pre-calculated monthly total per canal (not per-interaction)
+            raw_tarifa = cond_c.get("tarifa_proveedor_canal", []) if isinstance(cond_c, dict) else []
+            if isinstance(raw_tarifa, dict):
+                raw_tarifa = raw_tarifa.get("items", [])
+            tarifa_total = sum(
+                float(i.get("valor_total", 0)) for i in (raw_tarifa or [])
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+            )
+            # opex (fijo + variable): pre-calculated monthly total per canal (not per-interaction)
+            opex_items = cond_c.get("opex", []) if isinstance(cond_c, dict) else []
+            opex_total = sum(
+                float(i.get("valor_total", 0)) for i in (opex_items or [])
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+            )
+            # capex: valor_mensual × (1+tasa_interes) per canal
+            tasa_i = float((request_data.get("volumetria") or {}).get("indexacion", {}).get("tasa_interes_mensual", 0))
+            capex_items = cond_c.get("inversiones_capex", []) if isinstance(cond_c, dict) else []
+            capex_total = sum(
+                float(i.get("valor_mensual", 0)) * (1.0 + tasa_i) for i in (capex_items or [])
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+            )
+            return tarifa_total, opex_total, capex_total, _rate_c(dir_key, canal)
+
         # Construir estructura por modalidad
         result: Dict[str, List[Dict]] = {"inbound": [], "outbound": []}
         for (modalidad, canal), g in grupos.items():
             modalidad_key = "inbound" if "inbound" in modalidad else "outbound"
             participations = participaciones_inbound if modalidad_key == "inbound" else participaciones_outbound
             nwParticipation = next((p for p in participations if p["canal"] == canal), None)
+            tarifa_b, escal_b = _rates_b(modalidad_key, canal)
+            tarifa_c_total, opex_c_total, capex_c_total, escal_c = _canal_specific_c(modalidad_key, canal)
             result[modalidad_key].append({
                 "canal": canal,
                 "participacion": nwParticipation,
                 "fte": g["fte"],
                 "cts_total": round(g["cts"], 2),
                 "perfiles": g["perfiles"],
+                "cadena_b_tarifa_rate": tarifa_b,
+                "cadena_b_escal_rate": escal_b,
+                "cadena_c_tarifa_total": tarifa_c_total,
+                "cadena_c_opex_total": opex_c_total,
+                "cadena_c_capex_total": capex_c_total,
+                "cadena_c_escal_rate": escal_c,
             })
 
         return result
