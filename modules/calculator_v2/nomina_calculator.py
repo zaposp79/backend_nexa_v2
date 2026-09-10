@@ -77,6 +77,35 @@ _FACTOR_EXTRA_DIURNO = 1.25
 _FACTOR_EXTRA_NOCTURNO = 1.75
 
 
+def calcular_costo_empresa_sena(
+    salario_base: float,
+    smlv: float = _SMLV_DEFAULT,
+) -> float:
+    """Costo mensual para Aprendiz SENA e Inclusión (sin pensión, ARL, salud, dotaciones).
+
+    Excel V2-8: Inputs de Nomina row 59/60 — I=J=K=L=V=0; W = M + P(caja) + U(prestaciones).
+    Fórmula: t_haberes + caja + cesantías + primas + interés_cesantía + vacaciones.
+    """
+    if salario_base <= 0:
+        return 0.0
+    aux_transporte = _AUX_TRANSPORTE if 0 < salario_base < 2 * smlv else 0.0
+    t_haberes = salario_base + aux_transporte
+    base_p = salario_base  # (H - G) = solo salario, sin aux transporte
+
+    # Parafiscales: solo caja (O=ICBF+Sena también = 0 para SENA apprentices)
+    caja = base_p * _TASA_CAJA
+
+    # Prestaciones (normales)
+    cesantias = t_haberes * _TASA_CESANTIAS
+    primas = t_haberes * _TASA_PRIMAS
+    interes_cesantia = cesantias * _TASA_INTERES_CESANTIA
+    vacaciones = base_p * _TASA_VACACIONES
+    prestaciones = cesantias + primas + interes_cesantia + vacaciones
+
+    # M = t_haberes (seg social empleador = 0), V = 0 (dotaciones = 0)
+    return t_haberes + caja + prestaciones
+
+
 def calcular_costo_empresa(
     salario_base: float,
     comision: float,
@@ -1116,8 +1145,12 @@ class NominaCalculator:
         return result
 
     @staticmethod
-    def _get_costo_empresa(cargo_data: Dict) -> float:
-        """Retorna costo_empresa usando override si está en detalle_nomina, sino calcula."""
+    def _get_costo_empresa(cargo_data: Dict, cargo_nombre: str = "") -> float:
+        """Retorna costo_empresa: override > fórmula SENA > fórmula estándar.
+
+        SENA/Inclusión: pensión=0, ARL=0, salud=0, dotaciones=0.
+        Excel V2-8: Inputs de Nomina row 59/60 — I=J=K=L=V=0.
+        """
         override = cargo_data.get("costo_empresa")
         if override is not None:
             try:
@@ -1128,6 +1161,9 @@ class NominaCalculator:
                 pass
         salario = float(cargo_data.get("salario", 0))
         comision = float(cargo_data.get("comision", 0))
+        nombre_check = (cargo_data.get("cargo") or cargo_nombre or "").lower()
+        if "aprendiz sena" in nombre_check or "inclus" in nombre_check:
+            return calcular_costo_empresa_sena(salario)
         return calcular_costo_empresa(salario, comision)
 
     @staticmethod
