@@ -879,7 +879,6 @@ def _build_vision_general_canal(
             pct_a = round(valor_a / _total_valor_a, 10) if (activo and _total_valor_a > 0) else 0.0
 
             has_b = vol_b > 0 and _tvol_b > 0
-            pct_b = round(vol_b / _tvol_b, 10) if has_b else 0.0
             if has_b:
                 _shared_b = cadena_b_monthly - total_var_b[dir_key]
                 _canal_specific_b = opex_b_fijo_total + opex_b_var_total + capex_b_total + (tarifa_b + escal_b) * vol_b
@@ -888,7 +887,6 @@ def _build_vision_general_canal(
                 valor_b = 0.0
 
             has_c = vol_c > 0 and _tvol_c > 0
-            pct_c = round(vol_c / _tvol_c, 10) if has_c else 0.0
             if has_c:
                 _shared_c = cadena_c_monthly - total_var_c[dir_key]
                 _canal_specific_c = tarifa_c_total + opex_c_fijo_total + opex_c_var_total + capex_c_total + escal_c * vol_c
@@ -902,10 +900,20 @@ def _build_vision_general_canal(
                 "canal": canal_name,
                 "volumen": round(vol_a + vol_b + vol_c, 2),
                 "cadena_a": {"participacion": pct_a, "valor": valor_a, "activo": activo},
-                "cadena_b": {"participacion": pct_b, "valor": valor_b, "activo": has_b},
-                "cadena_c": {"participacion": pct_c, "valor": valor_c, "activo": has_c},
+                "cadena_b": {"participacion": 0.0, "valor": valor_b, "activo": has_b},
+                "cadena_c": {"participacion": 0.0, "valor": valor_c, "activo": has_c},
                 "ctsPonderado": cts_ponderado,
             })
+
+        # Compute participacion for B and C as valor / sum(valor) — same logic as cadena_a
+        _total_valor_b = sum(c["cadena_b"]["valor"] for c in canales if c["cadena_b"]["activo"])
+        _total_valor_c = sum(c["cadena_c"]["valor"] for c in canales if c["cadena_c"]["activo"])
+        for c in canales:
+            if c["cadena_b"]["activo"] and _total_valor_b > 0:
+                c["cadena_b"]["participacion"] = round(c["cadena_b"]["valor"] / _total_valor_b, 10)
+            if c["cadena_c"]["activo"] and _total_valor_c > 0:
+                c["cadena_c"]["participacion"] = round(c["cadena_c"]["valor"] / _total_valor_c, 10)
+
         result.append({"nombre": dir_key, "canales": canales})
     return result
 
