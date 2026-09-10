@@ -338,6 +338,8 @@ class NominaCalculator:
             for p in perfiles
         )
 
+        sena_unit_cost = float(datos_op.get("costo_empresa_sena") or 0.0)
+
         result: Dict[str, float] = {}
         fila_aprendiz = fila_inclusion = fila_especialista = None
         # Headcount total de cargos regulares activos (espejo de CCA SUM(E78:E98)).
@@ -401,7 +403,7 @@ class NominaCalculator:
                     aprendiz_cantidad = (regular_hc + cargos_add_hc) / ratio_ap
                     cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
                     if cargo_data and aprendiz_cantidad > 0:
-                        result[nombre_ap] = self._get_costo_empresa(cargo_data) * aprendiz_cantidad
+                        result[nombre_ap] = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost) * aprendiz_cantidad
 
         # ── Inclusión ─────────────────────────────────────────────────────────
         # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127  (incluye Aprendiz SENA)
@@ -413,7 +415,7 @@ class NominaCalculator:
                     inclusion_cantidad = (regular_hc + cargos_add_hc + aprendiz_cantidad) / ratio_inc
                     cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                     if cargo_data and inclusion_cantidad > 0:
-                        result[nombre_inc] = self._get_costo_empresa(cargo_data) * inclusion_cantidad
+                        result[nombre_inc] = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost) * inclusion_cantidad
 
         # ── Especialista de Proyectos ─────────────────────────────────────────
         # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
@@ -453,6 +455,8 @@ class NominaCalculator:
             _cplx = _cplx.get("valor") or ""
         complejidad_str = str(_cplx).strip().lower()
         complejidad_factor = {"alta": 1.0, "media": 0.5, "baja": 0.25}.get(complejidad_str, 0.5)
+
+        sena_unit_cost = float(datos_op.get("costo_empresa_sena") or 0.0)
 
         fila_aprendiz = fila_inclusion = fila_especialista = None
         # Headcount acumulado por índice de perfil para base de Aprendiz/Inclusión.
@@ -545,7 +549,7 @@ class NominaCalculator:
             if fila_aprendiz.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
                 if cargo_data:
-                    costo_unit_ap = self._get_costo_empresa(cargo_data)
+                    costo_unit_ap = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
 
             for pr in fila_aprendiz.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
@@ -584,7 +588,7 @@ class NominaCalculator:
             if fila_inclusion.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                 if cargo_data:
-                    costo_unit_inc = self._get_costo_empresa(cargo_data)
+                    costo_unit_inc = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
 
             for pr in fila_inclusion.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
@@ -1145,11 +1149,14 @@ class NominaCalculator:
         return result
 
     @staticmethod
-    def _get_costo_empresa(cargo_data: Dict, cargo_nombre: str = "") -> float:
+    def _get_costo_empresa(
+        cargo_data: Dict, cargo_nombre: str = "", sena_override: float = 0.0
+    ) -> float:
         """Retorna costo_empresa: override > fórmula SENA > fórmula estándar.
 
         SENA/Inclusión: pensión=0, ARL=0, salud=0, dotaciones=0.
         Excel V2-8: Inputs de Nomina row 59/60 — I=J=K=L=V=0.
+        sena_override: valor global desde datos_operativos.costo_empresa_sena (W59 Excel).
         """
         override = cargo_data.get("costo_empresa")
         if override is not None:
@@ -1163,6 +1170,8 @@ class NominaCalculator:
         comision = float(cargo_data.get("comision", 0))
         nombre_check = (cargo_data.get("cargo") or cargo_nombre or "").lower()
         if "aprendiz sena" in nombre_check or "inclus" in nombre_check:
+            if sena_override > 0:
+                return sena_override
             return calcular_costo_empresa_sena(salario)
         return calcular_costo_empresa(salario, comision)
 
