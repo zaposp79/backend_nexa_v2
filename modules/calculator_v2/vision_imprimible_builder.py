@@ -120,6 +120,18 @@ def _build_waterfall(meses: List[Dict], totales: Dict[str, float]) -> List[dict]
             return float(totales[key])
         return sum(float(m.get("valores", {}).get(key, 0.0)) for m in meses)
 
+    # Cadena C: costo_integracion y costo_variable se agregan igual que en vision_pyg_periods_builder
+    _costo_integracion_c = (
+        total("opex_fijo_cadena_c")
+        + total("capex_cadena_c")
+        + total("equipo_transversal_cadena_c")
+    )
+    _costo_variable_c = (
+        total("tasa_escalamiento_cadena_c")
+        + total("opex_variable_cadena_c")
+        + total("hitl_cadena_c")
+    )
+
     ingreso_neto = total("ingreso_neto")
     conceptos = [
         ("Ingreso Neto", ingreso_neto, False),
@@ -129,9 +141,9 @@ def _build_waterfall(meses: List[Dict], totales: Dict[str, float]) -> List[dict]
         ("Componente Financiero", total("polizas_adicionales_hm"), True),
         ("Componente Fijo", total("componente_fijo_b"), True),
         ("Componente Variable", total("componente_variable_b"), True),
-        ("Tarifa Proveedor", total("tarifa_proveedor_c"), True),
-        ("Costo Integración", total("costo_integracion_c"), True),
-        ("Costo Variable", total("costo_variable_c"), True),
+        ("Tarifa Proveedor", total("tarifa_canal_cadena_c"), True),
+        ("Costo Integración", _costo_integracion_c, True),
+        ("Costo Variable", _costo_variable_c, True),
         ("Costos Financieros", total("costos_financiacion_mensual"), True),
         ("Utilidad Neta", total("utilidad_neta"), False),
     ]
