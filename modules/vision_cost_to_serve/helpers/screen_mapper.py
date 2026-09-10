@@ -596,7 +596,6 @@ def _build_vision_detallada_canal(
             cap_rot      = sum(float(p.get("capacitacion_rotacion", 0)) for p in perfiles)
             examenes     = sum(float(p.get("examenes",              0)) for p in perfiles)
             estudios     = sum(float(p.get("estudios_seguridad",    0)) for p in perfiles)
-            cts_ponderado = (cts_base * participation_a) + (0 * participation_b) + (0 * participation_c)   # TODO: calcular CTS ponderado por canal (Excel: =(C34*C31)+(G34*G31)+(K34*K31))
 
             def _item(total: float, base_for_pct: float, _div: float = val_a_div, _base: float = cts_base) -> Dict[str, Any]:
                 pct = (base_for_pct / _base) if _base > 0 else 0.0
@@ -732,6 +731,10 @@ def _build_vision_detallada_canal(
                 cadena_b_item,
                 cadena_c_item,
             ]
+            _valor_a_pu = cts_base / val_a_div if val_a_div > 0 else 0.0
+            _valor_b_pu = _vg_b.get("valor_b", 0.0) if _has_b else 0.0
+            _valor_c_pu = _vg_c.get("valor_c", 0.0) if _has_c else 0.0
+            cts_ponderado = round(_valor_a_pu * participation_a + _valor_b_pu * participation_b + _valor_c_pu * participation_c, 2)
             result.append({
                 "modalidad": modalidad_key.capitalize(),
                 "canal": canal,
