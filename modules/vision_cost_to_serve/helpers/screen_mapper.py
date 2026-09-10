@@ -546,41 +546,108 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
     return result
 
 
-def _build_vision_general_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
+def _build_vision_general_canal(
+    vision_por_canal: Dict[str, Any],
+    cadenas_list: List[Dict[str, Any]],
+    igf: float,
+) -> List[Dict[str, Any]]:
     """Vision general por canal.
 
-    Excel: Cadena A $ = costo_directo/fte por tipo de canal (sin financiero).
-    Excel: % = valor_canal / sum(valores_activos_todos_canales).
+    Excel C64: volumen = vol_a + vol_b + vol_c (total interactions per canal).
+    Excel D/E: Cadena A participacion = valor_canal / total_valor_direction; valor = costo_directo/fte.
+    Excel F/G: Cadena B participacion = vol_b_canal / tvol_b_direction; valor = cadena_b_monthly_dir / tvol_b_direction.
+    Excel H/I: Cadena C — same pattern as B.
+    Excel J: ctsPonderado = valor_a * part_a + valor_b * part_b + valor_c * part_c.
     """
-    # Denominador para % = suma de costo_directo/fte de todos los canales activos
-    total_valor = 0.0
-    for modalidad_key in ("inbound", "outbound"):
-        for cd in (vision_por_canal.get(modalidad_key) or []):
-            if float(cd.get("fte", 0)) > 0:
-                total_valor += _costo_directo_per_fte(cd)
+    cadena_b_obj = next((c for c in cadenas_list if c.get("cadena") == "CADENA B"), {})
+    cadena_c_obj = next((c for c in cadenas_list if c.get("cadena") == "CADENA C"), {})
+
+    # First pass: derive vol_b and vol_c per canal using stored participacion ratios
+    canal_volumes: Dict[tuple, Dict[str, float]] = {}
+    for dir_key in ("inbound", "outbound"):
+        for cd in (vision_por_canal.get(dir_key) or []):
+            canal_name = cd.get("canal", "")
+            fte = float(cd.get("fte", 0))
+            # FTE → volume using IGF; if unidad=Volumen the perfiles store it directly
+            perfs = cd.get("perfiles") or []
+            unidad = next((p.get("unidad", "FTE") for p in perfs if p.get("unidad")), "FTE")
+            vol_a = fte * igf if unidad == "FTE" else fte
+
+            part_dict = cd.get("participacion") or {}
+            part_a = float(part_dict.get("participacion_a", 0))
+            part_b = float(part_dict.get("participacion_b", 0))
+            part_c = float(part_dict.get("participacion_c", 0))
+
+            if part_a > 0 and vol_a > 0:
+                vol_total = vol_a / part_a
+                vol_b = part_b * vol_total
+                vol_c = part_c * vol_total
+            else:
+                vol_b = 0.0
+                vol_c = 0.0
+
+            canal_volumes[(dir_key, canal_name)] = {
+                "vol_a": vol_a, "vol_b": vol_b, "vol_c": vol_c,
+                "part_a": part_a, "part_b": part_b, "part_c": part_c,
+            }
+
+    # Aggregate totals per direction
+    tvol_b: Dict[str, float] = {}
+    tvol_c: Dict[str, float] = {}
+    total_valor_dir: Dict[str, float] = {}
+    for dir_key in ("inbound", "outbound"):
+        tvol_b[dir_key] = sum(v["vol_b"] for k, v in canal_volumes.items() if k[0] == dir_key)
+        tvol_c[dir_key] = sum(v["vol_c"] for k, v in canal_volumes.items() if k[0] == dir_key)
+        total_valor_dir[dir_key] = sum(
+            _costo_directo_per_fte(cd)
+            for cd in (vision_por_canal.get(dir_key) or [])
+            if float(cd.get("fte", 0)) > 0
+        )
 
     result = []
-    for modalidad_key in ("inbound", "outbound"):
-        canales_raw = vision_por_canal.get(modalidad_key) or []
+    for dir_key in ("inbound", "outbound"):
+        cadena_b_monthly = float(cadena_b_obj.get(dir_key, 0))
+        cadena_c_monthly = float(cadena_c_obj.get(dir_key, 0))
+        _tvol_b = tvol_b[dir_key]
+        _tvol_c = tvol_c[dir_key]
+        _total_valor_a = total_valor_dir[dir_key]
+
         canales = []
-        for cd in canales_raw:
+        for cd in (vision_por_canal.get(dir_key) or []):
+            canal_name = cd.get("canal", "")
             fte = float(cd.get("fte", 0))
             activo = fte > 0
-            valor = round(_costo_directo_per_fte(cd), 2) if activo else 0.0
-            pct = round(valor / total_valor, 10) if (activo and total_valor > 0) else 0.0
+
+            valor_a = round(_costo_directo_per_fte(cd), 2) if activo else 0.0
+            pct_a = round(valor_a / _total_valor_a, 10) if (activo and _total_valor_a > 0) else 0.0
+
+            vols = canal_volumes.get((dir_key, canal_name), {})
+            vol_a = vols.get("vol_a", 0.0)
+            vol_b = vols.get("vol_b", 0.0)
+            vol_c = vols.get("vol_c", 0.0)
+            part_a = vols.get("part_a", 0.0)
+            part_b = vols.get("part_b", 0.0)
+            part_c = vols.get("part_c", 0.0)
+
+            has_b = vol_b > 0 and _tvol_b > 0
+            valor_b = round(cadena_b_monthly / _tvol_b, 2) if has_b else 0.0
+            pct_b = round(vol_b / _tvol_b, 10) if has_b else 0.0
+
+            has_c = vol_c > 0 and _tvol_c > 0
+            valor_c = round(cadena_c_monthly / _tvol_c, 2) if has_c else 0.0
+            pct_c = round(vol_c / _tvol_c, 10) if has_c else 0.0
+
+            cts_ponderado = round(valor_a * part_a + valor_b * part_b + valor_c * part_c, 2)
+
             canales.append({
-                "canal": cd.get("canal", ""),
-                "volumen": cd.get("fte", 0),
-                "cadena_a": {
-                    "participacion": pct,
-                    "valor": valor,
-                    "activo": activo,
-                },
-                "cadena_b": {"participacion": 0, "valor": 0, "activo": False},
-                "cadena_c": {"participacion": 0, "valor": 0, "activo": False},
-                "ctsPonderado": valor,
+                "canal": canal_name,
+                "volumen": round(vol_a + vol_b + vol_c, 2),
+                "cadena_a": {"participacion": pct_a, "valor": valor_a, "activo": activo},
+                "cadena_b": {"participacion": pct_b, "valor": valor_b, "activo": has_b},
+                "cadena_c": {"participacion": pct_c, "valor": valor_c, "activo": has_c},
+                "ctsPonderado": cts_ponderado,
             })
-        result.append({"nombre": modalidad_key, "canales": canales})
+        result.append({"nombre": dir_key, "canales": canales})
     return result
 
 
@@ -612,13 +679,14 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     vision_cts: Dict[str, Any] = result.get("vision_cts") or {}
     perfiles: List[Dict[str, Any]] = vision_cts.get("perfiles") or []
     vision_por_canal: Dict[str, Any] = vision_cts.get("vision_por_canal") or {}
+    periodo_pago = result.get("periodo_pago")
 
     header = {
         "cliente":            result.get("cliente"),
         "servicio":           result.get("servicio"),
         "tipo_cliente":       result.get("tipo_cliente"),
         "antiguedad_cliente": result.get("antiguedad_cliente"),
-        "periodo_pago":       result.get("periodo_pago"),
+        "periodo_pago":       periodo_pago,
         "fecha_inicio":       result.get("fecha_inicio"),
         "duracion_meses":     result.get("duracion_meses"),
         "ciudad":             result.get("ciudad"),
@@ -636,6 +704,15 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
     _cts_b = next((c.get("total_hme", c.get("total", 0.0)) for c in _cadenas_list if c.get("cadena") == "CADENA B"), 0.0)
     _cts_c = next((c.get("total_hme", c.get("total", 0.0)) for c in _cadenas_list if c.get("cadena") == "CADENA C"), 0.0)
     cts_mensual = vision_cts.get("cts_mensual", 0.0) + _cts_b + _cts_c
+    valor_contrato = vision_cts.get("valor_total_contrato", 0.0)
+    requiere_aprobacion = False
+    
+    if(valor_contrato >= 1000000000):
+        requiere_aprobacion = True
+    elif(valor_contrato/periodo_pago >= 200000000):
+        requiere_aprobacion = True
+    elif(valor_contrato/periodo_pago >= 100000000):
+            requiere_aprobacion = True
 
     summary_cards = [
         {
@@ -665,9 +742,15 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
         {
             "key": "valor_contrato",
             "label": "Valor Total Contrato",
-            "value": vision_cts.get("valor_total_contrato", 0.0),
+            "value": valor_contrato,
             "format": "currency",
         },
+        {
+            "key": "requiere_aprobacion",
+            "label": "Requiere aprobacion",
+            "value": requiere_aprobacion,
+            "format": "bolean",
+        }
     ]
 
     # Scores de riesgo vienen de vision_imprimible.seccion_05_control (calculado en _build_control)
@@ -805,7 +888,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             "key": "vision_general_por_canal",
             "label": "Vision general por canal",
             "source": "",
-            "items": _build_vision_general_canal(vision_por_canal),
+            "items": _build_vision_general_canal(vision_por_canal, _cadenas_list, vision_cts.get("igf", 0.0)),
         },
         {
             "key": "perfiles",
