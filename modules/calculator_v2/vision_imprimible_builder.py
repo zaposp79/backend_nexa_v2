@@ -203,10 +203,29 @@ def _build_margen_historico(service, client) -> dict:
 
 # ── Sección 04 — Comparativo de Escenarios ───────────────────────────────────
 
+def _total_slot(total: Dict) -> Dict:
+    return {
+        "id": "Total",
+        "nombre": "Total",
+        "canal": None,
+        "modalidad": None,
+        "modelo_cobro": None,
+        "componente_fijo": None,
+        "componente_variable": None,
+        "pct_fijo": None,
+        "pct_variable": None,
+        "fte": total.get("fte"),
+        "facturacion": total.get("facturacion"),
+        "tarifa_fija": total.get("tarifa_fija"),
+        "tarifa_variable": total.get("tarifa_variable"),
+    }
+
+
 def _build_escenarios(
     request_data: Dict[str, Any],
     cts_perfiles: List[Dict],
     vision_tarifas_escenarios: Optional[List[Dict]] = None,
+    total: Optional[Dict] = None,
 ) -> List[dict]:
     """
     Siempre retorna 5 slots.
@@ -249,6 +268,8 @@ def _build_escenarios(
                     "componente_variable": None, "pct_fijo": None, "pct_variable": None,
                     "fte": None, "facturacion": None, "tarifa_fija": None, "tarifa_variable": None,
                 })
+        if total:
+            all_5.append(_total_slot(total))
         return all_5
 
     # ── Fallback legacy: perfiles Cadena A + CTS (sin escenarios_comerciales) ──
@@ -339,8 +360,12 @@ def _build_escenarios(
                     all_5_fallback[slot] = esc
             except (ValueError, IndexError):
                 pass
+        if total:
+            all_5_fallback.append(_total_slot(total))
         return all_5_fallback
 
+    if total:
+        escenarios.append(_total_slot(total))
     return escenarios
 
 
@@ -659,8 +684,7 @@ def build_vision_imprimible(
             "margen_historico": _build_margen_historico(service, client),
         },
         "seccion_04_escenarios": {
-            "escenarios": _build_escenarios(request_data, cts_perfiles or [], vt_escenarios),
-            "total": vt_total,
+            "escenarios": _build_escenarios(request_data, cts_perfiles or [], vt_escenarios, vt_total),
         },
         "seccion_05_control": _build_control(request_data, meses, totales),
         "seccion_06_contingencias": {
