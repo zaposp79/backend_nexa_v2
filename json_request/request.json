@@ -30,7 +30,8 @@
         "tasa_ica": 0.01,
         "tasa_gmf": 0.004,
         "interacciones_gestionadas_por_fte_promedio": 200,
-        "pct_examenes_anuales": 0.28
+        "pct_examenes_anuales": 0.28,
+        "costo_empresa_sena": 2494099.29
     },
     "polizas": [
         {
@@ -129,7 +130,7 @@
             "maximo": 0.15
         },
         "imprevistos": 0.1
-	},	  
+    },
     "volumetria": {
         "indexacion": {
             "componente_humano": "IPC",
