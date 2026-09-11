@@ -6,7 +6,7 @@ No Excel, no runtime providers, no formula duplication.
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from nexa_engine.modules.vision_cost_to_serve.helpers.charts_mapper import (
     build_charts_from_result,
@@ -457,12 +457,70 @@ def _costo_directo_per_fte(canal_data: Dict[str, Any]) -> float:
     return cd_total / fte
 
 
-def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Vision detallada por canal — desglosa Payroll y No Payroll por canal (Cadena A).
-
-    Mismo patrón que _build_vision_por_servicio pero acotado a cada canal.
-    Los perfiles del canal ya incluyen todos los sub-campos calculados por CTSCalculator.
+def _build_vision_detallada_canal(
+    vision_por_canal: Dict[str, Any],
+    igf: float = 0.0,
+    vision_general_items: Optional[List[Dict[str, Any]]] = None,
+    cadenas_list: Optional[List[Dict[str, Any]]] = None,
+) -> List[Dict[str, Any]]:
+    """Vision detallada por canal — desglosa Payroll/No Payroll (Cadena A) y
+    componentes fijo/variable (Cadenas B y C) por canal y modalidad.
     """
+    # Shared components from global desglose (s_y_m, hitl for cadena_b; equipo_integracion, hitl for cadena_c)
+    _b_data = next((c for c in (cadenas_list or []) if c.get("cadena") == "CADENA B"), None)
+    _c_data = next((c for c in (cadenas_list or []) if c.get("cadena") == "CADENA C"), None)
+    _b_des = (_b_data or {}).get("desglose") or {}
+    _c_des = (_c_data or {}).get("desglose") or {}
+    _b_sm_total = float(_b_des.get("sm", 0))
+    _b_hitl_total = float(_b_des.get("hitl", 0))
+    _c_equipo_total = float(_c_des.get("equipo_integracion", 0))
+    _c_hitl_total = float(_c_des.get("hitl", 0))
+
+    # Compute total vol_b and vol_c per direction for proportional shared allocation
+    _tvol_b: Dict[str, float] = {}
+    _tvol_c: Dict[str, float] = {}
+    for dir_key in ("inbound", "outbound"):
+        _tvol_b[dir_key] = sum(
+            float((cd.get("participacion") or {}).get("vol_cadena_b", 0))
+            for cd in (vision_por_canal.get(dir_key) or [])
+        )
+        _tvol_c[dir_key] = sum(
+            float((cd.get("participacion") or {}).get("vol_cadena_c", 0))
+            for cd in (vision_por_canal.get(dir_key) or [])
+        )
+
+    # Build (dir, canal) → per-canal rates/totals from engine stored fields
+    _cv: Dict[tuple, Dict[str, float]] = {}
+    for dir_key in ("inbound", "outbound"):
+        for cd in (vision_por_canal.get(dir_key) or []):
+            part_d = cd.get("participacion") or {}
+            _cv[(dir_key, cd.get("canal", ""))] = {
+                "vol_b": float(part_d.get("vol_cadena_b", 0)),
+                "vol_c": float(part_d.get("vol_cadena_c", 0)),
+                "tarifa_b": float(cd.get("cadena_b_tarifa_rate", 0)),
+                "escal_b": float(cd.get("cadena_b_escal_rate", 0)),
+                "opex_b_fijo": float(cd.get("cadena_b_opex_fijo_total", 0)),
+                "opex_b_var": float(cd.get("cadena_b_opex_var_total", 0)),
+                "capex_b": float(cd.get("cadena_b_capex_total", 0)),
+                "tarifa_c": float(cd.get("cadena_c_tarifa_total", 0)),
+                "opex_c_fijo": float(cd.get("cadena_c_opex_fijo_total", 0)),
+                "opex_c_var": float(cd.get("cadena_c_opex_var_total", 0)),
+                "capex_c": float(cd.get("cadena_c_capex_total", 0)),
+                "escal_c": float(cd.get("cadena_c_escal_rate", 0)),
+            }
+
+    # Build (dir, canal) → {valor_b, valor_c} lookup from pre-computed vision_general
+    _vg_lookup: Dict[tuple, Dict[str, Any]] = {}
+    for dir_item in (vision_general_items or []):
+        dir_key = dir_item.get("nombre", "")
+        for c in (dir_item.get("canales") or []):
+            _vg_lookup[(dir_key, c.get("canal", ""))] = {
+                "valor_b": c.get("cadena_b", {}).get("valor", 0.0),
+                "valor_c": c.get("cadena_c", {}).get("valor", 0.0),
+                "activo_b": c.get("cadena_b", {}).get("activo", False),
+                "activo_c": c.get("cadena_c", {}).get("activo", False),
+            }
+
     result = []
     for modalidad_key in ("inbound", "outbound"):
         for canal_data in (vision_por_canal.get(modalidad_key) or []):
@@ -495,14 +553,35 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
                         "inversiones":              _z,
                         "costos_fijos_x_estacion":  _z,
                     },
-                    {"nombre": "cadena_b", "participacion": "0.00"},
-                    {"nombre": "cadena_c", "participacion": "0.00"},
+                    {
+                        "nombre": "cadena_b", "participacion": "0.00",
+                        "cost_to_serve": _z, "componente_fijo": _z, "opex": _z, "inversiones": _z,
+                        "s_y_m": _z, "componente_variable": _z, "tarifa": _z, "opex_variable": _z,
+                        "tasa_escalamiento": _z, "hitl": _z,
+                    },
+                    {
+                        "nombre": "cadena_c", "participacion": "0.00",
+                        "cost_to_serve": _z, "tarifa_proveedor": _z, "costo_integracion": _z,
+                        "opex": _z, "inversiones": _z, "equipo_integracion": _z,
+                        "costo_variable": _z, "tasa_escalamiento": _z, "opex_variable": _z, "hitl": _z,
+                    },
                 ]
                 result.append({"modalidad": modalidad_key.capitalize(), "canal": canal, "data": data_items})
                 continue
 
-            fte = fte_raw   
-         
+            # Use volumetria FTE as divisor (same as valor_a in vision_general_por_canal).
+            # headcount fte from perfiles may differ from volumetria fte (vol_a / igf).
+            part_dict = participacion
+            if "vol_cadena_a" in part_dict:
+                vol_a = float(part_dict.get("vol_cadena_a", 0))
+            else:
+                unidad = next((p.get("unidad", "FTE") for p in perfiles if p.get("unidad")), "FTE")
+                vol_a = fte_raw * igf if unidad.upper() == "FTE" else fte_raw
+            unidad_canal = next((p.get("unidad", "FTE") for p in perfiles if p.get("unidad")), "FTE").upper()
+            val_a_div = (vol_a / igf) if (unidad_canal == "FTE" and igf > 0) else vol_a
+            if val_a_div <= 0:
+                val_a_div = fte_raw if fte_raw > 0 else 1.0
+
             prl_total    = sum(float(p.get("payroll",        0)) for p in perfiles)
             npl_total    = sum(float(p.get("no_payroll",     0)) for p in perfiles)
             cts_base     = prl_total + npl_total
@@ -517,13 +596,119 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
             cap_rot      = sum(float(p.get("capacitacion_rotacion", 0)) for p in perfiles)
             examenes     = sum(float(p.get("examenes",              0)) for p in perfiles)
             estudios     = sum(float(p.get("estudios_seguridad",    0)) for p in perfiles)
-            cts_ponderado = (cts_base * participation_a) + (0 * participation_b) + (0 * participation_c)   # TODO: calcular CTS ponderado por canal (Excel: =(C34*C31)+(G34*G31)+(K34*K31))
 
-            def _item(total: float, base_for_pct: float, _fte: float = fte, _base: float = cts_base) -> Dict[str, Any]:
+            def _item(total: float, base_for_pct: float, _div: float = val_a_div, _base: float = cts_base) -> Dict[str, Any]:
                 pct = (base_for_pct / _base) if _base > 0 else 0.0
-                return {"total": round(total / _fte, 2), "participacion": _pct_str(pct)}
+                return {"total": round(total / _div, 2), "participacion": _pct_str(pct)}
 
             _z = {"total": 0.0, "participacion": "0.00"}
+
+            # Cadena B per-canal breakdown
+            _cv_key = (modalidad_key, canal)
+            _cv_b = _cv.get(_cv_key, {})
+            _vg_b = _vg_lookup.get(_cv_key, {})
+            _vol_b = _cv_b.get("vol_b", 0.0)
+            _has_b = _vg_b.get("activo_b", False) and _vol_b > 0
+            if _has_b:
+                _valor_b = _vg_b.get("valor_b", 0.0)
+                _b_total_monthly = _valor_b * _vol_b
+                _b_opex_fijo = _cv_b.get("opex_b_fijo", 0.0)
+                _b_opex_var = _cv_b.get("opex_b_var", 0.0)
+                _b_capex = _cv_b.get("capex_b", 0.0)
+                _b_tarifa_r = _cv_b.get("tarifa_b", 0.0)
+                _b_escal_r = _cv_b.get("escal_b", 0.0)
+                # Shared per-unit = valor_b minus canal-specific per-unit components.
+                # Split shared into s_y_m vs hitl using global desglose proportions.
+                _b_canal_specific_pu = (_b_opex_fijo + _b_opex_var + _b_capex) / _vol_b + _b_tarifa_r + _b_escal_r
+                _b_shared_pu = _valor_b - _b_canal_specific_pu
+                _b_denom = _b_sm_total + _b_hitl_total
+                _b_sm_pu = _b_shared_pu * (_b_sm_total / _b_denom) if _b_denom > 0 else _b_shared_pu
+                _b_hitl_pu = _b_shared_pu - _b_sm_pu
+                _b_sm_monthly = _b_sm_pu * _vol_b
+                _b_hitl_monthly = _b_hitl_pu * _vol_b
+                _b_comp_fijo_monthly = _b_opex_fijo + _b_capex + _b_sm_monthly
+                _b_tarifa_monthly = _b_tarifa_r * _vol_b
+                _b_escal_monthly = _b_escal_r * _vol_b
+                _b_comp_var_monthly = _b_tarifa_monthly + _b_opex_var + _b_escal_monthly + _b_hitl_monthly
+
+                def _bi(monthly_val: float) -> Dict[str, Any]:
+                    pct = (monthly_val / _b_total_monthly) if _b_total_monthly > 0 else 0.0
+                    return {"total": round(monthly_val / _vol_b, 2), "participacion": _pct_str(pct)}
+
+                cadena_b_item: Dict[str, Any] = {
+                    "nombre": "cadena_b",
+                    "participacion": participation_b,
+                    "cost_to_serve":       _bi(_b_total_monthly),
+                    "componente_fijo":     _bi(_b_comp_fijo_monthly),
+                    "opex":                _bi(_b_opex_fijo),
+                    "inversiones":         _bi(_b_capex),
+                    "s_y_m":               _bi(_b_sm_monthly),
+                    "componente_variable": _bi(_b_comp_var_monthly),
+                    "tarifa":              _bi(_b_tarifa_monthly),
+                    "opex_variable":       _bi(_b_opex_var),
+                    "tasa_escalamiento":   _bi(_b_escal_monthly),
+                    "hitl":                _bi(_b_hitl_monthly),
+                }
+            else:
+                cadena_b_item = {
+                    "nombre": "cadena_b", "participacion": participation_b,
+                    "cost_to_serve": _z, "componente_fijo": _z, "opex": _z, "inversiones": _z,
+                    "s_y_m": _z, "componente_variable": _z, "tarifa": _z, "opex_variable": _z,
+                    "tasa_escalamiento": _z, "hitl": _z,
+                }
+
+            # Cadena C per-canal breakdown
+            _cv_c = _cv.get(_cv_key, {})
+            _vg_c = _vg_lookup.get(_cv_key, {})
+            _vol_c = _cv_c.get("vol_c", 0.0)
+            _has_c = _vg_c.get("activo_c", False) and _vol_c > 0
+            if _has_c:
+                _valor_c = _vg_c.get("valor_c", 0.0)
+                _c_total_monthly = _valor_c * _vol_c
+                _c_tarifa_prov = _cv_c.get("tarifa_c", 0.0)
+                _c_opex_fijo = _cv_c.get("opex_c_fijo", 0.0)
+                _c_opex_var = _cv_c.get("opex_c_var", 0.0)
+                _c_capex = _cv_c.get("capex_c", 0.0)
+                _c_escal_r = _cv_c.get("escal_c", 0.0)
+                # Shared per-unit = valor_c minus canal-specific per-unit.
+                # Split shared into equipo_integracion vs hitl using global desglose proportions.
+                _c_canal_specific_pu = (_c_tarifa_prov + _c_opex_fijo + _c_opex_var + _c_capex) / _vol_c + _c_escal_r
+                _c_shared_pu = _valor_c - _c_canal_specific_pu
+                _c_denom = _c_equipo_total + _c_hitl_total
+                _c_equipo_pu = _c_shared_pu * (_c_equipo_total / _c_denom) if _c_denom > 0 else _c_shared_pu
+                _c_hitl_pu = _c_shared_pu - _c_equipo_pu
+                _c_equipo_monthly = _c_equipo_pu * _vol_c
+                _c_hitl_monthly = _c_hitl_pu * _vol_c
+                _c_escal_monthly = _c_escal_r * _vol_c
+                _c_costo_int_monthly = _c_opex_fijo + _c_capex + _c_equipo_monthly
+                _c_costo_var_monthly = _c_escal_monthly + _c_opex_var + _c_hitl_monthly
+
+                def _ci(monthly_val: float) -> Dict[str, Any]:
+                    pct = (monthly_val / _c_total_monthly) if _c_total_monthly > 0 else 0.0
+                    return {"total": round(monthly_val / _vol_c, 2), "participacion": _pct_str(pct)}
+
+                cadena_c_item: Dict[str, Any] = {
+                    "nombre": "cadena_c",
+                    "participacion": participation_c,
+                    "cost_to_serve":      _ci(_c_total_monthly),
+                    "tarifa_proveedor":   _ci(_c_tarifa_prov),
+                    "costo_integracion":  _ci(_c_costo_int_monthly),
+                    "opex":               _ci(_c_opex_fijo),
+                    "inversiones":        _ci(_c_capex),
+                    "equipo_integracion": _ci(_c_equipo_monthly),
+                    "costo_variable":     _ci(_c_costo_var_monthly),
+                    "tasa_escalamiento":  _ci(_c_escal_monthly),
+                    "opex_variable":      _ci(_c_opex_var),
+                    "hitl":               _ci(_c_hitl_monthly),
+                }
+            else:
+                cadena_c_item = {
+                    "nombre": "cadena_c", "participacion": participation_c,
+                    "cost_to_serve": _z, "tarifa_proveedor": _z, "costo_integracion": _z,
+                    "opex": _z, "inversiones": _z, "equipo_integracion": _z,
+                    "costo_variable": _z, "tasa_escalamiento": _z, "opex_variable": _z, "hitl": _z,
+                }
+
             data_items = [
                 {
                     "nombre": "cadena_a",
@@ -543,9 +728,13 @@ def _build_vision_detallada_canal(vision_por_canal: Dict[str, Any]) -> List[Dict
                     "inversiones":              _item(inversiones, inversiones),
                     "costos_fijos_x_estacion":  _item(costos_fijos, costos_fijos),
                 },
-                {"nombre": "cadena_b", "participacion": participation_b},
-                {"nombre": "cadena_c", "participacion": participation_c},
+                cadena_b_item,
+                cadena_c_item,
             ]
+            _valor_a_pu = cts_base / val_a_div if val_a_div > 0 else 0.0
+            _valor_b_pu = _vg_b.get("valor_b", 0.0) if _has_b else 0.0
+            _valor_c_pu = _vg_c.get("valor_c", 0.0) if _has_c else 0.0
+            cts_ponderado = round(_valor_a_pu * participation_a + _valor_b_pu * participation_b + _valor_c_pu * participation_c, 2)
             result.append({
                 "modalidad": modalidad_key.capitalize(),
                 "canal": canal,
@@ -606,8 +795,12 @@ def _build_vision_general_canal(
                 "part_a": part_a, "part_b": part_b, "part_c": part_c,
                 "tarifa_b": float(cd.get("cadena_b_tarifa_rate", 0)),
                 "escal_b": float(cd.get("cadena_b_escal_rate", 0)),
+                "opex_b_fijo_total": float(cd.get("cadena_b_opex_fijo_total", 0)),
+                "opex_b_var_total": float(cd.get("cadena_b_opex_var_total", 0)),
+                "capex_b_total": float(cd.get("cadena_b_capex_total", 0)),
                 "tarifa_c_total": float(cd.get("cadena_c_tarifa_total", 0)),
-                "opex_c_total": float(cd.get("cadena_c_opex_total", 0)),
+                "opex_c_fijo_total": float(cd.get("cadena_c_opex_fijo_total", 0)),
+                "opex_c_var_total": float(cd.get("cadena_c_opex_var_total", 0)),
                 "capex_c_total": float(cd.get("cadena_c_capex_total", 0)),
                 "escal_c": float(cd.get("cadena_c_escal_rate", 0)),
             }
@@ -625,11 +818,11 @@ def _build_vision_general_canal(
         tvol_b[dir_key] = sum(v["vol_b"] for k, v in canal_volumes.items() if k[0] == dir_key)
         tvol_c[dir_key] = sum(v["vol_c"] for k, v in canal_volumes.items() if k[0] == dir_key)
         total_var_b[dir_key] = sum(
-            (v["tarifa_b"] + v["escal_b"]) * v["vol_b"]
+            v["opex_b_fijo_total"] + v["opex_b_var_total"] + v["capex_b_total"] + (v["tarifa_b"] + v["escal_b"]) * v["vol_b"]
             for k, v in canal_volumes.items() if k[0] == dir_key
         )
         total_var_c[dir_key] = sum(
-            v["tarifa_c_total"] + v["opex_c_total"] + v["capex_c_total"] + v["escal_c"] * v["vol_c"]
+            v["tarifa_c_total"] + v["opex_c_fijo_total"] + v["opex_c_var_total"] + v["capex_c_total"] + v["escal_c"] * v["vol_c"]
             for k, v in canal_volumes.items() if k[0] == dir_key
         )
         _ta = 0.0
@@ -669,8 +862,12 @@ def _build_vision_general_canal(
             part_c = vols.get("part_c", 0.0)
             tarifa_b = vols.get("tarifa_b", 0.0)
             escal_b = vols.get("escal_b", 0.0)
+            opex_b_fijo_total = vols.get("opex_b_fijo_total", 0.0)
+            opex_b_var_total = vols.get("opex_b_var_total", 0.0)
+            capex_b_total = vols.get("capex_b_total", 0.0)
             tarifa_c_total = vols.get("tarifa_c_total", 0.0)
-            opex_c_total = vols.get("opex_c_total", 0.0)
+            opex_c_fijo_total = vols.get("opex_c_fijo_total", 0.0)
+            opex_c_var_total = vols.get("opex_c_var_total", 0.0)
             capex_c_total = vols.get("capex_c_total", 0.0)
             escal_c = vols.get("escal_c", 0.0)
 
@@ -682,18 +879,17 @@ def _build_vision_general_canal(
             pct_a = round(valor_a / _total_valor_a, 10) if (activo and _total_valor_a > 0) else 0.0
 
             has_b = vol_b > 0 and _tvol_b > 0
-            pct_b = round(vol_b / _tvol_b, 10) if has_b else 0.0
             if has_b:
                 _shared_b = cadena_b_monthly - total_var_b[dir_key]
-                valor_b = round((tarifa_b + escal_b) + _shared_b / _tvol_b, 2)
+                _canal_specific_b = opex_b_fijo_total + opex_b_var_total + capex_b_total + (tarifa_b + escal_b) * vol_b
+                valor_b = round(_canal_specific_b / vol_b + _shared_b / _tvol_b, 2)
             else:
                 valor_b = 0.0
 
             has_c = vol_c > 0 and _tvol_c > 0
-            pct_c = round(vol_c / _tvol_c, 10) if has_c else 0.0
             if has_c:
                 _shared_c = cadena_c_monthly - total_var_c[dir_key]
-                _canal_specific_c = tarifa_c_total + opex_c_total + capex_c_total + escal_c * vol_c
+                _canal_specific_c = tarifa_c_total + opex_c_fijo_total + opex_c_var_total + capex_c_total + escal_c * vol_c
                 valor_c = round(_canal_specific_c / vol_c + _shared_c / _tvol_c, 2)
             else:
                 valor_c = 0.0
@@ -704,10 +900,20 @@ def _build_vision_general_canal(
                 "canal": canal_name,
                 "volumen": round(vol_a + vol_b + vol_c, 2),
                 "cadena_a": {"participacion": pct_a, "valor": valor_a, "activo": activo},
-                "cadena_b": {"participacion": pct_b, "valor": valor_b, "activo": has_b},
-                "cadena_c": {"participacion": pct_c, "valor": valor_c, "activo": has_c},
+                "cadena_b": {"participacion": 0.0, "valor": valor_b, "activo": has_b},
+                "cadena_c": {"participacion": 0.0, "valor": valor_c, "activo": has_c},
                 "ctsPonderado": cts_ponderado,
             })
+
+        # Compute participacion for B and C as valor / sum(valor) — same logic as cadena_a
+        _total_valor_b = sum(c["cadena_b"]["valor"] for c in canales if c["cadena_b"]["activo"])
+        _total_valor_c = sum(c["cadena_c"]["valor"] for c in canales if c["cadena_c"]["activo"])
+        for c in canales:
+            if c["cadena_b"]["activo"] and _total_valor_b > 0:
+                c["cadena_b"]["participacion"] = round(c["cadena_b"]["valor"] / _total_valor_b, 10)
+            if c["cadena_c"]["activo"] and _total_valor_c > 0:
+                c["cadena_c"]["participacion"] = round(c["cadena_c"]["valor"] / _total_valor_c, 10)
+
         result.append({"nombre": dir_key, "canales": canales})
     return result
 
@@ -886,6 +1092,7 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
 
     _vgs_items = _build_vision_por_servicio(vision_cts)
     _cts_ponderado = _compute_cts_ponderado_from_items(_vgs_items)
+    _vgc_items = _build_vision_general_canal(vision_por_canal, _cadenas_list, vision_cts.get("igf", 0.0))
 
     sections: List[Dict[str, Any]] = [
         {
@@ -943,13 +1150,13 @@ def _build_from_v2_result(result: Dict[str, Any]) -> Dict[str, Any]:
             "key": "vision_detallada_por_canal",
             "label": "Vision detallada por canal",
             "source": "",
-            "items": _build_vision_detallada_canal(vision_por_canal),
+            "items": _build_vision_detallada_canal(vision_por_canal, vision_cts.get("igf", 0.0), _vgc_items, _cadenas_list),
         },
         {
             "key": "vision_general_por_canal",
             "label": "Vision general por canal",
             "source": "",
-            "items": _build_vision_general_canal(vision_por_canal, _cadenas_list, vision_cts.get("igf", 0.0)),
+            "items": _vgc_items,
         },
         {
             "key": "perfiles",

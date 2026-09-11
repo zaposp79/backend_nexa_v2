@@ -1605,13 +1605,38 @@ class MotorDeReglas:
         costo_var_b = (cond_b.get("costo_variable") or {}) if isinstance(cond_b, dict) else {}
         costo_var_c = (cond_c.get("costo_variable") or {}) if isinstance(cond_c, dict) else {}
 
-        def _rates_b(dir_key: str, canal: str):
+        _tasa_i = float((request_data.get("volumetria") or {}).get("indexacion", {}).get("tasa_interes_mensual", 0))
+
+        def _canal_specific_b(dir_key: str, canal: str) -> tuple:
+            # per-interaction rates from costo_variable
             tarifas = (costo_var_b.get("tarifas_por_canal") or {}).get(dir_key, [])
             escals = (costo_var_b.get("tasa_escalamiento") or {}).get(dir_key, [])
             tarifa = next((float(t.get("precio", 0)) for t in tarifas if t.get("canal") == canal), 0.0)
             escal_e = next((e for e in escals if e.get("canal") == canal), None)
             escal = float(escal_e.get("precio", 0)) * float(escal_e.get("tasa", 0)) if escal_e else 0.0
-            return tarifa, escal
+            # opex (split by tipo_gasto: Fijo / Variable): monthly total per canal
+            opex_raw = (cond_b.get("opex") or {}) if isinstance(cond_b, dict) else {}
+            opex_items = opex_raw.get("items", []) if isinstance(opex_raw, dict) else (opex_raw if isinstance(opex_raw, list) else [])
+            opex_fijo_total = sum(
+                float(i.get("valor_total", 0)) for i in opex_items
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+                and str(i.get("tipo_gasto", "")).strip().lower() == "fijo"
+            )
+            opex_var_total = sum(
+                float(i.get("valor_total", 0)) for i in opex_items
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+                and str(i.get("tipo_gasto", "")).strip().lower() == "variable"
+            )
+            # capex: valor_mensual × (1+tasa_interes) per canal
+            capex_items = cond_b.get("inversiones_capex", []) if isinstance(cond_b, dict) else []
+            capex_total = sum(
+                float(i.get("valor_mensual", 0)) * (1.0 + _tasa_i) for i in (capex_items or [])
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+            )
+            return tarifa, escal, opex_fijo_total, opex_var_total, capex_total
 
         def _rate_c(dir_key: str, canal: str) -> float:
             escals = (costo_var_c.get("tasa_escalamiento") or {}).get(dir_key, [])
@@ -1628,22 +1653,28 @@ class MotorDeReglas:
                 if str(i.get("canal", "")) == canal
                 and str(i.get("modalidad", "")).strip().lower() == dir_key
             )
-            # opex (fijo + variable): pre-calculated monthly total per canal (not per-interaction)
+            # opex (split by tipo_gasto: Fijo / Variable): monthly total per canal
             opex_items = cond_c.get("opex", []) if isinstance(cond_c, dict) else []
-            opex_total = sum(
+            opex_fijo_total = sum(
                 float(i.get("valor_total", 0)) for i in (opex_items or [])
                 if str(i.get("canal", "")) == canal
                 and str(i.get("modalidad", "")).strip().lower() == dir_key
+                and str(i.get("tipo_gasto", "")).strip().lower() == "fijo"
+            )
+            opex_var_total = sum(
+                float(i.get("valor_total", 0)) for i in (opex_items or [])
+                if str(i.get("canal", "")) == canal
+                and str(i.get("modalidad", "")).strip().lower() == dir_key
+                and str(i.get("tipo_gasto", "")).strip().lower() == "variable"
             )
             # capex: valor_mensual × (1+tasa_interes) per canal
-            tasa_i = float((request_data.get("volumetria") or {}).get("indexacion", {}).get("tasa_interes_mensual", 0))
             capex_items = cond_c.get("inversiones_capex", []) if isinstance(cond_c, dict) else []
             capex_total = sum(
-                float(i.get("valor_mensual", 0)) * (1.0 + tasa_i) for i in (capex_items or [])
+                float(i.get("valor_mensual", 0)) * (1.0 + _tasa_i) for i in (capex_items or [])
                 if str(i.get("canal", "")) == canal
                 and str(i.get("modalidad", "")).strip().lower() == dir_key
             )
-            return tarifa_total, opex_total, capex_total, _rate_c(dir_key, canal)
+            return tarifa_total, opex_fijo_total, opex_var_total, capex_total, _rate_c(dir_key, canal)
 
         # Construir estructura por modalidad
         result: Dict[str, List[Dict]] = {"inbound": [], "outbound": []}
@@ -1651,8 +1682,8 @@ class MotorDeReglas:
             modalidad_key = "inbound" if "inbound" in modalidad else "outbound"
             participations = participaciones_inbound if modalidad_key == "inbound" else participaciones_outbound
             nwParticipation = next((p for p in participations if p["canal"] == canal), None)
-            tarifa_b, escal_b = _rates_b(modalidad_key, canal)
-            tarifa_c_total, opex_c_total, capex_c_total, escal_c = _canal_specific_c(modalidad_key, canal)
+            tarifa_b, escal_b, opex_b_fijo_total, opex_b_var_total, capex_b_total = _canal_specific_b(modalidad_key, canal)
+            tarifa_c_total, opex_c_fijo_total, opex_c_var_total, capex_c_total, escal_c = _canal_specific_c(modalidad_key, canal)
             result[modalidad_key].append({
                 "canal": canal,
                 "participacion": nwParticipation,
@@ -1661,8 +1692,12 @@ class MotorDeReglas:
                 "perfiles": g["perfiles"],
                 "cadena_b_tarifa_rate": tarifa_b,
                 "cadena_b_escal_rate": escal_b,
+                "cadena_b_opex_fijo_total": opex_b_fijo_total,
+                "cadena_b_opex_var_total": opex_b_var_total,
+                "cadena_b_capex_total": capex_b_total,
                 "cadena_c_tarifa_total": tarifa_c_total,
-                "cadena_c_opex_total": opex_c_total,
+                "cadena_c_opex_fijo_total": opex_c_fijo_total,
+                "cadena_c_opex_var_total": opex_c_var_total,
                 "cadena_c_capex_total": capex_c_total,
                 "cadena_c_escal_rate": escal_c,
             })
