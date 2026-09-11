@@ -104,6 +104,10 @@ def _build_escenario(
     request_data: Dict[str, Any],
     b_vals_ramp1: Dict[str, Any] = {},
     c_vals_ramp1: Dict[str, Any] = {},
+    fijo_b_override: Optional[float] = None,
+    var_b_override: Optional[float] = None,
+    fijo_c_override: Optional[float] = None,
+    var_c_override: Optional[float] = None,
 ) -> dict:
     """
     Construye el objeto de un escenario (= un perfil de Cadena A).
@@ -139,11 +143,15 @@ def _build_escenario(
     polizas = float(cts_p.get("polizas", 0.0)) if cts_p else 0.0
     costo_a = float(cts_p.get("costo_total", 0.0)) if cts_p else (payroll + no_payroll + financiero)
     
-    # Costos Cadena B — proporcional al peso del canal respecto al total deal-level (ramp1)
+    # Costos Cadena B — split fijo/variable por canal cuando se proveen overrides directos
     _b_total_ramp1 = float(b_vals_ramp1.get("costo_cadena_b", 0.0))
     _ratio_b = (costo_b_mensual / _b_total_ramp1) if _b_total_ramp1 > 0 else 0.0
-    componente_fijo_b = float(b_vals_ramp1.get("componente_fijo_b", 0.0)) * _ratio_b
-    componente_variable_b = float(b_vals_ramp1.get("componente_variable_b", 0.0)) * _ratio_b
+    if fijo_b_override is not None and var_b_override is not None:
+        componente_fijo_b = fijo_b_override
+        componente_variable_b = var_b_override
+    else:
+        componente_fijo_b = float(b_vals_ramp1.get("componente_fijo_b", 0.0)) * _ratio_b
+        componente_variable_b = float(b_vals_ramp1.get("componente_variable_b", 0.0)) * _ratio_b
     ica_b = float(b_vals_ramp1.get("ica_cadena_b", 0.0)) * _ratio_b
     gmf_b = float(b_vals_ramp1.get("gmf_cadena_b", 0.0)) * _ratio_b
     polizas_b = float(b_vals_ramp1.get("polizas_cadena_b", 0.0)) * _ratio_b
@@ -152,11 +160,15 @@ def _build_escenario(
     # costo_total_b incluye costos operativos + financieros (ICA+GMF+polizas)
     costo_b = costo_b_mensual + financiero_b
 
-    # Costos Cadena C — proporcional al peso del canal respecto al total deal-level (ramp1)
+    # Costos Cadena C — split fijo/variable por canal cuando se proveen overrides directos
     _c_total_ramp1 = float(c_vals_ramp1.get("costo_cadena_c", 0.0))
     _ratio_c = (costo_c_mensual / _c_total_ramp1) if _c_total_ramp1 > 0 else 0.0
-    componente_fijo_c = float(c_vals_ramp1.get("componente_fijo_cadena_c", 0.0)) * _ratio_c
-    componente_variable_c = float(c_vals_ramp1.get("componente_variable_cadena_c", 0.0)) * _ratio_c
+    if fijo_c_override is not None and var_c_override is not None:
+        componente_fijo_c = fijo_c_override
+        componente_variable_c = var_c_override
+    else:
+        componente_fijo_c = float(c_vals_ramp1.get("componente_fijo_cadena_c", 0.0)) * _ratio_c
+        componente_variable_c = float(c_vals_ramp1.get("componente_variable_cadena_c", 0.0)) * _ratio_c
     ica_c = float(c_vals_ramp1.get("ica_cadena_c", 0.0)) * _ratio_c
     gmf_c = float(c_vals_ramp1.get("gmf_cadena_c", 0.0)) * _ratio_c
     polizas_c = float(c_vals_ramp1.get("polizas_cadena_c", 0.0)) * _ratio_c
@@ -1154,9 +1166,46 @@ def build_vision_tarifas(
                 for e in (_cond_c.get("costo_variable") or {}).get("tasa_escalamiento", {}).get(_direction_vt, [])
                 if str(e.get("canal") or "").strip().lower() == _canal_name_vt
             )
-            _c_shared_total = float(vals_ramp1.get("hitl_cadena_c", 0.0)) + float(vals_ramp1.get("equipo_transversal_cadena_c", 0.0))
-            _c_shared = _c_shared_total * (_vol_c_canal / total_vol_c) if total_vol_c > 0 else 0.0
+            _hitl_c_total = float(vals_ramp1.get("hitl_cadena_c", 0.0))
+            _equipo_tranv_c_total = float(vals_ramp1.get("equipo_transversal_cadena_c", 0.0))
+            _vol_c_prop = (_vol_c_canal / total_vol_c) if total_vol_c > 0 else 0.0
+            _c_shared = (_hitl_c_total + _equipo_tranv_c_total) * _vol_c_prop
             c_for_esc = round(_c_opex + _c_capex + _c_tarifa + _c_escal + _c_shared, 2)
+
+            # Split fijo/variable por canal (cadena B)
+            _b_opex_fijo = sum(
+                float(it.get("valor_total") or 0)
+                for it in (_cond_b.get("opex") or {}).get("items", [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+                and str(it.get("tipo_gasto", "Fijo")).strip().lower() != "variable"
+            )
+            _b_opex_var = sum(
+                float(it.get("valor_total") or 0)
+                for it in (_cond_b.get("opex") or {}).get("items", [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+                and str(it.get("tipo_gasto", "Fijo")).strip().lower() == "variable"
+            )
+            _sm_b_total = float(vals_ramp1.get("sm_cadena_b", 0.0))
+            _hitl_b_total = float(vals_ramp1.get("hitl_cadena_b", 0.0))
+            _vol_b_prop = (_vol_b_canal / total_vol_b) if total_vol_b > 0 else 0.0
+            _fijo_b_esc = round(_b_opex_fijo + _b_capex + _sm_b_total * _vol_b_prop, 2)
+            _var_b_esc = round(_b_opex_var + _b_tarifa + _b_escal + _hitl_b_total * _vol_b_prop, 2)
+
+            # Split fijo/variable por canal (cadena C)
+            _c_opex_fijo = sum(
+                float(it.get("valor_total") or 0)
+                for it in (_cond_c.get("opex") or [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+                and str(it.get("tipo_gasto", "Fijo")).strip().lower() != "variable"
+            )
+            _c_opex_var = sum(
+                float(it.get("valor_total") or 0)
+                for it in (_cond_c.get("opex") or [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+                and str(it.get("tipo_gasto", "Fijo")).strip().lower() == "variable"
+            )
+            _fijo_c_esc = round(_c_opex_fijo + _c_capex + _equipo_tranv_c_total * _vol_c_prop, 2)
+            _var_c_esc = round(_c_opex_var + _c_tarifa + _c_escal + _hitl_c_total * _vol_c_prop, 2)
 
             prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
             prop_fijo = 1.0 - prop_var
@@ -1209,6 +1258,10 @@ def build_vision_tarifas(
                 request_data=request_data,
                 b_vals_ramp1=vals_ramp1,
                 c_vals_ramp1=vals_ramp1,
+                fijo_b_override=_fijo_b_esc,
+                var_b_override=_var_b_esc,
+                fijo_c_override=_fijo_c_esc,
+                var_c_override=_var_c_esc,
             )
             escenarios.append(escenario)
 

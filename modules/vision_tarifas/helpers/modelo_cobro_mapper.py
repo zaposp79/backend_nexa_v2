@@ -196,7 +196,12 @@ def _build_scenario_entry(meta: dict, raw: dict, channel: dict, vt_data: Optiona
         "fte": _safe_float(meta.get("fte")),
         "reglas_negocio": _build_reglas_negocio(reglas, {}),
         "cadenas": _build_cadenas(raw),
-        "totales": _build_totales(tarifas, vt_data.get("costo_total") if vt_data else None),
+        "totales": _build_totales(
+            tarifas,
+            float((raw.get("cadena_a") or {}).get("total", 0))
+            + float((raw.get("cadena_b") or {}).get("total", 0))
+            + float((raw.get("cadena_c") or {}).get("total", 0))
+        ),
         "tarifa_componente_fijo_detail": _build_tarifa_fijo(
             meta, tarifas, fixed_component, channel
         ),
