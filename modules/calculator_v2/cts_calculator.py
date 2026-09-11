@@ -187,14 +187,15 @@ class CTSCalculator:
             })
 
         # Segunda pasada: financiero asignado pro-rata + totales por perfil
-        # Excel V2-8 · 'Visión Cost To Serve'!I160 = I159/((1-C63)*(1-C67)*(1-C68)*(1-C69)*(1-C70))
+        # Excel V2-8 · 'Visión Cost To Serve'!I160 = I159/((1-C63)*(1-C67)*(1-C68)*(1-C69)*(1+C70))
         # C63=margen, C67=cont_op, C68=cont_com, C69=markup, C70=descuento (Panel de Control General)
+        # descuento usa (1+descuento) porque es un recargo positivo al denominador, igual que HME!G9
         fm = (
             (1.0 - margen)
             * (1.0 - self._cont_op)
             * (1.0 - self._cont_com)
             * (1.0 - self._markup)
-            * (1.0 - self._descuento)
+            * (1.0 + self._descuento)
         )
         if fm <= 0:
             fm = 1.0 - margen if margen < 1.0 else 1.0

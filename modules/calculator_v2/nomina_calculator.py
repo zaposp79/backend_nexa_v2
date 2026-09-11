@@ -379,6 +379,12 @@ class NominaCalculator:
             if cantidad > 0:
                 regular_hc += cantidad
 
+            # Agente Básico 1 (tipo="Agente") se contabiliza directamente por FTE en CTS —
+            # excluir del overhead de estructura para evitar doble conteo.
+            if fila.get("tipo", "").lower() == "agente":
+                result.setdefault(nombre, 0.0)
+                continue
+
             cargo_data = self._resolver_cargo(fila, detalle_map)
             if not cargo_data or cantidad <= 0:
                 result.setdefault(nombre, 0.0)
@@ -526,6 +532,12 @@ class NominaCalculator:
                 # Acumular headcount por perfil (incluye Agente Básico 1 ratio=1).
                 if cantidad > 0:
                     regular_hc_pp[indice] = regular_hc_pp.get(indice, 0.0) + cantidad
+
+                # Agente Básico 1 (tipo="Agente") se contabiliza directamente por FTE en CTS —
+                # excluir del overhead de estructura para evitar doble conteo.
+                if fila.get("tipo", "").lower() == "agente":
+                    result[perfil_nombre].setdefault(cargo_nombre, 0.0)
+                    continue
 
                 if costo_unit <= 0:
                     result[perfil_nombre].setdefault(cargo_nombre, 0.0)

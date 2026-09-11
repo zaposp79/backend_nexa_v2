@@ -29,10 +29,16 @@ def _datos_op(request_data: Dict[str, Any]) -> Dict[str, Any]:
     return request_data.get("datos_operativos", {}) or {}
 
 def _get_cobranzas() -> Dict[str, Any]:
-    return _resolver.get_active_op().get("cobranzarango", []) or []
+    try:
+        return _resolver.get_active_op().get("cobranzarango", []) or []
+    except Exception:
+        return []
 
-def _get_cost_parametrization() -> Dict[str, Any]:
-    return _resolver.get_active_op().get("costo", {}) or {}
+def _get_cost_parametrization() -> List[Any]:
+    try:
+        return _resolver.get_active_op().get("costo", []) or []
+    except Exception:
+        return []
 
 def _primer_mes_ramp1(meses: List[Dict]) -> Optional[Dict]:
     """Primer mes con ramp_up_mes >= 1.0 (régimen permanente pre-IPC)."""
@@ -590,15 +596,17 @@ def _build_desglose_componente_fijo(request_data: Dict[str, Any], fteEscenario: 
 
     total_minutos_improductivos = 0
     total_pct_improductivos = 0
+    # Defaults cuando OP parametrización no está disponible
+    _horas_sem_safe = horas_semanales if horas_semanales > 0 else 42
     initial_average = (((horas_formacion_mensuales/4)/6)*60)
-    hours_calculated = ((horas_semanales / 6) * 60)
+    hours_calculated = ((_horas_sem_safe / 6) * 60)
     initial_coaching = 5
     initial_active_pause = 5
     initial_logout = 5
     payed_hours_percent = 0.00
-    
+
     break_pct = initial_break / hours_calculated
-    average_pct = initial_average / hours_calculated
+    average_pct = initial_average / hours_calculated if hours_calculated > 0 else 0.0
     logout_pct = initial_logout / hours_calculated
     couching_pct = initial_coaching / hours_calculated
     active_pause_pct = initial_active_pause / hours_calculated
@@ -627,8 +635,9 @@ def _build_desglose_componente_fijo(request_data: Dict[str, Any], fteEscenario: 
         "total_porcentaje": total_pct_improductivos
     }
 
-    # Tiempo Programado
-    tiempo_programado_horas = horas_semanales * semanas_mes * fte
+    # Tiempo Programado — usa _horas_sem_safe para evitar división por cero cuando OP no disponible
+    _semanas_mes_safe = semanas_mes if semanas_mes > 0 else 4.33
+    tiempo_programado_horas = _horas_sem_safe * _semanas_mes_safe * fte
     tiempo_programado_minutos = tiempo_programado_horas * 60
 
     desglose["tiempo_programado"] = {
@@ -735,8 +744,11 @@ def _build_honorarios_cobranza(request_data: Dict[str, Any], componente_variable
 
     return result
 
-def _get_value_business(data: Dict[str, Any]) -> float:
-    return data.get("valor",0.0)
+def _get_value_business(data: Any) -> float:
+    """Extrae el valor de un campo que puede ser dict {'valor': ...} o un escalar numérico."""
+    if isinstance(data, dict):
+        return float(data.get("valor", 0.0))
+    return float(data) if data is not None else 0.0
 
 def _build_desglose_producto_opex(
     request_data: list[Any]
@@ -1342,7 +1354,7 @@ def build_vision_tarifas(
     return {
         "escenarios": escenarios,
         "escenario_total": _build_escenario_total(
-            request_data["escenario_total"],
+            request_data.get("escenario_total") or {},
             request_data,
             fte_total_all_perfiles,
             escenarios,
