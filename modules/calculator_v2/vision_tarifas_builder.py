@@ -161,8 +161,8 @@ def _build_escenario(
     ica_b = float(b_vals_ramp1.get("ica_cadena_b", 0.0)) * _ratio_b
     gmf_b = float(b_vals_ramp1.get("gmf_cadena_b", 0.0)) * _ratio_b
     polizas_b = float(b_vals_ramp1.get("polizas_cadena_b", 0.0)) * _ratio_b
-    comision_por_administracion_b = 0.0
-    financiero_b = ica_b + gmf_b + polizas_b
+    comision_por_administracion_b = float(b_vals_ramp1.get("comision_admin_cadena_b", 0.0)) * _ratio_b
+    financiero_b = ica_b + gmf_b + polizas_b + comision_por_administracion_b
     # costo_total_b incluye costos operativos + financieros (ICA+GMF+polizas)
     costo_b = costo_b_mensual + financiero_b
 
@@ -178,8 +178,8 @@ def _build_escenario(
     ica_c = float(c_vals_ramp1.get("ica_cadena_c", 0.0)) * _ratio_c
     gmf_c = float(c_vals_ramp1.get("gmf_cadena_c", 0.0)) * _ratio_c
     polizas_c = float(c_vals_ramp1.get("polizas_cadena_c", 0.0)) * _ratio_c
-    comision_por_administracion_c = 0.0
-    financiero_c = ica_c + gmf_c + polizas_c
+    comision_por_administracion_c = float(c_vals_ramp1.get("comision_admin_cadena_c", 0.0)) * _ratio_c
+    financiero_c = ica_c + gmf_c + polizas_c + comision_por_administracion_c
     # costo_total_c incluye costos operativos + financieros (ICA+GMF+polizas)
     costo_c = costo_c_mensual + financiero_c
 
@@ -231,22 +231,25 @@ def _build_escenario(
                 tipo_tarifa_fija = "por FTE (sin minutos)"
 
     # Tarifa Componente Variable (Excel G55)
+    # HME G31=tarifa transaccion, G33=ingreso_variable/fte para Resultados/Honorarios
     tarifa_variable: Optional[float] = None
     tipo_tarifa_variable: Optional[str] = None
     volumen_minimo: Optional[float] = None
-    if pct_var > 0 and ingreso_variable > 0:
+    if pct_var > 0:
         if componente_variable == "Transacción":
-            volumen = float(perfil_input.get("volumen_transacciones_mes", 0) or 0)
-            if volumen > 0:
-                tarifa_variable = round(ingreso_variable / volumen, 4)
-                tipo_tarifa_variable = "por Transacción"
-                volumen_minimo = volumen
+            if ingreso_variable > 0:
+                volumen = float(perfil_input.get("volumen_transacciones_mes", 0) or 0)
+                if volumen > 0:
+                    tarifa_variable = round(ingreso_variable / volumen, 4)
+                    tipo_tarifa_variable = "por Transacción"
+                    volumen_minimo = volumen
         elif componente_variable in ("Resultados", "Honorarios"):
             commission_rate = float(perfil_input.get("commission_rate", 0) or 0)
             if commission_rate > 0:
                 tarifa_variable = round(commission_rate, 4)
                 tipo_tarifa_variable = "comisión por resultado"
             else:
+                # HME G33 = ingreso_variable_mes1 / num_personas
                 tarifa_variable = round(ingreso_variable / fte_safe, 2)
                 tipo_tarifa_variable = "por persona (Resultados)"
                 
@@ -362,14 +365,18 @@ def _build_escenario_total(
     else:
         tarifa_fija = facturacion_directa * pct_fijo if pct_fijo > 0 else facturacion_directa
 
-    # Tarifa Variable — Excel G273: ingreso_variable / (vol_b_total + vol_c_total)
-    # Only cadena B+C volume (digital+AI); cadena A is covered by the FTE tarifa.
+    # Tarifa Variable — Excel G273/G275 por tipo de componente
     tarifa_variable: float = 0.0
-    if pct_var > 0 and componente_variable == "Transacción":
+    if pct_var > 0:
         ingreso_variable_directa = facturacion_directa * pct_var
-        vol_bc = vol_b_total + vol_c_total
-        if vol_bc > 0:
-            tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
+        if componente_variable == "Transacción":
+            vol_bc = vol_b_total + vol_c_total
+            if vol_bc > 0:
+                tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
+        elif componente_variable in ("Resultados", "Honorarios"):
+            # HME G275 = ingreso_variable_total / fte_total
+            fte_safe_total = max(fte_total, 1)
+            tarifa_variable = round(ingreso_variable_directa / fte_safe_total, 2)
 
     ingreso_variable = facturacion_total * pct_var
     honorariosCobranza = []
