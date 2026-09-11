@@ -821,10 +821,14 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "polizas": costos.get("polizas", 0),
         }
 
+        # Para cadena B y C, el total ya suma los ítems financieros individualmente (ica+gmf+polizas).
+        # costos_financiacion = financiero - (ica+gmf+polizas) = 0 por construcción; no hay doble conteo.
+        _fin_b = costos_b.get("financiero", 0)
+        _fin_b_items = costos_b.get("ica", 0) + costos_b.get("gmf", 0) + costos_b.get("polizas", 0)
         cadena_b = {
             "componente_fijo": costos_b.get("componente_fijo", 0),
             "componente_variable": costos_b.get("componente_variable", 0),
-            "costos_financiacion": costos_b.get("financiero", 0),
+            "costos_financiacion": round(_fin_b - _fin_b_items, 2),
             "total": costos_b.get("costo_total", 0),
             "ingreso_mensual": esc.get("ingreso_mensual_b", 0),
             "ica": costos_b.get("ica", 0),
@@ -833,10 +837,12 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "polizas": costos_b.get("polizas", 0),
         }
 
+        _fin_c = costos_c.get("financiero", 0)
+        _fin_c_items = costos_c.get("ica", 0) + costos_c.get("gmf", 0) + costos_c.get("polizas", 0)
         cadena_c = {
             "componente_fijo": costos_c.get("componente_fijo", 0),
             "componente_variable": costos_c.get("componente_variable", 0),
-            "costos_financiacion": costos_c.get("financiero", 0),
+            "costos_financiacion": round(_fin_c - _fin_c_items, 2),
             "total": costos_c.get("costo_total", 0),
             "ingreso_mensual": esc.get("ingreso_mensual_c", 0),
             "ica": costos_c.get("ica", 0),
