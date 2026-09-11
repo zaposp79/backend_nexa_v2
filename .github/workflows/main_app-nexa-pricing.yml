@@ -96,7 +96,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build deployment package (nested layout)
+      - name: Setup Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Build deployment package (nested layout + pre-installed deps)
         run: |
           mkdir -p deploy_pkg/backend_nexa_v2
           rsync -a \
@@ -115,9 +122,14 @@ jobs:
             --exclude='deploy_pkg' \
             --exclude='backend_nexa_archive' \
             ./ deploy_pkg/backend_nexa_v2/
-          # requirements.txt en la raíz del paquete para que Oryx detecte Python
-          # y construya antenv/ con todos los paquetes instalados.
-          cp requirements.txt deploy_pkg/requirements.txt
+
+          # Pre-instalar dependencias con --target para evitar Oryx Python SDK install.
+          # Oryx 0.2.20260728.2 (githubactions image) tiene un bug: siempre salta el
+          # SDK download → "Could not find cached tarball". Con las deps en site-packages/
+          # el paquete es autocontenido y SCM_DO_BUILD_DURING_DEPLOYMENT=false funciona.
+          # Linux x86_64 + cp311 ABI es compatible entre GitHub Actions (ubuntu-latest)
+          # y Azure App Service (centralus, PYTHON|3.11).
+          pip install -r requirements.txt --target deploy_pkg/site-packages --quiet
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -132,46 +144,24 @@ jobs:
           RG=$(az webapp list --query "[?name=='${APP}'].resourceGroup | [0]" -o tsv)
           echo "Resource group: $RG"
 
-          # Fijar runtime a Python 3.11 — 3.12.13 no tiene tarball cacheado en Oryx
-          # (bullseye image). 3.11 es LTS y siempre disponible en Azure Central US.
+          # Fijar runtime a Python 3.11 (el sistema Python que ejecuta la app).
           az webapp config set \
             --name "$APP" --resource-group "$RG" \
             --linux-fx-version "PYTHON|3.11" \
             --output none
 
-          # Habilita Oryx para instalar paquetes desde requirements.txt tras el deploy.
-          # Sin esto, antenv/ no se crea y el startup falla con ModuleNotFoundError.
+          # Deshabilitar Oryx build: las dependencias viajan pre-instaladas en
+          # site-packages/ (build CI). Oryx 0.2.20260728.2 tiene un bug en la imagen
+          # githubactions donde el SDK download siempre se salta → deploy falla.
+          # Con SCM_DO_BUILD_DURING_DEPLOYMENT=false Oryx solo despliega los archivos.
           az webapp config appsettings set \
             --name "$APP" --resource-group "$RG" \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false \
             --output none
 
-          # Arrancar la app para que el endpoint Kudu/SCM esté disponible.
+          # Arrancar la app para que el endpoint Kudu esté disponible.
           az webapp start --name "$APP" --resource-group "$RG"
           sleep 20
-
-          # Eliminar tarball stale de Oryx via Kudu VFS API con credenciales de publicación.
-          # El Bearer token OIDC no tiene acceso a la VFS API; las credenciales de
-          # publicación (Basic Auth) sí. Si falla, Oryx rebuild con
-          # SCM_DO_BUILD_DURING_DEPLOYMENT=true sobreescribe el tarball igualmente.
-          HOST=$(az webapp show -n "$APP" -g "$RG" --query defaultHostName -o tsv)
-          SCM_HOST=$(echo "$HOST" | sed 's/^\([^.]*\)\.\(.*\)$/\1.scm.\2/')
-          CREDS=$(az webapp deployment list-publishing-credentials \
-            --name "$APP" --resource-group "$RG" \
-            --query '{u:publishingUserName,p:publishingPassword}' \
-            --output json 2>/dev/null || echo '{}')
-          KU=$(echo "$CREDS" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('u',''))" 2>/dev/null || true)
-          KP=$(echo "$CREDS" | python3 -c "import sys,json;d=json.load(sys.stdin);print(d.get('p',''))" 2>/dev/null || true)
-          if [ -n "$KU" ] && [ -n "$KP" ]; then
-            for F in output.tar.zst oryx-manifest.toml; do
-              CODE=$(curl -s -o /dev/null -w "%{http_code}" \
-                -X DELETE "https://${SCM_HOST}/api/vfs/site/wwwroot/${F}" \
-                -u "${KU}:${KP}")
-              echo "Delete $F → HTTP $CODE (200=borrado, 404=no existía)"
-            done
-          else
-            echo "⚠ Sin credenciales Kudu — tarball no borrado manualmente"
-          fi
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3

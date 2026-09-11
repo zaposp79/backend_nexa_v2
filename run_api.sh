@@ -16,6 +16,13 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT" || exit 1
 export PYTHONPATH="$PROJECT_ROOT:${PYTHONPATH:-}"
 
+# Dependencias pre-instaladas en CI (Azure Oryx bug workaround: SCM_DO_BUILD=false).
+# site-packages/ viaja en el paquete de deploy; se agrega a PYTHONPATH si existe.
+if [ -d "$PROJECT_ROOT/site-packages" ]; then
+    export PYTHONPATH="$PROJECT_ROOT/site-packages:$PYTHONPATH"
+    echo "✓ site-packages en PYTHONPATH (deps pre-instaladas en CI)"
+fi
+
 # Activar entorno virtual.
 # Orden: si Oryx ya activó antenv (VIRTUAL_ENV set), no hace falta nada.
 # Si no, buscar: antenv en PROJECT_ROOT (Azure/Oryx), luego venv local.
