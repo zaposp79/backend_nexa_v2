@@ -1078,14 +1078,9 @@ def build_vision_tarifas(
                 raw[k] = raw.get(k, 0.0) + float(item.get("valor_total") or 0)
         return raw
 
-    # Distribución por volumen (cadena_b/c.valor de volumetría) — el motor escala costos de
-    # SM, HITL y capex por volumen real, no por valor de items opex/capex del request.
-    # Raw items (valor_total/valor_mensual) tienen magnitudes dispares por canal y producen
-    # pesos incorrectos. Fallback a raw solo si no hay volumetría configurada.
-    b_raw_by_canal = vol_b_by_canal or _raw_cost_by_canal("cadena_b")
-    c_raw_by_canal = vol_c_by_canal or _raw_cost_by_canal("cadena_c")
-    total_b_raw = max(sum(b_raw_by_canal.values()), 1.0)
-    total_c_raw = max(sum(c_raw_by_canal.values()), 1.0)
+    _tasa_interes_vt = float(
+        (request_data.get("volumetria") or {}).get("indexacion", {}).get("tasa_interes_mensual", 0)
+    )
 
     escenarios = []
 
@@ -1103,10 +1098,65 @@ def build_vision_tarifas(
             modalidad_cfg = str(cfg.get("modalidad") or "").strip()
             canal_key = _clave(canal_cfg, modalidad_cfg)
 
-            # Costo B/C para este canal: distribución por item configurado, no por volumen.
-            # Canales sin items en Cadena B/C reciben 0 (comportamiento correcto del Excel).
-            b_for_esc = round(costo_b_mensual * (b_raw_by_canal.get(canal_key, 0.0) / total_b_raw), 2)
-            c_for_esc = round(costo_c_mensual * (c_raw_by_canal.get(canal_key, 0.0) / total_c_raw), 2)
+            # Costo B/C para este canal: items directos asignados al canal + costos
+            # compartidos (HITL+SM para B; HITL+equipo_transversal para C) por volumen.
+            _direction_vt = canal_key[1]   # "inbound" o "outbound"
+            _canal_name_vt = canal_key[0]  # e.g. "voz 1"
+            _vol_b_canal = vol_b_by_canal.get(canal_key, 0.0)
+            _vol_c_canal = vol_c_by_canal.get(canal_key, 0.0)
+
+            _cond_b = request_data.get("condiciones_cadena_b") or {}
+            _b_opex = sum(
+                float(it.get("valor_total") or 0)
+                for it in (_cond_b.get("opex") or {}).get("items", [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+            )
+            _b_capex = sum(
+                float(it.get("valor_mensual") or 0) * (1.0 + _tasa_interes_vt)
+                for it in (_cond_b.get("inversiones_capex") or [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+            )
+            _b_tarifa = sum(
+                float(t.get("precio") or 0) * _vol_b_canal
+                for t in (_cond_b.get("costo_variable") or {}).get("tarifas_por_canal", {}).get(_direction_vt, [])
+                if str(t.get("canal") or "").strip().lower() == _canal_name_vt
+            )
+            _b_escal = sum(
+                float(e.get("precio") or 0) * _vol_b_canal * float(e.get("tasa") or 0)
+                for e in (_cond_b.get("costo_variable") or {}).get("tasa_escalamiento", {}).get(_direction_vt, [])
+                if str(e.get("canal") or "").strip().lower() == _canal_name_vt
+            )
+            _b_shared_total = float(vals_ramp1.get("hitl_cadena_b", 0.0)) + float(vals_ramp1.get("sm_cadena_b", 0.0))
+            _b_shared = _b_shared_total * (_vol_b_canal / total_vol_b) if total_vol_b > 0 else 0.0
+            b_for_esc = round(_b_opex + _b_capex + _b_tarifa + _b_escal + _b_shared, 2)
+
+            _cond_c = request_data.get("condiciones_cadena_c") or {}
+            _c_opex = sum(
+                float(it.get("valor_total") or 0)
+                for it in (_cond_c.get("opex") or [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+            )
+            _c_capex = sum(
+                float(it.get("valor_mensual") or 0) * (1.0 + _tasa_interes_vt)
+                for it in (_cond_c.get("inversiones_capex") or [])
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+            )
+            _raw_tarifa_c = _cond_c.get("tarifa_proveedor_canal") or []
+            if isinstance(_raw_tarifa_c, dict):
+                _raw_tarifa_c = _raw_tarifa_c.get("items", [])
+            _c_tarifa = sum(
+                float(it.get("valor_total") or 0)
+                for it in _raw_tarifa_c
+                if _clave(it.get("canal"), it.get("modalidad")) == canal_key
+            )
+            _c_escal = sum(
+                float(e.get("precio") or 0) * _vol_c_canal * float(e.get("tasa") or 0)
+                for e in (_cond_c.get("costo_variable") or {}).get("tasa_escalamiento", {}).get(_direction_vt, [])
+                if str(e.get("canal") or "").strip().lower() == _canal_name_vt
+            )
+            _c_shared_total = float(vals_ramp1.get("hitl_cadena_c", 0.0)) + float(vals_ramp1.get("equipo_transversal_cadena_c", 0.0))
+            _c_shared = _c_shared_total * (_vol_c_canal / total_vol_c) if total_vol_c > 0 else 0.0
+            c_for_esc = round(_c_opex + _c_capex + _c_tarifa + _c_escal + _c_shared, 2)
 
             prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
             prop_fijo = 1.0 - prop_var
