@@ -248,7 +248,7 @@ def _scale(base: float, actual: float, denom: float) -> Optional[float]:
     return base * (actual / denom)
 
 
-def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float) -> Dict[str, Any]:
+def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float, servicio: str = "") -> Dict[str, Any]:
     ingreso_bruto    = vals.get("ingreso_bruto") or 0.0
     pct_imprevistos  = vals.get("pct_imprevistos") or 0.0
     cont_op          = vals.get("contingencia_operativa_valor") or vals.get("contingencia_op") or 0.0
@@ -265,6 +265,13 @@ def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float) -> Dict[str, Any
         ingreso_bruto + cont_op + cont_com + markup - descuento - (imprevistos or 0.0)
     ) if ingreso_bruto else None
 
+    # Excel P&G: =IF(servicio="Cobranzas", J30, J28+J30)
+    # Cobranzas → solo ingreso variable; demás → ingreso_fijo + ingreso_variable
+    if servicio == "cobranzas":
+        ingreso_neto = comision_ventas
+    else:
+        ingreso_neto = (ingreso_fijo or 0.0) + comision_ventas
+
     return {
         "ingreso_bruto":       ingreso_bruto or None,
         "ingreso_cadena_a":    vals.get("ingreso_cadena_a"),
@@ -278,7 +285,7 @@ def _ingresos_mes(vals: Dict[str, Any], comision_ventas: float) -> Dict[str, Any
         "ingreso_fijo":        ingreso_fijo,
         "ingreso_por_comision": comision_ventas,
         "ingreso_variable":    comision_ventas,
-        "ingreso_neto":        vals.get("ingreso_neto"),
+        "ingreso_neto":        ingreso_neto,
     }
 
 
@@ -322,8 +329,10 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float], costo_variable: flo
     # payroll display = nomina + cap_ini (evento único mes 1).
     cap_ini   = vals.get("capacitacion_inicial_mensual") or 0.0
 
+    _costo_base = vals.get("costo_total") or 0.0
+    _costo_total = _costo_base + costo_variable
     return {
-        "costo_total": vals.get("costo_total"),
+        "costo_total": _costo_total or None,
         "cadena_a": {
             "payroll":              (nomina + cap_ini) or None,
             "nomina_loaded":        vals.get("nomina_loaded_mensual"),
@@ -450,7 +459,7 @@ def _build_from_v2_result(
             "index":    mes_num,
             "label":    f"Mes {mes_num}",
             "periodo":  mes_num,
-            "ingresos": _ingresos_mes(vals, comision_ventas),
+            "ingresos": _ingresos_mes(vals, comision_ventas, servicio),
             "costos":   _costos_mes(vals, cts, costo_variable),
             "utilidad": _utilidad_mes(vals),
             "operativo": {"ramp_up": vals.get("ramp_up_mes")},
@@ -485,7 +494,7 @@ def _build_from_v2_result(
         totales_vals["pct_utilidad_neta"]       = (_contribucion_t / total_comision) * 100 if total_comision else 0.0
 
     totales = {
-        "ingresos": _ingresos_mes(totales_vals, total_comision),
+        "ingresos": _ingresos_mes(totales_vals, total_comision, servicio),
         "costos":   _costos_mes(totales_vals, cts_tot, total_costo_variable),
         "utilidad": _utilidad_mes(totales_vals),
         "operativo": {},
@@ -497,8 +506,10 @@ def _build_from_v2_result(
     # Se suman directamente los valores ya correctos de cada período mensual. 
     _imp_total = sum((p["ingresos"].get("imprevistos") or 0.0) for p in periods)
     _if_total  = sum((p["ingresos"].get("ingreso_fijo") or 0.0) for p in periods)
+    _in_total = sum((p["ingresos"].get("ingreso_neto") or 0.0) for p in periods)
     totales["ingresos"]["imprevistos"]  = _imp_total or None
     totales["ingresos"]["ingreso_fijo"] = _if_total  or None
+    totales["ingresos"]["ingreso_neto"] = _in_total  or None
 
     # CTS scaling para campos derivados de los perfiles (crucero, opex, inversiones, costos_fijos).
     # nomina_loaded NO se escala con CTS porque el valor correcto ya está en totales_vals
