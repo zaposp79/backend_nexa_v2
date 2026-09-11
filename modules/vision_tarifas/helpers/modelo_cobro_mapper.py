@@ -173,7 +173,11 @@ def _build_scenario_entry(meta: dict, raw: dict, channel: dict, vt_data: Optiona
         "modalidad": _coalesce(meta.get("modalidad"), channel.get("modalidad")),
         "canal": _coalesce(meta.get("canal"), channel.get("producto"), channel.get("nombre_canal")),
         "modelo_cobro": _coalesce(meta.get("modelo_cobro"), channel.get("modelo_cobro"), ""),
-        "componente_fijo": _resolve_componente_label(meta, channel),
+        "componente_fijo": (
+            meta.get("componente_fijo_label")
+            if "componente_fijo_label" in meta
+            else _resolve_componente_label(meta, channel)
+        ),
         "proporcion_componente_fijo_pct": _safe_float(meta.get("pct_fijo")),
         "componente_variable": (
             meta.get("componente_variable_label")
