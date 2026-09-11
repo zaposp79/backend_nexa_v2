@@ -245,6 +245,9 @@ def _build_escenarios(
     tarifa_fija, tarifa_variable, fte) y los metadatos correctos por canal/modalidad.
     Fallback: perfiles Cadena A + CTS cuando vision_tarifas no está disponible.
     """
+    _servicio = str(_datos_op(request_data).get("servicio") or "").strip().lower()
+    _is_sac = _servicio == "sac"
+
     # ── Cuando hay vision_tarifas: usar sus escenarios como fuente principal ──
     if vision_tarifas_escenarios is not None:
         all_5: List[dict] = []
@@ -257,6 +260,11 @@ def _build_escenarios(
                 tf = vt_esc.get("tarifa_componente_fijo") or {}
                 tv = vt_esc.get("tarifa_componente_variable") or {}
                 facturacion = float(vt_esc.get("facturacion_mensual") or 0.0)
+                comp_variable = vt_esc.get("componente_variable")
+                tarifa_variable = tv.get("valor")
+                # Regla SAC: Honorarios no genera tarifa variable cobrable
+                if _is_sac and str(comp_variable or "").lower() == "honorarios":
+                    tarifa_variable = 0
                 all_5.append({
                     "id": f"Escenario {n}",
                     "nombre": f"Escenario {n}",
@@ -265,13 +273,13 @@ def _build_escenarios(
                     "canal": vt_esc.get("canal"),
                     "modelo_cobro": vt_esc.get("modelo_cobro"),
                     "componente_fijo": vt_esc.get("componente_fijo"),
-                    "componente_variable": vt_esc.get("componente_variable"),
+                    "componente_variable": comp_variable,
                     "pct_fijo": float(vt_esc.get("pct_fijo") or 0.0),
                     "pct_variable": float(vt_esc.get("pct_variable") or 0.0),
                     "fte": int(float(vt_esc.get("fte") or 0)),
                     "facturacion": round(facturacion, 2) if facturacion else None,
                     "tarifa_fija": tf.get("valor"),
-                    "tarifa_variable": tv.get("valor"),
+                    "tarifa_variable": tarifa_variable,
                 })
             else:
                 all_5.append({
@@ -680,15 +688,20 @@ def build_vision_imprimible(
         vt_escenarios = vision_tarifas.get("escenarios") or None
         raw_total = vision_tarifas.get("total") or {}
         raw_esc_total = vision_tarifas.get("escenario_total") or {}
-        if raw_total:
+        if raw_total or raw_esc_total:
+            _comp_var_total = raw_esc_total.get("componente_variable")
+            _tarifa_variable_total = raw_esc_total.get("tarifa_componente_variable")
+            # Regla SAC: Honorarios no genera tarifa variable cobrable (aplica al total)
+            if str(service or "").lower() == "sac" and str(_comp_var_total or "").lower() == "honorarios":
+                _tarifa_variable_total = 0
             vt_total = {
                 "fte": raw_total.get("fte_total"),
-                "facturacion": raw_total.get("facturacion_mensual"),
-                "tarifa_fija": raw_total.get("tarifa_fija"),
-                "tarifa_variable": raw_total.get("ingreso_variable_mensual"),
+                "facturacion": raw_esc_total.get("facturacion_directa"),
+                "tarifa_fija": raw_esc_total.get("tarifa_componente_fijo"),
+                "tarifa_variable": _tarifa_variable_total,
                 "modelo_cobro": raw_esc_total.get("modelo_cobro"),
                 "componente_fijo": raw_esc_total.get("componente_fijo"),
-                "componente_variable": raw_esc_total.get("componente_variable"),
+                "componente_variable": _comp_var_total,
                 "pct_fijo": raw_esc_total.get("proporcion_componente_fijo_pct"),
                 "pct_variable": raw_esc_total.get("proporcion_componente_variable_pct"),
             }
