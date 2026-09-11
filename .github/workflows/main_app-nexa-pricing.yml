@@ -11,7 +11,7 @@ on:
 env:
   # App Service name. Override via repo variable AZURE_WEBAPP_NAME if needed.
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'app-nexa-pricing' }}
-  PYTHON_VERSION: "3.12.9"
+  PYTHON_VERSION: "3.11"
 
 # OIDC requires id-token:write; contents:read for checkout.
 permissions:
@@ -131,6 +131,13 @@ jobs:
           APP='${{ env.AZURE_WEBAPP_NAME }}'
           RG=$(az webapp list --query "[?name=='${APP}'].resourceGroup | [0]" -o tsv)
           echo "Resource group: $RG"
+
+          # Fijar runtime a Python 3.11 — 3.12.13 no tiene tarball cacheado en Oryx
+          # (bullseye image). 3.11 es LTS y siempre disponible en Azure Central US.
+          az webapp config set \
+            --name "$APP" --resource-group "$RG" \
+            --linux-fx-version "PYTHON|3.11" \
+            --output none
 
           # Habilita Oryx para instalar paquetes desde requirements.txt tras el deploy.
           # Sin esto, antenv/ no se crea y el startup falla con ModuleNotFoundError.
