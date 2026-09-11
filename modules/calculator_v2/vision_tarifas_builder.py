@@ -190,17 +190,23 @@ def _build_escenario(
     ingreso_fijo = facturacion_total * pct_fijo
     ingreso_variable = facturacion_total * pct_var
 
+    # Desglose de horas logueadas (necesario para tarifas Tiempo / Precio Fijo)
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte)
+    _resumen_dcf = desglose_componente_fijo.get("resumen", [])
+    _logged_row = next((r for r in _resumen_dcf if r.get("concepto") == "Horas logueadas"), {})
+    minutos_loggeados_mes = float(_logged_row.get("minutos", 0) or 0)
+
     # Tarifa Componente Fijo (Excel G45)
+    # FTE → ingreso_fijo / FTE  |  Tiempo / Precio Fijo → ingreso_fijo / minutos_logueados
     tarifa_fija: Optional[float] = None
     tipo_tarifa_fija: Optional[str] = None
     if pct_fijo > 0 and ingreso_fijo > 0:
         if componente_fijo == "FTE":
             tarifa_fija = round(ingreso_fijo / fte_safe, 2)
             tipo_tarifa_fija = "por FTE"
-        elif componente_fijo == "Tiempo":
-            minutos = float(perfil_input.get("minutos_loggeados_mes", 0) or 0)
-            if minutos > 0:
-                tarifa_fija = round(ingreso_fijo / minutos, 4)
+        elif componente_fijo in ("Tiempo", "Precio Fijo"):
+            if minutos_loggeados_mes > 0:
+                tarifa_fija = round(ingreso_fijo / minutos_loggeados_mes, 4)
                 tipo_tarifa_fija = "por minuto loggeado"
             else:
                 tarifa_fija = round(ingreso_fijo / fte_safe, 2)
@@ -230,17 +236,15 @@ def _build_escenario(
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
-    desglose_componente_fijo = {}
     pct_variable = perfil_input.get("pct_variable", 0.0)
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
-        
+
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_variable)
-    
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte)
+
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),
         "nombre": nombre,
@@ -303,36 +307,55 @@ def _build_escenario(
         "desglose_componente_fijo": desglose_componente_fijo
     }
 
-def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], fte_total: float, escenarios: List[dict], facturacion_total: float) -> dict:
-    
+def _build_escenario_total(
+    data: Dict[str, Any],
+    request_data: Dict[str, Any],
+    fte_total: float,
+    escenarios: List[dict],
+    facturacion_total: float,
+    vol_b_total: float = 0.0,
+    vol_c_total: float = 0.0,
+) -> dict:
     servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
     componente_fijo = str(data.get("componente_fijo", "FTE")) if data.get("proporcion_componente_fijo", 0.0) > 0 else None
+    componente_variable = str(data.get("componente_variable", ""))
     pct_var = float(data.get("proporcion_componente_variable", 0.0))
     pct_fijo = float(data.get("proporcion_componente_fijo", 0.0))
-    facturacion_directa = sum(
-        float(escenario.get("facturacion_mensual", 0.0) or 0.0)
-        for escenario in escenarios
-        if escenario.get("facturacion_mensual")
-    )
+    # Full deal facturación passed from build_vision_tarifas (ALL perfiles + ALL canals A+B+C).
+    # NOT the sum of individual escenarios (which double-counts repeated canals).
+    facturacion_directa = facturacion_total
+
+    # Tarifa Fija — Excel G263: ingreso_fijo / total_FTE (ALL cadena_a perfiles, not just active)
     if componente_fijo == "FTE":
-        tarifa_fija = facturacion_directa / fte_total if fte_total > 0 else 0.0
+        ingreso_fijo_directa = facturacion_directa * pct_fijo
+        tarifa_fija = ingreso_fijo_directa / fte_total if fte_total > 0 else 0.0
+    elif componente_fijo in ("Tiempo", "Precio Fijo"):
+        tarifa_fija = facturacion_directa * pct_fijo
     else:
-        tarifa_fija = facturacion_directa
-    
+        tarifa_fija = facturacion_directa * pct_fijo if pct_fijo > 0 else facturacion_directa
+
+    # Tarifa Variable — Excel G273: ingreso_variable / (vol_b_total + vol_c_total)
+    # Only cadena B+C volume (digital+AI); cadena A is covered by the FTE tarifa.
+    tarifa_variable: float = 0.0
+    if pct_var > 0 and componente_variable == "Transacción":
+        ingreso_variable_directa = facturacion_directa * pct_var
+        vol_bc = vol_b_total + vol_c_total
+        if vol_bc > 0:
+            tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
+
     ingreso_variable = facturacion_total * pct_var
     honorariosCobranza = []
     honorariosTotales = []
     ventas_multicanal = []
-    desglose_componente_fijo = {}
     if(servicio == "cobranzas"):
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
-            
+
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
-        
+
     desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_total)
-        
+
     return {
         "escenario": "Total",
         "modalidad": None,
@@ -340,11 +363,11 @@ def _build_escenario_total(data: Dict[str, Any],request_data: Dict[str, Any], ft
         "modelo_cobro": str(data.get("modelo_cobro", "")),
         "componente_fijo": componente_fijo,
         "proporcion_componente_fijo_pct": pct_fijo,
-        "componente_variable": str(data.get("componente_variable", "")),
+        "componente_variable": componente_variable,
         "proporcion_componente_variable_pct": pct_var,
         "facturacion_directa": round(facturacion_directa, 2),
         "tarifa_componente_fijo": tarifa_fija,
-        "tarifa_componente_variable": 0,
+        "tarifa_componente_variable": tarifa_variable,
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
         "ventas_multicanal": ventas_multicanal,
@@ -911,6 +934,9 @@ def build_vision_tarifas(
         ]
 
     fte_total_activos = sum(float(p.get("fte", 0) or 0) for p in perfiles_input)
+    # FTE total de TODOS los perfiles de cadena A (incluyendo canales no activos en escenarios).
+    # Excel C255 (Total): =SUM('Condiciones Cadena A'!$E$9:$S$9) — suma todos los perfiles.
+    fte_total_all_perfiles = sum(float(p.get("fte", 0) or 0) for p in all_perfiles)
 
     # Pesos por canal para distribuir costos B/C entre escenarios.
     # Primario: cadena_b/c.valor de volumetría.
@@ -1084,12 +1110,12 @@ def build_vision_tarifas(
 
             prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
             prop_fijo = 1.0 - prop_var
-            # Para canales puramente Cadena A (sin B/C), usa el volumen de cadena_a como proxy
-            # de transacciones para la fórmula: tarifa_variable = ingreso_variable / volumen
+            # Volumen total de transacciones = suma de cadenas A+B+C para el canal.
+            # Excel Hoja Maestra: G31 = ingreso_variable / SUM(vol_a, vol_b, vol_c)
             vol_transacciones = (
                 vol_b_by_canal.get(canal_key, 0.0)
-                or vol_c_by_canal.get(canal_key, 0.0)
-                or vol_a_by_canal.get(canal_key, 0.0)
+                + vol_c_by_canal.get(canal_key, 0.0)
+                + vol_a_by_canal.get(canal_key, 0.0)
             )
 
             if canal_key in cadena_a_canales:
@@ -1178,9 +1204,49 @@ def build_vision_tarifas(
 
     total = _build_total(escenarios, cts_perfiles or [])
     desglose_producto_opex = _build_desglose_producto_opex(request_data)
+
+    # Full deal facturación for the Total escenario.
+    # Excel 'Hoja Maestra Escenarios' Total row: sum of ALL perfiles cadena A income
+    # + full deal cadena B income + full deal cadena C income.
+    # Using sum(escenarios.facturacion_mensual) would double-count any canal that appears
+    # in multiple escenarios (e.g., Inbound Voz 1 × 3 = wrong) and miss perfiles/canals
+    # not covered by any escenario (e.g., Inbound Correo, Outbound Voz 1).
+    _denom_a = _denominador_ingreso(margen_a, cont_op, cont_com, markup, descuento)
+    _denom_b = _denominador_ingreso(margen_b, cont_op, cont_com, markup, descuento)
+    _denom_c = _denominador_ingreso(margen_c, cont_op, cont_com, markup, descuento)
+    # Cadena A: sum ingreso across ALL unique canals (all perfiles in cadena_a)
+    _total_ingreso_a = 0.0
+    for _k in cadena_a_canales:
+        _ing_a = float(cts_agg_by_canal.get(_k, {}).get("ingreso") or 0)
+        if _ing_a == 0:
+            _costo_a_k = float(cts_agg_by_canal.get(_k, {}).get("costo_total") or 0)
+            _ing_a = _costo_a_k / _denom_a if _denom_a > 0 else 0
+        _total_ingreso_a += _ing_a
+    # Cadena B: full deal cost from motor (ALL canals) + financiero (ICA, GMF, polizas)
+    _ica_b_tot = float(vals_ramp1.get("ica_cadena_b", 0.0))
+    _gmf_b_tot = float(vals_ramp1.get("gmf_cadena_b", 0.0))
+    _polizas_b_tot = float(vals_ramp1.get("polizas_cadena_b", 0.0))
+    _costo_b_tot = costo_b_mensual + _ica_b_tot + _gmf_b_tot + _polizas_b_tot
+    _total_ingreso_b = _costo_b_tot / _denom_b if (_denom_b > 0 and _costo_b_tot > 0) else 0.0
+    # Cadena C: full deal cost from motor (ALL canals) + financiero
+    _ica_c_tot = float(vals_ramp1.get("ica_cadena_c", 0.0))
+    _gmf_c_tot = float(vals_ramp1.get("gmf_cadena_c", 0.0))
+    _polizas_c_tot = float(vals_ramp1.get("polizas_cadena_c", 0.0))
+    _costo_c_tot = costo_c_mensual + _ica_c_tot + _gmf_c_tot + _polizas_c_tot
+    _total_ingreso_c = _costo_c_tot / _denom_c if (_denom_c > 0 and _costo_c_tot > 0) else 0.0
+    facturacion_deal_total = _total_ingreso_a + _total_ingreso_b + _total_ingreso_c
+
     return {
         "escenarios": escenarios,
-        "escenario_total": _build_escenario_total(request_data["escenario_total"],request_data, fte_total_activos, escenarios, total.get("facturacion_mensual", 0.0)), 
+        "escenario_total": _build_escenario_total(
+            request_data["escenario_total"],
+            request_data,
+            fte_total_all_perfiles,
+            escenarios,
+            facturacion_deal_total,
+            vol_b_total=sum(vol_b_by_canal.values()),
+            vol_c_total=sum(vol_c_by_canal.values()),
+        ),
         "total": total,
         "desglose_producto_opex": desglose_producto_opex,
         "ajustes_aplicados": {
