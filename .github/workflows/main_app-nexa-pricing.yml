@@ -11,7 +11,7 @@ on:
 env:
   # App Service name. Override via repo variable AZURE_WEBAPP_NAME if needed.
   AZURE_WEBAPP_NAME: ${{ vars.AZURE_WEBAPP_NAME || 'app-nexa-pricing' }}
-  PYTHON_VERSION: "3.12"
+  PYTHON_VERSION: "3.12.9"
 
 # OIDC requires id-token:write; contents:read for checkout.
 permissions:
