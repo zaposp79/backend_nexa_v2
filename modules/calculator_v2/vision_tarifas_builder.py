@@ -343,12 +343,22 @@ def _build_escenario_total(
     # NOT the sum of individual escenarios (which double-counts repeated canals).
     facturacion_directa = facturacion_total
 
-    # Tarifa Fija — Excel G263: ingreso_fijo / total_FTE (ALL cadena_a perfiles, not just active)
+    # Desglose horas logueadas — necesario para tarifa Tiempo / Precio Fijo
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_total)
+    _resumen_total = desglose_componente_fijo.get("resumen", [])
+    _logged_total = next((r for r in _resumen_total if r.get("concepto") == "Horas logueadas"), {})
+    _minutos_logueados_total = float(_logged_total.get("minutos", 0) or 0)
+
+    # Tarifa Fija — Excel G263
+    # FTE → ingreso_fijo / total_FTE | Tiempo/Precio Fijo → ingreso_fijo / minutos_logueados
+    ingreso_fijo_directa = facturacion_directa * pct_fijo
     if componente_fijo == "FTE":
-        ingreso_fijo_directa = facturacion_directa * pct_fijo
         tarifa_fija = ingreso_fijo_directa / fte_total if fte_total > 0 else 0.0
     elif componente_fijo in ("Tiempo", "Precio Fijo"):
-        tarifa_fija = facturacion_directa * pct_fijo
+        if _minutos_logueados_total > 0:
+            tarifa_fija = round(ingreso_fijo_directa / _minutos_logueados_total, 4)
+        else:
+            tarifa_fija = round(ingreso_fijo_directa / fte_total, 2) if fte_total > 0 else 0.0
     else:
         tarifa_fija = facturacion_directa * pct_fijo if pct_fijo > 0 else facturacion_directa
 
@@ -371,8 +381,6 @@ def _build_escenario_total(
 
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
-
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_total)
 
     return {
         "escenario": "Total",
