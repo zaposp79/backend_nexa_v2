@@ -71,6 +71,12 @@ def _item(key: str, value: Any, label: str | None = None) -> dict[str, Any]:
 def _valid_scenarios(document: dict[str, Any]) -> list[dict[str, Any]]:
     comparisons = deepcopy(_section(document, "comparativo_escenarios") or [])
     channels = ((document.get("vision_tarifas") or {}).get("canales") or [])
+    # v2: escenarios list indexed by slot id ("Escenario 1"..."Escenario 5")
+    vt_escenarios_v2: dict[str, dict] = {
+        e["id"]: e
+        for e in ((document.get("vision_tarifas") or {}).get("escenarios") or [])
+        if isinstance(e, dict) and e.get("id")
+    }
     result: list[dict[str, Any]] = []
 
     for index, comparison in enumerate(comparisons):
@@ -83,15 +89,24 @@ def _valid_scenarios(document: dict[str, Any]) -> list[dict[str, Any]]:
             continue
 
         channel = channels[index] if index < len(channels) and isinstance(channels[index], dict) else {}
+        # Prefer v2 escenario data (tarifa_componente_fijo/variable.valor, facturacion_mensual)
+        esc_v2 = vt_escenarios_v2.get(escenario) or {}
+        _tf_v2 = esc_v2.get("tarifa_componente_fijo") or {}
+        _tv_v2 = esc_v2.get("tarifa_componente_variable") or {}
+        tarifa_fija = _tf_v2.get("valor") if _tf_v2 else channel.get("tarifa_fijo_fte")
+        tarifa_variable = _tv_v2.get("valor") if _tv_v2 else channel.get("tarifa_variable")
         result.append(
             {
                 "escenario": escenario,
                 "modalidad_canal": modalidad,
                 "modelo_cobro": modelo,
-                "componente_fijo": channel.get("componente_fijo"),
-                "componente_variable": channel.get("componente_variable"),
-                "tarifa_fija": channel.get("tarifa_fijo_fte"),
-                "tarifa_variable": channel.get("tarifa_variable"),
+                "componente_fijo": esc_v2.get("componente_fijo") or channel.get("componente_fijo"),
+                "pct_fijo": esc_v2.get("pct_fijo"),
+                "componente_variable": esc_v2.get("componente_variable") or channel.get("componente_variable"),
+                "pct_variable": esc_v2.get("pct_variable"),
+                "facturacion": esc_v2.get("facturacion_mensual"),
+                "tarifa_fija": tarifa_fija,
+                "tarifa_variable": tarifa_variable,
                 "canales": comparison.get("canales") or channel.get("canal") or comparison.get("canal"),
             }
         )
@@ -283,17 +298,22 @@ def _build_analisis_section(document: dict[str, Any], charts: dict[str, Any]) ->
 def _build_comparativo_section(document: dict[str, Any]) -> dict[str, Any] | None:
     scenarios = _valid_scenarios(document)
     config = deepcopy(_section(document, "configuracion_comercial") or {})
+    # Total row: read from vision_tarifas.escenario_total (same source as Vision Tarifas endpoint)
+    esc_total = deepcopy((document.get("vision_tarifas") or {}).get("escenario_total") or {})
     section = {
         "id": "comparativo_escenarios",
         "title": "Comparativo escenarios",
         "type": "comparison_table",
         "items": scenarios,
         "total": {
-            "modelo_cobro": config.get("modelo_cobro_principal"),
-            "componente_fijo": config.get("pct_fijo_global"),
-            "componente_variable": config.get("pct_variable_global"),
-            "tarifa_fija": config.get("tarifa_fija"),
-            "tarifa_variable": config.get("tarifa_variable"),
+            "modelo_cobro": esc_total.get("modelo_cobro") or config.get("modelo_cobro_principal"),
+            "componente_fijo": esc_total.get("componente_fijo") or config.get("pct_fijo_global"),
+            "pct_fijo": esc_total.get("proporcion_componente_fijo_pct"),
+            "componente_variable": esc_total.get("componente_variable") or config.get("pct_variable_global"),
+            "pct_variable": esc_total.get("proporcion_componente_variable_pct"),
+            "facturacion": esc_total.get("facturacion_directa"),
+            "tarifa_fija": esc_total.get("tarifa_componente_fijo"),
+            "tarifa_variable": esc_total.get("tarifa_componente_variable"),
         },
         "nota": (deepcopy(_section(document, "comparativo_escenarios_meta") or {}) or {}).get("nota"),
     }
