@@ -973,6 +973,32 @@ def build_vision_tarifas(
     total_vol_b = max(sum(vol_b_by_canal.values()), 1.0)
     total_vol_c = max(sum(vol_c_by_canal.values()), 1.0)
 
+    def _vol_a_por_canal() -> Dict:
+        """Volumen cadena_a por canal — fallback para tarifa variable Transacción en canales sin B/C.
+        Replica la lógica del engine: si cadena_a.unidad == "FTE" multiplica por igf
+        (interacciones_gestionadas_por_fte_promedio = PdCG!O9) para convertir FTE → volumen.
+        """
+        vol_data = request_data.get("volumetria") or {}
+        _datos_op = request_data.get("datos_operativos") or {}
+        igf = float(_datos_op.get("interacciones_gestionadas_por_fte_promedio", 150))
+        result: Dict = {}
+        for direction in ["inbound", "outbound"]:
+            modalidad = direction.capitalize()
+            for c in vol_data.get(direction, {}).get("canales", []):
+                cn = str(c.get("canal") or "").strip()
+                if not cn:
+                    continue
+                k = _clave(cn, modalidad)
+                a_ch = c.get("cadena_a") or {}
+                val = float(a_ch.get("valor", 0) or 0)
+                if (a_ch.get("unidad") or "").upper() == "FTE":
+                    val *= igf
+                if val > 0:
+                    result[k] = result.get(k, 0.0) + val
+        return result
+
+    vol_a_by_canal = _vol_a_por_canal()
+
     cts_map = _cts_map(cts_perfiles or [])
 
     # Aggregate CTS costs and FTE per (canal, modalidad).
@@ -1058,7 +1084,13 @@ def build_vision_tarifas(
 
             prop_var = float(cfg.get("proporcion_componente_variable") or 0.0)
             prop_fijo = 1.0 - prop_var
-            vol_transacciones = vol_b_by_canal.get(canal_key, 0.0) or vol_c_by_canal.get(canal_key, 0.0)
+            # Para canales puramente Cadena A (sin B/C), usa el volumen de cadena_a como proxy
+            # de transacciones para la fórmula: tarifa_variable = ingreso_variable / volumen
+            vol_transacciones = (
+                vol_b_by_canal.get(canal_key, 0.0)
+                or vol_c_by_canal.get(canal_key, 0.0)
+                or vol_a_by_canal.get(canal_key, 0.0)
+            )
 
             if canal_key in cadena_a_canales:
                 # Canal con Cadena A: usa CTS agregado de todos los perfiles del canal.
