@@ -134,6 +134,16 @@ def _period_utilidad(v: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def _growth_risk_by_month(doc: Dict[str, Any]) -> Dict[int, float]:
+    """Extrae 'Crecimiento del cobro a riesgo' por mes desde vision_tarifas almacenada."""
+    vision_tarifas = doc.get("vision_tarifas") or {}
+    for esc in vision_tarifas.get("escenarios") or []:
+        for concepto in esc.get("ventas_multicanal") or []:
+            if concepto.get("concepto") == "Crecimiento del cobro a riesgo":
+                return {int(m["mes"]): float(m["valor"]) for m in concepto.get("meses", [])}
+    return {}
+
+
 def build_vision_pyg_periods(doc: Dict[str, Any]) -> Dict[str, Any]:
     """Construye la respuesta periods[] desde el doc almacenado en CosmosDB.
 
@@ -141,6 +151,8 @@ def build_vision_pyg_periods(doc: Dict[str, Any]) -> Dict[str, Any]:
     """
     meses: List[Dict[str, Any]] = doc.get("meses", [])
     totales: Dict[str, Any] = doc.get("totales", {})
+    # Excel V2-8 · 'Visión P&G'!B16 · Ramp-up | Paso a cobro variable
+    growth_risk = _growth_risk_by_month(doc)
 
     periods = []
     for m in meses:
@@ -153,7 +165,10 @@ def build_vision_pyg_periods(doc: Dict[str, Any]) -> Dict[str, Any]:
             "ingresos": _period_ingresos(v),
             "costos": _period_costos(v),
             "utilidad": _period_utilidad(v),
-            "operativo": {"ramp_up": v.get("ramp_up_mes")},
+            "operativo": {
+                "ramp_up": v.get("ramp_up_mes"),
+                "ramp_up_costo_variable": growth_risk.get(mes_num, 0),
+            },
         })
 
     totales_out = {
