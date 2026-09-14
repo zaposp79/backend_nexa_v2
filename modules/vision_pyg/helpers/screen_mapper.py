@@ -465,6 +465,27 @@ def _build_from_v2_result(
             vals["utilidad_neta"]           = _contribucion
             vals["pct_utilidad_neta"]       = (_contribucion / comision_ventas) * 100 if comision_ventas else 0.0
 
+        if servicio in ("saco", "ventas multicanal"):
+            # ingreso_neto se recalcula en _ingresos_mes como ingreso_fijo + comision_ventas.
+            # contribucion almacenada no incluye comision_ventas → recalcular consistentemente.
+            _ib = vals.get("ingreso_bruto") or 0.0
+            _pct_imp = vals.get("pct_imprevistos") or 0.0
+            _imp = vals.get("imprevistos_valor") or (_pct_imp * _ib)
+            _co = vals.get("contingencia_operativa_valor") or vals.get("contingencia_op") or 0.0
+            _cc = vals.get("contingencia_comercial_valor") or vals.get("contingencia_com") or 0.0
+            _mk = vals.get("markup_valor") or vals.get("markup_ingreso") or 0.0
+            _desc = vals.get("descuento_valor") or vals.get("descuento_ingreso") or 0.0
+            _ingreso_fijo = _ib + _co + _cc + _mk - _desc - _imp
+            _ingreso_neto = _ingreso_fijo + comision_ventas
+            _costo_total = vals.get("costo_total") or 0.0
+            _contribucion = _ingreso_neto - _costo_total
+            _estaciones = vals.get("estaciones_trabajo") or 0.0
+            vals["contribucion"]            = _contribucion
+            vals["contribucion_por_puesto"] = _contribucion / _estaciones if _estaciones else 0.0
+            vals["pct_contribucion"]        = (_contribucion / _ingreso_neto) if _ingreso_neto else 0.0
+            vals["utilidad_neta"]           = _contribucion
+            vals["pct_utilidad_neta"]       = (_contribucion / _ingreso_neto) if _ingreso_neto else 0.0
+
         periods.append({
             "index":    mes_num,
             "label":    f"Mes {mes_num}",
