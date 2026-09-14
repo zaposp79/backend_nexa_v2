@@ -509,36 +509,48 @@ def _build_total_detail(
         }
         # Build tarifa detail for Total from escenario_total values (not first_entry).
         # escenario_total stores tarifa_componente_fijo as a float (the computed all-deal rate).
-        _et_tfc_val = _safe_float(escenario_total.get("tarifa_componente_fijo") if escenario_total else 0)
-        _et_fijo_label = escenario_total.get("componente_fijo") if escenario_total else None
+        _et = escenario_total or {}
+        _et_tfc_val = _safe_float(_et.get("tarifa_componente_fijo", 0))
+        _et_fijo_label = _et.get("componente_fijo")
         _et_is_fte = _et_fijo_label and _et_fijo_label in ("FTE", "fte", "Fijo FTE")
         _et_is_minuto = _et_fijo_label and _et_fijo_label in ("Tiempo", "Precio Fijo")
+        _et_fac = _safe_float(_et.get("facturacion_directa", 0))
+        _et_pct_fijo = _safe_float(_et.get("proporcion_componente_fijo_pct", 0))
+        _et_ingreso_fijo = round(_et_fac * _et_pct_fijo, 2)
+        # Tarifa por minuto pagado: ingreso_fijo / minutos_pagados (from desglose_componente_fijo)
+        _et_dcf = (_et.get("desglose_componente_fijo") or {}).get("resumen") or []
+        _et_row_pag = next((r for r in _et_dcf if (r.get("concepto") or "").lower().startswith("horas pagadas")), {})
+        _et_min_pag = _safe_float(_et_row_pag.get("minutos", 0))
+        _et_tarifa_pagada = round(_et_ingreso_fijo / _et_min_pag, 4) if _et_min_pag > 0 and _et_ingreso_fijo > 0 else 0.0
         tarifa_fijo = {
-            "ingreso_componente_fijo": _safe_float(
-                (escenario_total or {}).get("facturacion_directa", 0)
-                * (escenario_total or {}).get("proporcion_componente_fijo_pct", 0)
-            ),
+            "ingreso_componente_fijo": _et_ingreso_fijo,
             "tarifa_principal_label": "Tarifa por FTE" if _et_is_fte else "Tarifa por minuto logueado",
             "tarifa_principal": _et_tfc_val,
             "tarifa_secundaria_label": "Tarifa por minuto pagado",
-            "tarifa_secundaria": 0.0,
+            "tarifa_secundaria": _et_tarifa_pagada,
             "tarifa_por_fte": _et_tfc_val if _et_is_fte else 0.0,
             "tarifa_por_minuto_logrado": _et_tfc_val if _et_is_minuto else 0.0,
-            "tarifa_por_minuto_pagado": 0.0,
+            "tarifa_por_minuto_pagado": _et_tarifa_pagada,
         }
-        _et_tcv_val = _safe_float(escenario_total.get("tarifa_componente_variable") if escenario_total else 0)
-        _et_var_label = escenario_total.get("componente_variable") if escenario_total else None
-        _et_pct_var = _safe_float((escenario_total or {}).get("proporcion_componente_variable_pct", 0))
-        _et_fac = _safe_float((escenario_total or {}).get("facturacion_directa", 0))
+        _et_tcv_val = _safe_float(_et.get("tarifa_componente_variable", 0))
+        _et_var_label = _et.get("componente_variable")
+        _et_pct_var = _safe_float(_et.get("proporcion_componente_variable_pct", 0))
         _et_ingreso_var = round(_et_fac * _et_pct_var, 2)
-        _et_is_transaccion = _et_var_label and _et_var_label.lower().startswith("transac")
+        _et_is_transaccion = bool(_et_var_label) and _et_var_label.lower().replace("ó", "o").replace("ó", "o").startswith("transac")
+        # Volumen Mínimo de Transacción for Total: Excel HME!G275 = (costo_A+costo_B+costo_C)×pct_var/tarifa
+        _et_vol_total = 0.0
+        if _et_is_transaccion and _et_tcv_val > 0:
+            _costo_a_tot_v = _safe_float((_total_ca or {}).get("costo_total", 0))
+            _costo_b_tot_v = _safe_float((_total_cb or {}).get("costo_total", 0))
+            _costo_c_tot_v = _safe_float((_total_cc or {}).get("costo_total", 0))
+            _et_vol_total = round((_costo_a_tot_v + _costo_b_tot_v + _costo_c_tot_v) * _et_pct_var / _et_tcv_val, 2)
         tarifa_var = {
             "titulo": f"Tarifa Componente Variable - {_et_var_label}" if _et_var_label else "Tarifa Componente Variable",
             "ingreso_componente_variable": _et_ingreso_var,
             "tarifa_principal_label": "Tarifa por Transacción" if _et_is_transaccion else "Comisiones M1",
             "tarifa_principal": _et_tcv_val,
             "volumen_label": "Volumen Mínimo de Transacción" if _et_is_transaccion else "Ingreso por persona",
-            "volumen": 0.0,
+            "volumen": _et_vol_total,
             "volumetria_label": "Volumetría de 1 FTE" if _et_is_transaccion else "",
             "volumetria_de_1_fte": 0.0,
             "tarifa_por_transaccion": _et_tcv_val if _et_is_transaccion else 0.0,
@@ -933,13 +945,22 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         _tfc_valor = tfc.get("valor") or 0
         _tfc_tipo = tfc.get("tipo") or ""
         _es_minuto = "minuto" in _tfc_tipo.lower() or "tiempo" in _tfc_tipo.lower()
+        # Tarifa por minuto pagado = ingreso_fijo / minutos_pagados (Horas pagadas × 60).
+        _dcf_resumen = (esc.get("desglose_componente_fijo") or {}).get("resumen") or []
+        _row_pagadas = next((r for r in _dcf_resumen if (r.get("concepto") or "").lower().startswith("horas pagadas")), {})
+        _minutos_pagados = _safe_float(_row_pagadas.get("minutos", 0))
+        _ingreso_fijo = _safe_float(esc.get("ingreso_fijo_mensual", 0))
+        _tarifa_hora_pagada = round(_ingreso_fijo / _minutos_pagados, 4) if _minutos_pagados > 0 and _ingreso_fijo > 0 else 0.0
+        # Volumen Mínimo de Transacción: from tarifa_componente_variable dict when available,
+        # fallback to volumen_transacciones_mes stored directly on the escenario.
+        _vol_minimo = _safe_float(tcv.get("volumen_minimo") or esc.get("volumen_transacciones_mes") or 0)
         tarifas = {
             "facturacion_total": esc.get("facturacion_mensual", 0),
             "tarifa_por_fte": _tfc_valor,
             "tarifa_hora_loggeada": _tfc_valor if _es_minuto else 0,
-            "tarifa_hora_pagada": 0,
+            "tarifa_hora_pagada": _tarifa_hora_pagada,
             "tarifa_por_transaccion": tcv.get("valor", 0),
-            "volumen_minimo_transaccion": tcv.get("volumen_minimo", 0),
+            "volumen_minimo_transaccion": _vol_minimo,
             "volumetria_de_1_fte": tcv.get("volumetria_de_1_fte", 0),
             "ingreso_componente_fijo": esc.get("ingreso_fijo_mensual", 0),
             "ingreso_componente_variable": esc.get("ingreso_variable_mensual", 0),
