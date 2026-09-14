@@ -429,7 +429,8 @@ def _build_escenario_total(
         "honorarios_cobranza": honorariosCobranza,
         "honorarios_totales": honorariosTotales,
         "ventas_multicanal": ventas_multicanal,
-        "desglose_componente_fijo": desglose_componente_fijo
+        "desglose_componente_fijo": desglose_componente_fijo,
+        "fte": fte_total,
     }
 
 # ── Totales consolidados ──────────────────────────────────────────────────────
@@ -469,7 +470,7 @@ def get_value_by_month(list, month):
 def _build_ventas_multicanal(request_data: Dict[str, Any], total_income: float, pct_variable: float) -> List[dict]:
     """Construye los honorarios por antigüedad desde la lista de cobranzas."""
 
-    nPersons = request_data.get("saco_multicanal", {}).get("numero_de_asesores")
+    nPersons = int(request_data.get("saco_multicanal", {}).get("numero_de_asesores") or 0)
     configurations = (request_data.get("saco_multicanal", {}) or {}).get("configuraciones", []) or []
     incomes_by_agent = next((x for x in configurations if x["concepto"] == "Ingreso Variable x Asesor"),{})
     benefits_charges = next((x for x in configurations if x["concepto"] == "Carga Prestacional"),{})
@@ -1377,19 +1378,61 @@ def build_vision_tarifas(
             _costo_a_k = float(cts_agg_by_canal.get(_k, {}).get("costo_total") or 0)
             _ing_a = _costo_a_k / _denom_a if _denom_a > 0 else 0
         _total_ingreso_a += _ing_a
-    # Cadena B: full deal cost from motor (ALL canals) + financiero (ICA, GMF, polizas)
+    # Cadena B: full deal cost from motor (ALL canals) + financiero (ICA, GMF, polizas, comision)
     _ica_b_tot = float(vals_ramp1.get("ica_cadena_b", 0.0))
     _gmf_b_tot = float(vals_ramp1.get("gmf_cadena_b", 0.0))
     _polizas_b_tot = float(vals_ramp1.get("polizas_cadena_b", 0.0))
-    _costo_b_tot = costo_b_mensual + _ica_b_tot + _gmf_b_tot + _polizas_b_tot
+    _comision_b_tot = float(vals_ramp1.get("comision_admin_cadena_b", 0.0) or 0.0)
+    _costo_b_tot = costo_b_mensual + _ica_b_tot + _gmf_b_tot + _polizas_b_tot + _comision_b_tot
     _total_ingreso_b = _costo_b_tot / _denom_b if (_denom_b > 0 and _costo_b_tot > 0) else 0.0
     # Cadena C: full deal cost from motor (ALL canals) + financiero
     _ica_c_tot = float(vals_ramp1.get("ica_cadena_c", 0.0))
     _gmf_c_tot = float(vals_ramp1.get("gmf_cadena_c", 0.0))
     _polizas_c_tot = float(vals_ramp1.get("polizas_cadena_c", 0.0))
-    _costo_c_tot = costo_c_mensual + _ica_c_tot + _gmf_c_tot + _polizas_c_tot
+    _comision_c_tot = float(vals_ramp1.get("comision_admin_cadena_c", 0.0) or 0.0)
+    _costo_c_tot = costo_c_mensual + _ica_c_tot + _gmf_c_tot + _polizas_c_tot + _comision_c_tot
     _total_ingreso_c = _costo_c_tot / _denom_c if (_denom_c > 0 and _costo_c_tot > 0) else 0.0
     facturacion_deal_total = _total_ingreso_a + _total_ingreso_b + _total_ingreso_c
+
+    # Full-deal per-cadena breakdown for the Total row.
+    # Cadena A: sum ALL cts_agg_by_canal entries (covers all canals, not just escenario canals).
+    # Cadena B/C: read full-deal values from vals_ramp1 (motor already computed all-canal totals).
+    def _sum_cts(field: str) -> float:
+        return sum(float(v.get(field, 0) or 0) for v in cts_agg_by_canal.values())
+    _cadena_a_total = {
+        "payroll": round(_sum_cts("payroll"), 2),
+        "no_payroll": round(_sum_cts("no_payroll"), 2),
+        "ica": round(_sum_cts("ica"), 2),
+        "gmf": round(_sum_cts("gmf"), 2),
+        "polizas": round(_sum_cts("polizas"), 2),
+        "comision_administracion": round(_sum_cts("comision_administracion"), 2),
+        "costo_financiacion": round(_sum_cts("costo_financiacion"), 2),
+        "costo_total": round(_sum_cts("costo_total"), 2),
+        "ingreso": round(_total_ingreso_a, 2),
+    }
+    _cadena_b_total = {
+        "componente_fijo": round(float(vals_ramp1.get("componente_fijo_cadena_b", 0) or 0), 2),
+        "componente_variable": round(float(vals_ramp1.get("componente_variable_cadena_b", 0) or 0), 2),
+        "ica": round(_ica_b_tot, 2),
+        "gmf": round(_gmf_b_tot, 2),
+        "polizas": round(_polizas_b_tot, 2),
+        "comision_administracion": round(float(vals_ramp1.get("comision_admin_cadena_b", 0) or 0), 2),
+        "costo_total": round(_costo_b_tot, 2),
+        "ingreso": round(_total_ingreso_b, 2),
+    }
+    _cadena_c_total = {
+        "componente_fijo": round(float(vals_ramp1.get("componente_fijo_cadena_c", 0) or 0), 2),
+        "componente_variable": round(float(vals_ramp1.get("componente_variable_cadena_c", 0) or 0), 2),
+        "ica": round(_ica_c_tot, 2),
+        "gmf": round(_gmf_c_tot, 2),
+        "polizas": round(_polizas_c_tot, 2),
+        "comision_administracion": round(float(vals_ramp1.get("comision_admin_cadena_c", 0) or 0), 2),
+        "costo_total": round(_costo_c_tot, 2),
+        "ingreso": round(_total_ingreso_c, 2),
+    }
+    total["cadena_a"] = _cadena_a_total
+    total["cadena_b"] = _cadena_b_total
+    total["cadena_c"] = _cadena_c_total
 
     return {
         "escenarios": escenarios,

@@ -407,23 +407,106 @@ def _build_total_detail(
         tarifa_fijo = {}
         tarifa_var = {}
     else:
-        raw_fte = _safe_float(first_entry.get("fte"))
-        fte_total = raw_fte * 2 if raw_fte else 0
-
         reglas_source = first_source.get("reglas") if first_source else {}
         root_rules = result.get("panel") or result.get("resumen") or {}
         rules = _build_reglas_negocio(reglas_source, root_rules)
 
-        ca = (first_source.get("cadena_a") or {}) if first_source else {}
-        cb = (first_source.get("cadena_b") or {}) if first_source else {}
-        cc = (first_source.get("cadena_c") or {}) if first_source else {}
-        cadenas = {
-            "cadena_a": _normalize_cadena(ca, "a"),
-            "cadena_b": _normalize_cadena(cb, "b"),
-            "cadena_c": _normalize_cadena(cc, "c"),
-        }
+        # Read full-deal cadena breakdown from builder's total dict (all canals / all perfiles).
+        # Builder pre-computes this in vision_tarifas_builder via cts_agg_by_canal (A) and vals_ramp1 (B/C).
+        # Falls back to canal-dedup across scenario_sources when builder data is absent.
+        _total_dict = vt_data.get("total") or {}
+        _total_ca = _total_dict.get("cadena_a")
+        _total_cb = _total_dict.get("cadena_b")
+        _total_cc = _total_dict.get("cadena_c")
 
-        totales = first_entry.get("totales") or {}
+        def _f(v: "Any") -> float:
+            return _safe_float(v)
+
+        if _total_ca is not None:
+            _a_payroll = _f(_total_ca.get("payroll", 0))
+            _a_nopay = _f(_total_ca.get("no_payroll", 0))
+            _a_ica = _f(_total_ca.get("ica", 0))
+            _a_gmf = _f(_total_ca.get("gmf", 0))
+            _a_comision = _f(_total_ca.get("comision_administracion", 0))
+            _a_polizas = _f(_total_ca.get("polizas", 0))
+            _a_costos_fin = _f(_total_ca.get("costo_financiacion", 0))
+            ca_total = {
+                "payroll": _a_payroll,
+                "no_payroll": _a_nopay,
+                "total": round(_a_payroll + _a_nopay + _a_ica + _a_gmf + _a_comision + _a_polizas + _a_costos_fin, 2),
+                "ingreso_mensual": _f(_total_ca.get("ingreso", 0)),
+                "ica": _a_ica,
+                "gmf": _a_gmf,
+                "comision_por_administracion": _a_comision,
+                "polizas": _a_polizas,
+                "costos_financiacion": _a_costos_fin,
+            }
+            def _map_bc(src: dict) -> dict:
+                fijo = _f(src.get("componente_fijo", 0))
+                variable = _f(src.get("componente_variable", 0))
+                ica = _f(src.get("ica", 0))
+                gmf = _f(src.get("gmf", 0))
+                comision = _f(src.get("comision_administracion", 0))
+                polizas = _f(src.get("polizas", 0))
+                costo_fin = _f(src.get("costo_financiacion", 0))
+                return {
+                    "componente_fijo": fijo,
+                    "componente_variable": variable,
+                    "total": round(fijo + variable + ica + gmf + comision + polizas + costo_fin, 2),
+                    "ingreso_mensual": _f(src.get("ingreso", 0)),
+                    "ica": ica,
+                    "gmf": gmf,
+                    "comision_por_administracion": comision,
+                    "polizas": polizas,
+                    "costos_financiacion": costo_fin,
+                }
+            cb_total = _map_bc(_total_cb or {})
+            cc_total = _map_bc(_total_cc or {})
+            fte_total = _safe_float((escenario_total or {}).get("fte", 0))
+        else:
+            # Fallback: aggregate across unique (canal, modalidad) in scenario_sources.
+            _seen_canal_keys: set = set()
+            ca_total: dict = {}
+            cb_total: dict = {}
+            cc_total: dict = {}
+            fte_total = 0.0
+            _fields_a = ["payroll", "no_payroll", "total", "ingreso_mensual", "ica", "gmf",
+                         "comision_por_administracion", "polizas", "costos_financiacion"]
+            _fields_bc = ["componente_fijo", "componente_variable", "total", "ingreso_mensual", "ica", "gmf",
+                          "comision_por_administracion", "polizas", "costos_financiacion"]
+
+            for src_key, source in scenario_sources.items():
+                meta = source.get("meta") or {}
+                _canal = str(meta.get("canal") or "").lower().strip()
+                _modalidad = str(meta.get("modalidad") or "").lower().strip()
+                _canon_key = (_canal, _modalidad)
+                if _canon_key in _seen_canal_keys:
+                    continue
+                _seen_canal_keys.add(_canon_key)
+                entry = scenario_map.get(src_key, {})
+                fte_total += _safe_float(entry.get("fte", 0))
+                ca = _normalize_cadena(source.get("cadena_a") or {}, "a")
+                cb = _normalize_cadena(source.get("cadena_b") or {}, "b")
+                cc = _normalize_cadena(source.get("cadena_c") or {}, "c")
+                for f in _fields_a:
+                    ca_total[f] = ca_total.get(f, 0.0) + _safe_float(ca.get(f, 0))
+                for f in _fields_bc:
+                    cb_total[f] = cb_total.get(f, 0.0) + _safe_float(cb.get(f, 0))
+                    cc_total[f] = cc_total.get(f, 0.0) + _safe_float(cc.get(f, 0))
+
+        cadenas = {
+            "cadena_a": ca_total,
+            "cadena_b": cb_total,
+            "cadena_c": cc_total,
+        }
+        totales = {
+            "costo_total_mensual": round(
+                ca_total.get("total", 0) + cb_total.get("total", 0) + cc_total.get("total", 0), 2
+            ),
+            "facturacion_total_mensual": round(
+                ca_total.get("ingreso_mensual", 0) + cb_total.get("ingreso_mensual", 0) + cc_total.get("ingreso_mensual", 0), 2
+            ),
+        }
         tarifa_fijo = first_entry.get("tarifa_componente_fijo_detail") or {}
         tarifa_var = first_entry.get("tarifa_componente_variable_detail") or {}
 
@@ -893,6 +976,7 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         "desglose_producto_opex": desglose_producto_opex,
         "ingreso_mensual": total.get("facturacion_mensual", 0),
         "costo_total": total.get("facturacion_mensual", 0),
+        "total": total,
     }
 
     bridged = dict(result)
