@@ -4,6 +4,8 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, Iterable, Optional
 
+from nexa_engine.modules.calculator_v2.vision_pyg_periods_builder import _growth_risk_by_month
+
 
 _INGRESOS_MAP = {
     "ingreso_bruto_a": ("ingresos", "ingreso_cadena_a"),
@@ -413,7 +415,9 @@ def _build_from_v2_result(
     cts = _cts_breakdown(result_doc.get("vision_cts") or {})
     vision_tarifas = result_doc.get("vision_tarifas")
     
-    cobranzas = None  
+    growth_risk = _growth_risk_by_month(result_doc)
+
+    cobranzas = None
     ventas_multicanal = None
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = next((x["ventas_multicanal"] for x in vision_tarifas.get("escenarios", []) if x.get("ventas_multicanal") != [] and x.get("ventas_multicanal") != None), None)
@@ -468,7 +472,10 @@ def _build_from_v2_result(
             "ingresos": _ingresos_mes(vals, comision_ventas, servicio),
             "costos":   _costos_mes(vals, cts, costo_variable),
             "utilidad": _utilidad_mes(vals),
-            "operativo": {"ramp_up": vals.get("ramp_up_mes")},
+            "operativo": {
+                "ramp_up": vals.get("ramp_up_mes"),
+                "ramp_up_costo_variable": growth_risk.get(mes_num, 0),
+            },
         })
 
     # Totales: igual que un mes pero usando totales_vals
