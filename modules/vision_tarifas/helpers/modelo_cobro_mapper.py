@@ -572,7 +572,7 @@ def _build_total_detail(
         _et_var_label = _et.get("componente_variable")
         _et_pct_var = _safe_float(_et.get("proporcion_componente_variable_pct", 0))
         _et_ingreso_var = round(_et_fac * _et_pct_var, 2)
-        _et_is_transaccion = bool(_et_var_label) and _et_var_label.lower().replace("ó", "o").replace("ó", "o").startswith("transac")
+        _et_is_transaccion = (_et_var_label or "").lower().replace("ó", "o").startswith("transac")
         # Volumen Mínimo de Transacción for Total: Excel HME!G275 = (costo_A+costo_B+costo_C)×pct_var/tarifa
         _et_vol_total = 0.0
         if _et_is_transaccion and _et_tcv_val > 0:
@@ -580,18 +580,42 @@ def _build_total_detail(
             _costo_b_tot_v = _safe_float((_total_cb or {}).get("costo_total", 0))
             _costo_c_tot_v = _safe_float((_total_cc or {}).get("costo_total", 0))
             _et_vol_total = round((_costo_a_tot_v + _costo_b_tot_v + _costo_c_tot_v) * _et_pct_var / _et_tcv_val, 2)
+
+        _et_servicio      = (result.get("servicio") or "").lower()
+        _et_tipo_honorario = (vt_data.get("tipo_honorario") or "").strip().lower()
+        _et_comisiones_m1 = _comisiones_m1(
+            _et_var_label or "",
+            _et_servicio,
+            escenario_total.get("honorarios_totales") or [] if escenario_total else [],
+            escenario_total.get("ventas_multicanal") or [] if escenario_total else [],
+            _et_tipo_honorario,
+        )
+
+        if _et_is_transaccion:
+            _et_titulo             = f"Tarifa Componente Variable - {_et_var_label}" if _et_var_label else "Tarifa Componente Variable"
+            _et_tarifa_ppal_label  = "Tarifa por Transacción"
+            _et_volumen_label      = "Volumen Mínimo de Transacción"
+            _et_volumetria_label   = "Volumetría de 1 FTE"
+            _et_ingreso_por_persona = 0.0
+        else:
+            _et_titulo             = f"Tarifa Componente Variable - {_et_var_label}" if _et_var_label else "Tarifa Componente Variable"
+            _et_tarifa_ppal_label  = ""
+            _et_volumen_label      = ""
+            _et_volumetria_label   = ""
+            _et_ingreso_por_persona = _et_tcv_val
+
         tarifa_var = {
-            "titulo": f"Tarifa Componente Variable - {_et_var_label}" if _et_var_label else "Tarifa Componente Variable",
+            "titulo":                      _et_titulo,
             "ingreso_componente_variable": _et_ingreso_var,
-            "tarifa_principal_label": "Tarifa por Transacción" if _et_is_transaccion else "Comisiones M1",
-            "tarifa_principal": _et_tcv_val,
-            "volumen_label": "Volumen Mínimo de Transacción" if _et_is_transaccion else "Ingreso por persona",
-            "volumen": _et_vol_total,
-            "volumetria_label": "Volumetría de 1 FTE" if _et_is_transaccion else "",
-            "volumetria_de_1_fte": 0.0,
-            "tarifa_por_transaccion": _et_tcv_val if _et_is_transaccion else 0.0,
-            "comisiones_mi": 0.0,
-            "ingreso_por_persona": 0.0,
+            "tarifa_principal_label":      _et_tarifa_ppal_label,
+            "tarifa_principal":            _et_tcv_val,
+            "volumen_label":               _et_volumen_label,
+            "volumen":                     _et_vol_total,
+            "volumetria_label":            _et_volumetria_label,
+            "volumetria_de_1_fte":         0.0,
+            "tarifa_por_transaccion":      _et_tcv_val if _et_is_transaccion else 0.0,
+            "comisiones_mi":               _et_comisiones_m1,
+            "ingreso_por_persona":         _et_ingreso_por_persona,
         }
 
     return {
@@ -734,23 +758,38 @@ def _build_tarifa_variable(meta: dict, tarifas: dict, variable_component: dict) 
         meta.get("componente_variable_label"),
         variable_component.get("tipo"),
     )
-    _vl_norm = (var_label or "").lower().replace("ó", "o").replace("ó", "o")
-    is_transaccion = bool(var_label) and _vl_norm.startswith("transac")
+    is_transaccion = (var_label or "").lower().replace("ó", "o").startswith("transac")
 
-    payload = {
-        "titulo": f"Tarifa Componente Variable - {var_label}" if var_label else "Tarifa Componente Variable",
+    volumen = _safe_float(tarifas.get("volumen_minimo_transaccion"))
+    tarifa_principal =  _safe_float(tarifas.get("tarifa_por_transaccion"))
+    comisiones_mi =  _safe_float(_first_comision(variable_component))
+    ingreso_por_persona = _safe_float(tarifas.get("ingreso_por_persona"))
+    if is_transaccion:
+        titulo              = f"Tarifa Componente Variable - {var_label}"
+        tarifa_principal_label = "Tarifa por Transacción"
+        volumen_label       = "Volumen Mínimo de Transacción"
+        volumetria_label    = "Volumetría de 1 FTE"
+    else:
+        titulo              = f"Tarifa Componente Variable - {var_label}" if var_label else "Tarifa Componente Variable"
+        tarifa_principal_label = ""
+        volumen_label       = ""
+        volumetria_label    = ""
+        ingreso_por_persona =  tarifa_principal
+        
+
+    return {
+        "titulo":                      titulo,
         "ingreso_componente_variable": _safe_float(tarifas.get("ingreso_componente_variable")),
-        "tarifa_principal_label": "Tarifa por Transacción" if is_transaccion else "Comisiones M1",
-        "tarifa_principal": _safe_float(tarifas.get("tarifa_por_transaccion")),
-        "volumen_label": "Volumen Mínimo de Transacción" if is_transaccion else "Ingreso por persona",
-        "volumen": _safe_float(tarifas.get("volumen_minimo_transaccion")),
-        "volumetria_label": "Volumetría de 1 FTE" if is_transaccion else "",
-        "volumetria_de_1_fte": _safe_float(tarifas.get("volumetria_de_1_fte")),
-        "tarifa_por_transaccion": _safe_float(tarifas.get("tarifa_por_transaccion")),
-        "comisiones_mi": _safe_float(_first_comision(variable_component)),
-        "ingreso_por_persona": _safe_float(tarifas.get("ingreso_por_persona")),
+        "tarifa_principal_label":      tarifa_principal_label,
+        "tarifa_principal":             tarifa_principal,
+        "volumen_label":               volumen_label,
+        "volumen":                     volumen,
+        "volumetria_label":            volumetria_label,
+        "volumetria_de_1_fte":         _safe_float(tarifas.get("volumetria_de_1_fte")),
+        "tarifa_por_transaccion":      _safe_float(tarifas.get("tarifa_por_transaccion")),
+        "comisiones_mi":               comisiones_mi,
+        "ingreso_por_persona":         ingreso_por_persona,
     }
-    return payload
 
 
 def _first_comision(variable_component: dict) -> Optional[float]:
