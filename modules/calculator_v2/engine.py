@@ -415,7 +415,8 @@ class MotorDeReglas:
                 _com_c0 = _billing_c_base * _tasa_com_c0
                 # Excel Pólizas-FC!M215: ICA_C = billing_c × (1+(pol+com)/fm_c) × tasa_ica
                 _ica_c0 = _billing_c_base * (1.0 + (_tasa_pol_c0 + _tasa_com_c0) / _fm_c) * _tasa_ica_c0
-                _gmf_c0 = _costo_c_op * _tasa_gmf_c0
+                # Excel Pólizas-FC: GMF_C = (Op_C + billing_c×(pol+com)) × tasa_gmf (igual que B)
+                _gmf_c0 = (_costo_c_op + _billing_c_base * (_tasa_pol_c0 + _tasa_com_c0)) * _tasa_gmf_c0
                 # C311 = Op_C + financieros; C312 = C311/fm_c
                 # Excel V2-8 · 'Hoja Maestra Escenarios'!C312 · formula: =C311/(1-$G$255)
                 _ingreso_c_base = (_costo_c_op + _pol_c0 + _com_c0 + _ica_c0 + _gmf_c0) / _fm_c
@@ -645,7 +646,8 @@ class MotorDeReglas:
                     if _fm_c > 0 else _billing_c_unramped
                 )
                 _ica_c = _ica_c_billing * _tasa_ica_c
-                _gmf_c = _billing_c_unramped * _fm_c * _tasa_gmf_c
+                # Excel Pólizas-FC: GMF_C = (Op_C + billing_c×(pol+com)) × tasa_gmf (igual que B)
+                _gmf_c = (ctx["costo_cadena_c"] + _billing_c_unramped * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
                 # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
                 _pol_c = _billing_c_unramped * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
                 _com_c = _billing_c_unramped * _tasa_com_c_mes
