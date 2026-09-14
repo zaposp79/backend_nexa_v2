@@ -507,8 +507,44 @@ def _build_total_detail(
                 ca_total.get("ingreso_mensual", 0) + cb_total.get("ingreso_mensual", 0) + cc_total.get("ingreso_mensual", 0), 2
             ),
         }
-        tarifa_fijo = first_entry.get("tarifa_componente_fijo_detail") or {}
-        tarifa_var = first_entry.get("tarifa_componente_variable_detail") or {}
+        # Build tarifa detail for Total from escenario_total values (not first_entry).
+        # escenario_total stores tarifa_componente_fijo as a float (the computed all-deal rate).
+        _et_tfc_val = _safe_float(escenario_total.get("tarifa_componente_fijo") if escenario_total else 0)
+        _et_fijo_label = escenario_total.get("componente_fijo") if escenario_total else None
+        _et_is_fte = _et_fijo_label and _et_fijo_label in ("FTE", "fte", "Fijo FTE")
+        _et_is_minuto = _et_fijo_label and _et_fijo_label in ("Tiempo", "Precio Fijo")
+        tarifa_fijo = {
+            "ingreso_componente_fijo": _safe_float(
+                (escenario_total or {}).get("facturacion_directa", 0)
+                * (escenario_total or {}).get("proporcion_componente_fijo_pct", 0)
+            ),
+            "tarifa_principal_label": "Tarifa por FTE" if _et_is_fte else "Tarifa por minuto logueado",
+            "tarifa_principal": _et_tfc_val,
+            "tarifa_secundaria_label": "Tarifa por minuto pagado",
+            "tarifa_secundaria": 0.0,
+            "tarifa_por_fte": _et_tfc_val if _et_is_fte else 0.0,
+            "tarifa_por_minuto_logrado": _et_tfc_val if _et_is_minuto else 0.0,
+            "tarifa_por_minuto_pagado": 0.0,
+        }
+        _et_tcv_val = _safe_float(escenario_total.get("tarifa_componente_variable") if escenario_total else 0)
+        _et_var_label = escenario_total.get("componente_variable") if escenario_total else None
+        _et_pct_var = _safe_float((escenario_total or {}).get("proporcion_componente_variable_pct", 0))
+        _et_fac = _safe_float((escenario_total or {}).get("facturacion_directa", 0))
+        _et_ingreso_var = round(_et_fac * _et_pct_var, 2)
+        _et_is_transaccion = _et_var_label and _et_var_label.lower().startswith("transac")
+        tarifa_var = {
+            "titulo": f"Tarifa Componente Variable - {_et_var_label}" if _et_var_label else "Tarifa Componente Variable",
+            "ingreso_componente_variable": _et_ingreso_var,
+            "tarifa_principal_label": "Tarifa por Transacción" if _et_is_transaccion else "Comisiones M1",
+            "tarifa_principal": _et_tcv_val,
+            "volumen_label": "Volumen Mínimo de Transacción" if _et_is_transaccion else "Ingreso por persona",
+            "volumen": 0.0,
+            "volumetria_label": "Volumetría de 1 FTE" if _et_is_transaccion else "",
+            "volumetria_de_1_fte": 0.0,
+            "tarifa_por_transaccion": _et_tcv_val if _et_is_transaccion else 0.0,
+            "comisiones_mi": 0.0,
+            "ingreso_por_persona": 0.0,
+        }
 
     return {
         "escenario": "Total",
@@ -632,7 +668,7 @@ def _build_tarifa_fijo(meta: dict, tarifas: dict, fixed_component: dict, channel
 
     return {
         "ingreso_componente_fijo": _safe_float(tarifas.get("ingreso_componente_fijo")),
-        "tarifa_principal_label": "Tarifa por FTE" if is_fte else "Tarifa por minuto logrado",
+        "tarifa_principal_label": "Tarifa por FTE" if is_fte else "Tarifa por minuto logueado",
         "tarifa_principal": _safe_float(tarifas.get("tarifa_por_fte")),
         "tarifa_secundaria_label": "Tarifa por minuto pagado" if is_fte else "Tarifa por minuto pagado",
         "tarifa_secundaria": _safe_float(tarifas.get("tarifa_hora_pagada")),
@@ -649,7 +685,8 @@ def _build_tarifa_variable(meta: dict, tarifas: dict, variable_component: dict) 
         meta.get("componente_variable_label"),
         variable_component.get("tipo"),
     )
-    is_transaccion = var_label and var_label in ("Transacción", "Transaccion")
+    _vl_norm = (var_label or "").lower().replace("ó", "o").replace("ó", "o")
+    is_transaccion = bool(var_label) and _vl_norm.startswith("transac")
 
     payload = {
         "titulo": f"Tarifa Componente Variable - {var_label}" if var_label else "Tarifa Componente Variable",
@@ -859,8 +896,10 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         if not isinstance(esc, dict):
             continue
 
-        tfc = esc.get("tarifa_componente_fijo") or {}
-        tcv = esc.get("tarifa_componente_variable") or {}
+        tfc_raw = esc.get("tarifa_componente_fijo")
+        tfc = tfc_raw if isinstance(tfc_raw, dict) else {}
+        tcv_raw = esc.get("tarifa_componente_variable")
+        tcv = tcv_raw if isinstance(tcv_raw, dict) else {}
         costos = esc.get("desglose_costos_mensual") or {}
         costos_b = esc.get("desglose_costos_mensual_b") or {}
         costos_c = esc.get("desglose_costos_mensual_c") or {}
@@ -891,13 +930,20 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "descuento": ajustes.get("descuento", 0),
         }
 
+        _tfc_valor = tfc.get("valor") or 0
+        _tfc_tipo = tfc.get("tipo") or ""
+        _es_minuto = "minuto" in _tfc_tipo.lower() or "tiempo" in _tfc_tipo.lower()
         tarifas = {
             "facturacion_total": esc.get("facturacion_mensual", 0),
-            "tarifa_por_fte": tfc.get("valor", 0),
+            "tarifa_por_fte": _tfc_valor,
+            "tarifa_hora_loggeada": _tfc_valor if _es_minuto else 0,
+            "tarifa_hora_pagada": 0,
             "tarifa_por_transaccion": tcv.get("valor", 0),
             "volumen_minimo_transaccion": tcv.get("volumen_minimo", 0),
+            "volumetria_de_1_fte": tcv.get("volumetria_de_1_fte", 0),
             "ingreso_componente_fijo": esc.get("ingreso_fijo_mensual", 0),
             "ingreso_componente_variable": esc.get("ingreso_variable_mensual", 0),
+            "ingreso_por_persona": tcv.get("ingreso_por_persona", 0),
         }
 
         cadena_a = {
