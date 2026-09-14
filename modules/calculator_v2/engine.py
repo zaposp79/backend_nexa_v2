@@ -410,6 +410,21 @@ class MotorDeReglas:
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
 
+        # Tasa de extensión amortizada (constante por mes) para pólizas con aplica_extension=True.
+        # Espejo de pol_ext_amortized en _compute_ingreso_cadena_a_hm (for_pricing=True):
+        # los meses_extension fuera del contrato se prorratean sobre duracion_meses.
+        _tasa_ext_pol_amort = 0.0
+        if duracion_meses > 0:
+            _tasa_ext_pol_amort = sum(
+                int(p.get("meses_extension", 0) or 0)
+                * float(p.get("pct_poliza", 0))
+                * float(p.get("pct_atribuible", 0))
+                for p in _polizas_todos
+                if "comisi" not in str(p.get("nombre", "")).lower()
+                and p.get("aplica_extension", False)
+                and int(p.get("meses_extension", 0) or 0) > 0
+            ) / duracion_meses
+
         # Costos Financiación — Excel V2-8: 'Pólizas - Costo Financiacion'!D515-D516
         # Panel!C21="Si" → cons_costo_de_financiacion > 0 en el request.
         # D515 = IFS(periodo_pago=30→1, 60→2, 90→3, else→4) = meses de capital charge.
@@ -574,14 +589,23 @@ class MotorDeReglas:
                 _ica_b = _ica_b_billing * _tasa_ica_b
                 _pol_b_billing_mes = _billing_b_unramped * _tasa_pol_b_mes
                 _gmf_b = (ctx["costo_cadena_b"] + _pol_b_billing_mes) * _tasa_gmf_b
-                _pol_b = _billing_b_unramped * _tasa_pol_b_mes
+                # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
+                _pol_b = _billing_b_unramped * (_tasa_pol_b_mes + _tasa_ext_pol_amort)
+                _tasa_com_b_mes = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0)) * _COMISION_ADMIN_FACTOR_HM
+                    for p in polizas_activas_mes
+                    if "comisi" in str(p.get("nombre", "")).lower()
+                )
+                _com_b = _billing_b_unramped * _tasa_com_b_mes
                 ctx["ica_hm"] += _ica_b
                 # Excel Pólizas-FC!M269: GMF_B = (costo_b_mes + Pol_billing_mes) × tasa_gmf
                 ctx["gmf_hm"] += _gmf_b
                 ctx["polizas_puras_hm"] += _pol_b
+                ctx["comision_admin_hm"] += _com_b
                 ctx["ica_cadena_b"] = _ica_b
                 ctx["gmf_cadena_b"] = _gmf_b
                 ctx["polizas_cadena_b"] = _pol_b
+                ctx["comision_admin_cadena_b"] = _com_b
 
             # ICA/GMF/Pólizas de Cadena C — sobre _billing_c_base (B = Op_C/fm_c), NO sobre C312.
             # C312 incorpora la recuperación de financieros en el ingreso bruto; las filas de
@@ -603,15 +627,24 @@ class MotorDeReglas:
                 )
                 _ica_c = _ica_c_billing * _tasa_ica_c
                 _gmf_c = _billing_c_unramped * _fm_c * _tasa_gmf_c
-                _pol_c = _billing_c_unramped * _tasa_pol_c_mes
+                # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
+                _pol_c = _billing_c_unramped * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
+                _tasa_com_c_mes = sum(
+                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0)) * _COMISION_ADMIN_FACTOR_HM
+                    for p in polizas_activas_mes
+                    if "comisi" in str(p.get("nombre", "")).lower()
+                )
+                _com_c = _billing_c_unramped * _tasa_com_c_mes
                 ctx["ica_hm"] += _ica_c
                 # Excel Pólizas-FC: GMF_C usa B × fm_c = Op_C con IPC simple (1+ipc_incremental),
                 # no costo_cadena_c que lleva tarifa_canal × double_t² (P&G display, no billing).
                 ctx["gmf_hm"] += _gmf_c
                 ctx["polizas_puras_hm"] += _pol_c
+                ctx["comision_admin_hm"] += _com_c
                 ctx["ica_cadena_c"] = _ica_c
                 ctx["gmf_cadena_c"] = _gmf_c
                 ctx["polizas_cadena_c"] = _pol_c
+                ctx["comision_admin_cadena_c"] = _com_c
 
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
             # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
