@@ -231,7 +231,13 @@ def _cts_breakdown(vision_cts: Dict[str, Any]) -> Dict[str, float]:
     """Pre-computa totales base del CTS para pro-rateo mensual."""
     perfiles = vision_cts.get("perfiles") or []
     return {
-        "payroll_base":       vision_cts.get("payroll_total") or 0.0,
+        # payroll_base excluye cap_ini porque nomina_total_mensual (el numerador en _scale)
+        # tampoco la incluye — si se incluyera, la ratio sería < 1 con cap_ini activa y
+        # crucero quedaría subdimensionado respecto a crucero_base.
+        "payroll_base":       sum(
+            p.get("payroll", 0.0) - (p.get("capacitacion_inicial") or 0.0)
+            for p in perfiles
+        ) or vision_cts.get("payroll_total") or 0.0,
         "no_payroll_base":    vision_cts.get("no_payroll_total") or 0.0,
         "crucero_base":       sum(p.get("crucero", 0.0) for p in perfiles),
         "nomina_loaded_base": sum(p.get("salario_cargado", 0.0) for p in perfiles),
