@@ -273,12 +273,23 @@ def _build_escenario(
                     volumen_minimo = round(_costo_total_esc * pct_var / tarifa_variable, 2) if tarifa_variable > 0 else volumen
         elif _cv_norm in ("resultado", "resultados", "honorarios"):
             # Excel V2-8 · HME!G33 = HME!G31 / num_personas = VT!"Ingreso por persona" mes 1
-            # SAC/SACO/Ventas Multicanal/Plataformas/Captura de Datos → tarifa variable = 0
+            # SAC/Plataformas/Captura de Datos → tarifa variable = 0 (no tienen tarifa cobrable)
+            # SACO/Ventas Multicanal → ventas_multicanal["Ingreso por persona"].meses[0].valor
             # Cobranzas → honorariosTotales["Ingreso por persona"].meses[0].calculado
-            _servicios_sin_tv = _SERVICIOS_SIN_TARIFA_VARIABLE_HR | {"ventas multicanal"}
-            if servicio in _servicios_sin_tv:
+            if servicio in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
                 tarifa_variable = 0.0
                 tipo_tarifa_variable = None
+            elif servicio in ("saco", "ventas multicanal"):
+                ingreso_por_persona_mes1 = None
+                for c in ventas_multicanal:
+                    if c.get("concepto") == "Ingreso por persona":
+                        meses_c = c.get("meses", [])
+                        if meses_c:
+                            ingreso_por_persona_mes1 = meses_c[0].get("valor")
+                        break
+                if ingreso_por_persona_mes1 is not None:
+                    tarifa_variable = round(ingreso_por_persona_mes1, 2)
+                    tipo_tarifa_variable = "ingreso por persona (mes 1)"
             else:
                 ingreso_por_persona_mes1 = None
                 for c in honorariosTotales:
@@ -400,7 +411,7 @@ def _build_escenario_total(
             vol_bc = vol_b_total + vol_c_total
             if vol_bc > 0:
                 tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
-        elif _cv_total_norm in ("resultados", "honorarios"):
+        elif _cv_total_norm in ("resultado", "resultados", "honorarios"):
             # SAC/Plataformas/Captura de Datos: no generan tarifa variable cobrable
             if servicio not in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
                 # HME G275 = ingreso_variable_total / fte_total
@@ -417,6 +428,16 @@ def _build_escenario_total(
 
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
+        # Excel HME Total: tarifa_variable = "Ingreso por persona" mes 1 de ventas_multicanal,
+        # independiente de pct_var o componente_variable del escenario_total.
+        for c in ventas_multicanal:
+            if c.get("concepto") == "Ingreso por persona":
+                _meses_pp = c.get("meses", [])
+                if _meses_pp:
+                    _ing_pp = _meses_pp[0].get("valor")
+                    if _ing_pp is not None:
+                        tarifa_variable = round(_ing_pp, 2)
+                break
 
     return {
         "escenario": "Total",
