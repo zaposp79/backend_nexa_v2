@@ -468,6 +468,7 @@ def _build_from_v2_result(
         if servicio in ("saco", "ventas multicanal"):
             # ingreso_neto se recalcula en _ingresos_mes como ingreso_fijo + comision_ventas.
             # contribucion almacenada no incluye comision_ventas → recalcular consistentemente.
+            # costo_total stored NO incluye costo_variable (costo_por_comision) — _costos_mes lo suma aparte.
             _ib = vals.get("ingreso_bruto") or 0.0
             _pct_imp = vals.get("pct_imprevistos") or 0.0
             _imp = vals.get("imprevistos_valor") or (_pct_imp * _ib)
@@ -477,7 +478,7 @@ def _build_from_v2_result(
             _desc = vals.get("descuento_valor") or vals.get("descuento_ingreso") or 0.0
             _ingreso_fijo = _ib + _co + _cc + _mk - _desc - _imp
             _ingreso_neto = _ingreso_fijo + comision_ventas
-            _costo_total = vals.get("costo_total") or 0.0
+            _costo_total = (vals.get("costo_total") or 0.0) + costo_variable
             _contribucion = _ingreso_neto - _costo_total
             _estaciones = vals.get("estaciones_trabajo") or 0.0
             vals["contribucion"]            = _contribucion
@@ -526,6 +527,11 @@ def _build_from_v2_result(
         totales_vals["pct_contribucion"]        = (_contribucion_t / total_comision) * 100 if total_comision else 0.0
         totales_vals["utilidad_neta"]           = _contribucion_t
         totales_vals["pct_utilidad_neta"]       = (_contribucion_t / total_comision) * 100 if total_comision else 0.0
+
+    if servicio in ("saco", "ventas multicanal"):
+        _contrib_t = sum((p["utilidad"].get("contribucion") or 0.0) for p in periods)
+        totales_vals["contribucion"] = _contrib_t
+        totales_vals["utilidad_neta"] = _contrib_t
 
     totales = {
         "ingresos": _ingresos_mes(totales_vals, total_comision, servicio),
