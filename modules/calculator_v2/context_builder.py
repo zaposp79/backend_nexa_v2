@@ -73,9 +73,22 @@ def build_base_context(
     # Pólizas: aplican sobre ingreso_neto = ingreso_bruto × (1 - imprevistos).
     tasa_financiero_efectiva = tasa_ica_val + tasa_gmf_val + tasa_polizas * (1 - pct_imprevistos_val)
 
-    # paso_cobro_variable: fila 16 de Visión P&G (distinto del ramp-up)
-    # Es 0 para SAC (modelo fijo). El ramp-up afecta el ingreso en cadena, no aquí.
-    paso_cobro_variable = float(reglas.get("paso_cobro_variable", 0.0))
+    # paso_cobro_variable: L16 de Visión P&G = ramp_up_costo_variable por mes.
+    # Para SACO/Ventas Multicanal: interpolación lineal 0 → pct_variable del primer escenario comercial.
+    # pct_variable viene de escenarios_comerciales[primer_slot].proporcion_componente_variable,
+    # consistente con lo que usa _build_ventas_multicanal y lee _growth_risk_by_month.
+    # Para el resto: 0 (1-0 no afecta ingreso_bruto).
+    _servicio = str(datos_op.get("servicio", "")).lower()
+    if _servicio in ("saco", "ventas multicanal"):
+        _esc_sorted = sorted(
+            [e for e in (request_data.get("escenarios_comerciales") or []) if int(e.get("escenario") or 0) >= 1],
+            key=lambda x: int(x.get("escenario") or 0),
+        )
+        _pct_var = float(_esc_sorted[0].get("proporcion_componente_variable") or 0.0) if _esc_sorted else 0.0
+        _n = int(datos_op.get("duracion_meses", 1))
+        paso_cobro_variable = ((mes_numero - 1) / (_n - 1) * _pct_var) if (_pct_var > 0 and _n > 1 and mes_numero > 1) else 0.0
+    else:
+        paso_cobro_variable = 0.0
 
     return {
         # ── Mes ────────────────────────────────────────────────────────────
