@@ -24,6 +24,8 @@ _COLLECTION = CollectionConfig(
     name="parameterization",
     partition_key_field="domain",
 )
+_HR_COLLECTION = CollectionConfig(name="hr")
+_OP_COLLECTION = CollectionConfig(name="op")
 
 # Ruta al JSON bundleado (relativa al paquete backend_nexa_v2)
 _BUNDLED_RUBROS = Path(__file__).resolve().parents[2] / "json_request" / "rubros_maestro.json"
@@ -84,7 +86,7 @@ class RubrosRepository:
         Retorna None si no hay parametrización HR activa o no hay datos para el servicio.
         """
         try:
-            docs, _ = self._store.query(_COLLECTION, {"domain": "hr"})
+            docs, _ = self._store.query(_HR_COLLECTION, {"domain": "hr"})
         except Exception as exc:
             logger.error("[v2] Error leyendo HR-Campaña: %s", exc)
             return None
@@ -94,7 +96,7 @@ class RubrosRepository:
             logger.warning("[v2] No hay HR parametrización activa en CosmosDB — ramp_up no disponible")
             return None
 
-        campana: List[dict] = active.get("payload", {}).get("campana", [])
+        campana: List[dict] = active.get("payload", {}).get("campana") or active.get("campana", [])
         servicio_lower = str(servicio).strip().lower()
 
         items = sorted(
@@ -117,7 +119,7 @@ class RubrosRepository:
         # Ejemplo: {2026: 0.0, 2027: 0.0555, 2028: 0.0584}
         """
         try:
-            docs, _ = self._store.query(_COLLECTION, {"domain": "op"})
+            docs, _ = self._store.query(_OP_COLLECTION, {"domain": "op"})
         except Exception as exc:
             logger.error("[v2] Error leyendo OP parametrización para IPC: %s", exc)
             return {}
@@ -127,7 +129,7 @@ class RubrosRepository:
             logger.warning("[v2] No hay OP parametrización activa en CosmosDB — IPC no se aplicará")
             return {}
 
-        componente_rows = active.get("payload", {}).get("componente", [])
+        componente_rows = active.get("payload", {}).get("componente") or active.get("componente", [])
         rates: Dict[int, float] = {}
         for row in componente_rows:
             if str(row.get("componente", "")).strip().upper() == "IPC":
@@ -149,17 +151,17 @@ class RubrosRepository:
         tiene múltiples localidades por ciudad (ej. Bogotá/Toberín, Bogotá/Chapinero).
         """
         try:
-            docs, _ = self._store.query(_COLLECTION, {"domain": "hr"})
+            docs, _ = self._store.query(_HR_COLLECTION, {"domain": "hr"})
         except Exception as exc:
             logger.error("[v2] Error leyendo HR parametrización: %s", exc)
             return 0.0
 
         active = next((d for d in docs if d.get("status") == "active"), None)
         if not active:
-            logger.warning("[v2] No hay HR parametrización activa en CosmosDB — costo_fijo_estacion = 0")
+            logger.warning("[v2] No hay HR parametrización activa — costo_fijo_estacion = 0")
             return 0.0
 
-        cf_lista = active.get("payload", {}).get("costo_fijo", [])
+        cf_lista = active.get("payload", {}).get("costo_fijo") or active.get("costo_fijo", [])
         ciudad_lower = str(ciudad).strip().lower()
         localidad_lower = str(localidad).strip().lower()
 

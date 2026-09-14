@@ -241,8 +241,21 @@ def _build_escenario(
                 tarifa_fija = round(ingreso_fijo / fte_safe, 2)
                 tipo_tarifa_fija = "por FTE (sin minutos)"
 
+    # Compute ventas_multicanal early so Resultado/Honorarios tarifa can use "Ingreso por persona"
+    honorariosCobranza = []
+    honorariosTotales = []
+    ventas_multicanal = []
+    pct_variable = perfil_input.get("pct_variable", 0.0)
+    servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
+    if servicio == "cobranzas":
+        honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
+        honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
+    if servicio in ("saco", "ventas multicanal"):
+        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_variable)
+
     # Tarifa Componente Variable (Excel G55)
-    # HME G31=tarifa transaccion, G33=ingreso_variable/fte para Resultados/Honorarios
+    # Excel V2-8 · 'Hoja Maestra Escenarios'!G33
+    # G33 = HME!G31 / VT!C141 = VT!C155 / num_asesores = VT!C160 ("Ingreso por persona" mes 1)
     tarifa_variable: Optional[float] = None
     tipo_tarifa_variable: Optional[str] = None
     volumen_minimo: Optional[float] = None
@@ -254,34 +267,27 @@ def _build_escenario(
                     tarifa_variable = round(ingreso_variable / volumen, 4)
                     tipo_tarifa_variable = "por Transacción"
                     volumen_minimo = volumen
-        elif componente_variable in ("Resultados", "Honorarios"):
-            if _sin_tarifa_hr:
-                # Excel: SAC/Plataformas/Captura de Datos — Honorarios y Resultados no
-                # generan tarifa por unidad (la proporción existe pero no es cobrable independientemente)
-                tarifa_variable = 0
-                tipo_tarifa_variable = None
-            else:
-                commission_rate = float(perfil_input.get("commission_rate", 0) or 0)
-                if commission_rate > 0:
-                    tarifa_variable = round(commission_rate, 4)
-                    tipo_tarifa_variable = "comisión por resultado"
-                else:
-                    # HME G33 = ingreso_variable_mes1 / num_personas
-                    tarifa_variable = round(ingreso_variable / fte_safe, 2)
-                    tipo_tarifa_variable = "por persona (Resultados)"
-                
-    
-    honorariosCobranza = []
-    honorariosTotales = []
-    ventas_multicanal = []
-    pct_variable = perfil_input.get("pct_variable", 0.0)
-    servicio = request_data.get("datos_operativos", {}).get("servicio", "").lower()
-    if(servicio == "cobranzas"):
-        honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
-        honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
-
-    if(servicio == "saco" or servicio == "ventas multicanal"):
-        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_variable)
+        elif componente_variable in ("Resultado", "Resultados", "Honorarios"):
+            # Excel V2-8 · HME!G33 = HME!G31 / num_personas = VT!"Ingreso por persona" mes 1
+            # SACO/Multicanal → ventas_multicanal["Ingreso por persona"].meses[0].valor
+            # Cobranzas       → honorariosTotales["Ingreso por persona"].meses[0].calculado
+            ingreso_por_persona_mes1 = None
+            for c in ventas_multicanal:
+                if c.get("concepto") == "Ingreso por persona":
+                    meses_c = c.get("meses", [])
+                    if meses_c:
+                        ingreso_por_persona_mes1 = meses_c[0].get("valor")
+                    break
+            if ingreso_por_persona_mes1 is None:
+                for c in honorariosTotales:
+                    if c.get("concepto") == "Ingreso por persona":
+                        meses_c = c.get("meses", [])
+                        if meses_c:
+                            ingreso_por_persona_mes1 = meses_c[0].get("calculado")
+                        break
+            if ingreso_por_persona_mes1 is not None:
+                tarifa_variable = round(ingreso_por_persona_mes1, 2)
+                tipo_tarifa_variable = "ingreso por persona (mes 1)"
 
     return {
         "id": str(perfil_input.get("escenario_nombre") or f"Escenario {idx + 1}"),

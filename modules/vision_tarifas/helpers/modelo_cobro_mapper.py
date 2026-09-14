@@ -502,7 +502,9 @@ def _build_cadena(chain: dict, label: str) -> dict:
             "no_payroll": _safe_float(chain.get("no_payroll")),
             "ica": _safe_float(chain.get("ica")),
             "gmf": _safe_float(chain.get("gmf")),
-            "comision_por_administracion": _safe_float(chain.get("comision_administracion")),
+            "comision_por_administracion": _safe_float(_coalesce(
+                chain.get("comision_por_administracion"), chain.get("comision_administracion")
+            )),
             "polizas": _safe_float(chain.get("polizas")),
             "costos_financiacion": _safe_float(chain.get("costos_financiacion")),
             "ingreso_mensual": _safe_float(_coalesce(chain.get("ingreso_mensual"), chain.get("ingreso_bruto"))),
@@ -513,7 +515,9 @@ def _build_cadena(chain: dict, label: str) -> dict:
         "componente_variable": _safe_float(chain.get("componente_variable")),
         "ica": _safe_float(chain.get("ica")),
         "gmf": _safe_float(chain.get("gmf")),
-        "comision_por_administracion": _safe_float(chain.get("comision_administracion")),
+        "comision_por_administracion": _safe_float(_coalesce(
+            chain.get("comision_por_administracion"), chain.get("comision_administracion")
+        )),
         "polizas": _safe_float(chain.get("polizas")),
         "costos_financiacion": _safe_float(chain.get("costos_financiacion")),
         "ingreso_mensual": _safe_float(_coalesce(chain.get("ingreso_mensual"), chain.get("ingreso_bruto"))),
@@ -825,10 +829,11 @@ def _bridge_v2_to_v1(result: dict) -> dict:
             "polizas": costos.get("polizas", 0),
         }
 
-        # Para cadena B y C, el total ya suma los ítems financieros individualmente (ica+gmf+polizas).
-        # costos_financiacion = financiero - (ica+gmf+polizas) = 0 por construcción; no hay doble conteo.
+        # Para cadena B y C, el total suma ítems individualmente (ica+gmf+polizas+comision).
+        # costos_financiacion = financiero - todos_los_ítems_individuales = 0; sin doble conteo.
         _fin_b = costos_b.get("financiero", 0)
-        _fin_b_items = costos_b.get("ica", 0) + costos_b.get("gmf", 0) + costos_b.get("polizas", 0)
+        _fin_b_items = (costos_b.get("ica", 0) + costos_b.get("gmf", 0)
+                        + costos_b.get("polizas", 0) + costos_b.get("comision_por_administracion", 0))
         cadena_b = {
             "componente_fijo": costos_b.get("componente_fijo", 0),
             "componente_variable": costos_b.get("componente_variable", 0),
@@ -842,7 +847,8 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         }
 
         _fin_c = costos_c.get("financiero", 0)
-        _fin_c_items = costos_c.get("ica", 0) + costos_c.get("gmf", 0) + costos_c.get("polizas", 0)
+        _fin_c_items = (costos_c.get("ica", 0) + costos_c.get("gmf", 0)
+                        + costos_c.get("polizas", 0) + costos_c.get("comision_por_administracion", 0))
         cadena_c = {
             "componente_fijo": costos_c.get("componente_fijo", 0),
             "componente_variable": costos_c.get("componente_variable", 0),
