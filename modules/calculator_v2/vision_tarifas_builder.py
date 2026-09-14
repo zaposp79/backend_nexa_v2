@@ -219,7 +219,8 @@ def _build_escenario(
     ingreso_variable = facturacion_total * pct_var
 
     # Desglose de horas logueadas (necesario para tarifas Tiempo / Precio Fijo)
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte)
+    # Usar fte_safe (min=1) para que minutos_loggeados_mes nunca sea 0 cuando fte_canal=0
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_safe)
     _resumen_dcf = desglose_componente_fijo.get("resumen", [])
     _logged_row = next((r for r in _resumen_dcf if r.get("concepto") == "Horas logueadas"), {})
     minutos_loggeados_mes = float(_logged_row.get("minutos", 0) or 0)
@@ -390,9 +391,11 @@ def _build_escenario_total(
             if vol_bc > 0:
                 tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
         elif componente_variable in ("Resultados", "Honorarios"):
-            # HME G275 = ingreso_variable_total / fte_total
-            fte_safe_total = max(fte_total, 1)
-            tarifa_variable = round(ingreso_variable_directa / fte_safe_total, 2)
+            # SAC/Plataformas/Captura de Datos: no generan tarifa variable cobrable
+            if servicio not in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
+                # HME G275 = ingreso_variable_total / fte_total
+                fte_safe_total = max(fte_total, 1)
+                tarifa_variable = round(ingreso_variable_directa / fte_safe_total, 2)
 
     ingreso_variable = facturacion_total * pct_var
     honorariosCobranza = []
