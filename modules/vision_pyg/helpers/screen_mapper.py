@@ -416,6 +416,7 @@ def _build_from_v2_result(
     vision_tarifas = result_doc.get("vision_tarifas")
     
     growth_risk = _growth_risk_by_month(result_doc)
+    tipo_honorario = ((vision_tarifas or {}).get("tipo_honorario") or "").strip().lower()
 
     cobranzas = None
     ventas_multicanal = None
@@ -447,7 +448,8 @@ def _build_from_v2_result(
             comision_ventas = next((x["valor"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
             costo_variable = next((x["valor"] for x in costos_variables_por_mes if x.get("mes") == str(mes_num)), 0)
         if(servicio == "cobranzas"):
-            comision_ventas = next((x["benchmark"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
+            _key = "calculado" if tipo_honorario == "calculado" else "benchmark"
+            comision_ventas = next((x[_key] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
 
         # Inyectar ingreso_variable y ajustar ingreso_neto ANTES de cualquier cálculo.
         # Excel P&G J31: =IF(servicio="Cobranzas", J30, J28+J30)
@@ -512,7 +514,8 @@ def _build_from_v2_result(
         total_comision = sum(item.get("valor", 0) for item in comisiones_por_mes)
         total_costo_variable = sum(item.get("valor", 0) for item in costos_variables_por_mes)
     if(servicio == "cobranzas"):
-        total_comision = sum(item.get("benchmark", 0) for item in comisiones_por_mes)
+        _key = "calculado" if tipo_honorario == "calculado" else "benchmark"
+        total_comision = sum(item.get(_key, 0) for item in comisiones_por_mes)
 
     # Mismo override en totales para que ratios y pct_utilidad_neta sean consistentes.
     totales_vals = dict(totales_vals)

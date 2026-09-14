@@ -1472,6 +1472,7 @@ def build_vision_tarifas(
         ),
         "total": total,
         "desglose_producto_opex": desglose_producto_opex,
+        "tipo_honorario": (request_data.get("cobranzas") or {}).get("tipo_honorario"),
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
             "margen_cadena_b": margen_b,

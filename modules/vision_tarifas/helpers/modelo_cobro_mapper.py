@@ -313,6 +313,30 @@ def _empty_resumen_rows() -> list[dict]:
 # ---------------------------------------------------------------------------
 
 
+def _comisiones_m1(
+    var_label: str,
+    servicio: str,
+    honorarios_totales: list,
+    ventas_multicanal: list,
+    tipo_honorario: str,
+) -> float:
+    _vl = var_label.lower().replace("ó", "o")
+    if _vl not in ("resultado", "honorarios"):
+        return 0.0
+    if servicio == "cobranzas":
+        _key = "calculado" if tipo_honorario == "calculado" else "benchmark"
+        _ing = next((x for x in honorarios_totales if (x.get("concepto") or "") == "Ingresos - Comisiones"), None)
+        if _ing:
+            _first = next(iter(_ing.get("meses") or []), None)
+            return float((_first or {}).get(_key) or 0.0)
+    elif servicio in ("saco", "ventas multicanal"):
+        _com = next((x for x in ventas_multicanal if (x.get("concepto") or "") == "Comisión"), None)
+        if _com:
+            _first = next(iter(_com.get("meses") or []), None)
+            return float((_first or {}).get("valor") or 0.0)
+    return 0.0
+
+
 def _build_modelo_cobro_list(
     scenario_map: dict,
     scenario_sources: dict,
@@ -321,12 +345,24 @@ def _build_modelo_cobro_list(
     missing_fields: list,
 ) -> list[dict]:
     items: list[dict] = []
+    servicio = (result.get("servicio") or "").lower()
+    tipo_honorario = (vt_data.get("tipo_honorario") or "").strip().lower()
 
     for i in range(1, 6):
         scenario_id = f"escenario_{i}"
         if scenario_id in scenario_map:
             entry = scenario_map[scenario_id]
             source = scenario_sources.get(scenario_id) or {}
+
+            tvar_detail = dict(entry.get("tarifa_componente_variable_detail") or {})
+            tvar_detail["comisiones_mi"] = _comisiones_m1(
+                entry.get("componente_variable") or "",
+                servicio,
+                source.get("honorarios_totales") or [],
+                source.get("ventas_multicanal") or [],
+                tipo_honorario,
+            )
+
             items.append({
                 "escenario": str(i),
                 "modalidad": entry.get("modalidad"),
@@ -347,7 +383,7 @@ def _build_modelo_cobro_list(
                 "totales": entry.get("totales"),
                 "reglas_negocio": entry.get("reglas_negocio"),
                 "tarifa_componente_fijo": entry.get("tarifa_componente_fijo_detail"),
-                "tarifa_componente_variable": entry.get("tarifa_componente_variable_detail"),
+                "tarifa_componente_variable": tvar_detail,
             })
         else:
             items.append(_empty_modelo_cobro_item(str(i)))
@@ -677,13 +713,14 @@ def _build_tarifa_fijo(meta: dict, tarifas: dict, fixed_component: dict, channel
         channel.get("componente_fijo"),
     )
     is_fte = fijo_label and fijo_label in ("FTE", "fte", "Fijo FTE")
+    is_tiempo = "tiempo" in (fijo_label or "").lower()
 
     return {
         "ingreso_componente_fijo": _safe_float(tarifas.get("ingreso_componente_fijo")),
         "tarifa_principal_label": "Tarifa por FTE" if is_fte else "Tarifa por minuto logueado",
         "tarifa_principal": _safe_float(tarifas.get("tarifa_por_fte")),
         "tarifa_secundaria_label": "Tarifa por minuto pagado" if is_fte else "Tarifa por minuto pagado",
-        "tarifa_secundaria": _safe_float(tarifas.get("tarifa_hora_pagada")),
+        "tarifa_secundaria": _safe_float(tarifas.get("tarifa_hora_pagada")) if is_tiempo else 0.0,
         "tarifa_por_fte": _safe_float(tarifas.get("tarifa_por_fte")),
         "tarifa_por_minuto_logrado": _safe_float(_coalesce(
             tarifas.get("tarifa_hora_loggeada"), tarifas.get("tarifa_por_minuto_loggeado")

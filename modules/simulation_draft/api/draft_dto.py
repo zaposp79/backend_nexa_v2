@@ -555,6 +555,7 @@ class RangoCartera(BaseModel):
 class Cobranzas(BaseModel):
     model_config = {"extra": "allow"}
     numero_de_asesores: Optional[int] = None
+    tipo_honorario: Optional[str] = None
     rangos_de_cartera: Optional[List[RangoCartera]] = None
     porcentaje_considerando_caidas: Optional[List[MesValor]] = None
 
