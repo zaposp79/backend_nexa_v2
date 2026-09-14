@@ -254,9 +254,14 @@ class NominaCalculator:
             float(p.get("comision_mensual", 0)) * float(p.get("fte", 0))
             for p in perfiles
         )
-        # Comisiones brutas de estructura (cantidad pro-rateada)
+        pct_rotacion = float(self._req.get("datos_operativos", {}).get("pct_rotacion", 0.0))
+
+        # Comisiones brutas de estructura (cantidad pro-rateada, mismo ajuste que desglose_por_cargo)
         for fila in ratios_filas:
             if not fila.get("incluido", False):
+                continue
+            # Agente Básico 1 (tipo="Agente") ya se contabiliza por FTE arriba — evitar doble conteo.
+            if fila.get("tipo", "").lower() == "agente":
                 continue
             cargo_data = self._resolver_cargo(fila, detalle_map)
             if not cargo_data:
@@ -267,6 +272,10 @@ class NominaCalculator:
             cantidad = self._calcular_cantidad(fila, perfiles)
             if cantidad <= 0:
                 continue
+            nombre = fila.get("position_name") or fila.get("position_id", "")
+            # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
+            if "otaci" in nombre.lower() and "(" in nombre:
+                cantidad *= pct_rotacion
             total += comision * cantidad
         return total
 
