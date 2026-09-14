@@ -21,6 +21,13 @@ from nexa_engine.modules.parametrizacion.services.resolver import (
 
 _resolver = ParametrizationResolver()
 
+# Servicios donde Honorarios/Resultados NO generan tarifa variable cobrable (valor = 0).
+# Fuente: Excel 'Hoja Maestra Escenarios' — la tarifa existe como proporción del ingreso
+# pero no tiene una unidad de cobro por transacción ni comisión externa medible.
+# SACO, Ventas Multicanal y Cobranzas SÍ generan tarifa variable (comisión externa real).
+_SERVICIOS_SIN_TARIFA_VARIABLE_HR: frozenset = frozenset({
+    "sac", "plataformas", "captura de datos",
+})
 
 
 # ── helpers internos ───────────────────────────────────────────────────────────
@@ -133,6 +140,9 @@ def _build_escenario(
     fte = int(float(perfil_input.get("fte", 0)))
     fte_safe = max(fte, 1)
 
+    _servicio_req = str((request_data.get("datos_operativos") or {}).get("servicio") or "").strip().lower()
+    _sin_tarifa_hr = _servicio_req in _SERVICIOS_SIN_TARIFA_VARIABLE_HR
+
     modelo_cobro = str(perfil_input.get("modelo_cobro", "Fijo"))
     pct_var = float(perfil_input.get("pct_variable", 0.0))
     pct_fijo = round(1.0 - pct_var, 6)
@@ -244,14 +254,20 @@ def _build_escenario(
                     tipo_tarifa_variable = "por Transacción"
                     volumen_minimo = volumen
         elif componente_variable in ("Resultados", "Honorarios"):
-            commission_rate = float(perfil_input.get("commission_rate", 0) or 0)
-            if commission_rate > 0:
-                tarifa_variable = round(commission_rate, 4)
-                tipo_tarifa_variable = "comisión por resultado"
+            if _sin_tarifa_hr:
+                # Excel: SAC/Plataformas/Captura de Datos — Honorarios y Resultados no
+                # generan tarifa por unidad (la proporción existe pero no es cobrable independientemente)
+                tarifa_variable = 0
+                tipo_tarifa_variable = None
             else:
-                # HME G33 = ingreso_variable_mes1 / num_personas
-                tarifa_variable = round(ingreso_variable / fte_safe, 2)
-                tipo_tarifa_variable = "por persona (Resultados)"
+                commission_rate = float(perfil_input.get("commission_rate", 0) or 0)
+                if commission_rate > 0:
+                    tarifa_variable = round(commission_rate, 4)
+                    tipo_tarifa_variable = "comisión por resultado"
+                else:
+                    # HME G33 = ingreso_variable_mes1 / num_personas
+                    tarifa_variable = round(ingreso_variable / fte_safe, 2)
+                    tipo_tarifa_variable = "por persona (Resultados)"
                 
     
     honorariosCobranza = []

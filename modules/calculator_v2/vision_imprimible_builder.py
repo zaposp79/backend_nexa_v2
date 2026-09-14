@@ -246,7 +246,7 @@ def _build_escenarios(
     Fallback: perfiles Cadena A + CTS cuando vision_tarifas no está disponible.
     """
     _servicio = str(_datos_op(request_data).get("servicio") or "").strip().lower()
-    _is_sac = _servicio == "sac"
+    _sin_tarifa_hr = _servicio in {"sac", "plataformas", "captura de datos"}
 
     # ── Cuando hay vision_tarifas: usar sus escenarios como fuente principal ──
     if vision_tarifas_escenarios is not None:
@@ -262,8 +262,8 @@ def _build_escenarios(
                 facturacion = float(vt_esc.get("facturacion_mensual") or 0.0)
                 comp_variable = vt_esc.get("componente_variable")
                 tarifa_variable = tv.get("valor")
-                # Regla SAC: Honorarios no genera tarifa variable cobrable
-                if _is_sac and str(comp_variable or "").lower() == "honorarios":
+                # SAC/Plataformas/Captura de Datos: Honorarios y Resultados → tarifa_variable = 0
+                if _sin_tarifa_hr and str(comp_variable or "").lower() in ("honorarios", "resultados"):
                     tarifa_variable = 0
                 all_5.append({
                     "id": f"Escenario {n}",
@@ -691,8 +691,9 @@ def build_vision_imprimible(
         if raw_total or raw_esc_total:
             _comp_var_total = raw_esc_total.get("componente_variable")
             _tarifa_variable_total = raw_esc_total.get("tarifa_componente_variable")
-            # Regla SAC: Honorarios no genera tarifa variable cobrable (aplica al total)
-            if str(service or "").lower() == "sac" and str(_comp_var_total or "").lower() == "honorarios":
+            # SAC/Plataformas/Captura de Datos: Honorarios y Resultados → tarifa_variable = 0
+            _sin_tarifa_hr_total = str(service or "").strip().lower() in {"sac", "plataformas", "captura de datos"}
+            if _sin_tarifa_hr_total and str(_comp_var_total or "").lower() in ("honorarios", "resultados"):
                 _tarifa_variable_total = 0
             vt_total = {
                 "fte": raw_total.get("fte_total"),
