@@ -100,6 +100,61 @@ def _inject_med_seg_costs(request_data: Dict[str, Any], param_store: DocumentSto
         logger.warning("[v2] No se pudieron cargar costos HR-Med-Seg (%s), el motor usará defaults", exc)
 
 
+def _inject_nomina_base_params(request_data: Dict[str, Any], param_store: DocumentStore) -> None:
+    """Inyecta smlv, aux_transporte y costo_empresa_sena desde la parametrización HR activa.
+
+    Lee salario_minimo y auxilio_transporte de HR-SalarioBasico (via get_nomina_laboral_params),
+    obtiene el salario del cargo "Aprendiz SENA" de HR-Nomina, y precomputa costo_empresa_sena
+    usando los valores parametrizados en lugar del constante hardcodeado.
+    Solo inyecta si los campos no vienen ya explícitos en el request.
+    """
+    try:
+        from nexa_engine.modules.parametrizacion.hr.repositories.hr_active_parametrization_repository import (
+            HRActiveParametrizationRepository,
+        )
+        from nexa_engine.modules.parametrizacion.services.resolver import ParametrizationResolver
+        from nexa_engine.modules.parametrizacion.repositories.infrastructure_parametrization_repository import (
+            InfrastructureParametrizationRepository,
+        )
+        from nexa_engine.modules.calculator_v2.nomina_calculator import calcular_costo_empresa_sena
+
+        hr_repo = HRActiveParametrizationRepository(param_store)
+        resolver = ParametrizationResolver(hr_repo=hr_repo)
+        infra = InfrastructureParametrizationRepository(resolver)
+
+        nomina_params = infra.get_nomina_laboral_params()
+        smlv = float(nomina_params.get("salario_minimo") or 0.0)
+        aux_transporte = float(nomina_params.get("auxilio_transporte") or 0.0)
+
+        if smlv <= 0 or aux_transporte <= 0:
+            return
+
+        datos_op = request_data.setdefault("datos_operativos", {})
+
+        if datos_op.get("smlv") is None:
+            datos_op["smlv"] = round(smlv, 4)
+        if datos_op.get("aux_transporte") is None:
+            datos_op["aux_transporte"] = round(aux_transporte, 4)
+
+        if not datos_op.get("costo_empresa_sena"):
+            hr_data = hr_repo.get_active()
+            sena_row = next(
+                (n for n in hr_data.nomina if n.cargo.strip().lower() == "aprendiz sena"),
+                None,
+            )
+            if sena_row and sena_row.salario > 0:
+                costo = calcular_costo_empresa_sena(
+                    sena_row.salario,
+                    smlv=smlv,
+                    aux_transporte=aux_transporte,
+                )
+                datos_op["costo_empresa_sena"] = round(costo, 4)
+                logger.info("[v2] costo_empresa_sena inyectado desde HR: %.2f (smlv=%.0f, aux=%.0f)",
+                            costo, smlv, aux_transporte)
+    except Exception as exc:
+        logger.warning("[v2] No se pudieron cargar params nómina base (%s), el motor usará defaults", exc)
+
+
 def handle_calculate_v2(
     request_data: Dict[str, Any],
     param_store: DocumentStore,
@@ -110,6 +165,7 @@ def handle_calculate_v2(
     """Ejecuta el motor v2, persiste en Cosmos y retorna respuesta simple."""
 
     _inject_med_seg_costs(request_data, param_store)
+    _inject_nomina_base_params(request_data, param_store)
 
     rubros_repo = RubrosRepository(param_store)
     engine = MotorDeReglas(rubros_repo)

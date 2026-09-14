@@ -80,6 +80,7 @@ _FACTOR_EXTRA_NOCTURNO = 1.75
 def calcular_costo_empresa_sena(
     salario_base: float,
     smlv: float = _SMLV_DEFAULT,
+    aux_transporte: float = _AUX_TRANSPORTE,
 ) -> float:
     """Costo mensual para Aprendiz SENA e Inclusión (sin pensión, ARL, salud, dotaciones).
 
@@ -88,8 +89,8 @@ def calcular_costo_empresa_sena(
     """
     if salario_base <= 0:
         return 0.0
-    aux_transporte = _AUX_TRANSPORTE if 0 < salario_base < 2 * smlv else 0.0
-    t_haberes = salario_base + aux_transporte
+    aux = aux_transporte if 0 < salario_base < 2 * smlv else 0.0
+    t_haberes = salario_base + aux
     base_p = salario_base  # (H - G) = solo salario, sin aux transporte
 
     # Parafiscales: solo caja (O=ICBF+Sena también = 0 para SENA apprentices)
