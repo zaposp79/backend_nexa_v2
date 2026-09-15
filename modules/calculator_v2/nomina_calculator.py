@@ -338,8 +338,9 @@ class NominaCalculator:
         if isinstance(_cplx, dict):
             _cplx = _cplx.get("valor") or ""
         complejidad_str = str(_cplx).strip().lower()
-        # Excel CCA!B101: "Alta"→1.0, "Media"→0.5 (confirmado), "Baja"→0.25
-        complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.5)
+        # Excel V2-8 · NL!A66: IFS(CCA!B101="Baja",20%,"Media",50%,"Alta",50%)
+        # Default 0.20 (Baja) cuando null — coincide con el comportamiento estándar del Excel.
+        complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.20)
 
         # Cantidad directa de cargos adicionales (CCA!E27/E31/E35) sumada de todos los perfiles.
         cargos_add_hc = sum(
@@ -470,7 +471,9 @@ class NominaCalculator:
         if isinstance(_cplx, dict):
             _cplx = _cplx.get("valor") or ""
         complejidad_str = str(_cplx).strip().lower()
-        complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.5)
+        # Excel V2-8 · NL!A66: IFS(CCA!B101="Baja",20%,"Media",50%,"Alta",50%)
+        # Default 0.20 (Baja) cuando null — coincide con el comportamiento estándar del Excel.
+        complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.20)
 
         sena_unit_cost = float(datos_op.get("costo_empresa_sena") or 0.0)
 
