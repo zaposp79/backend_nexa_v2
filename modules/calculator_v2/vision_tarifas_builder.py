@@ -413,6 +413,9 @@ def _build_escenario_total(
         honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
         honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
 
+    if servicio in ("saco", "ventas multicanal"):
+        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
+
 
     # Tarifa Variable — Excel G273/G275 por tipo de componente
     tarifa_variable: float = 0.0
@@ -435,9 +438,9 @@ def _build_escenario_total(
                             if meses_c:
                                 ingreso_por_persona_mes1 = meses_c[0].get("valor")
                             break
-                    if ingreso_por_persona_mes1 is not None:
-                        tarifa_variable = round(ingreso_por_persona_mes1, 2)
-                        tipo_tarifa_variable = "ingreso por persona (mes 1)"
+                if ingreso_por_persona_mes1 is not None:
+                    tarifa_variable = round(ingreso_por_persona_mes1, 2)
+                    tipo_tarifa_variable = "ingreso por persona (mes 1)"
             else:
                 keyHonorario = request_data.get("cobranzas", {}).get("tipo_honorario","").lower()
                 ingreso_por_persona_mes1 = None
