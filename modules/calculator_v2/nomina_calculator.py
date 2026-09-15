@@ -460,14 +460,24 @@ class NominaCalculator:
 
         # ── Especialista de Proyectos ─────────────────────────────────────────
         # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
-        # sum(pct_i) = 1 → total = costo_empresa × complejidad × 3 / duracion_meses
+        # Si "personalizado" > 0 en por_perfil, se usa ese valor en lugar de pct_i=fte_i/total_fte.
+        # El total es sum(factor_i): cuando no hay personalizado, sum(pct_i)=1; con personalizado,
+        # puede diferir si el usuario deliberadamente ingresa valores distintos a la distribución FTE.
         if fila_especialista is not None:
             nombre_esp = fila_especialista.get("position_name") or fila_especialista.get("position_id", "")
             if fila_especialista.get("incluido", False) and total_fte > 0:
                 cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
                 if cargo_data:
                     costo_esp = self._get_costo_empresa(cargo_data)
-                    result[nombre_esp] = costo_esp * complejidad_factor * 3.0 / duracion_meses
+                    # Sumar los personalizado de todos los perfiles del Esp
+                    sum_personalizado = 0.0
+                    for pr in fila_especialista.get("por_perfil", []):
+                        try:
+                            sum_personalizado += float(pr.get("personalizado") or 0)
+                        except (TypeError, ValueError):
+                            pass
+                    factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
+                    result[nombre_esp] = costo_esp * complejidad_factor * 3.0 * factor_total / duracion_meses
 
         return result
 
@@ -682,7 +692,8 @@ class NominaCalculator:
 
         # ── Especialista de Proyectos (por perfil) ────────────────────────────
         # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
-        # pct_perfil = fte_i / total_fte (proporción de agentes de este perfil)
+        # Si "personalizado" > 0 en por_perfil, se usa ese valor como factor del perfil
+        # en lugar de pct_i = fte_i / total_fte.
         if fila_especialista is not None:
             nombre_esp = fila_especialista.get("position_name") or fila_especialista.get("position_id", "")
             costo_unit_esp = 0.0
@@ -691,6 +702,16 @@ class NominaCalculator:
                 if cargo_data:
                     costo_unit_esp = self._get_costo_empresa(cargo_data)
 
+            # Construir mapa de personalizado por índice de perfil
+            personalizado_pp: Dict[int, float] = {}
+            for pr in fila_especialista.get("por_perfil", []):
+                idx = pr.get("indice_perfil", 0)
+                try:
+                    personalizado_pp[idx] = float(pr.get("personalizado") or 0)
+                except (TypeError, ValueError):
+                    personalizado_pp[idx] = 0.0
+            hay_personalizado = any(v > 0 for v in personalizado_pp.values())
+
             for i, perfil in enumerate(perfiles):
                 perfil_nombre = perfil.get("nombre", f"perfil{i+1}")
                 if perfil_nombre not in result:
@@ -698,9 +719,12 @@ class NominaCalculator:
                 if costo_unit_esp <= 0 or total_fte <= 0:
                     result[perfil_nombre].setdefault(nombre_esp, 0.0)
                     continue
-                fte_i = float(perfil.get("fte", 0))
-                pct_i = fte_i / total_fte
-                costo_i = costo_unit_esp * complejidad_factor * 3.0 * pct_i / duracion_meses
+                if hay_personalizado:
+                    factor_i = personalizado_pp.get(i, 0.0)
+                else:
+                    fte_i = float(perfil.get("fte", 0))
+                    factor_i = fte_i / total_fte
+                costo_i = costo_unit_esp * complejidad_factor * 3.0 * factor_i / duracion_meses
                 result[perfil_nombre][nombre_esp] = result[perfil_nombre].get(nombre_esp, 0.0) + costo_i
 
         return result
