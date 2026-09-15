@@ -18,6 +18,7 @@ Resolución de dependencia circular ICA/GMF ↔ ingreso_neto:
 from __future__ import annotations
 
 import logging
+import re
 import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -130,6 +131,37 @@ def _calendar_year_month(fecha_inicio: datetime, mes_numero: int) -> Tuple[int, 
     year = fecha_inicio.year + (total_months - 1) // 12
     month = ((total_months - 1) % 12) + 1
     return year, month
+
+
+def _normalize_comp_name(comp: str) -> str:
+    """Normaliza el nombre del componente de indexación para matching UI ↔ OP.
+
+    Permite que '70% SMMLV – 30% IPC' (UI con em-dash) sea igual a
+    '70% SMMLV - 30% IPC' (OP con guión simple) o '70% SMMLV\\n30% IPC' (Excel).
+    """
+    s = re.sub(r"[\n\r]+", " ", comp.strip())
+    s = re.sub(r"\s*[-–—]\s*", " ", s)
+    s = re.sub(r"\s+", " ", s).strip()
+    return s.upper()
+
+
+def _select_rates(
+    all_rates: Dict[str, Dict[int, float]],
+    comp: str,
+) -> Dict[int, float]:
+    """Devuelve las tasas anuales del componente de indexación indicado.
+
+    Busca en all_rates usando _normalize_comp_name para tolerar variaciones de
+    espaciado, guiones y capitalización entre el valor del request y los keys del OP.
+    Retorna {} si el componente no tiene tasas (ej. 'Tarifas definidas', 'Negociación').
+    """
+    if not comp:
+        return {}
+    target = _normalize_comp_name(comp)
+    for key, rates in all_rates.items():
+        if _normalize_comp_name(key) == target:
+            return rates
+    return {}
 
 
 def _compute_ipc_factor(
@@ -279,13 +311,16 @@ class MotorDeReglas:
 
         # ── IPC indexación anual ────────────────────────────────────────────
         # Excel V2-8: 'Panel de Control General'!L7-L10
-        # Tasas leídas desde OP-Componente en CosmosDB (domain='op').
-        ipc_rates = self._repo.get_ipc_rates_op()
+        # Tasas cargadas desde OP-Componente (todos los tipos: IPC, SMLV, 70%SMMLV+30%IPC…).
+        # Se seleccionan las tasas específicas para comp_humano y comp_tecnologico por separado.
+        _all_ipc_rates = self._repo.get_all_ipc_rates_op()
         indexacion = request_data.get("volumetria", {}).get("indexacion", {})
-        comp_humano = str(indexacion.get("componente_humano", "")).upper()
-        comp_tecnologico = str(indexacion.get("componente_tecnologico", "")).upper()
+        comp_humano = str(indexacion.get("componente_humano", ""))
+        comp_tecnologico = str(indexacion.get("componente_tecnologico", ""))
+        rates_h = _select_rates(_all_ipc_rates, comp_humano)
+        rates_t = _select_rates(_all_ipc_rates, comp_tecnologico)
         mes_ajuste_ipc = int(indexacion.get("mes_aplicacion", 1))
-        # Excel V2-8: 'Panel de Control General'!C21 / L8 — si False, tarifa no escala con IPC
+        # Excel V2-8: 'Panel de Control General'!L6 — si False, tarifa no escala con IPC
         aplica_indexacion_tarifa = bool(indexacion.get("aplica_indexacion_tarifa", True))
 
         fecha_inicio: Optional[datetime] = None
@@ -293,16 +328,18 @@ class MotorDeReglas:
         try:
             fecha_inicio = datetime.strptime(fecha_inicio_str[:10], "%Y-%m-%d")
         except Exception:
-            logger.warning("[motor-reglas] sim=%s fecha_inicio inválida '%s' — IPC no se aplicará", simulation_id, fecha_inicio_str)
+            logger.warning("[motor-reglas] sim=%s fecha_inicio inválida '%s' — indexación no se aplicará", simulation_id, fecha_inicio_str)
 
-        ipc_activo = bool(
-            fecha_inicio and ipc_rates and (comp_humano == "IPC" or comp_tecnologico == "IPC")
-        )
+        ipc_h_activo = bool(fecha_inicio and rates_h)
+        ipc_t_activo = bool(fecha_inicio and rates_t)
+        ipc_activo = ipc_h_activo or ipc_t_activo  # para compatibilidad con log
 
         logger.info(
-            "[motor-reglas] sim=%s nomina=%.0f no_payroll=%.0f meses=%d ramp_src=%s ipc_activo=%s rates=%s",
+            "[motor-reglas] sim=%s nomina=%.0f no_payroll=%.0f meses=%d ramp_src=%s "
+            "comp_h=%s ipc_h=%s comp_t=%s ipc_t=%s",
             simulation_id, nomina_fija, no_payroll_fijo, duracion_meses,
-            "cosmos" if ramp_up_campana else "request", ipc_activo, ipc_rates,
+            "cosmos" if ramp_up_campana else "request",
+            comp_humano, ipc_h_activo, comp_tecnologico, ipc_t_activo,
         )
 
         resultados_por_mes: List[ResultadoMes] = []
@@ -314,15 +351,22 @@ class MotorDeReglas:
         _ctx_base = build_base_context(request_data, 1, ramp_up_override=ramp_up_campana)
         # HM usa costo promedio con IPC solo si la tarifa está indexada.
         # Si aplica_indexacion_tarifa=False, tarifa es fija → HM se basa en costos del mes 1.
-        # Excel V2-8: 'Hoja Maestra'!C258 — solo promedia cuando la tarifa escala con IPC.
-        _avg_ipc = (
+        # Factores promedio IPC para la Hoja Maestra — cada componente usa sus propias tasas.
+        # Excel V2-8: 'Hoja Maestra'!C258 — promedio del factor acumulado sobre duracion_meses.
+        _avg_ipc_h = (
             _compute_avg_ipc_factor_single(
-                fecha_inicio, duracion_meses, mes_ajuste_ipc, ipc_rates, ipc_activo
+                fecha_inicio, duracion_meses, mes_ajuste_ipc, rates_h, ipc_h_activo
             )
             if aplica_indexacion_tarifa else 1.0
         )
-        _avg_nomina = nomina_fija * (_avg_ipc if comp_humano == "IPC" else 1.0)
-        _avg_no_payroll = no_payroll_fijo * (_avg_ipc if comp_tecnologico == "IPC" else 1.0)
+        _avg_ipc_t = (
+            _compute_avg_ipc_factor_single(
+                fecha_inicio, duracion_meses, mes_ajuste_ipc, rates_t, ipc_t_activo
+            )
+            if aplica_indexacion_tarifa else 1.0
+        )
+        _avg_nomina = nomina_fija * _avg_ipc_h
+        _avg_no_payroll = no_payroll_fijo * _avg_ipc_t
         # Excel V2-8: 'Hoja Maestra Escenarios'!C259 promedia el costo de cap_ini sobre todos los
         # meses del deal (cap_ini_total / duracion_meses). La base de pricing incluye este costo
         # amortizado para que la tarifa cubra la capacitación inicial distribuida en el contrato.
@@ -468,31 +512,40 @@ class MotorDeReglas:
             ctx = build_base_context(request_data, mes, ramp_up_override=ramp_up_campana)
             ramp_up = ctx["ramp_up_mes"]
 
-            # Factor IPC acumulado del NL para este mes (Tasas "Aumento Acumulado")
-            ipc_factor = (
-                _compute_ipc_factor(fecha_inicio, mes, mes_ajuste_ipc, ipc_rates)
-                if ipc_activo else 1.0
+            # Factores IPC acumulados del NL para este mes (Tasas "Aumento Acumulado").
+            # Excel V2-8: cada componente usa su propia fila de tasas en 'Tasas, TRM, Polizas'.
+            ipc_factor_h = (
+                _compute_ipc_factor(fecha_inicio, mes, mes_ajuste_ipc, rates_h)
+                if ipc_h_activo else 1.0
             )
-            # Factor IPC incremental del P&G para este mes (Tasas "Aumento x Año")
-            # Excel V2-8: costos P&G = costo_NL × (1 + IPC_incremental); doble aplicación
-            ipc_incremental = (
-                _compute_ipc_incremental(fecha_inicio, mes, mes_ajuste_ipc, ipc_rates)
-                if ipc_activo else 0.0
+            ipc_factor_t = (
+                _compute_ipc_factor(fecha_inicio, mes, mes_ajuste_ipc, rates_t)
+                if ipc_t_activo else 1.0
             )
+            # Factores IPC incrementales del P&G para este mes (Tasas "Aumento x Año").
+            ipc_incremental_h = (
+                _compute_ipc_incremental(fecha_inicio, mes, mes_ajuste_ipc, rates_h)
+                if ipc_h_activo else 0.0
+            )
+            ipc_incremental_t = (
+                _compute_ipc_incremental(fecha_inicio, mes, mes_ajuste_ipc, rates_t)
+                if ipc_t_activo else 0.0
+            )
+            # Mantener ipc_incremental unificado para compatibilidad con ingresos (tarifa Cadena A).
+            # La tarifa indexa según comp_humano (Cadena A es operación humana).
+            ipc_incremental = ipc_incremental_h
 
             # Factor de escala para costos:
             # Excel V2-8: 'Tasas, TRM, Polizas' — dos modos según indexación de tarifa:
-            # - aplica_indexacion_tarifa=True  → doble IPC: NL acumulado × P&G incremental
-            #   Aumento Acumulado ≠ 1 → NL ya tiene IPC; P&G aplica tasa del año encima.
+            # - aplica_indexacion_tarifa=True  → doble: NL acumulado × P&G incremental
             # - aplica_indexacion_tarifa=False → solo "Aumento x Año" del año calendario.
-            #   Aumento Acumulado = 1 (Excel fuerza 100%) → NL sin IPC; P&G aplica tasa directa.
-            #   NO acumular ipc_factor: las tasas en ipc_rates son ya las tasas por año (no base).
+            #   Aumento Acumulado = 1 → NL sin acumulado; P&G aplica tasa del año directa.
             if aplica_indexacion_tarifa:
-                double_h = ipc_factor * (1.0 + ipc_incremental) if comp_humano == "IPC" else 1.0
-                double_t = ipc_factor * (1.0 + ipc_incremental) if comp_tecnologico == "IPC" else 1.0
+                double_h = ipc_factor_h * (1.0 + ipc_incremental_h)
+                double_t = ipc_factor_t * (1.0 + ipc_incremental_t)
             else:
-                double_h = (1.0 + ipc_incremental) if comp_humano == "IPC" else 1.0
-                double_t = (1.0 + ipc_incremental) if comp_tecnologico == "IPC" else 1.0
+                double_h = 1.0 + ipc_incremental_h
+                double_t = 1.0 + ipc_incremental_t
             nomina_mes = nomina_fija * double_h
             no_payroll_mes = no_payroll_fijo * double_t
             # Excel V2-8: 'Nomina Loaded'!E234:E235 amortiza cap_inicial en todos los meses
@@ -715,8 +768,8 @@ class MotorDeReglas:
                 ctx["costos_financiacion_mensual"] = 0.0
 
             # Actualiza factores IPC del mes actual (se usarán como base del mes siguiente).
-            _prev_h_factor = ipc_factor if (comp_humano == "IPC" and ipc_activo) else 1.0
-            _prev_t_factor = ipc_factor if (comp_tecnologico == "IPC" and ipc_activo) else 1.0
+            _prev_h_factor = ipc_factor_h if ipc_h_activo else 1.0
+            _prev_t_factor = ipc_factor_t if ipc_t_activo else 1.0
 
             # Evaluar rubros en orden topológico
             for rubro in rubros:
@@ -738,11 +791,11 @@ class MotorDeReglas:
             duracion_meses=duracion_meses,
             fecha_inicio=fecha_inicio,
             mes_ajuste_ipc=mes_ajuste_ipc,
-            ipc_rates=ipc_rates,
-            ipc_activo=ipc_activo,
+            rates_h=rates_h,
+            rates_t=rates_t,
+            ipc_h_activo=ipc_h_activo,
+            ipc_t_activo=ipc_t_activo,
             aplica_indexacion_tarifa=aplica_indexacion_tarifa,
-            comp_humano=comp_humano,
-            comp_tecnologico=comp_tecnologico,
             nomina_fija=nomina_fija,
             no_payroll_fijo=no_payroll_fijo,
             ctx_base=_ctx_base,
@@ -755,13 +808,20 @@ class MotorDeReglas:
         # _prev_h/_t_factor al salir del loop = ipc_factor del último mes (base de CT[N]).
         # PCF tiene una columna adicional más allá de duracion_meses que se suma a totales.
         if financiacion_activa:
-            ipc_incr_n1 = (
-                _compute_ipc_incremental(fecha_inicio, duracion_meses + 1, mes_ajuste_ipc, ipc_rates)
-                if ipc_activo else 0.0
+            ipc_incr_h_n1 = (
+                _compute_ipc_incremental(fecha_inicio, duracion_meses + 1, mes_ajuste_ipc, rates_h)
+                if ipc_h_activo else 0.0
+            )
+            ipc_incr_t_n1 = (
+                _compute_ipc_incremental(fecha_inicio, duracion_meses + 1, mes_ajuste_ipc, rates_t)
+                if ipc_t_activo else 0.0
             )
             _h_base_n = nomina_fija * _prev_h_factor
             _t_base_n = no_payroll_fijo * _prev_t_factor
-            extra_fin = (_h_base_n + _t_base_n) * meses_cc * tasa_interes * (1.0 + ipc_incr_n1)
+            extra_fin = (
+                _h_base_n * meses_cc * tasa_interes * (1.0 + ipc_incr_h_n1)
+                + _t_base_n * meses_cc * tasa_interes * (1.0 + ipc_incr_t_n1)
+            )
             totales["costos_financiacion_mensual"] = (
                 totales.get("costos_financiacion_mensual", 0.0) + extra_fin
             )
@@ -1025,11 +1085,11 @@ class MotorDeReglas:
         duracion_meses: int,
         fecha_inicio: Optional[datetime],
         mes_ajuste_ipc: int,
-        ipc_rates: Dict[int, float],
-        ipc_activo: bool,
+        rates_h: Dict[int, float],
+        rates_t: Dict[int, float],
+        ipc_h_activo: bool,
+        ipc_t_activo: bool,
         aplica_indexacion_tarifa: bool,
-        comp_humano: str,
-        comp_tecnologico: str,
         nomina_fija: float,
         no_payroll_fijo: float,
         ctx_base: Dict[str, Any],
@@ -1070,18 +1130,29 @@ class MotorDeReglas:
             if tasa_pol_ext <= 0:
                 continue
 
-            # IPC del mes de extensión — misma lógica que el loop del contrato
-            ipc_factor = (
-                _compute_ipc_factor(fecha_inicio, mes_ext, mes_ajuste_ipc, ipc_rates)
-                if ipc_activo else 1.0
+            # IPC del mes de extensión — misma lógica que el loop del contrato, por componente.
+            ipc_factor_h = (
+                _compute_ipc_factor(fecha_inicio, mes_ext, mes_ajuste_ipc, rates_h)
+                if ipc_h_activo else 1.0
             )
-            ipc_incr = (
-                _compute_ipc_incremental(fecha_inicio, mes_ext, mes_ajuste_ipc, ipc_rates)
-                if ipc_activo else 0.0
+            ipc_factor_t = (
+                _compute_ipc_factor(fecha_inicio, mes_ext, mes_ajuste_ipc, rates_t)
+                if ipc_t_activo else 1.0
             )
-            extra_ipc = (1.0 + ipc_incr) if aplica_indexacion_tarifa else 1.0
-            double_h = ipc_factor * extra_ipc if comp_humano == "IPC" else 1.0
-            double_t = ipc_factor * extra_ipc if comp_tecnologico == "IPC" else 1.0
+            ipc_incr_h = (
+                _compute_ipc_incremental(fecha_inicio, mes_ext, mes_ajuste_ipc, rates_h)
+                if ipc_h_activo else 0.0
+            )
+            ipc_incr_t = (
+                _compute_ipc_incremental(fecha_inicio, mes_ext, mes_ajuste_ipc, rates_t)
+                if ipc_t_activo else 0.0
+            )
+            if aplica_indexacion_tarifa:
+                double_h = ipc_factor_h * (1.0 + ipc_incr_h)
+                double_t = ipc_factor_t * (1.0 + ipc_incr_t)
+            else:
+                double_h = 1.0 + ipc_incr_h
+                double_t = 1.0 + ipc_incr_t
 
             nomina_ext    = nomina_fija      * double_h
             nopayroll_ext = no_payroll_fijo  * double_t

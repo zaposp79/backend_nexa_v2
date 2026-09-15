@@ -118,29 +118,38 @@ class RubrosRepository:
         # Filtra filas de OP-Componente donde Componente='IPC' y retorna {año: tasa}.
         # Ejemplo: {2026: 0.0, 2027: 0.0555, 2028: 0.0584}
         """
+        all_rates = self.get_all_ipc_rates_op()
+        return all_rates.get("IPC", {})
+
+    def get_all_ipc_rates_op(self) -> Dict[str, Dict[int, float]]:
+        """Lee tasas de todos los componentes de indexación desde OP-Componente en CosmosDB.
+
+        # Excel V2-8: 'Tasas, TRM, Polizas' — Aumento x Año por tipo de componente.
+        # Retorna {componente: {año: tasa}} para IPC, SMLV, 70%SMMLV+30%IPC, etc.
+        """
         try:
             docs, _ = self._store.query(_OP_COLLECTION, {"domain": "op"})
         except Exception as exc:
-            logger.error("[v2] Error leyendo OP parametrización para IPC: %s", exc)
+            logger.error("[v2] Error leyendo OP parametrización para indexación: %s", exc)
             return {}
-
         active = next((d for d in docs if d.get("status") == "active"), None)
         if not active:
-            logger.warning("[v2] No hay OP parametrización activa en CosmosDB — IPC no se aplicará")
+            logger.warning("[v2] No hay OP parametrización activa en CosmosDB — indexación no se aplicará")
             return {}
-
         componente_rows = active.get("payload", {}).get("componente") or active.get("componente", [])
-        rates: Dict[int, float] = {}
+        all_rates: Dict[str, Dict[int, float]] = {}
         for row in componente_rows:
-            if str(row.get("componente", "")).strip().upper() == "IPC":
-                # Cosmos guarda el campo sin ñ ("ano"), fallback por si cambia
-                anio = row.get("ano") if row.get("ano") is not None else row.get("año")
-                valor = row.get("valor")
-                if anio is not None and valor is not None:
-                    rates[int(anio)] = float(valor)
-
-        logger.info("[v2] OP IPC rates cargadas: %s", rates)
-        return rates
+            comp = str(row.get("componente", "")).strip()
+            if not comp:
+                continue
+            anio = row.get("ano") if row.get("ano") is not None else row.get("año")
+            valor = row.get("valor")
+            if anio is not None and valor is not None:
+                if comp not in all_rates:
+                    all_rates[comp] = {}
+                all_rates[comp][int(anio)] = float(valor)
+        logger.info("[v2] OP indexación rates cargadas — componentes: %s", list(all_rates.keys()))
+        return all_rates
 
     def get_hr_costo_fijo_estacion(self, ciudad: str, localidad: str = "") -> float:
         """Costo fijo POR ESTACIÓN para la ciudad/localidad del deal (de HR activa en CosmosDB).
