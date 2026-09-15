@@ -148,6 +148,8 @@ def _build_escenario(
     pct_fijo = round(1.0 - pct_var, 6)
     componente_fijo = str(perfil_input.get("componente_fijo", "FTE")) if pct_fijo > 0 else None
     componente_variable = str(perfil_input.get("componente_variable", "")) if pct_var > 0 else None
+    # Normalize potential double-encoded UTF-8 (e.g., "TransacciÃ³n" → "Transacción" on Windows cp1252 load)
+    _cv_norm = (componente_variable or "").lower().replace("ó", "o").replace("ó", "o")
 
     # Costos Cadena A (del CTS)
     payroll = float(cts_p.get("payroll", 0.0)) if cts_p else 0.0
@@ -260,21 +262,34 @@ def _build_escenario(
     tipo_tarifa_variable: Optional[str] = None
     volumen_minimo: Optional[float] = None
     if pct_var > 0:
-        if componente_variable == "Transacción":
+        if _cv_norm.startswith("transac"):
             if ingreso_variable > 0:
                 volumen = float(perfil_input.get("volumen_transacciones_mes", 0) or 0)
                 if volumen > 0:
                     tarifa_variable = round(ingreso_variable / volumen, 4)
                     tipo_tarifa_variable = "por Transacción"
-                    volumen_minimo = volumen
-        elif componente_variable in ("Resultado", "Resultados", "Honorarios"):
+                    # Excel HME!G33 = (costo_A + costo_B + costo_C) × pct_var / tarifa_transaccion
+                    _costo_total_esc = costo_a + costo_b + costo_c
+                    volumen_minimo = round(_costo_total_esc * pct_var / tarifa_variable, 2) if tarifa_variable > 0 else volumen
+        elif _cv_norm in ("resultado", "resultados", "honorarios"):
             # Excel V2-8 · HME!G33 = HME!G31 / num_personas = VT!"Ingreso por persona" mes 1
-            # SAC/SACO/Ventas Multicanal/Plataformas/Captura de Datos → tarifa variable = 0
+            # SAC/Plataformas/Captura de Datos → tarifa variable = 0 (no tienen tarifa cobrable)
+            # SACO/Ventas Multicanal → ventas_multicanal["Ingreso por persona"].meses[0].valor
             # Cobranzas → honorariosTotales["Ingreso por persona"].meses[0].calculado
-            _servicios_sin_tv = _SERVICIOS_SIN_TARIFA_VARIABLE_HR | {"ventas multicanal"}
-            if servicio in _servicios_sin_tv:
+            if servicio in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
                 tarifa_variable = 0.0
                 tipo_tarifa_variable = None
+            elif servicio in ("saco", "ventas multicanal"):
+                ingreso_por_persona_mes1 = None
+                for c in ventas_multicanal:
+                    if c.get("concepto") == "Ingreso por persona":
+                        meses_c = c.get("meses", [])
+                        if meses_c:
+                            ingreso_por_persona_mes1 = meses_c[0].get("valor")
+                        break
+                if ingreso_por_persona_mes1 is not None:
+                    tarifa_variable = round(ingreso_por_persona_mes1, 2)
+                    tipo_tarifa_variable = "ingreso por persona (mes 1)"
             else:
                 ingreso_por_persona_mes1 = None
                 for c in honorariosTotales:
@@ -338,6 +353,7 @@ def _build_escenario(
             "tipo": tipo_tarifa_fija,
             "valor": tarifa_fija,
         } if tarifa_fija is not None else None,
+        "volumen_transacciones_mes": float(perfil_input.get("volumen_transacciones_mes") or 0),
         "tarifa_componente_variable": {
             "tipo": tipo_tarifa_variable,
             "valor": tarifa_variable,
@@ -363,6 +379,7 @@ def _build_escenario_total(
     componente_variable = str(data.get("componente_variable", ""))
     pct_var = float(data.get("proporcion_componente_variable", 0.0))
     pct_fijo = float(data.get("proporcion_componente_fijo", 0.0))
+    _cv_total_norm = (componente_variable or "").lower().replace("ó", "o").replace("ó", "o")
     # Full deal facturación passed from build_vision_tarifas (ALL perfiles + ALL canals A+B+C).
     # NOT the sum of individual escenarios (which double-counts repeated canals).
     facturacion_directa = facturacion_total
@@ -390,14 +407,13 @@ def _build_escenario_total(
     tarifa_variable: float = 0.0
     if pct_var > 0:
         ingreso_variable_directa = facturacion_directa * pct_var
-        if componente_variable == "Transacción":
+        if _cv_total_norm.startswith("transac"):
             vol_bc = vol_b_total + vol_c_total
             if vol_bc > 0:
                 tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
-        elif componente_variable in ("Resultado", "Resultados", "Honorarios"):
-            # SAC/SACO/Ventas Multicanal/Plataformas/Captura de Datos: no generan tarifa variable cobrable
-            _servicios_sin_tv_total = _SERVICIOS_SIN_TARIFA_VARIABLE_HR | {"ventas multicanal"}
-            if servicio not in _servicios_sin_tv_total:
+        elif _cv_total_norm in ("resultado", "resultados", "honorarios"):
+            # SAC/Plataformas/Captura de Datos: no generan tarifa variable cobrable
+            if servicio not in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
                 # HME G275 = ingreso_variable_total / fte_total
                 fte_safe_total = max(fte_total, 1)
                 tarifa_variable = round(ingreso_variable_directa / fte_safe_total, 2)
@@ -412,6 +428,16 @@ def _build_escenario_total(
 
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
+        # Excel HME Total: tarifa_variable = "Ingreso por persona" mes 1 de ventas_multicanal,
+        # independiente de pct_var o componente_variable del escenario_total.
+        for c in ventas_multicanal:
+            if c.get("concepto") == "Ingreso por persona":
+                _meses_pp = c.get("meses", [])
+                if _meses_pp:
+                    _ing_pp = _meses_pp[0].get("valor")
+                    if _ing_pp is not None:
+                        tarifa_variable = round(_ing_pp, 2)
+                break
 
     return {
         "escenario": "Total",
@@ -1446,6 +1472,7 @@ def build_vision_tarifas(
         ),
         "total": total,
         "desglose_producto_opex": desglose_producto_opex,
+        "tipo_honorario": (request_data.get("cobranzas") or {}).get("tipo_honorario"),
         "ajustes_aplicados": {
             "margen_cadena_a": margen_a,
             "margen_cadena_b": margen_b,

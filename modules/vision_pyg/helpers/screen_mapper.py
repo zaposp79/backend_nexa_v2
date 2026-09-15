@@ -416,6 +416,7 @@ def _build_from_v2_result(
     vision_tarifas = result_doc.get("vision_tarifas")
     
     growth_risk = _growth_risk_by_month(result_doc)
+    tipo_honorario = ((vision_tarifas or {}).get("tipo_honorario") or "").strip().lower()
 
     cobranzas = None
     ventas_multicanal = None
@@ -447,7 +448,8 @@ def _build_from_v2_result(
             comision_ventas = next((x["valor"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
             costo_variable = next((x["valor"] for x in costos_variables_por_mes if x.get("mes") == str(mes_num)), 0)
         if(servicio == "cobranzas"):
-            comision_ventas = next((x["benchmark"] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
+            _key = "calculado" if tipo_honorario == "calculado" else "benchmark"
+            comision_ventas = next((x[_key] for x in comisiones_por_mes if x.get("mes") == str(mes_num)), 0)
 
         # Inyectar ingreso_variable y ajustar ingreso_neto ANTES de cualquier cálculo.
         # Excel P&G J31: =IF(servicio="Cobranzas", J30, J28+J30)
@@ -464,6 +466,28 @@ def _build_from_v2_result(
             vals["pct_contribucion"]        = (_contribucion / comision_ventas) * 100 if comision_ventas else 0.0
             vals["utilidad_neta"]           = _contribucion
             vals["pct_utilidad_neta"]       = (_contribucion / comision_ventas) * 100 if comision_ventas else 0.0
+
+        if servicio in ("saco", "ventas multicanal"):
+            # ingreso_neto se recalcula en _ingresos_mes como ingreso_fijo + comision_ventas.
+            # contribucion almacenada no incluye comision_ventas → recalcular consistentemente.
+            # costo_total stored NO incluye costo_variable (costo_por_comision) — _costos_mes lo suma aparte.
+            _ib = vals.get("ingreso_bruto") or 0.0
+            _pct_imp = vals.get("pct_imprevistos") or 0.0
+            _imp = vals.get("imprevistos_valor") or (_pct_imp * _ib)
+            _co = vals.get("contingencia_operativa_valor") or vals.get("contingencia_op") or 0.0
+            _cc = vals.get("contingencia_comercial_valor") or vals.get("contingencia_com") or 0.0
+            _mk = vals.get("markup_valor") or vals.get("markup_ingreso") or 0.0
+            _desc = vals.get("descuento_valor") or vals.get("descuento_ingreso") or 0.0
+            _ingreso_fijo = _ib + _co + _cc + _mk - _desc - _imp
+            _ingreso_neto = _ingreso_fijo + comision_ventas
+            _costo_total = (vals.get("costo_total") or 0.0) + costo_variable
+            _contribucion = _ingreso_neto - _costo_total
+            _estaciones = vals.get("estaciones_trabajo") or 0.0
+            vals["contribucion"]            = _contribucion
+            vals["contribucion_por_puesto"] = _contribucion / _estaciones if _estaciones else 0.0
+            vals["pct_contribucion"]        = (_contribucion / _ingreso_neto) if _ingreso_neto else 0.0
+            vals["utilidad_neta"]           = _contribucion
+            vals["pct_utilidad_neta"]       = (_contribucion / _ingreso_neto) if _ingreso_neto else 0.0
 
         periods.append({
             "index":    mes_num,
@@ -490,7 +514,8 @@ def _build_from_v2_result(
         total_comision = sum(item.get("valor", 0) for item in comisiones_por_mes)
         total_costo_variable = sum(item.get("valor", 0) for item in costos_variables_por_mes)
     if(servicio == "cobranzas"):
-        total_comision = sum(item.get("benchmark", 0) for item in comisiones_por_mes)
+        _key = "calculado" if tipo_honorario == "calculado" else "benchmark"
+        total_comision = sum(item.get(_key, 0) for item in comisiones_por_mes)
 
     # Mismo override en totales para que ratios y pct_utilidad_neta sean consistentes.
     totales_vals = dict(totales_vals)
@@ -505,6 +530,11 @@ def _build_from_v2_result(
         totales_vals["pct_contribucion"]        = (_contribucion_t / total_comision) * 100 if total_comision else 0.0
         totales_vals["utilidad_neta"]           = _contribucion_t
         totales_vals["pct_utilidad_neta"]       = (_contribucion_t / total_comision) * 100 if total_comision else 0.0
+
+    if servicio in ("saco", "ventas multicanal"):
+        _contrib_t = sum((p["utilidad"].get("contribucion") or 0.0) for p in periods)
+        totales_vals["contribucion"] = _contrib_t
+        totales_vals["utilidad_neta"] = _contrib_t
 
     totales = {
         "ingresos": _ingresos_mes(totales_vals, total_comision, servicio),
