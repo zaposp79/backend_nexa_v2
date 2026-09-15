@@ -167,6 +167,8 @@ def _build_scenario_entry(meta: dict, raw: dict, channel: dict, vt_data: Optiona
     tarifas = raw.get("tarifas") or {}
     fixed_component = raw.get("componente_fijo") or {}
     variable_component = raw.get("componente_variable") or {}
+    servicio = (vt_data.get("servicio","") or "").lower()
+    tipo_honorario = (vt_data.get("tipo_honorario","") or "").lower()
 
     entry = {
         "escenario": str(_scenario_number(meta, 0)),
@@ -210,7 +212,7 @@ def _build_scenario_entry(meta: dict, raw: dict, channel: dict, vt_data: Optiona
             meta, tarifas, fixed_component, channel
         ),
         "tarifa_componente_variable_detail": _build_tarifa_variable(
-            meta, tarifas, variable_component
+            meta, tarifas, variable_component, raw, servicio, tipo_honorario
         ),
     }
     return entry
@@ -753,7 +755,7 @@ def _build_tarifa_fijo(meta: dict, tarifas: dict, fixed_component: dict, channel
     }
 
 
-def _build_tarifa_variable(meta: dict, tarifas: dict, variable_component: dict) -> dict:
+def _build_tarifa_variable(meta: dict, tarifas: dict, variable_component: dict, raw: dict, servicio: str, tipo_honorario: str) -> dict:
     var_label = _coalesce(
         meta.get("componente_variable_label"),
         variable_component.get("tipo"),
@@ -762,7 +764,14 @@ def _build_tarifa_variable(meta: dict, tarifas: dict, variable_component: dict) 
 
     volumen = _safe_float(tarifas.get("volumen_minimo_transaccion"))
     tarifa_principal =  _safe_float(tarifas.get("tarifa_por_transaccion"))
-    comisiones_mi =  _safe_float(_first_comision(variable_component))
+    comisiones_mi =  _comisiones_m1(
+                meta.get("componente_variable_label") or "",
+                servicio,
+                raw.get("honorarios_totales") or [],
+                raw.get("ventas_multicanal") or [],
+                tipo_honorario,
+            )
+
     ingreso_por_persona = _safe_float(tarifas.get("ingreso_por_persona"))
     if is_transaccion:
         titulo              = f"Tarifa Componente Variable - {var_label}"
@@ -1119,6 +1128,8 @@ def _bridge_v2_to_v1(result: dict) -> dict:
         "desglose_producto_opex": desglose_producto_opex,
         "ingreso_mensual": total.get("facturacion_mensual", 0),
         "costo_total": total.get("facturacion_mensual", 0),
+        "tipo_honorario": v2_vt.get("tipo_honorario",""),
+        "servicio": result.get("servicio"),
         "total": total,
     }
 
