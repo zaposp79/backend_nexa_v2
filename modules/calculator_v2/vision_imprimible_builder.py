@@ -246,7 +246,7 @@ def _build_escenarios(
     Fallback: perfiles Cadena A + CTS cuando vision_tarifas no está disponible.
     """
     _servicio = str(_datos_op(request_data).get("servicio") or "").strip().lower()
-    _sin_tarifa_hr = _servicio in {"sac", "plataformas", "captura de datos", "ventas multicanal"}
+    _sin_tarifa_hr = _servicio in {"sac", "plataformas", "captura de datos"}
 
     # ── Cuando hay vision_tarifas: usar sus escenarios como fuente principal ──
     if vision_tarifas_escenarios is not None:
@@ -692,7 +692,7 @@ def build_vision_imprimible(
             _comp_var_total = raw_esc_total.get("componente_variable")
             _tarifa_variable_total = raw_esc_total.get("tarifa_componente_variable")
             # SAC/Plataformas/Captura de Datos: Honorarios y Resultados → tarifa_variable = 0
-            _sin_tarifa_hr_total = str(service or "").strip().lower() in {"sac", "plataformas", "captura de datos", "ventas multicanal"}
+            _sin_tarifa_hr_total = str(service or "").strip().lower() in {"sac", "plataformas", "captura de datos"}
             if _sin_tarifa_hr_total and str(_comp_var_total or "").lower() in ("honorarios", "resultados", "resultado"):
                 _tarifa_variable_total = 0
             vt_total = {
