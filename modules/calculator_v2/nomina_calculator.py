@@ -245,18 +245,29 @@ class NominaCalculator:
         Excel V2-8: 'Nomina Loaded'!K198:K217 donde col A="Activado".
         Incluye comision_mensual × FTE por perfil de agente +
         comision × cantidad pro-rateada por cargo de estructura.
+        Para el Esp: comision × (complejidad × 3 × factor_total / dur), mismo factor
+        que desglose_por_cargo (INP!D61 × A66 × 3 × sum(pct) / PCG!C11).
         """
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
+        datos_op = self._req.get("datos_operativos", {})
+        duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
+
+        # Leer complejidad (mismo método que desglose_por_cargo)
+        _cplx = self._cadena_a.get("ratios", {}).get("complejidad") or ""
+        if isinstance(_cplx, dict):
+            _cplx = _cplx.get("label") or _cplx.get("valor") or ""
+        complejidad_str = str(_cplx).strip().lower()
+        complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.20)
 
         # Comisiones brutas de agentes (FTE)
         total = sum(
             float(p.get("comision_mensual", 0)) * float(p.get("fte", 0))
             for p in perfiles
         )
-        pct_rotacion = float(self._req.get("datos_operativos", {}).get("pct_rotacion", 0.0))
+        pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
 
         # Comisiones brutas de estructura (cantidad pro-rateada, mismo ajuste que desglose_por_cargo)
         for fila in ratios_filas:
@@ -271,10 +282,25 @@ class NominaCalculator:
             comision = float(cargo_data.get("comision", 0))
             if comision <= 0:
                 continue
+            nombre = fila.get("position_name") or fila.get("position_id", "")
+
+            # Excel V2-8 · INP!D61: Especialista de Proyectos usa factor de complejidad,
+            # igual que su costo_empresa en desglose_por_cargo.
+            # comision_esp × (complejidad × 3 × factor_total / dur)
+            if "especialista" in nombre.lower():
+                sum_personalizado = 0.0
+                for pr in fila.get("por_perfil", []):
+                    try:
+                        sum_personalizado += float(pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        pass
+                factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
+                total += comision * complejidad_factor * 3.0 * factor_total / duracion_meses
+                continue
+
             cantidad = self._calcular_cantidad(fila, perfiles)
             if cantidad <= 0:
                 continue
-            nombre = fila.get("position_name") or fila.get("position_id", "")
             # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
             if "otaci" in nombre.lower() and "(" in nombre:
                 cantidad *= pct_rotacion
