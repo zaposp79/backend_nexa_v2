@@ -465,11 +465,11 @@ def _build_escenario_total(
                     if _ing_pp is not None:
                         tarifa_variable = round(_ing_pp, 2)
                 break
-        if(componente_fijo == ""):
-            tarifa_fija = 0
         if(componente_variable == "" or componente_variable.startswith("transac")):
             tarifa_variable = 0
             
+    if(componente_fijo == ""):
+        tarifa_fija = 0     
         
     return {
         "escenario": "Total",
