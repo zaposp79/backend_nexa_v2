@@ -291,12 +291,13 @@ def _build_escenario(
                     tarifa_variable = round(ingreso_por_persona_mes1, 2)
                     tipo_tarifa_variable = "ingreso por persona (mes 1)"
             else:
+                keyHonorario = request_data.get("cobranzas", {}).get("tipo_honorario","").lower()
                 ingreso_por_persona_mes1 = None
                 for c in honorariosTotales:
                     if c.get("concepto") == "Ingreso por persona":
                         meses_c = c.get("meses", [])
                         if meses_c:
-                            ingreso_por_persona_mes1 = meses_c[0].get("calculado")
+                            ingreso_por_persona_mes1 = meses_c[0].get(keyHonorario)
                         break
                 if ingreso_por_persona_mes1 is not None:
                     tarifa_variable = round(ingreso_por_persona_mes1, 2)
@@ -403,6 +404,16 @@ def _build_escenario_total(
     else:
         tarifa_fija = facturacion_directa * pct_fijo if pct_fijo > 0 else facturacion_directa
 
+
+    ingreso_variable = facturacion_total * pct_var
+    honorariosCobranza = []
+    honorariosTotales = []
+    ventas_multicanal = []
+    if(servicio == "cobranzas"):
+        honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
+        honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
+
+
     # Tarifa Variable — Excel G273/G275 por tipo de componente
     tarifa_variable: float = 0.0
     if pct_var > 0:
@@ -413,18 +424,34 @@ def _build_escenario_total(
                 tarifa_variable = round(ingreso_variable_directa / vol_bc, 4)
         elif _cv_total_norm in ("resultado", "resultados", "honorarios"):
             # SAC/Plataformas/Captura de Datos: no generan tarifa variable cobrable
-            if servicio not in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
-                # HME G275 = ingreso_variable_total / fte_total
-                fte_safe_total = max(fte_total, 1)
-                tarifa_variable = round(ingreso_variable_directa / fte_safe_total, 2)
+            if servicio in _SERVICIOS_SIN_TARIFA_VARIABLE_HR:
+                tarifa_variable = 0.0
+                tipo_tarifa_variable = None
+            elif servicio in ("saco", "ventas multicanal"):
+                ingreso_por_persona_mes1 = None
+                for c in ventas_multicanal:
+                    if c.get("concepto") == "Ingreso por persona":
+                            meses_c = c.get("meses", [])
+                            if meses_c:
+                                ingreso_por_persona_mes1 = meses_c[0].get("valor")
+                            break
+                    if ingreso_por_persona_mes1 is not None:
+                        tarifa_variable = round(ingreso_por_persona_mes1, 2)
+                        tipo_tarifa_variable = "ingreso por persona (mes 1)"
+            else:
+                keyHonorario = request_data.get("cobranzas", {}).get("tipo_honorario","").lower()
+                ingreso_por_persona_mes1 = None
+                for c in honorariosTotales:
+                    if c.get("concepto") == "Ingreso por persona":
+                        meses_c = c.get("meses", [])
+                        if meses_c:
+                            ingreso_por_persona_mes1 = meses_c[0].get(keyHonorario)
+                        break
+                if ingreso_por_persona_mes1 is not None:
+                    tarifa_variable = round(ingreso_por_persona_mes1, 2)
+                    tipo_tarifa_variable = "ingreso por persona (mes 1)"
 
-    ingreso_variable = facturacion_total * pct_var
-    honorariosCobranza = []
-    honorariosTotales = []
-    ventas_multicanal = []
-    if(servicio == "cobranzas"):
-        honorariosCobranza = _build_honorarios_cobranza(request_data, ingreso_variable)
-        honorariosTotales = _build_honorarios_totales(honorariosCobranza, request_data)
+
 
     if(servicio == "saco" or servicio == "ventas multicanal"):
         ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
