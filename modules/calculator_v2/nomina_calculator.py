@@ -187,14 +187,16 @@ class NominaCalculator:
         salario_fijo = nomina_loaded - salario_variable.
         recargos_horas_extra = informativo (no suma a nómina, igual que Excel col AM = col W).
         """
-        nomina_loaded = self._nomina_agentes() + self._nomina_estructura()
+        # Los cargos adicionales son salario fijo (comision=0) → se incluyen en nomina_loaded.
+        # Excel V2-8: NominaLoaded!C69 forma parte del bloque de nómina, no es un rubro aparte.
+        nomina_loaded = self._nomina_agentes() + self._nomina_estructura() + self._cargos_adicionales()
         salario_variable = self._nomina_comisiones_brutas()
         return {
             "nomina_loaded": nomina_loaded,
             "crucero_total": self._crucero(),
             "capacitacion_rotacion": self._capacitacion_rotacion(),
             "capacitacion_inicial": self._capacitacion_inicial(),
-            "cargos_adicionales": self._cargos_adicionales(),
+            "cargos_adicionales": 0.0,
             "examenes_medicos": self._examenes_medicos(),
             "estudios_seguridad": self._estudios_seguridad(),
             "salario_fijo": nomina_loaded - salario_variable,
@@ -295,6 +297,13 @@ class NominaCalculator:
             crucero_unit = crucero_base or float(cap.get("crucero_mensual", 0))
             fte = float(perfil.get("fte", 0))
             total += crucero_unit * fte
+            # Cargos adicionales del perfil — misma tarifa crucero por estación
+            for cargo in perfil.get("cargos_adicionales") or []:
+                if not (cargo.get("nombre") or "").strip():
+                    continue
+                cantidad = float(cargo.get("cantidad", 0.0))
+                if cantidad > 0:
+                    total += crucero_unit * cantidad
         return total
 
     def _nomina_agentes(self) -> float:
@@ -773,6 +782,13 @@ class NominaCalculator:
                 continue
             fte = float(perfil.get("fte", 0))
             total += fte * dias * tarifa_diaria * pct_rotacion
+            # Cargos adicionales comparten el flag y días de capacitación del perfil
+            for cargo in perfil.get("cargos_adicionales") or []:
+                if not (cargo.get("nombre") or "").strip():
+                    continue
+                cantidad = float(cargo.get("cantidad", 0.0))
+                if cantidad > 0:
+                    total += cantidad * dias * tarifa_diaria * pct_rotacion
         return total
 
     def _capacitacion_inicial(self) -> float:
@@ -796,6 +812,13 @@ class NominaCalculator:
             fte = float(perfil.get("fte", 0))
             dias = float(cap.get("dias_capacitacion_perfil", 0))
             total += fte * dias * tarifa_diaria
+            # Cargos adicionales comparten el flag y días de capacitación del perfil
+            for cargo in perfil.get("cargos_adicionales") or []:
+                if not (cargo.get("nombre") or "").strip():
+                    continue
+                cantidad = float(cargo.get("cantidad", 0.0))
+                if cantidad > 0:
+                    total += cantidad * dias * tarifa_diaria
         return total
 
     def _cargos_adicionales(self) -> float:
@@ -871,6 +894,15 @@ class NominaCalculator:
             if fte_agente <= 0:
                 continue
 
+            # FTE directo de cargos adicionales del perfil (igual que C230 en _estudios_seguridad).
+            cargos_add_fte = sum(
+                float(cargo.get("cantidad", 0.0))
+                for cargo in (perfil.get("cargos_adicionales") or [])
+                if (cargo.get("nombre") or "").strip()
+            )
+            # fte_base afecta los ratios de estructura (mismo patrón que _estudios_seguridad).
+            fte_base = fte_agente + cargos_add_fte
+
             # FTE total para exámenes = agente (fila 97) + estructura operativa del perfil.
             # Excel: NominaLoaded!C339 = C329 × SUMPRODUCT(CCA!E94:S98 × (E77:S77=perfil)) / C11
             # Filas 94-98: Formadores, Monitor, Supervisor, Agente Básico 1, Validador.
@@ -898,7 +930,8 @@ class NominaCalculator:
                         except ValueError:
                             ratio = 0.0
                         if ratio > 0:
-                            fte_exam += fte_agente / ratio
+                            fte_exam += fte_base / ratio
+            fte_exam += cargos_add_fte  # suma directa (simétrico con _estudios_seguridad C230)
 
             # Backward-compat: sub-objeto legacy examenes_medicos (soporte tests/fixtures)
             exam = perfil.get("examenes_medicos")
