@@ -433,6 +433,9 @@ class NominaCalculator:
 
         # ── Inclusión ─────────────────────────────────────────────────────────
         # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127  (incluye Aprendiz SENA)
+        # Excel V2-8: INP!D60 = INDEX(CCA!F45:F67, MATCH('Inclusión', CCA!D105:D128, 0)).
+        # El MATCH encuentra 'Inclusión' en posición 23 de D105:D128 → INDEX(F45:F67,23) = F67 = Esp commission.
+        # Cuando CCA!F67>0, Inclusión recibe la misma comisión que el Esp → usa calcular_costo_empresa (no sena).
         if fila_inclusion is not None:
             nombre_inc = fila_inclusion.get("position_name") or fila_inclusion.get("position_id", "")
             if fila_inclusion.get("incluido", False):
@@ -441,7 +444,18 @@ class NominaCalculator:
                     inclusion_cantidad = (regular_hc + cargos_add_hc + aprendiz_cantidad) / ratio_inc
                     cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                     if cargo_data and inclusion_cantidad > 0:
-                        result[nombre_inc] = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost) * inclusion_cantidad
+                        # Excel V2-8 · INP!D60: Inclusión hereda comisión del Esp de Proyectos (CCA!F67).
+                        esp_com_for_inclusion = 0.0
+                        if fila_especialista is not None:
+                            esp_cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
+                            if esp_cargo_data:
+                                esp_com_for_inclusion = float(esp_cargo_data.get("comision", 0))
+                        if esp_com_for_inclusion > 0:
+                            sal_inc = float(cargo_data.get("salario", 0))
+                            costo_inc_unit = calcular_costo_empresa(sal_inc, esp_com_for_inclusion)
+                        else:
+                            costo_inc_unit = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
+                        result[nombre_inc] = costo_inc_unit * inclusion_cantidad
 
         # ── Especialista de Proyectos ─────────────────────────────────────────
         # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
@@ -616,13 +630,24 @@ class NominaCalculator:
 
         # ── Inclusión (por perfil) ────────────────────────────────────────────
         # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127 — incluye Aprendiz SENA
+        # Excel V2-8: INP!D60 = INDEX(F45:F67, pos23) = F67 = Esp commission → Inclusión hereda comisión del Esp.
         if fila_inclusion is not None:
             nombre_inc = fila_inclusion.get("position_name") or fila_inclusion.get("position_id", "")
             costo_unit_inc = 0.0
             if fila_inclusion.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                 if cargo_data:
-                    costo_unit_inc = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
+                    # Excel V2-8 · INP!D60: Inclusión hereda comisión del Esp de Proyectos (CCA!F67).
+                    esp_com_for_inclusion = 0.0
+                    if fila_especialista is not None:
+                        esp_cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
+                        if esp_cargo_data:
+                            esp_com_for_inclusion = float(esp_cargo_data.get("comision", 0))
+                    if esp_com_for_inclusion > 0:
+                        sal_inc = float(cargo_data.get("salario", 0))
+                        costo_unit_inc = calcular_costo_empresa(sal_inc, esp_com_for_inclusion)
+                    else:
+                        costo_unit_inc = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
 
             for pr in fila_inclusion.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
