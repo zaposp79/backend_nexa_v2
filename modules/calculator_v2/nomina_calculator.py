@@ -295,7 +295,12 @@ class NominaCalculator:
                     except (TypeError, ValueError):
                         pass
                 factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
-                total += comision * complejidad_factor * 3.0 * factor_total / duracion_meses
+                # SV_Esp = delta CE (con/sin comision) × factor — igual que delta_NL en desglose_por_cargo,
+                # así delta_SF = delta_NL - delta_SV = 0 cuando se agrega comision al Esp.
+                ce_sin_com = NominaCalculator._get_costo_empresa(dict(cargo_data, comision=0))
+                ce_con_com = NominaCalculator._get_costo_empresa(cargo_data)
+                ce_delta = ce_con_com - ce_sin_com
+                total += ce_delta * complejidad_factor * 3.0 * factor_total / duracion_meses
                 continue
 
             cantidad = self._calcular_cantidad(fila, perfiles)
