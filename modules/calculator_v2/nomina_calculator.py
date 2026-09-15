@@ -345,7 +345,8 @@ class NominaCalculator:
         total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
         _cplx = self._cadena_a.get("ratios", {}).get("complejidad") or ""
         if isinstance(_cplx, dict):
-            _cplx = _cplx.get("valor") or ""
+            # Frontend envía {"label": "Media", "value": 0.5} — leer label para el lookup
+            _cplx = _cplx.get("label") or _cplx.get("valor") or ""
         complejidad_str = str(_cplx).strip().lower()
         # Excel V2-8 · NL!A66: IFS(CCA!B101="Baja",20%,"Media",50%,"Alta",50%)
         # Default 0.20 (Baja) cuando null — coincide con el comportamiento estándar del Excel.
@@ -492,7 +493,8 @@ class NominaCalculator:
         total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
         _cplx = self._cadena_a.get("ratios", {}).get("complejidad") or ""
         if isinstance(_cplx, dict):
-            _cplx = _cplx.get("valor") or ""
+            # Frontend envía {"label": "Media", "value": 0.5} — leer label para el lookup
+            _cplx = _cplx.get("label") or _cplx.get("valor") or ""
         complejidad_str = str(_cplx).strip().lower()
         # Excel V2-8 · NL!A66: IFS(CCA!B101="Baja",20%,"Media",50%,"Alta",50%)
         # Default 0.20 (Baja) cuando null — coincide con el comportamiento estándar del Excel.
