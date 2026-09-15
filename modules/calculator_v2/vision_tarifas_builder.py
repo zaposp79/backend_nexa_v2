@@ -450,21 +450,6 @@ def _build_escenario_total(
                 if ingreso_por_persona_mes1 is not None:
                     tarifa_variable = round(ingreso_por_persona_mes1, 2)
                     tipo_tarifa_variable = "ingreso por persona (mes 1)"
-
-
-
-    if(servicio == "saco" or servicio == "ventas multicanal"):
-        ventas_multicanal = _build_ventas_multicanal(request_data, facturacion_total, pct_var)
-        # Excel HME Total: tarifa_variable = "Ingreso por persona" mes 1 de ventas_multicanal,
-        # independiente de pct_var o componente_variable del escenario_total.
-        for c in ventas_multicanal:
-            if c.get("concepto") == "Ingreso por persona":
-                _meses_pp = c.get("meses", [])
-                if _meses_pp:
-                    _ing_pp = _meses_pp[0].get("valor")
-                    if _ing_pp is not None:
-                        tarifa_variable = round(_ing_pp, 2)
-                break
         if(componente_variable == None or componente_variable == "" or componente_variable.startswith("transac")):
             tarifa_variable = 0
             
