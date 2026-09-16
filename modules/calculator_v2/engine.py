@@ -609,9 +609,8 @@ class MotorDeReglas:
                 or mes <= duracion_meses + int(p.get("meses_extension") or 0)
             ]
             ctx_cost = {**_ctx_base, "polizas_activas": polizas_activas_mes}
-            # Excel P&G: ICA/GMF/Pólizas se calculan sobre la base HME (constante), no sobre
-            # costo_op_mes que varía con IPC. Usar _costo_op_hm garantiza valores constantes
-            # iguales a los de la Hoja Maestra de Escenarios, igual que en la Visión Excel.
+            # Excel P&G: ICA/GMF/Pólizas base = HME constante (sin IPC para tarifa fija).
+            # Cuando financiacion_activa, el bloque if/else abajo aplica _ipc_fin escalado.
             _, componentes_cost_mes = self._compute_ingreso_cadena_a_hm(
                 _costo_op_hm, ctx_cost, for_pricing=False
             )
@@ -713,14 +712,17 @@ class MotorDeReglas:
                     ctx["polizas_cadena_c"] = _pol_c
                     ctx["comision_admin_cadena_c"] = _com_c
             else:
-                # Sin financiacion: billing mensual real (comportamiento original, validado OK)
-                ctx["ica_hm"] = componentes_cost_mes.get("ica_hm", 0.0)
-                ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
-                ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
-                ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
+                # Sin financiacion: billing base HME escalado por ipc_incremental_h (paso anual).
+                # Para componente_humano=Tarifas definidas ipc_h=0 → factor=1 → constante (ipcrequest26 OK).
+                # Para componente_humano=SMLV/IPC ipc_h>0 → step-up al inicio de cada año.
+                _ipc_fin_else = 1.0 + ipc_incremental_h
+                ctx["ica_hm"] = componentes_cost_mes.get("ica_hm", 0.0) * _ipc_fin_else
+                ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0) * _ipc_fin_else
+                ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0) * _ipc_fin_else
+                ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0) * _ipc_fin_else
                 if _cadena_b_calc and _billing_b_base > 0:
                     _cap_b_mes = 0.0
-                    _billing_b_with_cap = _billing_b_base_eff + (_cap_b_mes / _fm_b if _fm_b > 0 else 0.0)
+                    _billing_b_with_cap = _billing_b_base_eff * _ipc_fin_else + (_cap_b_mes / _fm_b if _fm_b > 0 else 0.0)
                     _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
                     _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
                     _tasa_pol_b_mes = sum(
@@ -739,7 +741,7 @@ class MotorDeReglas:
                     )
                     _ica_b = _ica_b_billing * _tasa_ica_b
                     _pol_b_billing_mes = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_com_b_mes)
-                    _gmf_b = (_costo_b_op + _cap_b_mes + _pol_b_billing_mes) * _tasa_gmf_b
+                    _gmf_b = (_costo_b_op * _ipc_fin_else + _cap_b_mes + _pol_b_billing_mes) * _tasa_gmf_b
                     _pol_b = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_ext_pol_amort)
                     _com_b = _billing_b_with_cap * _tasa_com_b_mes
                     ctx["ica_hm"] += _ica_b
@@ -752,7 +754,7 @@ class MotorDeReglas:
                     ctx["comision_admin_cadena_b"] = _com_b
                 if _cadena_c_calc and _billing_c_base > 0:
                     _cap_c_mes = 0.0
-                    _billing_c_with_cap = _billing_c_base_eff + (_cap_c_mes / _fm_c if _fm_c > 0 else 0.0)
+                    _billing_c_with_cap = _billing_c_base_eff * _ipc_fin_else + (_cap_c_mes / _fm_c if _fm_c > 0 else 0.0)
                     _tasa_ica_c = float(ctx.get("tasa_ica", 0.01))
                     _tasa_gmf_c = float(ctx.get("tasa_gmf", 0.004))
                     _tasa_pol_c_mes = sum(
@@ -770,7 +772,7 @@ class MotorDeReglas:
                         if _fm_c > 0 else _billing_c_with_cap
                     )
                     _ica_c = _ica_c_billing * _tasa_ica_c
-                    _gmf_c = (_costo_c_op + _cap_c_mes + _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
+                    _gmf_c = (_costo_c_op * _ipc_fin_else + _cap_c_mes + _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
                     _pol_c = _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
                     _com_c = _billing_c_with_cap * _tasa_com_c_mes
                     ctx["ica_hm"] += _ica_c
