@@ -640,7 +640,7 @@ class MotorDeReglas:
             # Pólizas-FC!E188: ICA_B = (Op_B+Pol_B)/fm_b × ica = billing_b × (1+pol/fm_b) × ica
             # Pólizas-FC!E269: GMF_B = (Op_B+Pol_B) × gmf (base incluye Pol, diferente de Cadena C)
             if _cadena_b_calc and _billing_b_base > 0:
-                _billing_b_unramped = _billing_b_base * (1.0 + ipc_incremental)
+                _billing_b_unramped = _billing_b_base * (1.0 + ipc_incremental_t)
                 _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
                 _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
                 _tasa_pol_b_mes = sum(
@@ -679,7 +679,7 @@ class MotorDeReglas:
             # C312 incorpora la recuperación de financieros en el ingreso bruto; las filas de
             # ICA/GMF/Pol del P&G usan B como base (Pólizas-FC M215), no C312.
             if _cadena_c_calc and _billing_c_base > 0:
-                _billing_c_unramped = _billing_c_base * (1.0 + ipc_incremental)
+                _billing_c_unramped = _billing_c_base * (1.0 + ipc_incremental_t)
                 _tasa_ica_c = float(ctx.get("tasa_ica", 0.01))
                 _tasa_gmf_c = float(ctx.get("tasa_gmf", 0.004))
                 _tasa_pol_c_mes = sum(
@@ -744,13 +744,14 @@ class MotorDeReglas:
             # Ingreso Cadena B: base × IPC_incremental × ramp_up (mirrors ingreso_cadena_a).
             # Excel V2-8: 'Visión P&G'!J21 = C304 × J15(ramp_up) × (1+IPC_anual)
             if _cadena_b_calc:
-                ctx["ingreso_cadena_b"] = _ingreso_b_base * (1.0 + ipc_incremental) * ramp_up
+                # Excel V2-8: 'Visión P&G'!J21 = C304 × ramp × (1+AumentoXAño[L8]) — L8=comp_tecnologico
+                ctx["ingreso_cadena_b"] = _ingreso_b_base * (1.0 + ipc_incremental_t) * ramp_up
             else:
                 ctx["ingreso_cadena_b"] = 0.0
 
-            # Ingreso Cadena C: base × IPC_incremental × ramp_up (mirrors ingreso_cadena_b)
+            # Ingreso Cadena C: base × IPC_incremental_t × ramp_up — análogo a B (L8=comp_tecnologico)
             if _cadena_c_calc:
-                ctx["ingreso_cadena_c"] = _ingreso_c_base * (1.0 + ipc_incremental) * ramp_up
+                ctx["ingreso_cadena_c"] = _ingreso_c_base * (1.0 + ipc_incremental_t) * ramp_up
             else:
                 ctx["ingreso_cadena_c"] = 0.0
 
@@ -762,7 +763,8 @@ class MotorDeReglas:
                 _h_base = nomina_fija * _prev_h_factor
                 _t_base = no_payroll_fijo * _prev_t_factor
                 ctx["costos_financiacion_mensual"] = (
-                    (_h_base + _t_base) * meses_cc * tasa_interes * (1.0 + ipc_incremental)
+                    _h_base * meses_cc * tasa_interes * (1.0 + ipc_incremental_h)
+                    + _t_base * meses_cc * tasa_interes * (1.0 + ipc_incremental_t)
                 )
             else:
                 ctx["costos_financiacion_mensual"] = 0.0
