@@ -271,9 +271,17 @@ class NominaCalculator:
                 continue
             nombre = fila.get("position_name") or fila.get("position_id", "")
 
-            # Excel V2-8: NL!C181 = SUM(C155:C177) — la fila Esp (C178) queda excluida del SV.
-            # La comisión del Esp es costo fijo (va al SF vía NL zona 1), no variable.
+            # Excel V2-8 · NL!C178 = INP!D61 × CCA!E101 = commission × pct_perfil.
+            # NL!C181 = SUM(C155:C178) incluye el Esp → P&G SV incluye comisión del Esp.
             if "especialista" in nombre.lower():
+                sum_personalizado = 0.0
+                for pr in fila.get("por_perfil", []):
+                    try:
+                        sum_personalizado += float(pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        pass
+                factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
+                total += comision * factor_total
                 continue
 
             cantidad = self._calcular_cantidad(fila, perfiles)
@@ -534,10 +542,9 @@ class NominaCalculator:
             if fila_especialista.get("incluido", False) and total_fte > 0:
                 cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
                 if cargo_data:
-                    # Excel NL!C66: usa CE sin comisión × factor. La comisión del Esp está en SF
-                    # (aparece en zona 1 sin el delta de comisión → SUM(C43:C80) excluye ce_delta).
-                    # P&G NL = SF + SV; Esp NL usa base sin comisión para que NL+SV sean consistentes.
-                    costo_esp = self._get_costo_empresa(dict(cargo_data, comision=0))
+                    # Excel V2-8 · NL!C66 = INP!AM61 × complejidad × 3 × pct / Panel!C11.
+                    # INP!AM61 incluye comisión (D61=500k) → CE con comisión completa.
+                    costo_esp = self._get_costo_empresa(cargo_data)
                     sum_personalizado = 0.0
                     for pr in fila_especialista.get("por_perfil", []):
                         try:
