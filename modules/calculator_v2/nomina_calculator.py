@@ -290,8 +290,14 @@ class NominaCalculator:
             if cantidad <= 0:
                 continue
             # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
+            # Si personalizado > 0, el ratio ya incluye el ajuste — no duplicar pct_rotacion.
             if "otaci" in nombre.lower() and "(" in nombre:
-                cantidad *= pct_rotacion
+                _has_pers = any(
+                    float(pr.get("personalizado") or 0) > 0
+                    for pr in fila.get("por_perfil", [])
+                )
+                if not _has_pers:
+                    cantidad *= pct_rotacion
             total += comision * cantidad
         return total
 
@@ -407,8 +413,16 @@ class NominaCalculator:
             # Cantidad (con ajuste de rotación si aplica).
             cantidad = self._calcular_cantidad(fila, perfiles)
             # Excel CCA!E91:E92 = (FTE/ratio) × Panel!C20 para cargos "(Rotación)".
+            # Cuando personalizado > 0, el valor ya representa el ratio CCA completo
+            # (equivalente a editar manualmente la celda CCA!E91), por lo que pct_rotacion
+            # NO se aplica de nuevo — de lo contrario se duplica el ajuste de rotación.
             if "otaci" in nombre_lower and "(" in nombre:
-                cantidad *= pct_rotacion
+                _has_personalizado = any(
+                    float(pr.get("personalizado") or 0) > 0
+                    for pr in fila.get("por_perfil", [])
+                )
+                if not _has_personalizado:
+                    cantidad *= pct_rotacion
 
             # Acumular headcount para Aprendiz/Inclusión (incluye Agente Básico 1 ratio=1).
             if cantidad > 0:
