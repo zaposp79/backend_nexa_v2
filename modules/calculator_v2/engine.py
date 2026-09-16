@@ -399,6 +399,14 @@ class MotorDeReglas:
         ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
             _costo_op_hm, _ctx_base, for_pricing=True
         )
+        # Vision P&G ICA/GMF/Pol/Com for A: Pólizas-FC col M uses full cap (not (N-1)/N HME average)
+        if financiacion_activa:
+            _costo_op_hm_full = _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing + _cap_charge_pricing_a
+            _, componentes_pricing_pyg = self._compute_ingreso_cadena_a_hm(
+                _costo_op_hm_full, _ctx_base, for_pricing=True
+            )
+        else:
+            componentes_pricing_pyg = componentes_pricing
         # Corrección: el numerador HME debe incluir el cap completo (C265 = cap_flat).
         # La función ya dividió por denominador_a; sumar cap_residual / denominador_a.
         _margen_a_hm = float(_ctx_base.get("margen_a", 0.18))
@@ -456,18 +464,19 @@ class MotorDeReglas:
                 _tasa_gmf_b0 = float(_ctx_base.get("tasa_gmf", 0.004))
                 # Excel V2-8 HME C275: cap_charge_B = _costo_b_op × meses_cc × tasa
                 _cap_charge_pricing_b = _costo_b_op * meses_cc * tasa_interes if financiacion_activa else 0.0
-                # Excel E406: base_costo = Op_B + cap_B → billing_eff = (Op_B+cap_B)/fm_b
-                # Mes 1 tiene cap=0 (CT[k-1]=0), meses 2..N tienen cap=cap_flat.
-                # El HME promedia sobre N meses → cap efectivo para pol/com/ICA/GMF = (N-1)/N × cap_flat.
-                # El cap completo sí va en el numerador del HME (C275 incluye mes N+1 con cap≠0).
+                # HME (ingreso): billing promedia meses 1..N → cap efectivo = (N-1)/N × cap_flat.
                 _cap_hme_billing_b = _cap_charge_pricing_b * (duracion_meses - 1) / max(duracion_meses, 1)
                 _billing_b_base_eff = (_costo_b_op + _cap_hme_billing_b) / _fm_b
                 _pol_b0 = _billing_b_base_eff * _tasa_pol_b0
                 _com_b0 = _billing_b_base_eff * _tasa_com_b0
-                # Excel Pólizas-FC!E188: ICA_B = billing_eff × (1+(pol+com)/fm_b) × tasa_ica
                 _ica_b0 = _billing_b_base_eff * (1.0 + (_tasa_pol_b0 + _tasa_com_b0) / _fm_b) * _tasa_ica_b0
-                # Excel Pólizas-FC!E269: GMF_B promedia meses 1..N (mes 1 sin cap) → base usa (N-1)/N × cap
                 _gmf_b0 = (_costo_b_op + _cap_hme_billing_b + _billing_b_base_eff * (_tasa_pol_b0 + _tasa_com_b0)) * _tasa_gmf_b0
+                # Vision P&G ICA/GMF/Pol/Com: Pólizas-FC col M = mes activo con cap completo.
+                _billing_b_full = (_costo_b_op + _cap_charge_pricing_b) / _fm_b
+                _pol_b0_pyg = _billing_b_full * _tasa_pol_b0
+                _com_b0_pyg = _billing_b_full * _tasa_com_b0
+                _ica_b0_pyg = _billing_b_full * (1.0 + (_tasa_pol_b0 + _tasa_com_b0) / _fm_b) * _tasa_ica_b0
+                _gmf_b0_pyg = (_costo_b_op + _cap_charge_pricing_b + _billing_b_full * (_tasa_pol_b0 + _tasa_com_b0)) * _tasa_gmf_b0
                 # Excel V2-8 · 'Hoja Maestra Escenarios'!C304 · formula: =C303/(1-$G$254)
                 # Numerador usa cap completo (C275 incluye mes N+1 → avg = cap_flat)
                 _ingreso_b_base = (_costo_b_op + _pol_b0 + _com_b0 + _ica_b0 + _gmf_b0 + _cap_charge_pricing_b) / _fm_b
@@ -502,16 +511,19 @@ class MotorDeReglas:
                 _tasa_gmf_c0 = float(_ctx_base.get("tasa_gmf", 0.004))
                 # Excel V2-8 HME C285: cap_charge_C = _costo_c_op × meses_cc × tasa
                 _cap_charge_pricing_c = _costo_c_op * meses_cc * tasa_interes if financiacion_activa else 0.0
-                # Mes 1 tiene cap=0; meses 2..N tienen cap=cap_flat.
-                # Billing base promedio para pol/com/ICA/GMF = (costo_op + (N-1)/N × cap) / fm_c.
+                # HME (ingreso): billing promedia meses 1..N → cap efectivo = (N-1)/N × cap_flat.
                 _cap_hme_billing_c = _cap_charge_pricing_c * (duracion_meses - 1) / max(duracion_meses, 1)
                 _billing_c_base_eff = (_costo_c_op + _cap_hme_billing_c) / _fm_c
                 _pol_c0 = _billing_c_base_eff * _tasa_pol_c0
                 _com_c0 = _billing_c_base_eff * _tasa_com_c0
-                # Excel Pólizas-FC!M215: ICA_C = billing_eff × (1+(pol+com)/fm_c) × tasa_ica
                 _ica_c0 = _billing_c_base_eff * (1.0 + (_tasa_pol_c0 + _tasa_com_c0) / _fm_c) * _tasa_ica_c0
-                # Excel Pólizas-FC: GMF_C promedia meses 1..N (mes 1 sin cap) → base usa (N-1)/N × cap
                 _gmf_c0 = (_costo_c_op + _cap_hme_billing_c + _billing_c_base_eff * (_tasa_pol_c0 + _tasa_com_c0)) * _tasa_gmf_c0
+                # Vision P&G ICA/GMF/Pol/Com: Pólizas-FC col M = mes activo con cap completo.
+                _billing_c_full = (_costo_c_op + _cap_charge_pricing_c) / _fm_c
+                _pol_c0_pyg = _billing_c_full * _tasa_pol_c0
+                _com_c0_pyg = _billing_c_full * _tasa_com_c0
+                _ica_c0_pyg = _billing_c_full * (1.0 + (_tasa_pol_c0 + _tasa_com_c0) / _fm_c) * _tasa_ica_c0
+                _gmf_c0_pyg = (_costo_c_op + _cap_charge_pricing_c + _billing_c_full * (_tasa_pol_c0 + _tasa_com_c0)) * _tasa_gmf_c0
                 # C311 = Op_C + financieros; C312 = C311/fm_c
                 # Excel V2-8 · 'Hoja Maestra Escenarios'!C312 · formula: =C311/(1-$G$255)
                 _ingreso_c_base = (_costo_c_op + _pol_c0 + _com_c0 + _ica_c0 + _gmf_c0 + _cap_charge_pricing_c) / _fm_c
@@ -662,94 +674,113 @@ class MotorDeReglas:
             ctx["inversiones_mensual"] = _no_payroll_detalle["inversiones"] * double_t
             ctx["costos_fijos_mensual"] = _no_payroll_detalle["costos_fijos"] * double_t
 
-            # Componentes financieros reales del mes (ICA/GMF con N de pólizas activas este mes)
-            ctx["ica_hm"] = componentes_cost_mes.get("ica_hm", 0.0)
-            ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
-            ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
-            ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
-            # ICA/GMF/Pólizas de Cadena B — sobre _billing_b_base (B = Op_B/fm_b), NO sobre C304.
-            # Pólizas-FC!E188: ICA_B = (Op_B+Pol_B)/fm_b × ica = billing_b × (1+pol/fm_b) × ica
-            # Pólizas-FC!E269: GMF_B = (Op_B+Pol_B) × gmf (base incluye Pol, diferente de Cadena C)
-            if _cadena_b_calc and _billing_b_base > 0:
-                # Excel HME: ICA/GMF/Pólizas B se calculan sobre base constante (sin IPC).
-                # _billing_b_base_eff = _costo_b_op / _fm_b ya fue calculado antes del loop.
-                _cap_b_mes = _prev_b * meses_cc * tasa_interes if financiacion_activa and mes > 1 else 0.0
-                _billing_b_with_cap = _billing_b_base_eff + (_cap_b_mes / _fm_b if _fm_b > 0 else 0.0)
-                _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
-                _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
-                _tasa_pol_b_mes = sum(
-                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
-                    for p in polizas_activas_mes
-                    if "comisi" not in str(p.get("nombre", "")).lower()
-                )
-                _tasa_com_b_mes = sum(
-                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0)) * _COMISION_ADMIN_FACTOR_HM
-                    for p in polizas_activas_mes
-                    if "comisi" in str(p.get("nombre", "")).lower()
-                )
-                # Excel Pólizas-FC!M188: ICA_B = billing_with_cap × (1+(pol+com)/fm_b) × tasa_ica
-                _ica_b_billing = (
-                    _billing_b_with_cap * (1.0 + (_tasa_pol_b_mes + _tasa_com_b_mes) / _fm_b)
-                    if _fm_b > 0 else _billing_b_with_cap
-                )
-                _ica_b = _ica_b_billing * _tasa_ica_b
-                # Excel Pólizas-FC!M269: GMF_B = (Op_B + cap_B + billing_with_cap×(pol+com)) × tasa_gmf
-                _pol_b_billing_mes = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_com_b_mes)
-                _gmf_b = (_costo_b_op + _cap_b_mes + _pol_b_billing_mes) * _tasa_gmf_b
-                # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
-                _pol_b = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_ext_pol_amort)
-                _com_b = _billing_b_with_cap * _tasa_com_b_mes
-                ctx["ica_hm"] += _ica_b
-                # Excel Pólizas-FC!M269: GMF_B = (costo_b_mes + Pol_billing_mes) × tasa_gmf
-                ctx["gmf_hm"] += _gmf_b
-                ctx["polizas_puras_hm"] += _pol_b
-                ctx["comision_admin_hm"] += _com_b
-                ctx["ica_cadena_b"] = _ica_b
-                ctx["gmf_cadena_b"] = _gmf_b
-                ctx["polizas_cadena_b"] = _pol_b
-                ctx["comision_admin_cadena_b"] = _com_b
-
-            # ICA/GMF/Pólizas de Cadena C — sobre _billing_c_base (B = Op_C/fm_c), NO sobre C312.
-            # C312 incorpora la recuperación de financieros en el ingreso bruto; las filas de
-            # ICA/GMF/Pol del P&G usan B como base (Pólizas-FC M215), no C312.
-            if _cadena_c_calc and _billing_c_base > 0:
-                # Excel HME: ICA/GMF/Pólizas C se calculan sobre base constante (sin IPC).
-                # _billing_c_base_eff = _costo_c_op / _fm_c ya fue calculado antes del loop.
-                _cap_c_mes = _prev_c * meses_cc * tasa_interes if financiacion_activa and mes > 1 else 0.0
-                _billing_c_with_cap = _billing_c_base_eff + (_cap_c_mes / _fm_c if _fm_c > 0 else 0.0)
-                _tasa_ica_c = float(ctx.get("tasa_ica", 0.01))
-                _tasa_gmf_c = float(ctx.get("tasa_gmf", 0.004))
-                _tasa_pol_c_mes = sum(
-                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
-                    for p in polizas_activas_mes
-                    if "comisi" not in str(p.get("nombre", "")).lower()
-                )
-                _tasa_com_c_mes = sum(
-                    float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0)) * _COMISION_ADMIN_FACTOR_HM
-                    for p in polizas_activas_mes
-                    if "comisi" in str(p.get("nombre", "")).lower()
-                )
-                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M215: billing_with_cap × (1+(pol+com)/fm_c) × ica
-                _ica_c_billing = (
-                    _billing_c_with_cap * (1.0 + (_tasa_pol_c_mes + _tasa_com_c_mes) / _fm_c)
-                    if _fm_c > 0 else _billing_c_with_cap
-                )
-                _ica_c = _ica_c_billing * _tasa_ica_c
-                # Excel Pólizas-FC: GMF_C = (Op_C + cap_C + billing_with_cap×(pol+com)) × tasa_gmf
-                _gmf_c = (_costo_c_op + _cap_c_mes + _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
-                # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
-                _pol_c = _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
-                _com_c = _billing_c_with_cap * _tasa_com_c_mes
-                ctx["ica_hm"] += _ica_c
-                # Excel Pólizas-FC: GMF_C usa B × fm_c = Op_C con IPC simple (1+ipc_incremental),
-                # no costo_cadena_c que lleva tarifa_canal × double_t² (P&G display, no billing).
-                ctx["gmf_hm"] += _gmf_c
-                ctx["polizas_puras_hm"] += _pol_c
-                ctx["comision_admin_hm"] += _com_c
-                ctx["ica_cadena_c"] = _ica_c
-                ctx["gmf_cadena_c"] = _gmf_c
-                ctx["polizas_cadena_c"] = _pol_c
-                ctx["comision_admin_cadena_c"] = _com_c
+            # ICA/GMF/Pol/Com: cuando hay financiacion, Excel Vision P&G usa HME_base × (1+IPC_año)
+            # para todos los componentes (no billing mensual real que varía con cap).
+            # Sin financiacion: billing mensual real (comportamiento actual, validado OK).
+            if financiacion_activa:
+                _ipc_fin = 1.0 + ipc_incremental_t
+                # Cadena A: Vision P&G ICA usa full cap billing (Pólizas-FC col M), scaled by IPC
+                ctx["ica_hm"] = componentes_pricing_pyg.get("ica_hm", 0.0) * _ipc_fin
+                ctx["gmf_hm"] = componentes_pricing_pyg.get("gmf_hm", 0.0) * _ipc_fin
+                ctx["comision_admin_hm"] = componentes_pricing_pyg.get("comision_admin_hm", 0.0) * _ipc_fin
+                ctx["polizas_puras_hm"] = componentes_pricing_pyg.get("polizas_puras_hm", 0.0) * _ipc_fin
+                # Cadena B: full cap billing (pyg) scaled by IPC
+                if _cadena_b_calc and _fm_b > 0:
+                    _ica_b = _ica_b0_pyg * _ipc_fin
+                    _gmf_b = _gmf_b0_pyg * _ipc_fin
+                    _pol_b = _pol_b0_pyg * _ipc_fin
+                    _com_b = _com_b0_pyg * _ipc_fin
+                    ctx["ica_hm"] += _ica_b
+                    ctx["gmf_hm"] += _gmf_b
+                    ctx["polizas_puras_hm"] += _pol_b
+                    ctx["comision_admin_hm"] += _com_b
+                    ctx["ica_cadena_b"] = _ica_b
+                    ctx["gmf_cadena_b"] = _gmf_b
+                    ctx["polizas_cadena_b"] = _pol_b
+                    ctx["comision_admin_cadena_b"] = _com_b
+                # Cadena C: full cap billing (pyg) scaled by IPC
+                if _cadena_c_calc and _fm_c > 0:
+                    _ica_c = _ica_c0_pyg * _ipc_fin
+                    _gmf_c = _gmf_c0_pyg * _ipc_fin
+                    _pol_c = _pol_c0_pyg * _ipc_fin
+                    _com_c = _com_c0_pyg * _ipc_fin
+                    ctx["ica_hm"] += _ica_c
+                    ctx["gmf_hm"] += _gmf_c
+                    ctx["polizas_puras_hm"] += _pol_c
+                    ctx["comision_admin_hm"] += _com_c
+                    ctx["ica_cadena_c"] = _ica_c
+                    ctx["gmf_cadena_c"] = _gmf_c
+                    ctx["polizas_cadena_c"] = _pol_c
+                    ctx["comision_admin_cadena_c"] = _com_c
+            else:
+                # Sin financiacion: billing mensual real (comportamiento original, validado OK)
+                ctx["ica_hm"] = componentes_cost_mes.get("ica_hm", 0.0)
+                ctx["gmf_hm"] = componentes_cost_mes.get("gmf_hm", 0.0)
+                ctx["comision_admin_hm"] = componentes_cost_mes.get("comision_admin_hm", 0.0)
+                ctx["polizas_puras_hm"] = componentes_cost_mes.get("polizas_puras_hm", 0.0)
+                if _cadena_b_calc and _billing_b_base > 0:
+                    _cap_b_mes = 0.0
+                    _billing_b_with_cap = _billing_b_base_eff + (_cap_b_mes / _fm_b if _fm_b > 0 else 0.0)
+                    _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
+                    _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
+                    _tasa_pol_b_mes = sum(
+                        float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                        for p in polizas_activas_mes
+                        if "comisi" not in str(p.get("nombre", "")).lower()
+                    )
+                    _tasa_com_b_mes = sum(
+                        float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0)) * _COMISION_ADMIN_FACTOR_HM
+                        for p in polizas_activas_mes
+                        if "comisi" in str(p.get("nombre", "")).lower()
+                    )
+                    _ica_b_billing = (
+                        _billing_b_with_cap * (1.0 + (_tasa_pol_b_mes + _tasa_com_b_mes) / _fm_b)
+                        if _fm_b > 0 else _billing_b_with_cap
+                    )
+                    _ica_b = _ica_b_billing * _tasa_ica_b
+                    _pol_b_billing_mes = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_com_b_mes)
+                    _gmf_b = (_costo_b_op + _cap_b_mes + _pol_b_billing_mes) * _tasa_gmf_b
+                    _pol_b = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_ext_pol_amort)
+                    _com_b = _billing_b_with_cap * _tasa_com_b_mes
+                    ctx["ica_hm"] += _ica_b
+                    ctx["gmf_hm"] += _gmf_b
+                    ctx["polizas_puras_hm"] += _pol_b
+                    ctx["comision_admin_hm"] += _com_b
+                    ctx["ica_cadena_b"] = _ica_b
+                    ctx["gmf_cadena_b"] = _gmf_b
+                    ctx["polizas_cadena_b"] = _pol_b
+                    ctx["comision_admin_cadena_b"] = _com_b
+                if _cadena_c_calc and _billing_c_base > 0:
+                    _cap_c_mes = 0.0
+                    _billing_c_with_cap = _billing_c_base_eff + (_cap_c_mes / _fm_c if _fm_c > 0 else 0.0)
+                    _tasa_ica_c = float(ctx.get("tasa_ica", 0.01))
+                    _tasa_gmf_c = float(ctx.get("tasa_gmf", 0.004))
+                    _tasa_pol_c_mes = sum(
+                        float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0))
+                        for p in polizas_activas_mes
+                        if "comisi" not in str(p.get("nombre", "")).lower()
+                    )
+                    _tasa_com_c_mes = sum(
+                        float(p.get("pct_poliza", 0)) * float(p.get("pct_atribuible", 0)) * _COMISION_ADMIN_FACTOR_HM
+                        for p in polizas_activas_mes
+                        if "comisi" in str(p.get("nombre", "")).lower()
+                    )
+                    _ica_c_billing = (
+                        _billing_c_with_cap * (1.0 + (_tasa_pol_c_mes + _tasa_com_c_mes) / _fm_c)
+                        if _fm_c > 0 else _billing_c_with_cap
+                    )
+                    _ica_c = _ica_c_billing * _tasa_ica_c
+                    _gmf_c = (_costo_c_op + _cap_c_mes + _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
+                    _pol_c = _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
+                    _com_c = _billing_c_with_cap * _tasa_com_c_mes
+                    ctx["ica_hm"] += _ica_c
+                    ctx["gmf_hm"] += _gmf_c
+                    ctx["polizas_puras_hm"] += _pol_c
+                    ctx["comision_admin_hm"] += _com_c
+                    ctx["ica_cadena_c"] = _ica_c
+                    ctx["gmf_cadena_c"] = _gmf_c
+                    ctx["polizas_cadena_c"] = _pol_c
+                    ctx["comision_admin_cadena_c"] = _com_c
 
             # Suma financiera completa (ICA + GMF + Comisión + puras) — base para otros cálculos.
             # La vista P&G row 73 usa solo polizas_puras_hm (ver screen_mapper.py).
