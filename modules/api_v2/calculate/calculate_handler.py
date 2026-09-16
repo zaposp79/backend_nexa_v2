@@ -136,13 +136,15 @@ def _inject_nomina_base_params(request_data: Dict[str, Any], param_store: Docume
         if datos_op.get("aux_transporte") is None:
             datos_op["aux_transporte"] = round(aux_transporte, 4)
 
+        hr_data = hr_repo.get_active()
+
         if not datos_op.get("costo_empresa_sena"):
-            hr_data = hr_repo.get_active()
             sena_row = next(
                 (n for n in hr_data.nomina if n.cargo.strip().lower() == "aprendiz sena"),
                 None,
             )
             if sena_row and sena_row.salario > 0:
+                # W59 = M59 + P59 + U59 + V59 (Inputs de Nomina formula structure)
                 costo = calcular_costo_empresa_sena(
                     sena_row.salario,
                     smlv=smlv,
@@ -151,6 +153,38 @@ def _inject_nomina_base_params(request_data: Dict[str, Any], param_store: Docume
                 datos_op["costo_empresa_sena"] = round(costo, 4)
                 logger.info("[v2] costo_empresa_sena inyectado desde HR: %.2f (smlv=%.0f, aux=%.0f)",
                             costo, smlv, aux_transporte)
+
+        # Inyectar ratios de Aprendiz SENA e Inclusión desde HR-Ratios si están ausentes o en cero.
+        # Espejo de CCA!E126 (Aprendiz SENA) y CCA!E127 (Inclusión) que vienen de la parametrización.
+        _hr_ratio_map = {
+            r.cargo.strip().lower(): r.agentes
+            for r in hr_data.ratios
+            if r.cargo and r.agentes > 0
+        }
+
+        cadena_a = request_data.get("condiciones_cadena_a", {})
+        ratios_filas = cadena_a.get("ratios", {}).get("filas", [])
+        for fila in ratios_filas:
+            nombre = (fila.get("position_name") or fila.get("position_id") or "").strip().lower()
+            if nombre not in ("aprendiz sena", "inclusión", "inclusion"):
+                continue
+            # Busca si ya tiene ratio válido en algún por_perfil
+            tiene_ratio = any(
+                float(str(pr.get("ratio", "0")).strip() or "0") > 0
+                for pr in fila.get("por_perfil", [])
+            )
+            if tiene_ratio:
+                continue
+            hr_ratio = _hr_ratio_map.get(nombre)
+            if not hr_ratio:
+                # Fallback: buscar sin tilde
+                hr_ratio = _hr_ratio_map.get(nombre.replace("ó", "o").replace("ú", "u"))
+            if hr_ratio and hr_ratio > 0:
+                for pr in fila.get("por_perfil", []):
+                    pr["ratio"] = str(int(hr_ratio))
+                if not fila.get("por_perfil"):
+                    fila["por_perfil"] = [{"indice_perfil": 0, "ratio": str(int(hr_ratio)), "personalizado": ""}]
+                logger.info("[v2] Ratio HR inyectado para '%s': %g", nombre, hr_ratio)
     except Exception as exc:
         logger.warning("[v2] No se pudieron cargar params nómina base (%s), el motor usará defaults", exc)
 
