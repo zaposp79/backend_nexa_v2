@@ -82,29 +82,16 @@ def calcular_costo_empresa_sena(
     smlv: float = _SMLV_DEFAULT,
     aux_transporte: float = _AUX_TRANSPORTE,
 ) -> float:
-    """Costo mensual para Aprendiz SENA e Inclusión (sin pensión, ARL, salud, dotaciones).
+    """Costo mensual para Aprendiz SENA e Inclusión.
 
-    Excel V2-8: Inputs de Nomina row 59/60 — I=J=K=L=V=0; W = M + P(caja) + U(prestaciones).
-    Fórmula: t_haberes + caja + cesantías + primas + interés_cesantía + vacaciones.
+    Excel V2-8: Inputs de Nomina row 59/60 — solo M=t_haberes; P=J=K=L=N=O=Q=R=S=T=U=V=0.
+    W59 = M59 = salario + aux_transporte (ninguna carga parafiscal ni prestacional).
     """
     if salario_base <= 0:
         return 0.0
     aux = aux_transporte if 0 < salario_base < 2 * smlv else 0.0
-    t_haberes = salario_base + aux
-    base_p = salario_base  # (H - G) = solo salario, sin aux transporte
-
-    # Parafiscales: solo caja (O=ICBF+Sena también = 0 para SENA apprentices)
-    caja = base_p * _TASA_CAJA
-
-    # Prestaciones (normales)
-    cesantias = t_haberes * _TASA_CESANTIAS
-    primas = t_haberes * _TASA_PRIMAS
-    interes_cesantia = cesantias * _TASA_INTERES_CESANTIA
-    vacaciones = base_p * _TASA_VACACIONES
-    prestaciones = cesantias + primas + interes_cesantia + vacaciones
-
-    # M = t_haberes (seg social empleador = 0), V = 0 (dotaciones = 0)
-    return t_haberes + caja + prestaciones
+    # Excel V2-8 · INP!W59 = M59 = t_haberes; P59=U59=V59=0
+    return salario_base + aux
 
 
 def calcular_costo_empresa(
