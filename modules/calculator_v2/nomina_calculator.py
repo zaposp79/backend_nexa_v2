@@ -286,18 +286,12 @@ class NominaCalculator:
                 total += comision * factor_total
                 continue
 
-            cantidad = self._calcular_cantidad(fila, perfiles)
+            _is_rot = "otaci" in nombre.lower() and "(" in nombre
+            cantidad = self._calcular_cantidad(
+                fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot
+            )
             if cantidad <= 0:
                 continue
-            # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
-            # Si personalizado > 0, el ratio ya incluye el ajuste — no duplicar pct_rotacion.
-            if "otaci" in nombre.lower() and "(" in nombre:
-                _has_pers = any(
-                    float(pr.get("personalizado") or 0) > 0
-                    for pr in fila.get("por_perfil", [])
-                )
-                if not _has_pers:
-                    cantidad *= pct_rotacion
             total += comision * cantidad
         return total
 
@@ -410,19 +404,14 @@ class NominaCalculator:
                 result.setdefault(nombre, 0.0)
                 continue
 
-            # Cantidad (con ajuste de rotación si aplica).
-            cantidad = self._calcular_cantidad(fila, perfiles)
+            # Cantidad (con ajuste de rotación por perfil si aplica).
             # Excel CCA!E91:E92 = (FTE/ratio) × Panel!C20 para cargos "(Rotación)".
-            # Cuando personalizado > 0, el valor ya representa el ratio CCA completo
-            # (equivalente a editar manualmente la celda CCA!E91), por lo que pct_rotacion
-            # NO se aplica de nuevo — de lo contrario se duplica el ajuste de rotación.
-            if "otaci" in nombre_lower and "(" in nombre:
-                _has_personalizado = any(
-                    float(pr.get("personalizado") or 0) > 0
-                    for pr in fila.get("por_perfil", [])
-                )
-                if not _has_personalizado:
-                    cantidad *= pct_rotacion
+            # _calcular_cantidad aplica pct_rotacion solo a los perfils SIN personalizado,
+            # permitiendo mixes parciales (un perfil override + otro auto).
+            _is_rot = "otaci" in nombre_lower and "(" in nombre
+            cantidad = self._calcular_cantidad(
+                fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot
+            )
 
             # Acumular headcount para Aprendiz/Inclusión (incluye Agente Básico 1 ratio=1).
             if cantidad > 0:
@@ -1439,21 +1428,31 @@ class NominaCalculator:
         return cargo or {}
 
     @staticmethod
-    def _calcular_cantidad(fila: Dict, perfiles: List[Dict]) -> float:
+    def _calcular_cantidad(
+        fila: Dict,
+        perfiles: List[Dict],
+        *,
+        pct_rotacion: float = 0.0,
+        is_rotation: bool = False,
+    ) -> float:
         """Distribución fraccionaria SIN ceil: fte_perfil / ratio (continua, no entera).
 
         Excel V2-8: Condiciones Cadena A E78 = (fte_total / ratio_cargo).
-        Si por_perfil[i].personalizado > 0, se usa ese valor directamente en lugar
-        del cálculo automático (equivale a editar manualmente E78/F78/G78 en el Excel).
+        Si por_perfil[i].personalizado > 0, se usa ese valor directamente (equivale
+        a editar manualmente la celda CCA!E91 en el Excel — el valor ya representa el
+        ratio CCA completo, sin necesidad de aplicar pct_rotacion de nuevo).
+        Si personalizado == 0 e is_rotation=True, aplica pct_rotacion al resultado
+        automático de ese perfil.
+        Esto permite mixes parciales: un perfil con override, otro con cálculo auto.
         """
         total = 0.0
         for pr in fila.get("por_perfil", []):
-            # Override manual: si personalizado > 0 se usa tal cual (Excel: celda editada)
             try:
                 personalizado_val = float(pr.get("personalizado") or 0)
             except (TypeError, ValueError):
                 personalizado_val = 0.0
             if personalizado_val > 0:
+                # Override manual: no aplicar pct_rotacion (ya incluido implícitamente)
                 total += personalizado_val
                 continue
 
@@ -1464,5 +1463,8 @@ class NominaCalculator:
             except ValueError:
                 ratio_val = 0.0
             if ratio_val > 0 and indice < len(perfiles):
-                total += float(perfiles[indice].get("fte", 0)) / ratio_val
+                q = float(perfiles[indice].get("fte", 0)) / ratio_val
+                if is_rotation:
+                    q *= pct_rotacion
+                total += q
         return total
