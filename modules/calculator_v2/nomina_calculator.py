@@ -818,10 +818,15 @@ class NominaCalculator:
         if fila_especialista is not None:
             nombre_esp = fila_especialista.get("position_name") or fila_especialista.get("position_id", "")
             costo_unit_esp = 0.0
+            comision_esp_pp = 0.0
             if fila_especialista.get("incluido", False) and total_fte > 0:
                 cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
                 if cargo_data:
                     costo_unit_esp = self._get_costo_empresa(cargo_data)
+                    # Excel V2-8 · P&G NL = zona1 (CE) + zona2 (raw commission).
+                    # Espeja el aggregate (desglose_por_cargo) para que payroll_base del CTS
+                    # sea consistente con nomina_total_mensual y el _scale de Crucero sea correcto.
+                    comision_esp_pp = float(cargo_data.get("comision", 0))
 
             # Construir mapa de personalizado por índice de perfil
             personalizado_pp: Dict[int, float] = {}
@@ -847,7 +852,10 @@ class NominaCalculator:
                 else:
                     fte_i = float(perfil.get("fte", 0))
                     factor_i = fte_i / total_fte
-                costo_i = costo_unit_esp * complejidad_factor * 3.0 * factor_i / duracion_meses
+                costo_i = (
+                    costo_unit_esp * complejidad_factor * 3.0 * factor_i / duracion_meses
+                    + comision_esp_pp * factor_i
+                )
                 result[perfil_nombre][nombre_esp] = result[perfil_nombre].get(nombre_esp, 0.0) + costo_i
 
         return result
