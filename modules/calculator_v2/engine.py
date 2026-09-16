@@ -371,10 +371,46 @@ class MotorDeReglas:
         # meses del deal (cap_ini_total / duracion_meses). La base de pricing incluye este costo
         # amortizado para que la tarifa cubra la capacitación inicial distribuida en el contrato.
         # Ejemplo: cap_ini=3M, duración=10M → +300K/mes en base de pricing → ingreso ≈ +376K.
+        # Costos Financiación — deben calcularse antes del pricing para incluir cap_charge en HME.
+        # Excel V2-8: 'Pólizas - Costo Financiacion'!D515-D516
+        # Panel!C21="Si" → cons_costo_de_financiacion > 0 en el request.
+        tasa_interes = float(indexacion.get("tasa_interes_mensual", 0.0))
+        periodo_pago_dias = int(datos_op.get("periodo_pago", 30))
+        cons_financiacion = float(datos_op.get("cons_costo_de_financiacion", 0.0))
+        financiacion_activa = cons_financiacion > 0 and tasa_interes > 0
+        # meses_cc = D515 = IFS(D514=30→1, 60→2, 90→3, else→4) — ref PCF!D515 ArrayFormula
+        if periodo_pago_dias == 30:
+            meses_cc = 1
+        elif periodo_pago_dias == 60:
+            meses_cc = 2
+        elif periodo_pago_dias == 90:
+            meses_cc = 3
+        else:
+            meses_cc = 4
+
         _cap_ini_amortizada_pricing = _cap_inicial_base / duracion_meses if duracion_meses > 0 else 0.0
+        # Excel V2-8 HME C265: cap_charge_A = (_avg_nomina + _avg_no_payroll) × meses_cc × tasa
+        _cap_charge_pricing_a = (_avg_nomina + _avg_no_payroll) * meses_cc * tasa_interes if financiacion_activa else 0.0
+        # Mes 1 tiene cap_A=0; meses 2..N tienen cap_A=cap_flat.
+        # Para pol/com/ICA/GMF (promedio meses 1..N): billing usa (N-1)/N × cap_flat.
+        # Para numerador HME (C265, incluye mes N+1): usar cap completo.
+        _cap_hme_billing_a = _cap_charge_pricing_a * (duracion_meses - 1) / max(duracion_meses, 1)
+        _costo_op_hm = _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing + _cap_hme_billing_a
         ingreso_cadena_a_base, componentes_pricing = self._compute_ingreso_cadena_a_hm(
-            _avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing, _ctx_base, for_pricing=True
+            _costo_op_hm, _ctx_base, for_pricing=True
         )
+        # Corrección: el numerador HME debe incluir el cap completo (C265 = cap_flat).
+        # La función ya dividió por denominador_a; sumar cap_residual / denominador_a.
+        _margen_a_hm = float(_ctx_base.get("margen_a", 0.18))
+        _denominador_a_hm = (
+            (1.0 - _margen_a_hm)
+            * (1.0 - float(_ctx_base.get("cont_op", 0.0)))
+            * (1.0 - float(_ctx_base.get("cont_com", 0.0)))
+            * (1.0 - float(_ctx_base.get("markup", 0.0)))
+            * (1.0 + float(_ctx_base.get("descuento", 0.0)))
+        )
+        if _denominador_a_hm > 0:
+            ingreso_cadena_a_base += (_cap_charge_pricing_a - _cap_hme_billing_a) / _denominador_a_hm
         # Excel V2-8: 'Hoja Maestra Escenarios'!C295 = payroll+nopay+pol+ICA+GMF (incluye financieros).
         # C296 = C295/(1-margen) — base para ingreso_cadena_a en la Visión P&G.
         # ingreso_cadena_a_base = C295/denominador_completo (contiene financieros).
@@ -418,14 +454,23 @@ class MotorDeReglas:
                 )
                 _tasa_ica_b0 = float(_ctx_base.get("tasa_ica", 0.01))
                 _tasa_gmf_b0 = float(_ctx_base.get("tasa_gmf", 0.004))
-                _pol_b0 = _billing_b_base * _tasa_pol_b0
-                _com_b0 = _billing_b_base * _tasa_com_b0
-                # Excel Pólizas-FC!E188: ICA_B = billing_b × (1+(pol+com)/fm_b) × tasa_ica
-                _ica_b0 = _billing_b_base * (1.0 + (_tasa_pol_b0 + _tasa_com_b0) / _fm_b) * _tasa_ica_b0
-                # Excel Pólizas-FC!E269: GMF_B = (Op_B + billing_b×(pol+com)) × tasa_gmf
-                _gmf_b0 = (_costo_b_op + _billing_b_base * (_tasa_pol_b0 + _tasa_com_b0)) * _tasa_gmf_b0
+                # Excel V2-8 HME C275: cap_charge_B = _costo_b_op × meses_cc × tasa
+                _cap_charge_pricing_b = _costo_b_op * meses_cc * tasa_interes if financiacion_activa else 0.0
+                # Excel E406: base_costo = Op_B + cap_B → billing_eff = (Op_B+cap_B)/fm_b
+                # Mes 1 tiene cap=0 (CT[k-1]=0), meses 2..N tienen cap=cap_flat.
+                # El HME promedia sobre N meses → cap efectivo para pol/com/ICA/GMF = (N-1)/N × cap_flat.
+                # El cap completo sí va en el numerador del HME (C275 incluye mes N+1 con cap≠0).
+                _cap_hme_billing_b = _cap_charge_pricing_b * (duracion_meses - 1) / max(duracion_meses, 1)
+                _billing_b_base_eff = (_costo_b_op + _cap_hme_billing_b) / _fm_b
+                _pol_b0 = _billing_b_base_eff * _tasa_pol_b0
+                _com_b0 = _billing_b_base_eff * _tasa_com_b0
+                # Excel Pólizas-FC!E188: ICA_B = billing_eff × (1+(pol+com)/fm_b) × tasa_ica
+                _ica_b0 = _billing_b_base_eff * (1.0 + (_tasa_pol_b0 + _tasa_com_b0) / _fm_b) * _tasa_ica_b0
+                # Excel Pólizas-FC!E269: GMF_B promedia meses 1..N (mes 1 sin cap) → base usa (N-1)/N × cap
+                _gmf_b0 = (_costo_b_op + _cap_hme_billing_b + _billing_b_base_eff * (_tasa_pol_b0 + _tasa_com_b0)) * _tasa_gmf_b0
                 # Excel V2-8 · 'Hoja Maestra Escenarios'!C304 · formula: =C303/(1-$G$254)
-                _ingreso_b_base = (_costo_b_op + _pol_b0 + _com_b0 + _ica_b0 + _gmf_b0) / _fm_b
+                # Numerador usa cap completo (C275 incluye mes N+1 → avg = cap_flat)
+                _ingreso_b_base = (_costo_b_op + _pol_b0 + _com_b0 + _ica_b0 + _gmf_b0 + _cap_charge_pricing_b) / _fm_b
 
         # Ingreso Cadena C base — Excel 'Hoja Maestra Escenarios'!C312 = C311/(1-margen_c)
         # C311 = Op_C + ICA + GMF + Pol (todos los costos incluyendo componentes financieros).
@@ -455,15 +500,21 @@ class MotorDeReglas:
                 )
                 _tasa_ica_c0 = float(_ctx_base.get("tasa_ica", 0.01))
                 _tasa_gmf_c0 = float(_ctx_base.get("tasa_gmf", 0.004))
-                _pol_c0 = _billing_c_base * _tasa_pol_c0
-                _com_c0 = _billing_c_base * _tasa_com_c0
-                # Excel Pólizas-FC!M215: ICA_C = billing_c × (1+(pol+com)/fm_c) × tasa_ica
-                _ica_c0 = _billing_c_base * (1.0 + (_tasa_pol_c0 + _tasa_com_c0) / _fm_c) * _tasa_ica_c0
-                # Excel Pólizas-FC: GMF_C = (Op_C + billing_c×(pol+com)) × tasa_gmf (igual que B)
-                _gmf_c0 = (_costo_c_op + _billing_c_base * (_tasa_pol_c0 + _tasa_com_c0)) * _tasa_gmf_c0
+                # Excel V2-8 HME C285: cap_charge_C = _costo_c_op × meses_cc × tasa
+                _cap_charge_pricing_c = _costo_c_op * meses_cc * tasa_interes if financiacion_activa else 0.0
+                # Mes 1 tiene cap=0; meses 2..N tienen cap=cap_flat.
+                # Billing base promedio para pol/com/ICA/GMF = (costo_op + (N-1)/N × cap) / fm_c.
+                _cap_hme_billing_c = _cap_charge_pricing_c * (duracion_meses - 1) / max(duracion_meses, 1)
+                _billing_c_base_eff = (_costo_c_op + _cap_hme_billing_c) / _fm_c
+                _pol_c0 = _billing_c_base_eff * _tasa_pol_c0
+                _com_c0 = _billing_c_base_eff * _tasa_com_c0
+                # Excel Pólizas-FC!M215: ICA_C = billing_eff × (1+(pol+com)/fm_c) × tasa_ica
+                _ica_c0 = _billing_c_base_eff * (1.0 + (_tasa_pol_c0 + _tasa_com_c0) / _fm_c) * _tasa_ica_c0
+                # Excel Pólizas-FC: GMF_C promedia meses 1..N (mes 1 sin cap) → base usa (N-1)/N × cap
+                _gmf_c0 = (_costo_c_op + _cap_hme_billing_c + _billing_c_base_eff * (_tasa_pol_c0 + _tasa_com_c0)) * _tasa_gmf_c0
                 # C311 = Op_C + financieros; C312 = C311/fm_c
                 # Excel V2-8 · 'Hoja Maestra Escenarios'!C312 · formula: =C311/(1-$G$255)
-                _ingreso_c_base = (_costo_c_op + _pol_c0 + _com_c0 + _ica_c0 + _gmf_c0) / _fm_c
+                _ingreso_c_base = (_costo_c_op + _pol_c0 + _com_c0 + _ica_c0 + _gmf_c0 + _cap_charge_pricing_c) / _fm_c
 
         # Pólizas activas del deal (para filtrar por mes en costos reales)
         _polizas_todos: List[Dict] = _ctx_base.get("polizas_activas", [])
@@ -483,30 +534,12 @@ class MotorDeReglas:
                 and int(p.get("meses_extension", 0) or 0) > 0
             ) / duracion_meses
 
-        # Costos Financiación — Excel V2-8: 'Pólizas - Costo Financiacion'!D515-D516
-        # Panel!C21="Si" → cons_costo_de_financiacion > 0 en el request.
-        # D515 = IFS(periodo_pago=30→1, 60→2, 90→3, else→4) = meses de capital charge.
-        # D516 = tasa mensual = Panel!L11 = indexacion.tasa_interes_mensual.
-        # Formula PCF!col_k = D515[k-1] × D516 × SUMIFS(CT![k-1], canal, modalidad)
-        # CT (Costos Totales) = SUMIFS(NominaLoaded!col + NoPayroll!col, perfil) — IPC simple NL-level.
-        # El P&G multiplica por (1 + IPC_incremental) — capa P&G sobre la base NL.
-        tasa_interes = float(indexacion.get("tasa_interes_mensual", 0.0))
-        periodo_pago_dias = int(datos_op.get("periodo_pago", 30))
-        cons_financiacion = float(datos_op.get("cons_costo_de_financiacion", 0.0))
-        financiacion_activa = cons_financiacion > 0 and tasa_interes > 0
-        # meses_cc = D515 = IFS(D514=30→1, 60→2, 90→3, else→4) — ref PCF!D515 ArrayFormula
-        if periodo_pago_dias == 30:
-            meses_cc = 1
-        elif periodo_pago_dias == 60:
-            meses_cc = 2
-        elif periodo_pago_dias == 90:
-            meses_cc = 3
-        else:
-            meses_cc = 4
         # Factores IPC de la capa NL (acumulados, simple) del mes anterior.
         # CT[k-1] = (nomina_fija + no_payroll_fijo) × ipc_factor_{k-1} — base del capital charge.
         _prev_h_factor = 1.0   # ipc_factor_{k-1} para comp_humano
         _prev_t_factor = 1.0   # ipc_factor_{k-1} para comp_tecnologico
+        _prev_b = 0.0          # costo Cadena B NL-level del mes anterior (para PCF)
+        _prev_c = 0.0          # costo Cadena C NL-level del mes anterior (para PCF)
 
         for mes in range(1, duracion_meses + 1):
             ctx = build_base_context(request_data, mes, ramp_up_override=ramp_up_campana)
@@ -548,12 +581,7 @@ class MotorDeReglas:
                 double_t = 1.0 + ipc_incremental_t
             nomina_mes = nomina_fija * double_h
             no_payroll_mes = no_payroll_fijo * double_t
-            # Excel V2-8: 'Nomina Loaded'!E234:E235 amortiza cap_inicial en todos los meses
-            # (dias × tarifa × FTEs / duracion_meses). Incluirla en la base de costo_op_mes
-            # es necesario para que ICA/GMF/Pólizas se calculen sobre la base correcta.
             _cap_inicial_amortizada = _cap_inicial_base / duracion_meses if duracion_meses > 0 else 0.0
-            # cap_ini es parte de nómina en Excel (NominaLoaded) → escala con comp_humano IPC
-            # Excel V2-8: P&G aplica (1+AumentoXAño) a toda la base NL incluyendo cap_ini
             costo_op_mes = nomina_mes + no_payroll_mes + _cap_inicial_amortizada * double_h
 
             # Ingreso: HME!C296 × (1 + IPC_incremental) — solo después del margen (sin ajustes comerciales)
@@ -569,8 +597,11 @@ class MotorDeReglas:
                 or mes <= duracion_meses + int(p.get("meses_extension") or 0)
             ]
             ctx_cost = {**_ctx_base, "polizas_activas": polizas_activas_mes}
+            # Excel P&G: ICA/GMF/Pólizas se calculan sobre la base HME (constante), no sobre
+            # costo_op_mes que varía con IPC. Usar _costo_op_hm garantiza valores constantes
+            # iguales a los de la Hoja Maestra de Escenarios, igual que en la Visión Excel.
             _, componentes_cost_mes = self._compute_ingreso_cadena_a_hm(
-                costo_op_mes, ctx_cost, for_pricing=False
+                _costo_op_hm, ctx_cost, for_pricing=False
             )
 
             # nomina_total_mensual = nómina recurrente mensual (sin cap_inicial).
@@ -640,7 +671,10 @@ class MotorDeReglas:
             # Pólizas-FC!E188: ICA_B = (Op_B+Pol_B)/fm_b × ica = billing_b × (1+pol/fm_b) × ica
             # Pólizas-FC!E269: GMF_B = (Op_B+Pol_B) × gmf (base incluye Pol, diferente de Cadena C)
             if _cadena_b_calc and _billing_b_base > 0:
-                _billing_b_unramped = _billing_b_base * (1.0 + ipc_incremental_t)
+                # Excel HME: ICA/GMF/Pólizas B se calculan sobre base constante (sin IPC).
+                # _billing_b_base_eff = _costo_b_op / _fm_b ya fue calculado antes del loop.
+                _cap_b_mes = _prev_b * meses_cc * tasa_interes if financiacion_activa and mes > 1 else 0.0
+                _billing_b_with_cap = _billing_b_base_eff + (_cap_b_mes / _fm_b if _fm_b > 0 else 0.0)
                 _tasa_ica_b = float(ctx.get("tasa_ica", 0.01))
                 _tasa_gmf_b = float(ctx.get("tasa_gmf", 0.004))
                 _tasa_pol_b_mes = sum(
@@ -653,18 +687,18 @@ class MotorDeReglas:
                     for p in polizas_activas_mes
                     if "comisi" in str(p.get("nombre", "")).lower()
                 )
-                # Excel Pólizas-FC!M188: ICA_B = billing_b × (1+(pol+com)/fm_b) × tasa_ica
+                # Excel Pólizas-FC!M188: ICA_B = billing_with_cap × (1+(pol+com)/fm_b) × tasa_ica
                 _ica_b_billing = (
-                    _billing_b_unramped * (1.0 + (_tasa_pol_b_mes + _tasa_com_b_mes) / _fm_b)
-                    if _fm_b > 0 else _billing_b_unramped
+                    _billing_b_with_cap * (1.0 + (_tasa_pol_b_mes + _tasa_com_b_mes) / _fm_b)
+                    if _fm_b > 0 else _billing_b_with_cap
                 )
                 _ica_b = _ica_b_billing * _tasa_ica_b
-                # Excel Pólizas-FC!M269: GMF_B = (Op_B + billing_b×(pol+com)) × tasa_gmf
-                _pol_b_billing_mes = _billing_b_unramped * (_tasa_pol_b_mes + _tasa_com_b_mes)
-                _gmf_b = (ctx["costo_cadena_b"] + _pol_b_billing_mes) * _tasa_gmf_b
+                # Excel Pólizas-FC!M269: GMF_B = (Op_B + cap_B + billing_with_cap×(pol+com)) × tasa_gmf
+                _pol_b_billing_mes = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_com_b_mes)
+                _gmf_b = (_costo_b_op + _cap_b_mes + _pol_b_billing_mes) * _tasa_gmf_b
                 # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
-                _pol_b = _billing_b_unramped * (_tasa_pol_b_mes + _tasa_ext_pol_amort)
-                _com_b = _billing_b_unramped * _tasa_com_b_mes
+                _pol_b = _billing_b_with_cap * (_tasa_pol_b_mes + _tasa_ext_pol_amort)
+                _com_b = _billing_b_with_cap * _tasa_com_b_mes
                 ctx["ica_hm"] += _ica_b
                 # Excel Pólizas-FC!M269: GMF_B = (costo_b_mes + Pol_billing_mes) × tasa_gmf
                 ctx["gmf_hm"] += _gmf_b
@@ -679,7 +713,10 @@ class MotorDeReglas:
             # C312 incorpora la recuperación de financieros en el ingreso bruto; las filas de
             # ICA/GMF/Pol del P&G usan B como base (Pólizas-FC M215), no C312.
             if _cadena_c_calc and _billing_c_base > 0:
-                _billing_c_unramped = _billing_c_base * (1.0 + ipc_incremental_t)
+                # Excel HME: ICA/GMF/Pólizas C se calculan sobre base constante (sin IPC).
+                # _billing_c_base_eff = _costo_c_op / _fm_c ya fue calculado antes del loop.
+                _cap_c_mes = _prev_c * meses_cc * tasa_interes if financiacion_activa and mes > 1 else 0.0
+                _billing_c_with_cap = _billing_c_base_eff + (_cap_c_mes / _fm_c if _fm_c > 0 else 0.0)
                 _tasa_ica_c = float(ctx.get("tasa_ica", 0.01))
                 _tasa_gmf_c = float(ctx.get("tasa_gmf", 0.004))
                 _tasa_pol_c_mes = sum(
@@ -692,18 +729,17 @@ class MotorDeReglas:
                     for p in polizas_activas_mes
                     if "comisi" in str(p.get("nombre", "")).lower()
                 )
-                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M215 · formula: =(CT!M91+M458)/fm_c×tasa_ica
-                # M458 = pol_billing = B × (pol+com); factor corrector: (1 + (pol+com)/fm_c)
+                # Excel V2-8 · 'Pólizas - Costo Financiacion'!M215: billing_with_cap × (1+(pol+com)/fm_c) × ica
                 _ica_c_billing = (
-                    _billing_c_unramped * (1.0 + (_tasa_pol_c_mes + _tasa_com_c_mes) / _fm_c)
-                    if _fm_c > 0 else _billing_c_unramped
+                    _billing_c_with_cap * (1.0 + (_tasa_pol_c_mes + _tasa_com_c_mes) / _fm_c)
+                    if _fm_c > 0 else _billing_c_with_cap
                 )
                 _ica_c = _ica_c_billing * _tasa_ica_c
-                # Excel Pólizas-FC: GMF_C = (Op_C + billing_c×(pol+com)) × tasa_gmf (igual que B)
-                _gmf_c = (ctx["costo_cadena_c"] + _billing_c_unramped * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
+                # Excel Pólizas-FC: GMF_C = (Op_C + cap_C + billing_with_cap×(pol+com)) × tasa_gmf
+                _gmf_c = (_costo_c_op + _cap_c_mes + _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_com_c_mes)) * _tasa_gmf_c
                 # Incluye extensión amortizada: espejo de pol_ext_amortized en cadena A
-                _pol_c = _billing_c_unramped * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
-                _com_c = _billing_c_unramped * _tasa_com_c_mes
+                _pol_c = _billing_c_with_cap * (_tasa_pol_c_mes + _tasa_ext_pol_amort)
+                _com_c = _billing_c_with_cap * _tasa_com_c_mes
                 ctx["ica_hm"] += _ica_c
                 # Excel Pólizas-FC: GMF_C usa B × fm_c = Op_C con IPC simple (1+ipc_incremental),
                 # no costo_cadena_c que lleva tarifa_canal × double_t² (P&G display, no billing).
@@ -755,23 +791,32 @@ class MotorDeReglas:
             else:
                 ctx["ingreso_cadena_c"] = 0.0
 
-            # Capital charge diferido — PCF!col_k = meses_cc[k-1] × tasa × CT[k-1] × (1+IPC_incr_k)
-            # CT[k-1] = NominaLoaded[k-1] + NoPayroll[k-1] con IPC simple (ipc_factor NL-level).
-            # El P&G aplica (1+ipc_incremental_k) como capa adicional (no reaplicar double_h).
+            # Capital charge diferido — PCF!col_k = meses_cc × tasa × CT[k-1]
+            # CT[k-1] = costos NL-level del mes anterior (sin P&G incremental).
+            # Cadena A: nomina_fija×ipc_factor[k-1] + nopayroll_fijo×ipc_factor[k-1]
+            # Cadena B/C: costo_b/c NL-level del mes anterior.
             # Mes 1 = 0 (no hay mes k-1); activo desde mes 2 si financiacion_activa.
             if financiacion_activa and mes > 1:
-                _h_base = nomina_fija * _prev_h_factor
-                _t_base = no_payroll_fijo * _prev_t_factor
-                ctx["costos_financiacion_mensual"] = (
-                    _h_base * meses_cc * tasa_interes * (1.0 + ipc_incremental_h)
-                    + _t_base * meses_cc * tasa_interes * (1.0 + ipc_incremental_t)
-                )
+                # Excel Vision P&G: costos_financiacion = HME_cap_total × (1 + IPC_año)
+                # Igual que ingreso_b: usa el cap de la Hoja Maestra escalado por IPC anual,
+                # no el cap NL-level del mes anterior (que daría mes 6 sin IPC).
+                _total_cap_hme = _cap_charge_pricing_a + _cap_charge_pricing_b + _cap_charge_pricing_c
+                ctx["costos_financiacion_mensual"] = _total_cap_hme * (1.0 + ipc_incremental_t)
             else:
                 ctx["costos_financiacion_mensual"] = 0.0
 
             # Actualiza factores IPC del mes actual (se usarán como base del mes siguiente).
             _prev_h_factor = ipc_factor_h if ipc_h_activo else 1.0
             _prev_t_factor = ipc_factor_t if ipc_t_activo else 1.0
+            # Costos NL-level de Cadena B/C para capital charge del próximo mes.
+            _prev_b = (
+                _cadena_b_calc.calcular_mes(ipc_factor_h, ipc_factor_t)["costo_cadena_b"]
+                if _cadena_b_calc else 0.0
+            )
+            _prev_c = (
+                _cadena_c_calc.calcular_mes(ipc_factor_h, ipc_factor_t)["costo_cadena_c"]
+                if _cadena_c_calc else 0.0
+            )
 
             # Evaluar rubros en orden topológico
             for rubro in rubros:
@@ -808,22 +853,12 @@ class MotorDeReglas:
 
         # Extra mes N+1: el capital charge basado en CT[N] se paga en el mes N+1.
         # _prev_h/_t_factor al salir del loop = ipc_factor del último mes (base de CT[N]).
+        # _prev_b/_prev_c = costo B/C NL-level del último mes.
         # PCF tiene una columna adicional más allá de duracion_meses que se suma a totales.
         if financiacion_activa:
-            ipc_incr_h_n1 = (
-                _compute_ipc_incremental(fecha_inicio, duracion_meses + 1, mes_ajuste_ipc, rates_h)
-                if ipc_h_activo else 0.0
-            )
-            ipc_incr_t_n1 = (
-                _compute_ipc_incremental(fecha_inicio, duracion_meses + 1, mes_ajuste_ipc, rates_t)
-                if ipc_t_activo else 0.0
-            )
             _h_base_n = nomina_fija * _prev_h_factor
             _t_base_n = no_payroll_fijo * _prev_t_factor
-            extra_fin = (
-                _h_base_n * meses_cc * tasa_interes * (1.0 + ipc_incr_h_n1)
-                + _t_base_n * meses_cc * tasa_interes * (1.0 + ipc_incr_t_n1)
-            )
+            extra_fin = (_h_base_n + _t_base_n + _prev_b + _prev_c) * meses_cc * tasa_interes
             totales["costos_financiacion_mensual"] = (
                 totales.get("costos_financiacion_mensual", 0.0) + extra_fin
             )
@@ -831,17 +866,24 @@ class MotorDeReglas:
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
         # Componentes financieros base (100% ramp, sin IPC) — reutiliza el call de pricing
-        # Excel V2-8: 'Visión Cost To Serve' — financiero = ICA + GMF + Comision + Polizas
+        # Excel V2-8: 'Visión Cost To Serve' — financiero = ICA + GMF + Comision + Polizas + Financiacion
         # (componentes de la Hoja Maestra Escenarios, for_pricing=True, una sola vez)
         ica_b = componentes_pricing.get("ica_hm", 0.0)
         gmf_b = componentes_pricing.get("gmf_hm", 0.0)
         com_b = componentes_pricing.get("comision_admin_hm", 0.0)
         pol_b = componentes_pricing.get("polizas_puras_hm", 0.0)
-        componente_financiero_base = ica_b + gmf_b + com_b + pol_b
+        # Excel V2-8 CTS fila 158: costo_financiacion = SUM(PCF por perfil) / duracion_meses.
+        # Solo cuando financiacion_activa; 0 cuando false → no rompe el caso existente.
+        _fin_mensual_cts = (
+            totales.get("costos_financiacion_mensual", 0.0) / max(duracion_meses, 1)
+            if financiacion_activa
+            else 0.0
+        )
+        componente_financiero_base = ica_b + gmf_b + com_b + pol_b + _fin_mensual_cts
 
         componentes_pricing_fin = {
             "ica": ica_b, "gmf": gmf_b, "polizas": pol_b, "comision": com_b,
-            "financiacion": totales.get("costos_financiacion_mensual", 0.0),
+            "financiacion": _fin_mensual_cts,
         }
         vision_cts = self._construir_vision_cts(
             request_data=request_data,
