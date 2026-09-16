@@ -552,7 +552,14 @@ class NominaCalculator:
                         except (TypeError, ValueError):
                             pass
                     factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
-                    result[nombre_esp] = costo_esp * complejidad_factor * 3.0 * factor_total / duracion_meses
+                    # Excel V2-8 · P&G NL = zona1 (CE via NL!C66) + zona2 (raw commission via NL!C178).
+                    # Esp aparece en AMBAS zonas: CE_with_commission×factor (zona1) + commission×factor (zona2).
+                    # Motor NL debe incluir ambas para coincidir con Excel P&G NL.
+                    comision_esp = float(cargo_data.get("comision", 0))
+                    result[nombre_esp] = (
+                        costo_esp * complejidad_factor * 3.0 * factor_total / duracion_meses
+                        + comision_esp * factor_total
+                    )
 
         return result
 
