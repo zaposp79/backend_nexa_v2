@@ -79,19 +79,21 @@ _FACTOR_EXTRA_NOCTURNO = 1.75
 
 def calcular_costo_empresa_sena(
     salario_base: float,
+    comision: float = 0.0,
     smlv: float = _SMLV_DEFAULT,
     aux_transporte: float = _AUX_TRANSPORTE,
 ) -> float:
-    """Costo mensual para Aprendiz SENA e Inclusión.
+    """Costo mensual para Aprendiz SENA e Inclusión (solo t_haberes).
 
-    Excel V2-8: Inputs de Nomina row 59/60 — solo M=t_haberes; P=J=K=L=N=O=Q=R=S=T=U=V=0.
-    W59 = M59 = salario + aux_transporte (ninguna carga parafiscal ni prestacional).
+    Excel V2-8: INP!W59 = H59 = salario + comision + aux_transporte.
+    J/N/P/Q/R/S/T/U/V = 0 (sin carga parafiscal ni prestacional).
+    Cuando hay comisión en CCA!F65/F66, se suma al costo como parte de t_haberes.
     """
     if salario_base <= 0:
         return 0.0
     aux = aux_transporte if 0 < salario_base < 2 * smlv else 0.0
-    # Excel V2-8 · INP!W59 = M59 = t_haberes; P59=U59=V59=0
-    return salario_base + aux
+    # Excel V2-8 · INP!W59 = C59 + D59 + G59 = salario + comision + aux
+    return salario_base + comision + aux
 
 
 def calcular_costo_empresa(
@@ -476,29 +478,30 @@ class NominaCalculator:
 
                 cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
                 if cargo_data and aprendiz_cantidad > 0:
-                    result[nombre_ap] = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost) * aprendiz_cantidad
+                    # Excel V2-8 · INP!W59 = salario + comision + aux (solo t_haberes).
+                    _smlv = float(datos_op.get("smlv") or _SMLV_DEFAULT)
+                    _aux_tr = float(datos_op.get("aux_transporte") or _AUX_TRANSPORTE)
+                    _sal_ap = float(cargo_data.get("salario", 0))
+                    _com_ap = float(cargo_data.get("comision", 0))
+                    _costo_ap = calcular_costo_empresa_sena(_sal_ap, _com_ap, _smlv, _aux_tr)
+                    result[nombre_ap] = (_costo_ap or sena_unit_cost) * aprendiz_cantidad
 
         # ── Inclusión ─────────────────────────────────────────────────────────
         # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127  (incluye Aprendiz SENA)
-        # Excel V2-8: INP!D60 = INDEX(CCA!F45:F67, MATCH('Inclusión', CCA!D105:D128, 0)).
-        # El MATCH encuentra 'Inclusión' en posición 23 de D105:D128 → INDEX(F45:F67,23) = F67 = Esp commission.
-        # Cuando CCA!F67>0, Inclusión recibe la misma comisión que el Esp → usa calcular_costo_empresa (no sena).
+        # Excel V2-8: INP!D60 = Inclusión usa su propia comisión de CCA!F66 (no la del Especialista).
+        # INP!W60 = H60 = salario + comision + aux (solo t_haberes, igual que SENA).
         if fila_inclusion is not None:
             nombre_inc = fila_inclusion.get("position_name") or fila_inclusion.get("position_id", "")
             if fila_inclusion.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
-                esp_com_for_inclusion = 0.0
-                if fila_especialista is not None:
-                    esp_cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
-                    if esp_cargo_data:
-                        esp_com_for_inclusion = float(esp_cargo_data.get("comision", 0))
                 costo_inc_unit = 0.0
                 if cargo_data:
-                    # Excel V2-8 · INP!D60: Inclusión hereda comisión del Esp de Proyectos (CCA!F67).
-                    if esp_com_for_inclusion > 0:
-                        costo_inc_unit = calcular_costo_empresa(float(cargo_data.get("salario", 0)), esp_com_for_inclusion)
-                    else:
-                        costo_inc_unit = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
+                    # Excel V2-8 · INP!W60 = C60 + D60 + G60 = salario + comision_inclusión + aux.
+                    _smlv = float(datos_op.get("smlv") or _SMLV_DEFAULT)
+                    _aux_tr = float(datos_op.get("aux_transporte") or _AUX_TRANSPORTE)
+                    _sal_inc = float(cargo_data.get("salario", 0))
+                    _com_inc = float(cargo_data.get("comision", 0))
+                    costo_inc_unit = calcular_costo_empresa_sena(_sal_inc, _com_inc, _smlv, _aux_tr)
 
                 any_personalizado_inc = any(
                     float(pr.get("personalizado") or 0) > 0
@@ -709,7 +712,12 @@ class NominaCalculator:
             if fila_aprendiz.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
                 if cargo_data:
-                    costo_unit_ap = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
+                    # Excel V2-8 · INP!W59 = salario + comision + aux (solo t_haberes).
+                    _smlv = float(datos_op.get("smlv") or _SMLV_DEFAULT)
+                    _aux_tr = float(datos_op.get("aux_transporte") or _AUX_TRANSPORTE)
+                    _sal_ap = float(cargo_data.get("salario", 0))
+                    _com_ap = float(cargo_data.get("comision", 0))
+                    costo_unit_ap = calcular_costo_empresa_sena(_sal_ap, _com_ap, _smlv, _aux_tr) or sena_unit_cost
 
             for pr in fila_aprendiz.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
@@ -756,17 +764,13 @@ class NominaCalculator:
             if fila_inclusion.get("incluido", False):
                 cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
                 if cargo_data:
-                    # Excel V2-8 · INP!D60: Inclusión hereda comisión del Esp de Proyectos (CCA!F67).
-                    esp_com_for_inclusion = 0.0
-                    if fila_especialista is not None:
-                        esp_cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
-                        if esp_cargo_data:
-                            esp_com_for_inclusion = float(esp_cargo_data.get("comision", 0))
-                    if esp_com_for_inclusion > 0:
-                        sal_inc = float(cargo_data.get("salario", 0))
-                        costo_unit_inc = calcular_costo_empresa(sal_inc, esp_com_for_inclusion)
-                    else:
-                        costo_unit_inc = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
+                    # Excel V2-8 · INP!W60 = C60 + D60 + G60: Inclusión usa su propia comisión
+                    # de CCA!F66, no la del Especialista. Solo t_haberes (igual que SENA).
+                    _smlv = float(datos_op.get("smlv") or _SMLV_DEFAULT)
+                    _aux_tr = float(datos_op.get("aux_transporte") or _AUX_TRANSPORTE)
+                    _sal_inc = float(cargo_data.get("salario", 0))
+                    _com_inc = float(cargo_data.get("comision", 0))
+                    costo_unit_inc = calcular_costo_empresa_sena(_sal_inc, _com_inc, _smlv, _aux_tr)
 
             for pr in fila_inclusion.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
