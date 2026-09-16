@@ -13,8 +13,9 @@ Componentes:
   - HITL Dispositivos:      hitl.dispositivos_requeridos → precio × cantidad_total
 
 IPC:
-  - Personal (equipo transversal, HITL personal): aplica double_h
-  - Tecnología (OPEX, CAPEX, tarifas, dispositivos): aplica double_t
+  - Personal y dispositivos (equipo transversal, HITL): aplica double_h
+  - Tecnología (OPEX, CAPEX, tarifas, tasa escalamiento): aplica double_t
+  - Tarifa Canal: double_t al cuadrado (escalamiento compuesto)
 
 Salario: el request incluye salario base; se aplica calcular_costo_empresa() igual que Cadena B.
 Volúmenes Cadena C: volumetria.{inbound|outbound}.canales[i].cadena_c.valor
@@ -46,8 +47,8 @@ class CadenaCCalculator:
     def calcular_mes(self, double_h: float = 1.0, double_t: float = 1.0) -> Dict[str, float]:
         """Aplica factores IPC y retorna todos los componentes del mes.
 
-        double_h: factor IPC acumulado para componente humano (equipo transversal y HITL personal)
-        double_t: factor IPC acumulado para componente tecnológico (OPEX, CAPEX, tarifas, dispositivos)
+        double_h: factor IPC acumulado para componente humano (equipo transversal y HITL, incl. dispositivos)
+        double_t: factor IPC acumulado para componente tecnológico (OPEX, CAPEX, tarifas)
         """
         b = self._base
 
@@ -61,7 +62,8 @@ class CadenaCCalculator:
         capex_in      = b["capex_in"]      * double_t
         capex_out     = b["capex_out"]     * double_t
         equipo_tranv  = b["equipo_transversal_personal"] * double_h
-        disp_tranv    = b["equipo_transversal_dispositivos"] * double_t
+        # Dispositivos del equipo transversal siguen IPC humano (atados al personal), igual que Excel.
+        disp_tranv    = b["equipo_transversal_dispositivos"] * double_h
         # Excel V2-8: 'Visión P&G'!C60 · fórmula: =SUMPRODUCT(...)*(1+IPC)*(1+IPC) — factor tecnológico al cuadrado.
         tarifa_canal     = b["tarifa_canal"]     * double_t * double_t
         tarifa_canal_in  = b["tarifa_canal_in"]  * double_t * double_t
@@ -70,7 +72,8 @@ class CadenaCCalculator:
         escal_out     = b["tasa_escal_out"] * double_t
         tasa_escal    = escal_in + escal_out
         hitl_personal = b["hitl_personal"] * double_h
-        hitl_disp     = b["hitl_dispositivos"] * double_t
+        # HITL dispositivos siguen IPC humano (atados al personal), igual que Excel.
+        hitl_disp     = b["hitl_dispositivos"] * double_h
 
         costo_total = (
             opex_fijo + opex_variable + capex
@@ -108,9 +111,9 @@ class CadenaCCalculator:
             "tasa_escalamiento_inbound_cadena_c":  escal_in,
             "tasa_escalamiento_outbound_cadena_c": escal_out,
             "hitl_cadena_c":               hitl_personal + hitl_disp,
-            # Componente humano: solo costos de personal (IPC double_h) — para vision CTS
-            "equipo_personal_cadena_c":    equipo_tranv,
-            "hitl_personal_cadena_c":      hitl_personal,
+            # Componente humano: personal + dispositivos (ambos double_h) — para vision CTS
+            "equipo_personal_cadena_c":    equipo_tranv + disp_tranv,
+            "hitl_personal_cadena_c":      hitl_personal + hitl_disp,
         }
 
     # ── Cálculo base (sin IPC, una vez en __init__) ───────────────────────────

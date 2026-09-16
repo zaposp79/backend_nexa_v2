@@ -6,7 +6,7 @@ Componentes del Fijo (OPEX + CAPEX + S&M):
   - OPEX Variable: ítems opex.items[] con tipo_gasto="Variable" → Componente Variable
   - CAPEX:        inversiones_capex[].valor_mensual × (1+tasa) × double_t  → Componente Fijo
   - S&M personal:     equipo_soporte_mantenimiento.roles → calcular_costo_empresa(salario) × fte (double_h)
-  - S&M dispositivos: equipo_soporte_mantenimiento.dispositivos_requeridos → precio × cantidad (double_t)
+  - S&M dispositivos: equipo_soporte_mantenimiento.dispositivos_requeridos → precio × cantidad (double_h)
 
 Componentes del Variable (Tarifa + Escalamiento + HITL):
   - Tarifa Canal:        precio × volumen Cadena B × IPC tecnológico  → Componente Variable
@@ -14,8 +14,8 @@ Componentes del Variable (Tarifa + Escalamiento + HITL):
   - HITL:                personal (IPC humano) + dispositivos (IPC tecn) → Componente Variable
 
 IPC:
-  - Personal (S&M, HITL): aplica componente_humano (double_h)
-  - Tecnología (OPEX, tarifas, HITL dispositivos, S&M dispositivos): aplica componente_tecnológico (double_t)
+  - Personal y dispositivos (S&M, HITL): aplica componente_humano (double_h)
+  - Tecnología (OPEX, tarifas, CAPEX): aplica componente_tecnológico (double_t)
   - CAPEX: se aplica double_t; base = valor_mensual × (1 + tasa_interes_mensual)
   - S&M dispositivos: Excel V2-8 'Costo Fijo'!D206 = SUMPRODUCT(C98:C103×D98:D103) — incluido desde V2-8
 
@@ -57,9 +57,9 @@ class CadenaBCalculator:
         # Componente Fijo = OPEX Fijo + CAPEX + S&M
         opex_fijo = b["opex_fijo"] * double_t
         capex = b["capex"] * double_t
-        # Excel V2-8: S&M = personal (double_h) + dispositivos (double_t)
-        # 'Costo Fijo'!D206 = SUMPRODUCT('Condiciones Cadena B'!C98:C103×D98:D103)
-        sm = b["sm_personal"] * double_h + b["sm_dispositivos"] * double_t
+        # S&M completo (personal + dispositivos) escala con double_h: los dispositivos
+        # del equipo S&M están atados al personal y siguen el IPC humano, igual que en Excel.
+        sm = b["sm_personal"] * double_h + b["sm_dispositivos"] * double_h
         comp_fijo = opex_fijo + capex + sm
 
         # Componente Variable = OPEX Variable + Tarifa Canal + Tasa Escalamiento + HITL
@@ -70,7 +70,8 @@ class CadenaBCalculator:
         escal_in = b["tasa_escal_in"] * double_t
         escal_out = b["tasa_escal_out"] * double_t
         escal = escal_in + escal_out
-        hitl = b["hitl_personal"] * double_h + b["hitl_dispositivos"] * double_t
+        # HITL completo (personal + dispositivos) escala con double_h, igual que en Excel.
+        hitl = b["hitl_personal"] * double_h + b["hitl_dispositivos"] * double_h
         comp_var = opex_var + tarifa + escal + hitl
 
         costo_total = comp_fijo + comp_var
@@ -103,9 +104,9 @@ class CadenaBCalculator:
             "tasa_escalamiento_inbound_cadena_b":  escal_in,
             "tasa_escalamiento_outbound_cadena_b": escal_out,
             "hitl_cadena_b":           hitl,
-            # Componente humano: solo costos de personal (IPC double_h) — para vision CTS
-            "sm_personal_cadena_b":    b["sm_personal"] * double_h,
-            "hitl_personal_cadena_b":  b["hitl_personal"] * double_h,
+            # Componente humano: personal + dispositivos (ambos double_h) — para vision CTS
+            "sm_personal_cadena_b":    (b["sm_personal"] + b["sm_dispositivos"]) * double_h,
+            "hitl_personal_cadena_b":  (b["hitl_personal"] + b["hitl_dispositivos"]) * double_h,
         }
 
     # ── Cálculo base (sin IPC, una vez en __init__) ───────────────────────────
