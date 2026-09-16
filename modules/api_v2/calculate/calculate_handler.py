@@ -144,9 +144,10 @@ def _inject_nomina_base_params(request_data: Dict[str, Any], param_store: Docume
                 None,
             )
             if sena_row and sena_row.salario > 0:
-                # W59 = M59 + P59 + U59 + V59 (Inputs de Nomina formula structure)
+                # INP!W59 = salario + comision + aux (solo t_haberes; sin parafiscales ni prestaciones)
                 costo = calcular_costo_empresa_sena(
                     sena_row.salario,
+                    comision=sena_row.comision,
                     smlv=smlv,
                     aux_transporte=aux_transporte,
                 )
