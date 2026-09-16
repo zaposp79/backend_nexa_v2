@@ -424,17 +424,46 @@ class NominaCalculator:
 
         # ── Aprendiz SENA ─────────────────────────────────────────────────────
         # Excel CCA!E99 = (SUM(E78:E98) + E27+E31+E35) / E126
-        # Quantity = (regular_headcount + cargos_adicionales) / ratio
+        # Si por_perfil[i].personalizado > 0 → usa ese valor directo (celda editada en Excel).
+        # Perfiles sin personalizado: fórmula proporcional (regular_hc × fte_i/total_fte) / ratio.
         aprendiz_cantidad = 0.0
         if fila_aprendiz is not None:
             nombre_ap = fila_aprendiz.get("position_name") or fila_aprendiz.get("position_id", "")
             if fila_aprendiz.get("incluido", False):
-                ratio_ap = self._get_ratio_global(fila_aprendiz)
-                if ratio_ap > 0:
-                    aprendiz_cantidad = (regular_hc + cargos_add_hc) / ratio_ap
-                    cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
-                    if cargo_data and aprendiz_cantidad > 0:
-                        result[nombre_ap] = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost) * aprendiz_cantidad
+                any_personalizado_ap = any(
+                    float(pr.get("personalizado") or 0) > 0
+                    for pr in fila_aprendiz.get("por_perfil", [])
+                )
+                if any_personalizado_ap:
+                    for pr in fila_aprendiz.get("por_perfil", []):
+                        try:
+                            pval = float(pr.get("personalizado") or 0)
+                        except (TypeError, ValueError):
+                            pval = 0.0
+                        if pval > 0:
+                            aprendiz_cantidad += pval
+                        else:
+                            indice = pr.get("indice_perfil", 0)
+                            try:
+                                ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
+                            except ValueError:
+                                ratio_val = 0.0
+                            if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
+                                fte_i = float(perfiles[indice].get("fte", 0))
+                                cadd_i = sum(
+                                    float(c.get("cantidad", 0))
+                                    for c in (perfiles[indice].get("cargos_adicionales") or [])
+                                    if (c.get("nombre") or "").strip()
+                                )
+                                aprendiz_cantidad += (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
+                else:
+                    ratio_ap = self._get_ratio_global(fila_aprendiz)
+                    if ratio_ap > 0:
+                        aprendiz_cantidad = (regular_hc + cargos_add_hc) / ratio_ap
+
+                cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
+                if cargo_data and aprendiz_cantidad > 0:
+                    result[nombre_ap] = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost) * aprendiz_cantidad
 
         # ── Inclusión ─────────────────────────────────────────────────────────
         # Excel CCA!E100 = (SUM(E78:E99) + E27+E31+E35) / E127  (incluye Aprendiz SENA)
@@ -444,23 +473,56 @@ class NominaCalculator:
         if fila_inclusion is not None:
             nombre_inc = fila_inclusion.get("position_name") or fila_inclusion.get("position_id", "")
             if fila_inclusion.get("incluido", False):
-                ratio_inc = self._get_ratio_global(fila_inclusion)
-                if ratio_inc > 0:
-                    inclusion_cantidad = (regular_hc + cargos_add_hc + aprendiz_cantidad) / ratio_inc
-                    cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
-                    if cargo_data and inclusion_cantidad > 0:
-                        # Excel V2-8 · INP!D60: Inclusión hereda comisión del Esp de Proyectos (CCA!F67).
-                        esp_com_for_inclusion = 0.0
-                        if fila_especialista is not None:
-                            esp_cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
-                            if esp_cargo_data:
-                                esp_com_for_inclusion = float(esp_cargo_data.get("comision", 0))
-                        if esp_com_for_inclusion > 0:
-                            sal_inc = float(cargo_data.get("salario", 0))
-                            costo_inc_unit = calcular_costo_empresa(sal_inc, esp_com_for_inclusion)
+                cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
+                esp_com_for_inclusion = 0.0
+                if fila_especialista is not None:
+                    esp_cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
+                    if esp_cargo_data:
+                        esp_com_for_inclusion = float(esp_cargo_data.get("comision", 0))
+                costo_inc_unit = 0.0
+                if cargo_data:
+                    # Excel V2-8 · INP!D60: Inclusión hereda comisión del Esp de Proyectos (CCA!F67).
+                    if esp_com_for_inclusion > 0:
+                        costo_inc_unit = calcular_costo_empresa(float(cargo_data.get("salario", 0)), esp_com_for_inclusion)
+                    else:
+                        costo_inc_unit = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
+
+                any_personalizado_inc = any(
+                    float(pr.get("personalizado") or 0) > 0
+                    for pr in fila_inclusion.get("por_perfil", [])
+                )
+                if any_personalizado_inc:
+                    inclusion_cantidad = 0.0
+                    for pr in fila_inclusion.get("por_perfil", []):
+                        try:
+                            pval = float(pr.get("personalizado") or 0)
+                        except (TypeError, ValueError):
+                            pval = 0.0
+                        if pval > 0:
+                            inclusion_cantidad += pval
                         else:
-                            costo_inc_unit = self._get_costo_empresa(cargo_data, sena_override=sena_unit_cost)
-                        result[nombre_inc] = costo_inc_unit * inclusion_cantidad
+                            indice = pr.get("indice_perfil", 0)
+                            try:
+                                ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
+                            except ValueError:
+                                ratio_val = 0.0
+                            if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
+                                fte_i = float(perfiles[indice].get("fte", 0))
+                                cadd_i = sum(
+                                    float(c.get("cantidad", 0))
+                                    for c in (perfiles[indice].get("cargos_adicionales") or [])
+                                    if (c.get("nombre") or "").strip()
+                                )
+                                aprendiz_i = aprendiz_cantidad * fte_i / total_fte
+                                inclusion_cantidad += (regular_hc * fte_i / total_fte + cadd_i + aprendiz_i) / ratio_val
+                else:
+                    ratio_inc = self._get_ratio_global(fila_inclusion)
+                    inclusion_cantidad = (
+                        (regular_hc + cargos_add_hc + aprendiz_cantidad) / ratio_inc if ratio_inc > 0 else 0.0
+                    )
+
+                if cargo_data and inclusion_cantidad > 0 and costo_inc_unit > 0:
+                    result[nombre_inc] = costo_inc_unit * inclusion_cantidad
 
         # ── Especialista de Proyectos ─────────────────────────────────────────
         # Excel NL!C66 = costo_empresa × complejidad_factor × 3 × pct_perfil / Panel!C11
@@ -631,16 +693,23 @@ class NominaCalculator:
                     continue
 
                 try:
-                    ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                    personalizado_val = float(pr.get("personalizado") or 0)
                 except (TypeError, ValueError):
-                    ratio = 0.0
+                    personalizado_val = 0.0
 
-                cargos_add_i = sum(
-                    float(c.get("cantidad", 0))
-                    for c in (perfiles[indice].get("cargos_adicionales") or [])
-                    if (c.get("nombre") or "").strip()
-                )
-                aprendiz_q_i = (regular_hc_pp.get(indice, 0.0) + cargos_add_i) / ratio if ratio > 0 else 0.0
+                if personalizado_val > 0:
+                    aprendiz_q_i = personalizado_val
+                else:
+                    try:
+                        ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                    except (TypeError, ValueError):
+                        ratio = 0.0
+                    cargos_add_i = sum(
+                        float(c.get("cantidad", 0))
+                        for c in (perfiles[indice].get("cargos_adicionales") or [])
+                        if (c.get("nombre") or "").strip()
+                    )
+                    aprendiz_q_i = (regular_hc_pp.get(indice, 0.0) + cargos_add_i) / ratio if ratio > 0 else 0.0
                 aprendiz_hc_pp[indice] = aprendiz_q_i
 
                 costo = costo_unit_ap * aprendiz_q_i if costo_unit_ap > 0 else 0.0
@@ -680,18 +749,25 @@ class NominaCalculator:
                     continue
 
                 try:
-                    ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                    personalizado_val = float(pr.get("personalizado") or 0)
                 except (TypeError, ValueError):
-                    ratio = 0.0
+                    personalizado_val = 0.0
 
-                cargos_add_i = sum(
-                    float(c.get("cantidad", 0))
-                    for c in (perfiles[indice].get("cargos_adicionales") or [])
-                    if (c.get("nombre") or "").strip()
-                )
-                inclusion_q_i = (
-                    regular_hc_pp.get(indice, 0.0) + cargos_add_i + aprendiz_hc_pp.get(indice, 0.0)
-                ) / ratio if ratio > 0 else 0.0
+                if personalizado_val > 0:
+                    inclusion_q_i = personalizado_val
+                else:
+                    try:
+                        ratio = float(str(pr.get("ratio", "0")).strip() or "0")
+                    except (TypeError, ValueError):
+                        ratio = 0.0
+                    cargos_add_i = sum(
+                        float(c.get("cantidad", 0))
+                        for c in (perfiles[indice].get("cargos_adicionales") or [])
+                        if (c.get("nombre") or "").strip()
+                    )
+                    inclusion_q_i = (
+                        regular_hc_pp.get(indice, 0.0) + cargos_add_i + aprendiz_hc_pp.get(indice, 0.0)
+                    ) / ratio if ratio > 0 else 0.0
 
                 costo = costo_unit_inc * inclusion_q_i if costo_unit_inc > 0 else 0.0
                 result[perfil_nombre][nombre_inc] = result[perfil_nombre].get(nombre_inc, 0.0) + costo
