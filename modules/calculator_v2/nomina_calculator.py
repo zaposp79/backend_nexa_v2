@@ -435,6 +435,8 @@ class NominaCalculator:
         # Si por_perfil[i].personalizado > 0 → usa ese valor directo (celda editada en Excel).
         # Perfiles sin personalizado: fórmula proporcional (regular_hc × fte_i/total_fte) / ratio.
         aprendiz_cantidad = 0.0
+        # aprendiz_hc_pp tracks per-profile SENA FTE for use in Inclusión formula.
+        aprendiz_hc_pp: Dict[int, float] = {}
         if fila_aprendiz is not None:
             nombre_ap = fila_aprendiz.get("position_name") or fila_aprendiz.get("position_id", "")
             if fila_aprendiz.get("incluido", False):
@@ -448,10 +450,11 @@ class NominaCalculator:
                             pval = float(pr.get("personalizado") or 0)
                         except (TypeError, ValueError):
                             pval = 0.0
+                        indice = pr.get("indice_perfil", 0)
                         if pval > 0:
+                            aprendiz_hc_pp[indice] = pval
                             aprendiz_cantidad += pval
                         else:
-                            indice = pr.get("indice_perfil", 0)
                             try:
                                 ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
                             except ValueError:
@@ -463,7 +466,9 @@ class NominaCalculator:
                                     for c in (perfiles[indice].get("cargos_adicionales") or [])
                                     if (c.get("nombre") or "").strip()
                                 )
-                                aprendiz_cantidad += (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
+                                q = (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
+                                aprendiz_hc_pp[indice] = q
+                                aprendiz_cantidad += q
                 else:
                     ratio_ap = self._get_ratio_global(fila_aprendiz)
                     if ratio_ap > 0:
@@ -521,7 +526,11 @@ class NominaCalculator:
                                     for c in (perfiles[indice].get("cargos_adicionales") or [])
                                     if (c.get("nombre") or "").strip()
                                 )
-                                aprendiz_i = aprendiz_cantidad * fte_i / total_fte
+                                # Use exact per-profile SENA FTE when available (mixed personalizado case).
+                                aprendiz_i = aprendiz_hc_pp.get(
+                                    indice,
+                                    aprendiz_cantidad * fte_i / total_fte if total_fte > 0 else 0.0,
+                                )
                                 inclusion_cantidad += (regular_hc * fte_i / total_fte + cadd_i + aprendiz_i) / ratio_val
                 else:
                     ratio_inc = self._get_ratio_global(fila_inclusion)
@@ -545,13 +554,22 @@ class NominaCalculator:
                     # Excel V2-8 · NL!C66 = INP!AM61 × complejidad × 3 × pct / Panel!C11.
                     # INP!AM61 incluye comisión (D61=500k) → CE con comisión completa.
                     costo_esp = self._get_costo_empresa(cargo_data)
-                    sum_personalizado = 0.0
+                    # Mixed personalizado: profiles with personalizado use that value;
+                    # profiles without use fte_i/total_fte. Sum = 1.0 when all formula-based.
+                    factor_total = 0.0
                     for pr in fila_especialista.get("por_perfil", []):
                         try:
-                            sum_personalizado += float(pr.get("personalizado") or 0)
+                            pval = float(pr.get("personalizado") or 0)
                         except (TypeError, ValueError):
-                            pass
-                    factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
+                            pval = 0.0
+                        if pval > 0:
+                            factor_total += pval
+                        else:
+                            idx = pr.get("indice_perfil", 0)
+                            if idx < len(perfiles) and total_fte > 0:
+                                factor_total += float(perfiles[idx].get("fte", 0)) / total_fte
+                    if factor_total <= 0:
+                        factor_total = 1.0
                     # Excel V2-8 · P&G NL = zona1 (CE via NL!C66) + zona2 (raw commission via NL!C178).
                     # Esp aparece en AMBAS zonas: CE_with_commission×factor (zona1) + commission×factor (zona2).
                     # Motor NL debe incluir ambas para coincidir con Excel P&G NL.
@@ -815,8 +833,10 @@ class NominaCalculator:
                 if costo_unit_esp <= 0 or total_fte <= 0:
                     result[perfil_nombre].setdefault(nombre_esp, 0.0)
                     continue
-                if hay_personalizado:
-                    factor_i = personalizado_pp.get(i, 0.0)
+                # Mixed personalizado: check per-profile, not a global hay_personalizado flag.
+                pval_i = personalizado_pp.get(i, 0.0)
+                if pval_i > 0:
+                    factor_i = pval_i
                 else:
                     fte_i = float(perfil.get("fte", 0))
                     factor_i = fte_i / total_fte
