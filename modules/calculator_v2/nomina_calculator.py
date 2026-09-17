@@ -77,6 +77,31 @@ _FACTOR_EXTRA_DIURNO = 1.25
 _FACTOR_EXTRA_NOCTURNO = 1.75
 
 
+# ── Helpers de compatibilidad para CargoAdicionalV1 ───────────────────────────
+# El contrato API usa "cargo" y "ratio" (CargoAdicionalV1); requests legacy
+# pueden usar "nombre" y "cantidad". Ambas formas se soportan aquí.
+
+def _cargo_nombre(cargo: dict) -> str:
+    """Retorna el nombre del cargo adicional, soportando 'cargo' y 'nombre'."""
+    return str(cargo.get("cargo") or cargo.get("nombre") or "").strip()
+
+def _cargo_cantidad(cargo: dict) -> float:
+    """Retorna el FTE del cargo adicional, soportando 'ratio' y 'cantidad'."""
+    return float(cargo.get("ratio") or cargo.get("cantidad") or 0.0)
+
+def _iter_cargos_adicionales(perfil: dict):
+    """Itera los cargos adicionales de un perfil.
+
+    Soporta:
+      - list[CargoAdicionalV1]: cada elemento es dict {"cargo", "salario_base", "ratio"}
+      - float escalar (legacy): FTE total sin detalle salarial (se ignora en v2)
+    """
+    raw = perfil.get("cargos_adicionales")
+    if isinstance(raw, list):
+        return raw
+    return []
+
+
 def calcular_costo_empresa_sena(
     salario_base: float,
     comision: float = 0.0,
@@ -264,8 +289,8 @@ class NominaCalculator:
         )
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
         cargos_add_hc = sum(
-            sum(float(c.get("cantidad", 0)) for c in (p.get("cargos_adicionales") or [])
-                if (c.get("nombre") or "").strip())
+            sum(_cargo_cantidad(c) for c in _iter_cargos_adicionales(p)
+                if _cargo_nombre(c))
             for p in perfiles
         )
 
@@ -361,9 +386,9 @@ class NominaCalculator:
                             if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
                                 fte_i = float(perfiles[indice].get("fte", 0))
                                 cadd_i = sum(
-                                    float(c.get("cantidad", 0))
-                                    for c in (perfiles[indice].get("cargos_adicionales") or [])
-                                    if (c.get("nombre") or "").strip()
+                                    _cargo_cantidad(c)
+                                    for c in _iter_cargos_adicionales(perfiles[indice])
+                                    if _cargo_nombre(c)
                                 )
                                 q = (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
                                 aprendiz_hc_pp[indice] = q
@@ -403,9 +428,9 @@ class NominaCalculator:
                                 if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
                                     fte_i = float(perfiles[indice].get("fte", 0))
                                     cadd_i = sum(
-                                        float(c.get("cantidad", 0))
-                                        for c in (perfiles[indice].get("cargos_adicionales") or [])
-                                        if (c.get("nombre") or "").strip()
+                                        _cargo_cantidad(c)
+                                        for c in _iter_cargos_adicionales(perfiles[indice])
+                                        if _cargo_nombre(c)
                                     )
                                     aprendiz_i = aprendiz_hc_pp.get(
                                         indice,
@@ -439,10 +464,10 @@ class NominaCalculator:
             fte = float(perfil.get("fte", 0))
             total += crucero_unit * fte
             # Cargos adicionales del perfil — misma tarifa crucero por estación
-            for cargo in perfil.get("cargos_adicionales") or []:
-                if not (cargo.get("nombre") or "").strip():
+            for cargo in _iter_cargos_adicionales(perfil):
+                if not _cargo_nombre(cargo):
                     continue
-                cantidad = float(cargo.get("cantidad", 0.0))
+                cantidad = _cargo_cantidad(cargo)
                 if cantidad > 0:
                     total += crucero_unit * cantidad
         return total
@@ -495,8 +520,8 @@ class NominaCalculator:
 
         # Cantidad directa de cargos adicionales (CCA!E27/E31/E35) sumada de todos los perfiles.
         cargos_add_hc = sum(
-            sum(float(c.get("cantidad", 0)) for c in (p.get("cargos_adicionales") or [])
-                if (c.get("nombre") or "").strip())
+            sum(_cargo_cantidad(c) for c in _iter_cargos_adicionales(p)
+                if _cargo_nombre(c))
             for p in perfiles
         )
 
@@ -620,9 +645,9 @@ class NominaCalculator:
                             if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
                                 fte_i = float(perfiles[indice].get("fte", 0))
                                 cadd_i = sum(
-                                    float(c.get("cantidad", 0))
-                                    for c in (perfiles[indice].get("cargos_adicionales") or [])
-                                    if (c.get("nombre") or "").strip()
+                                    _cargo_cantidad(c)
+                                    for c in _iter_cargos_adicionales(perfiles[indice])
+                                    if _cargo_nombre(c)
                                 )
                                 # Usar headcount real por perfil en lugar de distribución proporcional.
                                 # regular_hc × fte_i/total_fte es incorrecto cuando otro perfil tiene
@@ -685,9 +710,9 @@ class NominaCalculator:
                             if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
                                 fte_i = float(perfiles[indice].get("fte", 0))
                                 cadd_i = sum(
-                                    float(c.get("cantidad", 0))
-                                    for c in (perfiles[indice].get("cargos_adicionales") or [])
-                                    if (c.get("nombre") or "").strip()
+                                    _cargo_cantidad(c)
+                                    for c in _iter_cargos_adicionales(perfiles[indice])
+                                    if _cargo_nombre(c)
                                 )
                                 # Use exact per-profile SENA FTE when available (mixed personalizado case).
                                 aprendiz_i = aprendiz_hc_pp.get(
@@ -908,9 +933,9 @@ class NominaCalculator:
                     except (TypeError, ValueError):
                         ratio = 0.0
                     cargos_add_i = sum(
-                        float(c.get("cantidad", 0))
-                        for c in (perfiles[indice].get("cargos_adicionales") or [])
-                        if (c.get("nombre") or "").strip()
+                        _cargo_cantidad(c)
+                        for c in _iter_cargos_adicionales(perfiles[indice])
+                        if _cargo_nombre(c)
                     )
                     aprendiz_q_i = (regular_hc_pp.get(indice, 0.0) + cargos_add_i) / ratio if ratio > 0 else 0.0
                 aprendiz_hc_pp[indice] = aprendiz_q_i
@@ -960,9 +985,9 @@ class NominaCalculator:
                     except (TypeError, ValueError):
                         ratio = 0.0
                     cargos_add_i = sum(
-                        float(c.get("cantidad", 0))
-                        for c in (perfiles[indice].get("cargos_adicionales") or [])
-                        if (c.get("nombre") or "").strip()
+                        _cargo_cantidad(c)
+                        for c in _iter_cargos_adicionales(perfiles[indice])
+                        if _cargo_nombre(c)
                     )
                     inclusion_q_i = (
                         regular_hc_pp.get(indice, 0.0) + cargos_add_i + aprendiz_hc_pp.get(indice, 0.0)
@@ -1152,10 +1177,10 @@ class NominaCalculator:
             fte = float(perfil.get("fte", 0))
             total += fte * dias * tarifa_diaria * pct_rotacion
             # Cargos adicionales comparten el flag y días de capacitación del perfil
-            for cargo in perfil.get("cargos_adicionales") or []:
-                if not (cargo.get("nombre") or "").strip():
+            for cargo in _iter_cargos_adicionales(perfil):
+                if not _cargo_nombre(cargo):
                     continue
-                cantidad = float(cargo.get("cantidad", 0.0))
+                cantidad = _cargo_cantidad(cargo)
                 if cantidad > 0:
                     total += cantidad * dias * tarifa_diaria * pct_rotacion
         return total
@@ -1182,10 +1207,10 @@ class NominaCalculator:
             dias = float(cap.get("dias_capacitacion_perfil", 0))
             total += fte * dias * tarifa_diaria
             # Cargos adicionales comparten el flag y días de capacitación del perfil
-            for cargo in perfil.get("cargos_adicionales") or []:
-                if not (cargo.get("nombre") or "").strip():
+            for cargo in _iter_cargos_adicionales(perfil):
+                if not _cargo_nombre(cargo):
                     continue
-                cantidad = float(cargo.get("cantidad", 0.0))
+                cantidad = _cargo_cantidad(cargo)
                 if cantidad > 0:
                     total += cantidad * dias * tarifa_diaria
         return total
@@ -1206,11 +1231,11 @@ class NominaCalculator:
 
         total = 0.0
         for perfil in self._cadena_a.get("perfiles", []):
-            for cargo in perfil.get("cargos_adicionales") or []:
-                nombre = (cargo.get("nombre") or "").strip()
+            for cargo in _iter_cargos_adicionales(perfil):
+                nombre = _cargo_nombre(cargo)
                 if not nombre:
                     continue
-                cantidad = float(cargo.get("cantidad", 0.0))
+                cantidad = _cargo_cantidad(cargo)
                 if cantidad <= 0:
                     continue
                 salario_base = float(cargo.get("salario_base") or smlv)
@@ -1265,9 +1290,9 @@ class NominaCalculator:
 
             # FTE directo de cargos adicionales del perfil (igual que C230 en _estudios_seguridad).
             cargos_add_fte = sum(
-                float(cargo.get("cantidad", 0.0))
-                for cargo in (perfil.get("cargos_adicionales") or [])
-                if (cargo.get("nombre") or "").strip()
+                _cargo_cantidad(c)
+                for c in _iter_cargos_adicionales(perfil)
+                if _cargo_nombre(c)
             )
             # fte_base afecta los ratios de estructura (mismo patrón que _estudios_seguridad).
             fte_base = fte_agente + cargos_add_fte
@@ -1379,9 +1404,9 @@ class NominaCalculator:
             # C230: FTE directo de cargos adicionales (CCA!E27/E31/E35 — cantidad, no ratio 1:N).
             # Excel V2-8 · 'Nomina Loaded'!C230 = SUMPRODUCT(CCA!E25:S35 × (D="Ratio") × (E8:S8=perfil))
             cargos_add_fte = sum(
-                float(cargo.get("cantidad", 0.0))
-                for cargo in (perfil.get("cargos_adicionales") or [])
-                if (cargo.get("nombre") or "").strip()
+                _cargo_cantidad(c)
+                for c in _iter_cargos_adicionales(perfil)
+                if _cargo_nombre(c)
             )
 
             # Base FTE para numerador de estructura = agente + cargos adicionales.
@@ -1469,9 +1494,9 @@ class NominaCalculator:
 
             # Cargos adicionales FTE del perfil — usado en cap_ini, cap_rot, fte_exam y fte_estudio
             cargos_add_fte = sum(
-                float(c.get("cantidad", 0.0))
-                for c in (perfil.get("cargos_adicionales") or [])
-                if (c.get("nombre") or "").strip()
+                _cargo_cantidad(c)
+                for c in _iter_cargos_adicionales(perfil)
+                if _cargo_nombre(c)
             )
             fte_total = fte + cargos_add_fte
 
