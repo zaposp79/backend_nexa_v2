@@ -236,66 +236,190 @@ class NominaCalculator:
 
         Excel V2-8: 'Nomina Loaded'!K198:K217 donde col A="Activado".
         Incluye comision_mensual × FTE por perfil de agente +
-        comision × cantidad pro-rateada por cargo de estructura.
-        Para el Esp: comision × (complejidad × 3 × factor_total / dur), mismo factor
-        que desglose_por_cargo (INP!D61 × A66 × 3 × sum(pct) / PCG!C11).
+        comision × cantidad por cargo de estructura.
+
+        SENA e Inclusión usan la misma fórmula de cantidad que desglose_por_cargo():
+          SENA_qty  = (regular_hc + cargos_add_hc) / ratio_sena
+          Incl_qty  = (regular_hc + cargos_add_hc + aprendiz_qty) / ratio_incl
+        No _calcular_cantidad() (que usa FTE/ratio — incorrecto para estos cargos).
         """
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         detalle: List[Dict] = self._cadena_a.get("detalle_nomina", [])
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
         datos_op = self._req.get("datos_operativos", {})
-        duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
+        total_fte = sum(float(p.get("fte", 0)) for p in perfiles)
 
-        # Leer complejidad (mismo método que desglose_por_cargo)
+        # Complejidad (mismo método que desglose_por_cargo)
         _cplx = self._cadena_a.get("ratios", {}).get("complejidad") or ""
         if isinstance(_cplx, dict):
             _cplx = _cplx.get("label") or _cplx.get("valor") or ""
         complejidad_str = str(_cplx).strip().lower()
         complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.20)
 
-        # Comisiones brutas de agentes (FTE)
+        # Comisiones brutas de agentes (FTE × comision_mensual)
         total = sum(
             float(p.get("comision_mensual", 0)) * float(p.get("fte", 0))
             for p in perfiles
         )
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
+        cargos_add_hc = sum(
+            sum(float(c.get("cantidad", 0)) for c in (p.get("cargos_adicionales") or [])
+                if (c.get("nombre") or "").strip())
+            for p in perfiles
+        )
 
-        # Comisiones brutas de estructura (cantidad pro-rateada, mismo ajuste que desglose_por_cargo)
+        # Acumular regular_hc (mismo que desglose_por_cargo) para SENA/Inclusión.
+        regular_hc = 0.0
+        fila_aprendiz = fila_inclusion = fila_especialista = None
+
         for fila in ratios_filas:
+            nombre = fila.get("position_name") or fila.get("position_id", "")
+            nombre_lower = nombre.lower()
+
+            # Diferir cargos especiales.
+            if "aprendiz sena" in nombre_lower:
+                fila_aprendiz = fila
+                continue
+            if "inclus" in nombre_lower:
+                fila_inclusion = fila
+                continue
+            if "especialista" in nombre_lower:
+                fila_especialista = fila
+                continue
+
             if not fila.get("incluido", False):
                 continue
-            # Agente Básico 1 (tipo="Agente") ya se contabiliza por FTE arriba — evitar doble conteo.
-            if fila.get("tipo", "").lower() == "agente":
-                continue
-            cargo_data = self._resolver_cargo(fila, detalle_map)
-            if not cargo_data:
-                continue
-            comision = float(cargo_data.get("comision", 0))
-            if comision <= 0:
-                continue
-            nombre = fila.get("position_name") or fila.get("position_id", "")
 
-            # Excel V2-8 · NL!C178 = INP!D61 × CCA!E101 = commission × pct_perfil.
-            # NL!C181 = SUM(C155:C178) incluye el Esp → P&G SV incluye comisión del Esp.
-            if "especialista" in nombre.lower():
-                sum_personalizado = 0.0
-                for pr in fila.get("por_perfil", []):
-                    try:
-                        sum_personalizado += float(pr.get("personalizado") or 0)
-                    except (TypeError, ValueError):
-                        pass
-                factor_total = sum_personalizado if sum_personalizado > 0 else 1.0
-                total += comision * factor_total
-                continue
-
-            _is_rot = "otaci" in nombre.lower() and "(" in nombre
+            _is_rot = "otaci" in nombre_lower and "(" in nombre
             cantidad = self._calcular_cantidad(
                 fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot
             )
-            if cantidad <= 0:
+            if cantidad > 0:
+                regular_hc += cantidad
+
+            # Agente Básico 1 ya contabilizado por FTE arriba — no sumar comisión aquí.
+            if fila.get("tipo", "").lower() == "agente":
                 continue
-            total += comision * cantidad
+
+            cargo_data = self._resolver_cargo(fila, detalle_map)
+            if not cargo_data or cantidad <= 0:
+                continue
+            comision_c = float(cargo_data.get("comision", 0))
+            if comision_c <= 0:
+                continue
+            total += comision_c * cantidad
+
+        # Especialista: factor mixto personalizado/pct_fte (mismo fix que desglose_por_cargo).
+        if fila_especialista is not None and fila_especialista.get("incluido", False):
+            cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
+            if cargo_data:
+                comision_esp = float(cargo_data.get("comision", 0))
+                if comision_esp > 0:
+                    factor_total = 0.0
+                    for pr in fila_especialista.get("por_perfil", []):
+                        try:
+                            pval = float(pr.get("personalizado") or 0)
+                        except (TypeError, ValueError):
+                            pval = 0.0
+                        if pval > 0:
+                            factor_total += pval
+                        else:
+                            idx = pr.get("indice_perfil", 0)
+                            if idx < len(perfiles) and total_fte > 0:
+                                factor_total += float(perfiles[idx].get("fte", 0)) / total_fte
+                    if factor_total <= 0:
+                        factor_total = 1.0
+                    total += comision_esp * factor_total
+
+        # SENA: cantidad = (regular_hc + cargos_add_hc) / ratio (misma fórmula que desglose_por_cargo).
+        aprendiz_qty = 0.0
+        aprendiz_hc_pp: Dict[int, float] = {}
+        if fila_aprendiz is not None and fila_aprendiz.get("incluido", False):
+            cargo_data = self._resolver_cargo(fila_aprendiz, detalle_map)
+            if cargo_data:
+                comision_ap = float(cargo_data.get("comision", 0))
+                any_personalizado_ap = any(
+                    float(pr.get("personalizado") or 0) > 0
+                    for pr in fila_aprendiz.get("por_perfil", [])
+                )
+                if any_personalizado_ap:
+                    for pr in fila_aprendiz.get("por_perfil", []):
+                        try:
+                            pval = float(pr.get("personalizado") or 0)
+                        except (TypeError, ValueError):
+                            pval = 0.0
+                        indice = pr.get("indice_perfil", 0)
+                        if pval > 0:
+                            aprendiz_hc_pp[indice] = pval
+                            aprendiz_qty += pval
+                        else:
+                            try:
+                                ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
+                            except ValueError:
+                                ratio_val = 0.0
+                            if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
+                                fte_i = float(perfiles[indice].get("fte", 0))
+                                cadd_i = sum(
+                                    float(c.get("cantidad", 0))
+                                    for c in (perfiles[indice].get("cargos_adicionales") or [])
+                                    if (c.get("nombre") or "").strip()
+                                )
+                                q = (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
+                                aprendiz_hc_pp[indice] = q
+                                aprendiz_qty += q
+                else:
+                    ratio_ap = self._get_ratio_global(fila_aprendiz)
+                    if ratio_ap > 0:
+                        aprendiz_qty = (regular_hc + cargos_add_hc) / ratio_ap
+                if comision_ap > 0:
+                    total += comision_ap * aprendiz_qty
+
+        # Inclusión: cantidad = (regular_hc + cargos_add_hc + aprendiz_qty) / ratio.
+        if fila_inclusion is not None and fila_inclusion.get("incluido", False):
+            cargo_data = self._resolver_cargo(fila_inclusion, detalle_map)
+            if cargo_data:
+                comision_inc = float(cargo_data.get("comision", 0))
+                if comision_inc > 0:
+                    any_personalizado_inc = any(
+                        float(pr.get("personalizado") or 0) > 0
+                        for pr in fila_inclusion.get("por_perfil", [])
+                    )
+                    if any_personalizado_inc:
+                        inclusion_qty = 0.0
+                        for pr in fila_inclusion.get("por_perfil", []):
+                            try:
+                                pval = float(pr.get("personalizado") or 0)
+                            except (TypeError, ValueError):
+                                pval = 0.0
+                            indice = pr.get("indice_perfil", 0)
+                            if pval > 0:
+                                inclusion_qty += pval
+                            else:
+                                try:
+                                    ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
+                                except ValueError:
+                                    ratio_val = 0.0
+                                if ratio_val > 0 and indice < len(perfiles) and total_fte > 0:
+                                    fte_i = float(perfiles[indice].get("fte", 0))
+                                    cadd_i = sum(
+                                        float(c.get("cantidad", 0))
+                                        for c in (perfiles[indice].get("cargos_adicionales") or [])
+                                        if (c.get("nombre") or "").strip()
+                                    )
+                                    aprendiz_i = aprendiz_hc_pp.get(
+                                        indice,
+                                        aprendiz_qty * fte_i / total_fte if total_fte > 0 else 0.0,
+                                    )
+                                    inclusion_qty += (regular_hc * fte_i / total_fte + cadd_i + aprendiz_i) / ratio_val
+                    else:
+                        ratio_inc = self._get_ratio_global(fila_inclusion)
+                        inclusion_qty = (
+                            (regular_hc + cargos_add_hc + aprendiz_qty) / ratio_inc
+                            if ratio_inc > 0 else 0.0
+                        )
+                    total += comision_inc * inclusion_qty
+
         return total
 
     def _crucero(self) -> float:
@@ -885,6 +1009,7 @@ class NominaCalculator:
         ratios_filas: List[Dict] = self._cadena_a.get("ratios", {}).get("filas", [])
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
 
+        datos_op = self._req.get("datos_operativos", {})
         result: Dict[str, float] = {perfil: 0.0 for perfil in desglose}
 
         for fila in ratios_filas:
@@ -898,7 +1023,14 @@ class NominaCalculator:
             comision = float(cargo_data.get("comision", 0))
             if comision <= 0:
                 continue
-            costo_empresa = calcular_costo_empresa(salario, comision)
+            nombre_lower = cargo_nombre.strip().lower()
+            # SENA e Inclusión: solo t_haberes como costo base (sin parafiscales/prestaciones).
+            if "aprendiz sena" in nombre_lower or "inclus" in nombre_lower:
+                _smlv = float(datos_op.get("smlv") or _SMLV_DEFAULT)
+                _aux_tr = float(datos_op.get("aux_transporte") or _AUX_TRANSPORTE)
+                costo_empresa = calcular_costo_empresa_sena(salario, comision, _smlv, _aux_tr)
+            else:
+                costo_empresa = calcular_costo_empresa(salario, comision)
             if costo_empresa <= 0:
                 continue
             com_frac = comision / costo_empresa
