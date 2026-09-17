@@ -506,6 +506,11 @@ class NominaCalculator:
         fila_aprendiz = fila_inclusion = fila_especialista = None
         # Headcount total de cargos regulares activos (espejo de CCA SUM(E78:E98)).
         regular_hc = 0.0
+        # Headcount por perfil — necesario para la fórmula SENA/Inclusión en el caso mixto
+        # donde algunos perfiles tienen personalizado (no proporcional a FTE) y otros usan
+        # fórmula. Sin esto, la distribución regular_hc×fte_i/total_fte contamina a los
+        # perfiles fórmula con el exceso de personalizado de otros perfiles.
+        regular_hc_pp: Dict[int, float] = {}
 
         for fila in ratios_filas:
             nombre = fila.get("position_name") or fila.get("position_id", "")
@@ -543,6 +548,27 @@ class NominaCalculator:
             # Acumular headcount para Aprendiz/Inclusión (incluye Agente Básico 1 ratio=1).
             if cantidad > 0:
                 regular_hc += cantidad
+
+            # Acumular headcount POR PERFIL para fórmula SENA/Inclusión mixta.
+            for _pr in fila.get("por_perfil", []):
+                _idx = _pr.get("indice_perfil", 0)
+                if _idx >= len(perfiles):
+                    continue
+                try:
+                    _pval = float(_pr.get("personalizado") or 0)
+                except (TypeError, ValueError):
+                    _pval = 0.0
+                if _pval > 0:
+                    regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _pval
+                else:
+                    try:
+                        _ratio_pr = float(str(_pr.get("ratio", "0")).strip() or "0")
+                    except ValueError:
+                        _ratio_pr = 0.0
+                    _fte_pr = float(perfiles[_idx].get("fte", 0))
+                    _rot_factor = pct_rotacion if _is_rot else 1.0
+                    _q_pr = (_fte_pr / _ratio_pr * _rot_factor) if _ratio_pr > 0 else 0.0
+                    regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _q_pr
 
             # Agente Básico 1 (tipo="Agente") se contabiliza directamente por FTE en CTS —
             # excluir del overhead de estructura para evitar doble conteo.
@@ -598,7 +624,11 @@ class NominaCalculator:
                                     for c in (perfiles[indice].get("cargos_adicionales") or [])
                                     if (c.get("nombre") or "").strip()
                                 )
-                                q = (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
+                                # Usar headcount real por perfil en lugar de distribución proporcional.
+                                # regular_hc × fte_i/total_fte es incorrecto cuando otro perfil tiene
+                                # personalizado no proporcional (ej. Validador P1=4 vs fórmula=0.2).
+                                rhc_i = regular_hc_pp.get(indice, regular_hc * fte_i / total_fte)
+                                q = (rhc_i + cadd_i) / ratio_val
                                 aprendiz_hc_pp[indice] = q
                                 aprendiz_cantidad += q
                 else:
@@ -664,7 +694,10 @@ class NominaCalculator:
                                     indice,
                                     aprendiz_cantidad * fte_i / total_fte if total_fte > 0 else 0.0,
                                 )
-                                inclusion_cantidad += (regular_hc * fte_i / total_fte + cadd_i + aprendiz_i) / ratio_val
+                                # Igual que SENA: usar headcount real por perfil en lugar de distribución
+                                # proporcional para evitar contaminación entre perfiles con personalizado.
+                                rhc_i = regular_hc_pp.get(indice, regular_hc * fte_i / total_fte)
+                                inclusion_cantidad += (rhc_i + cadd_i + aprendiz_i) / ratio_val
                 else:
                     ratio_inc = self._get_ratio_global(fila_inclusion)
                     inclusion_cantidad = (
