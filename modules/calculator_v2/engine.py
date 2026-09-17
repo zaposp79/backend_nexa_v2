@@ -844,10 +844,10 @@ class MotorDeReglas:
             # Mes 1 = 0 (no hay mes k-1); activo desde mes 2 si financiacion_activa.
             if financiacion_activa and mes > 1:
                 # Excel Vision P&G: costos_financiacion = HME_cap_total × (1 + IPC_año)
-                # Igual que ingreso_b: usa el cap de la Hoja Maestra escalado por IPC anual,
-                # no el cap NL-level del mes anterior (que daría mes 6 sin IPC).
+                # Usa ipc_incremental_h (igual que ICA/GMF/Pol/Com en el bloque de financiacion).
+                # Cuando h=SMLV y t=IPC, usar t generaría una tasa distinta y un gap visible.
                 _total_cap_hme = _cap_charge_pricing_a + _cap_charge_pricing_b + _cap_charge_pricing_c
-                ctx["costos_financiacion_mensual"] = _total_cap_hme * (1.0 + ipc_incremental_t)
+                ctx["costos_financiacion_mensual"] = _total_cap_hme * (1.0 + ipc_incremental_h)
             else:
                 ctx["costos_financiacion_mensual"] = 0.0
 
@@ -882,13 +882,13 @@ class MotorDeReglas:
         # contribucion, utilidad_neta); todos los rubros de ingreso/costos operativos = 0.
         if financiacion_activa:
             mes_extra = duracion_meses + 1
-            ipc_incremental_t_extra = (
-                _compute_ipc_incremental(fecha_inicio, mes_extra, mes_ajuste_ipc, rates_t)
-                if ipc_t_activo else 0.0
+            ipc_incremental_h_extra = (
+                _compute_ipc_incremental(fecha_inicio, mes_extra, mes_ajuste_ipc, rates_h)
+                if ipc_h_activo else 0.0
             )
             _cap_total_extra = _cap_charge_pricing_a + _cap_charge_pricing_b + _cap_charge_pricing_c
             ctx_extra = build_base_context(request_data, mes_extra, ramp_up_override=ramp_up_campana)
-            ctx_extra["costos_financiacion_mensual"] = _cap_total_extra * (1.0 + ipc_incremental_t_extra)
+            ctx_extra["costos_financiacion_mensual"] = _cap_total_extra * (1.0 + ipc_incremental_h_extra)
             for rubro in rubros:
                 ctx_extra[rubro.id] = self._evaluar_rubro(rubro, ctx_extra)
             valores_num_extra = {
