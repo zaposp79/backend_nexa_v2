@@ -75,6 +75,7 @@ def _build_economics(
     meses: List[Dict],
     totales: Dict[str, float],
     cts_mensual: Optional[float] = None,
+    duracion_meses: int = 1,
 ) -> dict:
     """
     ingreso_mensual = ingreso_neto del primer mes con ramp=1.0 (tarifa de régimen permanente).
@@ -91,9 +92,10 @@ def _build_economics(
     vals = mes.get("valores", {}) if mes else {}
     ingreso_mensual = float(vals.get("ingreso_neto", 0.0))
 
-    costo_mensual = float(
-        cts_mensual if cts_mensual is not None else vals.get("cts_mensual", 0.0)
-    )
+    _mes1 = (meses[0].get("valores", {}) if meses else {})
+    costo_total = float(_mes1.get("costo_total", cts_mensual or 0.0))
+    _cap_ini = float(_mes1.get("capacitacion_inicial_mensual", 0.0))
+    costo_mensual = costo_total - _cap_ini + (_cap_ini / duracion_meses)
     margen = float(vals.get("margen_a", 0.0))
     valor_total = float(totales.get("ingreso_neto", 0.0))
 
@@ -791,7 +793,7 @@ def build_vision_imprimible(
 
     return {
         "seccion_01_ficha": _build_ficha(request_data, duracion_meses),
-        "seccion_02_economics": _build_economics(meses, totales, cts_mensual),
+        "seccion_02_economics": _build_economics(meses, totales, cts_mensual, duracion_meses),
         "seccion_03_grafico": {
             "waterfall": _build_waterfall(meses, totales),
             "evolucion_mensual": _build_evolucion(meses),
