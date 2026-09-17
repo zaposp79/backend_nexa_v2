@@ -389,8 +389,9 @@ class MotorDeReglas:
             meses_cc = 4
 
         _cap_ini_amortizada_pricing = _cap_inicial_base / duracion_meses if duracion_meses > 0 else 0.0
-        # Excel V2-8 HME C265: cap_charge_A = (_avg_nomina + _avg_no_payroll) × meses_cc × tasa
-        _cap_charge_pricing_a = (_avg_nomina + _avg_no_payroll) * meses_cc * tasa_interes if financiacion_activa else 0.0
+        # Excel V2-8 HME C265: cap_charge_A = (nomina + nopayroll + cap_ini_amort) × meses_cc × tasa.
+        # cap_ini forma parte del costo operativo base de la cadena A y debe incluirse en el cargo.
+        _cap_charge_pricing_a = (_avg_nomina + _avg_no_payroll + _cap_ini_amortizada_pricing) * meses_cc * tasa_interes if financiacion_activa else 0.0
         # Mes 1 tiene cap_A=0; meses 2..N tienen cap_A=cap_flat.
         # Para pol/com/ICA/GMF (promedio meses 1..N): billing usa (N-1)/N × cap_flat.
         # Para numerador HME (C265, incluye mes N+1): usar cap completo.
