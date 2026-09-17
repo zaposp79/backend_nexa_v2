@@ -685,7 +685,9 @@ class MotorDeReglas:
             # para todos los componentes (no billing mensual real que varía con cap).
             # Sin financiacion: billing mensual real (comportamiento actual, validado OK).
             if financiacion_activa:
-                _ipc_fin = 1.0 + ipc_incremental_t
+                # Usa ipc_incremental_h igual que el else — mismo factor que el NL-level.
+                # Cuando h=SMLV y t=IPC las tasas difieren; el Excel aplica el factor humano en ambos.
+                _ipc_fin = 1.0 + ipc_incremental_h
                 # Mes 1: PCF=0 → billing sin cap premium → escalar por _mes1_billing_scale.
                 # Mes 2+: billing con cap completo → factor 1.0.
                 _no_cap = _mes1_billing_scale if mes == 1 else 1.0
