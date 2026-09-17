@@ -384,19 +384,17 @@ class NominaCalculator:
                 comision_esp = float(cargo_data.get("comision", 0))
                 if comision_esp > 0:
                     factor_total = 0.0
+                    _total_rhc_esp = sum(regular_hc_pp.values())
                     for pr in fila_especialista.get("por_perfil", []):
+                        _idx_esp = pr.get("indice_perfil", 0)
                         try:
                             pval = float(pr.get("personalizado") or 0)
                         except (TypeError, ValueError):
                             pval = 0.0
                         if pval > 0:
                             factor_total += pval
-                        else:
-                            try:
-                                ratio_pr = float(str(pr.get("ratio", "0")).strip() or "0")
-                            except ValueError:
-                                ratio_pr = 0.0
-                            factor_total += ratio_pr
+                        elif _total_rhc_esp > 0:
+                            factor_total += regular_hc_pp.get(_idx_esp, 0.0) / _total_rhc_esp
                     if factor_total <= 0:
                         factor_total = 1.0
                     total += comision_esp * factor_total
@@ -798,19 +796,17 @@ class NominaCalculator:
                     # Mixed personalizado: profiles with personalizado use that value;
                     # profiles without use fte_i/total_fte. Sum = 1.0 when all formula-based.
                     factor_total = 0.0
+                    _total_rhc_esp = sum(regular_hc_pp.values())
                     for pr in fila_especialista.get("por_perfil", []):
+                        _idx_esp = pr.get("indice_perfil", 0)
                         try:
                             pval = float(pr.get("personalizado") or 0)
                         except (TypeError, ValueError):
                             pval = 0.0
                         if pval > 0:
                             factor_total += pval
-                        else:
-                            try:
-                                ratio_pr = float(str(pr.get("ratio", "0")).strip() or "0")
-                            except ValueError:
-                                ratio_pr = 0.0
-                            factor_total += ratio_pr
+                        elif _total_rhc_esp > 0:
+                            factor_total += regular_hc_pp.get(_idx_esp, 0.0) / _total_rhc_esp
                     if factor_total <= 0:
                         factor_total = 1.0
                     # Excel V2-8 · P&G NL = zona1 (CE via NL!C66) + zona2 (raw commission via NL!C178).
@@ -1067,20 +1063,16 @@ class NominaCalculator:
                     # sea consistente con nomina_total_mensual y el _scale de Crucero sea correcto.
                     comision_esp_pp = float(cargo_data.get("comision", 0))
 
-            # Construir mapa de personalizado y ratio por índice de perfil
+            # Construir mapa de personalizado por índice de perfil
             personalizado_pp: Dict[int, float] = {}
-            ratio_pp: Dict[int, float] = {}
             for pr in fila_especialista.get("por_perfil", []):
                 idx = pr.get("indice_perfil", 0)
                 try:
                     personalizado_pp[idx] = float(pr.get("personalizado") or 0)
                 except (TypeError, ValueError):
                     personalizado_pp[idx] = 0.0
-                try:
-                    ratio_pp[idx] = float(str(pr.get("ratio", "0")).strip() or "0")
-                except (TypeError, ValueError):
-                    ratio_pp[idx] = 0.0
             hay_personalizado = any(v > 0 for v in personalizado_pp.values())
+            _total_rhc_esp = sum(regular_hc_pp.values())
 
             for i, perfil in enumerate(perfiles):
                 perfil_nombre = perfil.get("nombre", f"perfil{i+1}")
@@ -1093,8 +1085,10 @@ class NominaCalculator:
                 pval_i = personalizado_pp.get(i, 0.0)
                 if pval_i > 0:
                     factor_i = pval_i
+                elif _total_rhc_esp > 0:
+                    factor_i = regular_hc_pp.get(i, 0.0) / _total_rhc_esp
                 else:
-                    factor_i = ratio_pp.get(i, 0.0)
+                    factor_i = float(perfil.get("fte", 0)) / total_fte if total_fte > 0 else 0.0
                 costo_i = (
                     costo_unit_esp * complejidad_factor * 3.0 * factor_i / duracion_meses
                     + comision_esp_pp * factor_i
