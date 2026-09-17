@@ -296,6 +296,9 @@ class NominaCalculator:
 
         # Acumular regular_hc (mismo que desglose_por_cargo) para SENA/Inclusión.
         regular_hc = 0.0
+        # Headcount por perfil — mismo fix que desglose_por_cargo() para evitar
+        # sobreestimación proporcional cuando personalizado no es proporcional al FTE.
+        regular_hc_pp: Dict[int, float] = {}
         fila_aprendiz = fila_inclusion = fila_especialista = None
 
         for fila in ratios_filas:
@@ -322,6 +325,27 @@ class NominaCalculator:
             )
             if cantidad > 0:
                 regular_hc += cantidad
+
+            # Acumular headcount real por perfil para SENA/Inclusión formula path.
+            for _pr in fila.get("por_perfil", []):
+                _idx = _pr.get("indice_perfil", 0)
+                if _idx >= len(perfiles):
+                    continue
+                try:
+                    _pval = float(_pr.get("personalizado") or 0)
+                except (TypeError, ValueError):
+                    _pval = 0.0
+                if _pval > 0:
+                    regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _pval
+                else:
+                    try:
+                        _ratio_pr = float(str(_pr.get("ratio", "0")).strip() or "0")
+                    except ValueError:
+                        _ratio_pr = 0.0
+                    _fte_pr = float(perfiles[_idx].get("fte", 0))
+                    _rot_f = pct_rotacion if _is_rot else 1.0
+                    _q_pr = (_fte_pr / _ratio_pr * _rot_f) if _ratio_pr > 0 else 0.0
+                    regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _q_pr
 
             # Agente Básico 1 ya contabilizado por FTE arriba — no sumar comisión aquí.
             if fila.get("tipo", "").lower() == "agente":
@@ -390,7 +414,8 @@ class NominaCalculator:
                                     for c in _iter_cargos_adicionales(perfiles[indice])
                                     if _cargo_nombre(c)
                                 )
-                                q = (regular_hc * fte_i / total_fte + cadd_i) / ratio_val
+                                rhc_i = regular_hc_pp.get(indice, regular_hc * fte_i / total_fte)
+                                q = (rhc_i + cadd_i) / ratio_val
                                 aprendiz_hc_pp[indice] = q
                                 aprendiz_qty += q
                 else:
@@ -436,7 +461,8 @@ class NominaCalculator:
                                         indice,
                                         aprendiz_qty * fte_i / total_fte if total_fte > 0 else 0.0,
                                     )
-                                    inclusion_qty += (regular_hc * fte_i / total_fte + cadd_i + aprendiz_i) / ratio_val
+                                    rhc_i = regular_hc_pp.get(indice, regular_hc * fte_i / total_fte)
+                                    inclusion_qty += (rhc_i + cadd_i + aprendiz_i) / ratio_val
                     else:
                         ratio_inc = self._get_ratio_global(fila_inclusion)
                         inclusion_qty = (
