@@ -53,9 +53,12 @@ class NoPayrollCalculator:
             staffing = opex_fijo.get("staffing", {}).get("calculo_horas_staffing", {})
             semanas = float(staffing.get("semanas_mes", 4.33))
             horas = float(staffing.get("horas_semanales", 42.0))
+            # ausentismo_pago del staffing puede estar stale si Panel!C19 cambió;
+            # se usa solo para detectar ítems cuya cantidad fue pre-calculada con ese valor.
+            ausentismo_stale = float(staffing.get("ausentismo_pago", self._pct_ausentismo))
             items: List[Dict] = opex_fijo.get("items", [])
             for item in items:
-                total += self._valor_item(item, fte, semanas, horas)
+                total += self._valor_item(item, fte, semanas, horas, ausentismo_stale)
         return total
 
     def _inversiones(self) -> float:
@@ -138,6 +141,7 @@ class NoPayrollCalculator:
         fte: float = 0.0,
         semanas: float = 4.33,
         horas: float = 42.0,
+        ausentismo_stale: float = 0.0,
     ) -> float:
         costo = float(item.get("costo", 0))
         if int(item.get("costo_totalizado", 0)) == 1:
@@ -154,9 +158,23 @@ class NoPayrollCalculator:
             if "otaci" in _concepto.lower() and "(" in _concepto:
                 formula = "rotacion"
 
+        # Auto-detect: ítems cuya cantidad fue pre-calculada con horas_productivas y ausentismo
+        # anterior (staffing.ausentismo_pago). Si Panel!C19 cambió, el cantidad del request
+        # quedó stale. Detectar comparando la cantidad almacenada con la fórmula esperada.
+        # Excel V2-8: 'Condiciones Cadena A'!G166 = E195×E196×(1-E197)×E9×60×50%×2%
+        # E9 = FTE operativo (sin cargos adicionales — E27/E31/E35 = 0 en el deal de referencia).
+        if formula is None and abs(ausentismo_stale - self._pct_ausentismo) > 1e-9 and fte > 0:
+            pct_uso_d = float(item.get("pct_uso_recurso", 0.5))
+            pct_min_d = float(item.get("pct_costo_minuto", 0.02))
+            cantidad_stored = float(item.get("cantidad", 0))
+            expected_old = semanas * horas * (1.0 - ausentismo_stale) * fte * 60.0 * pct_uso_d * pct_min_d
+            if expected_old > 0 and abs(cantidad_stored - expected_old) / expected_old < 0.01:
+                formula = "horas_productivas"
+
         if formula == "horas_productivas":
-            # Excel V2-8: 'Condiciones Cadena A'!G166 = semanas×horas×(1−ausent)×FTE×60×uso×min
+            # Excel V2-8: 'Condiciones Cadena A'!G166 = semanas×horas×(1−ausent)×E9×60×uso×min
             # pct_ausentismo viene de Panel!C19 (datos_operativos) — siempre actualizado.
+            # Usa solo FTE operativo (E9); E27/E31/E35 = 0 en el deal de referencia.
             # pct_uso_recurso=50%, pct_costo_minuto=2%: constantes del Excel; opcionales en el item.
             pct_uso = float(item.get("pct_uso_recurso", 0.5))
             pct_min = float(item.get("pct_costo_minuto", 0.02))
@@ -164,7 +182,7 @@ class NoPayrollCalculator:
             return costo * cantidad
 
         if formula == "rotacion":
-            # Excel V2-8: 'Condiciones Cadena A'!G168 = FTE × Panel!C20 (pct_rotacion)
+            # Excel V2-8: 'Condiciones Cadena A'!G168 = E9 × Panel!C20 (solo FTE operativo)
             return costo * fte * self._pct_rotacion
 
         return costo * float(item.get("cantidad", 0))
