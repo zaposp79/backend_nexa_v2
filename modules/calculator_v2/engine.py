@@ -863,6 +863,27 @@ class MotorDeReglas:
             }
             resultados_por_mes.append(ResultadoMes(mes=mes, valores=valores_num))
 
+        # Mes N+1: cuando financiacion_activa, el capital charge del contrato se paga un mes
+        # después del fin de la operación. Vision P&G muestra una columna adicional con solo
+        # costos_financiacion_mensual y sus derivados (costo_total, componente_financiero,
+        # contribucion, utilidad_neta); todos los rubros de ingreso/costos operativos = 0.
+        if financiacion_activa:
+            mes_extra = duracion_meses + 1
+            ipc_incremental_t_extra = (
+                _compute_ipc_incremental(fecha_inicio, mes_extra, mes_ajuste_ipc, rates_t)
+                if ipc_t_activo else 0.0
+            )
+            _cap_total_extra = _cap_charge_pricing_a + _cap_charge_pricing_b + _cap_charge_pricing_c
+            ctx_extra = build_base_context(request_data, mes_extra, ramp_up_override=ramp_up_campana)
+            ctx_extra["costos_financiacion_mensual"] = _cap_total_extra * (1.0 + ipc_incremental_t_extra)
+            for rubro in rubros:
+                ctx_extra[rubro.id] = self._evaluar_rubro(rubro, ctx_extra)
+            valores_num_extra = {
+                k: float(v) for k, v in ctx_extra.items()
+                if isinstance(v, (int, float)) and not isinstance(v, bool)
+            }
+            resultados_por_mes.append(ResultadoMes(mes=mes_extra, valores=valores_num_extra))
+
         # Excel V2-8: meses de extensión de pólizas post-contrato aparecen como columnas adicionales.
         # Se agregan como ResultadoMes separados — el mapper los expone como periods adicionales
         # y _calcular_totales los incluye en los totales automáticamente.
@@ -883,18 +904,6 @@ class MotorDeReglas:
         resultados_por_mes.extend(_ext_meses)
 
         totales = self._calcular_totales(resultados_por_mes)
-
-        # Extra mes N+1: el capital charge basado en CT[N] se paga en el mes N+1.
-        # _prev_h/_t_factor al salir del loop = ipc_factor del último mes (base de CT[N]).
-        # _prev_b/_prev_c = costo B/C NL-level del último mes.
-        # PCF tiene una columna adicional más allá de duracion_meses que se suma a totales.
-        if financiacion_activa:
-            _h_base_n = nomina_fija * _prev_h_factor
-            _t_base_n = no_payroll_fijo * _prev_t_factor
-            extra_fin = (_h_base_n + _t_base_n + _prev_b + _prev_c) * meses_cc * tasa_interes
-            totales["costos_financiacion_mensual"] = (
-                totales.get("costos_financiacion_mensual", 0.0) + extra_fin
-            )
 
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
