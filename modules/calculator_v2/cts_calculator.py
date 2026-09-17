@@ -31,7 +31,10 @@ class CTSCalculator:
         self._tasa_interes = float(indexacion.get("tasa_interes_mensual", 0.0))
         # Tarifa global por estación (Panel de Control General C17)
         # Excel V2-8: 'Condiciones Cadena A'!E153 = Panel!C17 × FTE
-        self._crucero_base = float(request_data.get("datos_operativos", {}).get("crucero", 0.0))
+        datos_op = request_data.get("datos_operativos", {})
+        self._crucero_base = float(datos_op.get("crucero", 0.0))
+        self._pct_ausentismo = float(datos_op.get("pct_ausentismo", 0.0))
+        self._pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
         # Reglas de negocio (Panel de Control General C67-C70)
         # Excel V2-8 · 'Visión Cost To Serve'!I160 = I159/((1-C63)*(1-C67)*(1-C68)*(1-C69)*(1-C70))
         reglas = request_data.get("reglas_negocio", {})
@@ -138,7 +141,11 @@ class CTSCalculator:
             salario_fijo = nomina_loaded - salario_variable
 
             opex_items = perfil.get("opex_fijo", {}).get("items", [])
-            opex_it = sum(self._valor_item(item) for item in opex_items)
+            _staffing = perfil.get("opex_fijo", {}).get("staffing", {}).get("calculo_horas_staffing", {})
+            _semanas = float(_staffing.get("semanas_mes", 4.33))
+            _horas = float(_staffing.get("horas_semanales", 42.0))
+            _aus_stale = float(_staffing.get("ausentismo_pago", self._pct_ausentismo))
+            opex_it = sum(self._valor_item(item, fte, _semanas, _horas, _aus_stale) for item in opex_items)
 
             inv = inversiones_por_perfil[i]
 
@@ -263,10 +270,39 @@ class CTSCalculator:
         factor = 1.0 + self._tasa_interes
         return [v * factor for v in result]
 
-    @staticmethod
-    def _valor_item(item: Dict) -> float:
+    def _valor_item(
+        self,
+        item: Dict,
+        fte: float = 0.0,
+        semanas: float = 4.33,
+        horas: float = 42.0,
+        ausentismo_stale: float = 0.0,
+    ) -> float:
         costo = float(item.get("costo", 0))
-        cantidad = float(item.get("cantidad", 0))
         if int(item.get("costo_totalizado", 0)) == 1:
             return costo
-        return costo * cantidad
+
+        formula = item.get("formula_cantidad")
+        if formula is None:
+            _concepto = str(item.get("concepto") or item.get("descripcion") or item.get("nombre") or "")
+            if "otaci" in _concepto.lower() and "(" in _concepto:
+                formula = "rotacion"
+
+        if formula is None and abs(ausentismo_stale - self._pct_ausentismo) > 1e-9 and fte > 0:
+            pct_uso_d = float(item.get("pct_uso_recurso", 0.5))
+            pct_min_d = float(item.get("pct_costo_minuto", 0.02))
+            cantidad_stored = float(item.get("cantidad", 0))
+            expected_old = semanas * horas * (1.0 - ausentismo_stale) * fte * 60.0 * pct_uso_d * pct_min_d
+            if expected_old > 0 and abs(cantidad_stored - expected_old) / expected_old < 0.01:
+                formula = "horas_productivas"
+
+        if formula == "horas_productivas":
+            pct_uso = float(item.get("pct_uso_recurso", 0.5))
+            pct_min = float(item.get("pct_costo_minuto", 0.02))
+            cantidad = semanas * horas * (1.0 - self._pct_ausentismo) * fte * 60.0 * pct_uso * pct_min
+            return costo * cantidad
+
+        if formula == "rotacion":
+            return costo * fte * self._pct_rotacion
+
+        return costo * float(item.get("cantidad", 0))
