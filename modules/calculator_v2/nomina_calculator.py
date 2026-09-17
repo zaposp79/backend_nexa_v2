@@ -1029,11 +1029,30 @@ class NominaCalculator:
                 _smlv = float(datos_op.get("smlv") or _SMLV_DEFAULT)
                 _aux_tr = float(datos_op.get("aux_transporte") or _AUX_TRANSPORTE)
                 costo_empresa = calcular_costo_empresa_sena(salario, comision, _smlv, _aux_tr)
+                if costo_empresa <= 0:
+                    continue
+                com_frac = comision / costo_empresa
+            elif "especialista" in nombre_lower:
+                # Especialista: costo_cargo = (CE × complejidad × 3/dur + com) × factor.
+                # com_frac debe ser com/(CE×comp×3/dur + com) para que
+                # comision_pp = com × factor (sin término cruzado com²/CE × factor).
+                costo_empresa = calcular_costo_empresa(salario, comision)
+                if costo_empresa <= 0:
+                    continue
+                _cplx_str = self._cadena_a.get("ratios", {}).get("complejidad") or ""
+                if isinstance(_cplx_str, dict):
+                    _cplx_str = _cplx_str.get("label") or _cplx_str.get("valor") or ""
+                _cplx_f = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(str(_cplx_str).strip().lower(), 0.20)
+                _dur = float(self._req.get("datos_operativos", {}).get("duracion_meses", 1) or 1)
+                _unit_per_factor = costo_empresa * _cplx_f * 3.0 / _dur + comision
+                if _unit_per_factor <= 0:
+                    continue
+                com_frac = comision / _unit_per_factor
             else:
                 costo_empresa = calcular_costo_empresa(salario, comision)
-            if costo_empresa <= 0:
-                continue
-            com_frac = comision / costo_empresa
+                if costo_empresa <= 0:
+                    continue
+                com_frac = comision / costo_empresa
             for perfil, cargos in desglose.items():
                 costo_cargo = cargos.get(cargo_nombre, 0.0)
                 if costo_cargo > 0:
@@ -1415,21 +1434,29 @@ class NominaCalculator:
                                   "examenes_medicos": 0.0, "estudios_seguridad": 0.0}
                 continue
 
+            # Cargos adicionales FTE del perfil — usado en cap_ini, cap_rot, fte_exam y fte_estudio
+            cargos_add_fte = sum(
+                float(c.get("cantidad", 0.0))
+                for c in (perfil.get("cargos_adicionales") or [])
+                if (c.get("nombre") or "").strip()
+            )
+            fte_total = fte + cargos_add_fte
+
             # Capacitación inicial — amortizada mensualmente para vista CTS
             # Excel NL C255:BK273 muestra costo total; CTS muestra total / duracion_meses
             cap_ini = 0.0
             if tarifa_diaria > 0 and cap.get("incluye_capacitacion_inicial", False):
                 dias = float(cap.get("dias_capacitacion_perfil", 0))
-                cap_ini = fte * dias * tarifa_diaria / duracion_meses
+                cap_ini = fte_total * dias * tarifa_diaria / duracion_meses
 
             # Capacitación rotación
             cap_rot = 0.0
             if tarifa_diaria > 0 and cap.get("incluye_capacitacion_rotacion", False):
                 dias = float(cap.get("dias_capacitacion_perfil") or 0)
-                cap_rot = fte * dias * tarifa_diaria * pct_rotacion
+                cap_rot = fte_total * dias * tarifa_diaria * pct_rotacion
 
-            # FTE examinable = agente + operativos de estructura del perfil
-            fte_exam = fte
+            # FTE examinable = agente + cargos_adicionales + operativos de estructura del perfil
+            fte_exam = fte_total
             for fila in ratios_filas:
                 if not fila.get("incluido", False):
                     continue
@@ -1474,13 +1501,7 @@ class NominaCalculator:
                 if cap.get("incluye_costo_capacitacion_anual", False):
                     exams += cu_exam_anu * fte_exam * pct_anuales_global / 12.0
 
-            # Estudios de seguridad — fte_exam base idéntica pero incluye cargos_adicionales
-            cargos_add_fte = sum(
-                float(c.get("cantidad", 0.0))
-                for c in (perfil.get("cargos_adicionales") or [])
-                if (c.get("nombre") or "").strip()
-            )
-            fte_base = fte + cargos_add_fte
+            # Estudios de seguridad — usa fte_total (ya incluye cargos_adicionales)
             fte_estudio = fte
             for fila in ratios_filas:
                 if not fila.get("incluido", False):
@@ -1502,7 +1523,7 @@ class NominaCalculator:
                         except ValueError:
                             ratio = 0.0
                         if ratio > 0:
-                            fte_estudio += fte_base / ratio
+                            fte_estudio += fte_total / ratio
             fte_estudio += cargos_add_fte
 
             seg = 0.0
