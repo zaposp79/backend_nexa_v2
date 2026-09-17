@@ -668,6 +668,87 @@ def _build_contingencias(meses: List[Dict]) -> List[dict]:
     return items
 
 
+# ── Ajuste ingreso_neto para servicios basados en comisiones ─────────────────
+
+def _ajustar_ingresos_por_servicio(
+    meses: List[Dict],
+    totales: Dict[str, float],
+    servicio: str,
+    vision_tarifas: Optional[Dict],
+) -> tuple:
+    """Corrige ingreso_neto en meses y totales para cobranzas/saco/ventas multicanal.
+
+    Espeja la lógica de screen_mapper._build_from_v2_result para que vision-imprimible
+    muestre los mismos valores de ingreso que vision-pyg.
+    """
+    if not vision_tarifas:
+        return meses, totales
+
+    serv = (servicio or "").strip().lower()
+    if serv not in ("cobranzas", "saco", "ventas multicanal"):
+        return meses, totales
+
+    tipo_honorario = (vision_tarifas.get("tipo_honorario") or "").strip().lower()
+    comisiones_por_mes: List[Dict] = []
+
+    if serv == "cobranzas":
+        cobranzas = next(
+            (x["honorarios_totales"] for x in vision_tarifas.get("escenarios", [])
+             if x.get("honorarios_totales") not in (None, [])),
+            None,
+        ) or (vision_tarifas.get("escenario_total") or {}).get("honorarios_totales")
+        if cobranzas:
+            comisiones_por_mes = next(
+                (x.get("meses", []) for x in cobranzas if x.get("concepto") == "Ingresos - Comisiones"),
+                [],
+            )
+    else:
+        ventas = next(
+            (x["ventas_multicanal"] for x in vision_tarifas.get("escenarios", [])
+             if x.get("ventas_multicanal") not in (None, [])),
+            None,
+        ) or (vision_tarifas.get("escenario_total") or {}).get("ventas_multicanal")
+        if ventas:
+            comisiones_por_mes = next(
+                (x.get("meses", []) for x in ventas if x.get("concepto") == "Comisión"),
+                [],
+            )
+
+    if not comisiones_por_mes:
+        return meses, totales
+
+    _key = "calculado" if (serv == "cobranzas" and tipo_honorario == "calculado") else "benchmark" if serv == "cobranzas" else "valor"
+    com_lookup = {str(e.get("mes")): float(e.get(_key, 0)) for e in comisiones_por_mes}
+
+    meses_ajustados: List[Dict] = []
+    ingreso_neto_total = 0.0
+    for m in meses:
+        mes_num = str(m.get("mes", ""))
+        comision = com_lookup.get(mes_num, 0.0)
+        vals = m.get("valores", {})
+
+        if serv == "cobranzas":
+            ingreso_neto_adj = comision
+        else:
+            ib   = float(vals.get("ingreso_bruto", 0))
+            co   = float(vals.get("contingencia_operativa_valor") or vals.get("contingencia_op") or 0)
+            cc   = float(vals.get("contingencia_comercial_valor") or vals.get("contingencia_com") or 0)
+            mk   = float(vals.get("markup_valor") or vals.get("markup_ingreso") or 0)
+            desc = float(vals.get("descuento_valor") or vals.get("descuento_ingreso") or 0)
+            pct_imp = float(vals.get("pct_imprevistos") or 0)
+            imp  = float(vals.get("imprevistos_valor") or (pct_imp * ib))
+            ingreso_neto_adj = (ib + co + cc + mk - desc - imp) + comision
+
+        ingreso_neto_total += ingreso_neto_adj
+        new_vals = dict(vals)
+        new_vals["ingreso_neto"] = ingreso_neto_adj
+        meses_ajustados.append({**m, "valores": new_vals})
+
+    totales_ajustados = dict(totales)
+    totales_ajustados["ingreso_neto"] = ingreso_neto_total
+    return meses_ajustados, totales_ajustados
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def build_vision_imprimible(
@@ -684,6 +765,7 @@ def build_vision_imprimible(
     vt_total = None
     service = _datos_op(request_data).get("servicio", "")
     client = _datos_op(request_data).get("cliente", "")
+    meses, totales = _ajustar_ingresos_por_servicio(meses, totales, service, vision_tarifas)
     if vision_tarifas:
         vt_escenarios = vision_tarifas.get("escenarios") or None
         raw_total = vision_tarifas.get("total") or {}
