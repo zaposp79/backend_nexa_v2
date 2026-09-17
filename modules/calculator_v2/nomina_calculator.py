@@ -91,7 +91,10 @@ def calcular_costo_empresa_sena(
     """
     if salario_base <= 0:
         return 0.0
-    aux = aux_transporte if 0 < salario_base < 2 * smlv else 0.0
+    # Excel V2-8 · INP!G59 = IF(AND(F59<2*C4, F59>0), C5, 0)
+    # F59 = T.Imponible = salario + comision (NO solo salario_base).
+    t_imponible = salario_base + comision
+    aux = aux_transporte if 0 < t_imponible < 2 * smlv else 0.0
     # Excel V2-8 · INP!W59 = C59 + D59 + G59 = salario + comision + aux
     return salario_base + comision + aux
 
