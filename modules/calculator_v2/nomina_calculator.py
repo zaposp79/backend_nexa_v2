@@ -9,7 +9,7 @@ Reglas del Excel Nexa - Pricing - Simulador - V2-8.xlsx (Inputs de Nomina, fila 
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 # ── Tabla estática: cargo → grupo (Excel Graficos AM5:AN28) ─────────────────
 # Fuente: 001_ElTiempo.xlsx · Graficos!AM5:AN28
@@ -94,12 +94,29 @@ def _iter_cargos_adicionales(perfil: dict):
 
     Soporta:
       - list[CargoAdicionalV1]: cada elemento es dict {"cargo", "salario_base", "ratio"}
-      - float escalar (legacy): FTE total sin detalle salarial (se ignora en v2)
+      - dict (un solo CargoAdicionalV1): se envuelve en lista
+      - float escalar (legacy): FTE total sin detalle salarial (se ignora aquí)
     """
     raw = perfil.get("cargos_adicionales")
     if isinstance(raw, list):
         return raw
+    if isinstance(raw, dict):
+        return [raw]
     return []
+
+
+def _total_cargos_fte(perfil: dict) -> float:
+    """FTE total de cargos adicionales del perfil — soporta float escalar y list/dict.
+
+    Float escalar (legacy CCA!E26 = 12.0): se usa directamente como FTE adicional.
+    List/dict (CargoAdicionalV1): suma de los campos ratio de cada cargo nombrado.
+    """
+    raw = perfil.get("cargos_adicionales")
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    return sum(
+        _cargo_cantidad(c) for c in _iter_cargos_adicionales(perfil) if _cargo_nombre(c)
+    )
 
 
 def calcular_costo_empresa_sena(
@@ -288,11 +305,9 @@ class NominaCalculator:
             for p in perfiles
         )
         pct_rotacion = float(datos_op.get("pct_rotacion", 0.0))
-        cargos_add_hc = sum(
-            sum(_cargo_cantidad(c) for c in _iter_cargos_adicionales(p)
-                if _cargo_nombre(c))
-            for p in perfiles
-        )
+        # FTE de cargos adicionales por perfil (igual que desglose_por_cargo).
+        _cadd_pp: Dict[int, float] = {i: _total_cargos_fte(p) for i, p in enumerate(perfiles)}
+        cargos_add_hc = sum(_cadd_pp.values())
 
         # Acumular regular_hc (mismo que desglose_por_cargo) para SENA/Inclusión.
         regular_hc = 0.0
@@ -320,8 +335,10 @@ class NominaCalculator:
                 continue
 
             _is_rot = "otaci" in nombre_lower and "(" in nombre
+            # Excel CCA!E78 = (E9 + E27+E31+E35) / ratio — igual que desglose_por_cargo.
             cantidad = self._calcular_cantidad(
-                fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot
+                fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot,
+                cargos_add_fte_pp=_cadd_pp,
             )
             if cantidad > 0:
                 regular_hc += cantidad
@@ -343,8 +360,9 @@ class NominaCalculator:
                     except ValueError:
                         _ratio_pr = 0.0
                     _fte_pr = float(perfiles[_idx].get("fte", 0))
+                    _cadd_i = _cadd_pp.get(_idx, 0.0)
                     _rot_f = pct_rotacion if _is_rot else 1.0
-                    _q_pr = (_fte_pr / _ratio_pr * _rot_f) if _ratio_pr > 0 else 0.0
+                    _q_pr = ((_fte_pr + _cadd_i) / _ratio_pr * _rot_f) if _ratio_pr > 0 else 0.0
                     regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _q_pr
 
             # Agente Básico 1 ya contabilizado por FTE arriba — no sumar comisión aquí.
@@ -546,12 +564,13 @@ class NominaCalculator:
         # Default 0.20 (Baja) cuando null — coincide con el comportamiento estándar del Excel.
         complejidad_factor = {"alta": 0.5, "media": 0.5, "baja": 0.20}.get(complejidad_str, 0.20)
 
-        # Cantidad directa de cargos adicionales (CCA!E27/E31/E35) sumada de todos los perfiles.
-        cargos_add_hc = sum(
-            sum(_cargo_cantidad(c) for c in _iter_cargos_adicionales(p)
-                if _cargo_nombre(c))
-            for p in perfiles
-        )
+        # FTE de cargos adicionales por perfil — Excel CCA!E27+E31+E35 por columna de perfil.
+        # Soporta float escalar (legacy) y list[CargoAdicionalV1].
+        cargos_add_fte_pp: Dict[int, float] = {
+            i: _total_cargos_fte(p) for i, p in enumerate(perfiles)
+        }
+        # Total global (suma de todos los perfiles) para fórmulas que no distinguen por perfil.
+        cargos_add_hc = sum(cargos_add_fte_pp.values())
 
         sena_unit_cost = float(datos_op.get("costo_empresa_sena") or 0.0)
 
@@ -594,8 +613,10 @@ class NominaCalculator:
             # _calcular_cantidad aplica pct_rotacion solo a los perfils SIN personalizado,
             # permitiendo mixes parciales (un perfil override + otro auto).
             _is_rot = "otaci" in nombre_lower and "(" in nombre
+            # Excel CCA!E78 = (E9 + E27+E31+E35) / ratio — cargos_add_fte_pp por perfil
             cantidad = self._calcular_cantidad(
-                fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot
+                fila, perfiles, pct_rotacion=pct_rotacion, is_rotation=_is_rot,
+                cargos_add_fte_pp=cargos_add_fte_pp,
             )
 
             # Acumular headcount para Aprendiz/Inclusión (incluye Agente Básico 1 ratio=1).
@@ -619,8 +640,9 @@ class NominaCalculator:
                     except ValueError:
                         _ratio_pr = 0.0
                     _fte_pr = float(perfiles[_idx].get("fte", 0))
+                    _cadd_pr = cargos_add_fte_pp.get(_idx, 0.0)
                     _rot_factor = pct_rotacion if _is_rot else 1.0
-                    _q_pr = (_fte_pr / _ratio_pr * _rot_factor) if _ratio_pr > 0 else 0.0
+                    _q_pr = ((_fte_pr + _cadd_pr) / _ratio_pr * _rot_factor) if _ratio_pr > 0 else 0.0
                     regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _q_pr
 
             # Agente Básico 1 (tipo="Agente") se contabiliza directamente por FTE en CTS —
@@ -893,8 +915,10 @@ class NominaCalculator:
                     except ValueError:
                         ratio = 0.0
                     fte = float(perfiles[indice].get("fte", 0))
-                    cantidad = fte / ratio if ratio > 0 else 0.0
-                    # Excel CCA!E91:E92 = (FTE/ratio) × pct_rotacion para cargos "(Rotación)".
+                    # Excel CCA!E78 = (E9 + E27+E31+E35) / ratio_cargo
+                    cadd_i = _total_cargos_fte(perfiles[indice])
+                    cantidad = (fte + cadd_i) / ratio if ratio > 0 else 0.0
+                    # Excel CCA!E91:E92 = ((FTE+cadd)/ratio) × pct_rotacion para "(Rotación)".
                     if "otaci" in cargo_nombre_lower and "(" in cargo_nombre:
                         cantidad *= pct_rotacion
 
@@ -1690,10 +1714,12 @@ class NominaCalculator:
         *,
         pct_rotacion: float = 0.0,
         is_rotation: bool = False,
+        cargos_add_fte_pp: Optional[Dict[int, float]] = None,
     ) -> float:
-        """Distribución fraccionaria SIN ceil: fte_perfil / ratio (continua, no entera).
+        """Distribución fraccionaria SIN ceil: (fte_perfil + cargo_add) / ratio.
 
-        Excel V2-8: Condiciones Cadena A E78 = (fte_total / ratio_cargo).
+        Excel V2-8: CCA!E78 = (E9 + E27 + E31 + E35) / ratio_cargo.
+        Los FTEs de cargos adicionales se suman al numerador de cada perfil.
         Si por_perfil[i].personalizado > 0, se usa ese valor directamente (equivale
         a editar manualmente la celda CCA!E91 en el Excel — el valor ya representa el
         ratio CCA completo, sin necesidad de aplicar pct_rotacion de nuevo).
@@ -1712,14 +1738,16 @@ class NominaCalculator:
                 total += personalizado_val
                 continue
 
-            # Cálculo estándar: fte / ratio
+            # Excel CCA!E78 = (E9 + E27 + E31 + E35) / ratio_cargo
             indice = pr.get("indice_perfil", 0)
             try:
                 ratio_val = float(str(pr.get("ratio", "0")).strip() or "0")
             except ValueError:
                 ratio_val = 0.0
             if ratio_val > 0 and indice < len(perfiles):
-                q = float(perfiles[indice].get("fte", 0)) / ratio_val
+                fte_i = float(perfiles[indice].get("fte", 0))
+                cadd_i = (cargos_add_fte_pp or {}).get(indice, 0.0)
+                q = (fte_i + cadd_i) / ratio_val
                 if is_rotation:
                     q *= pct_rotacion
                 total += q
