@@ -1439,7 +1439,7 @@ def build_vision_tarifas(
     _total_ingreso_c = _costo_c_tot / _denom_c if (_denom_c > 0 and _costo_c_tot > 0) else 0.0
     facturacion_deal_total = _total_ingreso_a + _total_ingreso_b + _total_ingreso_c
 
-    # Full-deal per-cadena breakdown for the Total row.
+    # Full-deal  per-cadena breakdown for the Total row.
     # Cadena A: sum ALL cts_agg_by_canal entries (covers all canals, not just escenario canals).
     # Cadena B/C: read full-deal values from vals_ramp1 (motor already computed all-canal totals).
     def _sum_cts(field: str) -> float:
