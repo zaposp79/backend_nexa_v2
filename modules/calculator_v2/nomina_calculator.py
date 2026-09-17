@@ -374,9 +374,11 @@ class NominaCalculator:
                         if pval > 0:
                             factor_total += pval
                         else:
-                            idx = pr.get("indice_perfil", 0)
-                            if idx < len(perfiles) and total_fte > 0:
-                                factor_total += float(perfiles[idx].get("fte", 0)) / total_fte
+                            try:
+                                ratio_pr = float(str(pr.get("ratio", "0")).strip() or "0")
+                            except ValueError:
+                                ratio_pr = 0.0
+                            factor_total += ratio_pr
                     if factor_total <= 0:
                         factor_total = 1.0
                     total += comision_esp * factor_total
@@ -782,9 +784,11 @@ class NominaCalculator:
                         if pval > 0:
                             factor_total += pval
                         else:
-                            idx = pr.get("indice_perfil", 0)
-                            if idx < len(perfiles) and total_fte > 0:
-                                factor_total += float(perfiles[idx].get("fte", 0)) / total_fte
+                            try:
+                                ratio_pr = float(str(pr.get("ratio", "0")).strip() or "0")
+                            except ValueError:
+                                ratio_pr = 0.0
+                            factor_total += ratio_pr
                     if factor_total <= 0:
                         factor_total = 1.0
                     # Excel V2-8 · P&G NL = zona1 (CE via NL!C66) + zona2 (raw commission via NL!C178).
@@ -1039,14 +1043,19 @@ class NominaCalculator:
                     # sea consistente con nomina_total_mensual y el _scale de Crucero sea correcto.
                     comision_esp_pp = float(cargo_data.get("comision", 0))
 
-            # Construir mapa de personalizado por índice de perfil
+            # Construir mapa de personalizado y ratio por índice de perfil
             personalizado_pp: Dict[int, float] = {}
+            ratio_pp: Dict[int, float] = {}
             for pr in fila_especialista.get("por_perfil", []):
                 idx = pr.get("indice_perfil", 0)
                 try:
                     personalizado_pp[idx] = float(pr.get("personalizado") or 0)
                 except (TypeError, ValueError):
                     personalizado_pp[idx] = 0.0
+                try:
+                    ratio_pp[idx] = float(str(pr.get("ratio", "0")).strip() or "0")
+                except (TypeError, ValueError):
+                    ratio_pp[idx] = 0.0
             hay_personalizado = any(v > 0 for v in personalizado_pp.values())
 
             for i, perfil in enumerate(perfiles):
@@ -1061,8 +1070,7 @@ class NominaCalculator:
                 if pval_i > 0:
                     factor_i = pval_i
                 else:
-                    fte_i = float(perfil.get("fte", 0))
-                    factor_i = fte_i / total_fte
+                    factor_i = ratio_pp.get(i, 0.0)
                 costo_i = (
                     costo_unit_esp * complejidad_factor * 3.0 * factor_i / duracion_meses
                     + comision_esp_pp * factor_i
