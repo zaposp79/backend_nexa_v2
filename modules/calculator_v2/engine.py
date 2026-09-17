@@ -553,6 +553,13 @@ class MotorDeReglas:
         _prev_b = 0.0          # costo Cadena B NL-level del mes anterior (para PCF)
         _prev_c = 0.0          # costo Cadena C NL-level del mes anterior (para PCF)
 
+        # Mes 1 tiene PCF=0 (sin cap charge), por lo que billing = costo_op/fm sin premium de cap.
+        # Todos los componentes financieros (ICA/GMF/Pol/Com) escalan proporcionalmente con billing:
+        # ratio = billing_mes1 / billing_pyg = costo_op / (costo_op + cap) = 1/(1 + meses_cc × tasa).
+        _mes1_billing_scale = (
+            1.0 / (1.0 + meses_cc * tasa_interes) if financiacion_activa else 1.0
+        )
+
         for mes in range(1, duracion_meses + 1):
             ctx = build_base_context(request_data, mes, ramp_up_override=ramp_up_campana)
             ramp_up = ctx["ramp_up_mes"]
@@ -678,17 +685,20 @@ class MotorDeReglas:
             # Sin financiacion: billing mensual real (comportamiento actual, validado OK).
             if financiacion_activa:
                 _ipc_fin = 1.0 + ipc_incremental_t
+                # Mes 1: PCF=0 → billing sin cap premium → escalar por _mes1_billing_scale.
+                # Mes 2+: billing con cap completo → factor 1.0.
+                _no_cap = _mes1_billing_scale if mes == 1 else 1.0
                 # Cadena A: Vision P&G ICA usa full cap billing (Pólizas-FC col M), scaled by IPC
-                ctx["ica_hm"] = componentes_pricing_pyg.get("ica_hm", 0.0) * _ipc_fin
-                ctx["gmf_hm"] = componentes_pricing_pyg.get("gmf_hm", 0.0) * _ipc_fin
-                ctx["comision_admin_hm"] = componentes_pricing_pyg.get("comision_admin_hm", 0.0) * _ipc_fin
-                ctx["polizas_puras_hm"] = componentes_pricing_pyg.get("polizas_puras_hm", 0.0) * _ipc_fin
-                # Cadena B: full cap billing (pyg) scaled by IPC
+                ctx["ica_hm"] = componentes_pricing_pyg.get("ica_hm", 0.0) * _ipc_fin * _no_cap
+                ctx["gmf_hm"] = componentes_pricing_pyg.get("gmf_hm", 0.0) * _ipc_fin * _no_cap
+                ctx["comision_admin_hm"] = componentes_pricing_pyg.get("comision_admin_hm", 0.0) * _ipc_fin * _no_cap
+                ctx["polizas_puras_hm"] = componentes_pricing_pyg.get("polizas_puras_hm", 0.0) * _ipc_fin * _no_cap
+                # Cadena B: full cap billing (pyg) scaled by IPC; mes 1 sin cap
                 if _cadena_b_calc and _fm_b > 0:
-                    _ica_b = _ica_b0_pyg * _ipc_fin
-                    _gmf_b = _gmf_b0_pyg * _ipc_fin
-                    _pol_b = _pol_b0_pyg * _ipc_fin
-                    _com_b = _com_b0_pyg * _ipc_fin
+                    _ica_b = _ica_b0_pyg * _ipc_fin * _no_cap
+                    _gmf_b = _gmf_b0_pyg * _ipc_fin * _no_cap
+                    _pol_b = _pol_b0_pyg * _ipc_fin * _no_cap
+                    _com_b = _com_b0_pyg * _ipc_fin * _no_cap
                     ctx["ica_hm"] += _ica_b
                     ctx["gmf_hm"] += _gmf_b
                     ctx["polizas_puras_hm"] += _pol_b
@@ -697,12 +707,12 @@ class MotorDeReglas:
                     ctx["gmf_cadena_b"] = _gmf_b
                     ctx["polizas_cadena_b"] = _pol_b
                     ctx["comision_admin_cadena_b"] = _com_b
-                # Cadena C: full cap billing (pyg) scaled by IPC
+                # Cadena C: full cap billing (pyg) scaled by IPC; mes 1 sin cap
                 if _cadena_c_calc and _fm_c > 0:
-                    _ica_c = _ica_c0_pyg * _ipc_fin
-                    _gmf_c = _gmf_c0_pyg * _ipc_fin
-                    _pol_c = _pol_c0_pyg * _ipc_fin
-                    _com_c = _com_c0_pyg * _ipc_fin
+                    _ica_c = _ica_c0_pyg * _ipc_fin * _no_cap
+                    _gmf_c = _gmf_c0_pyg * _ipc_fin * _no_cap
+                    _pol_c = _pol_c0_pyg * _ipc_fin * _no_cap
+                    _com_c = _com_c0_pyg * _ipc_fin * _no_cap
                     ctx["ica_hm"] += _ica_c
                     ctx["gmf_hm"] += _gmf_c
                     ctx["polizas_puras_hm"] += _pol_c
