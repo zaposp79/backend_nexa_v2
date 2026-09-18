@@ -187,7 +187,9 @@ def calcular_costo_empresa(
     cesantias = 0.0 if es_integral else t_haberes * _TASA_CESANTIAS
     primas = 0.0 if es_integral else t_haberes * _TASA_PRIMAS
     interes_cesantia = cesantias * _TASA_INTERES_CESANTIA
-    vacaciones = base_p * _TASA_VACACIONES * (0.70 if base_p > 10 * smlv else 1.0)
+    # Excel V2-8 · INP!T77 usa >= (inclusivo): base >= 10 SMLV → 70% del base
+    # Cesantías/Primas usan > (es_integral, también estricto) → no aplican misma condición
+    vacaciones = base_p * _TASA_VACACIONES * (0.70 if base_p >= 10 * smlv else 1.0)
     prestaciones = cesantias + primas + interes_cesantia + vacaciones
 
     # Dotaciones
