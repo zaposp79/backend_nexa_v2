@@ -244,17 +244,19 @@ def _build_escenario(
     ingreso_variable = facturacion_total * pct_var
 
     # Desglose de horas logueadas (necesario para tarifas Tiempo / Precio Fijo)
-    # Usar fte_safe (min=1) para que minutos_loggeados_mes nunca sea 0 cuando fte_canal=0
-    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte_safe)
+    # Usar fte real (no fte_safe) para que minutos_loggeados_mes sea 0 cuando fte_canal=0.
+    # Cuando no hay perfil Cadena A para el canal (fte=0), la tarifa por FTE/minuto no aplica.
+    desglose_componente_fijo = _build_desglose_componente_fijo(request_data, fte)
     _resumen_dcf = desglose_componente_fijo.get("resumen", [])
     _logged_row = next((r for r in _resumen_dcf if r.get("concepto") == "Horas logueadas"), {})
     minutos_loggeados_mes = float(_logged_row.get("minutos", 0) or 0)
 
     # Tarifa Componente Fijo (Excel G45)
     # FTE → ingreso_fijo / FTE  |  Tiempo / Precio Fijo → ingreso_fijo / minutos_logueados
+    # Solo aplica cuando hay FTEs asignados al canal; sin FTE (cts_p=None) el Excel muestra $-.
     tarifa_fija: Optional[float] = None
     tipo_tarifa_fija: Optional[str] = None
-    if pct_fijo > 0 and ingreso_fijo > 0:
+    if pct_fijo > 0 and ingreso_fijo > 0 and fte > 0:
         if componente_fijo == "FTE":
             tarifa_fija = round(ingreso_fijo / fte_safe, 2)
             tipo_tarifa_fija = "por FTE"
