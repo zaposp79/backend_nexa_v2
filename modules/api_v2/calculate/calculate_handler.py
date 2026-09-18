@@ -206,8 +206,10 @@ def handle_calculate_v2(
     _perfiles = request_data.get("condiciones_cadena_a", {}).get("perfiles") or []
     for _idx, _p in enumerate(_perfiles):
         _ca = _p.get("cargos_adicionales")
-        if _ca:
-            logger.info("[v2] perfil[%d] fte=%s cargos_adicionales=%s", _idx, _p.get("fte"), _ca)
+        logger.info(
+            "[v2] perfil[%d] canal=%s fte=%s cargos_adicionales=%r tipo=%s",
+            _idx, _p.get("canal"), _p.get("fte"), _ca, type(_ca).__name__,
+        )
 
     rubros_repo = RubrosRepository(param_store)
     engine = MotorDeReglas(rubros_repo)

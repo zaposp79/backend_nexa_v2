@@ -9,7 +9,10 @@ Reglas del Excel Nexa - Pricing - Simulador - V2-8.xlsx (Inputs de Nomina, fila 
 """
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List, Optional, Tuple
+
+_log = logging.getLogger("nexa.nomina_calc")
 
 # ── Tabla estática: cargo → grupo (Excel Graficos AM5:AN28) ─────────────────
 # Fuente: 001_ElTiempo.xlsx · Graficos!AM5:AN28
@@ -532,15 +535,23 @@ class NominaCalculator:
         crucero_base = float(self._req.get("datos_operativos", {}).get("crucero", 0.0))
         perfiles: List[Dict] = self._cadena_a.get("perfiles", [])
         total = 0.0
-        for perfil in perfiles:
+        for idx, perfil in enumerate(perfiles):
             cap = perfil.get("capacitacion") or {}
             crucero_unit = crucero_base or float(cap.get("crucero_mensual", 0))
             fte = float(perfil.get("fte", 0))
             total += crucero_unit * fte
             # Excel CCA!E153 = 8600 × (FTE_perfil + E27+E31+E35) — soporta float escalar y list
             cargo_add_fte = _total_cargos_fte(perfil)
+            raw_ca = perfil.get("cargos_adicionales")
+            _log.info(
+                "[crucero] perfil[%d] canal=%s fte=%s crucero_unit=%s "
+                "cargo_add_fte=%s raw_cargos_adicionales=%r subtipo=%s",
+                idx, perfil.get("canal"), fte, crucero_unit,
+                cargo_add_fte, raw_ca, type(raw_ca).__name__,
+            )
             if cargo_add_fte > 0:
                 total += crucero_unit * cargo_add_fte
+        _log.info("[crucero] total=%s (crucero_base=%s, perfiles=%d)", total, crucero_base, len(perfiles))
         return total
 
     def _nomina_agentes(self) -> float:
