@@ -1210,6 +1210,7 @@ class NominaCalculator:
         detalle_map = {c["cargo"].strip().lower(): c for c in detalle}
 
         datos_op = self._req.get("datos_operativos", {})
+        _duracion_meses = float(datos_op.get("duracion_meses", 1) or 1)
         result: Dict[str, float] = {perfil: 0.0 for perfil in desglose}
 
         for fila in ratios_filas:
@@ -1253,9 +1254,14 @@ class NominaCalculator:
                 if costo_empresa <= 0:
                     continue
                 com_frac = comision / costo_empresa
+            # "(Inicial)" cargos: desglose stores cost amortized (/ duracion_meses),
+            # but Excel computes commission on full non-amortized qty × comision.
+            _es_inicial = "nicial" in nombre_lower and "(" in cargo_nombre
             for perfil, cargos in desglose.items():
                 costo_cargo = cargos.get(cargo_nombre, 0.0)
                 if costo_cargo > 0:
+                    if _es_inicial:
+                        costo_cargo *= _duracion_meses
                     result[perfil] = result.get(perfil, 0.0) + costo_cargo * com_frac
 
         return result

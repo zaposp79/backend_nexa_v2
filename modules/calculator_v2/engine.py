@@ -1927,6 +1927,54 @@ class MotorDeReglas:
                 "cadena_c_escal_rate": escal_c,
             })
 
+        # Include volumetría channels that have no perfiles so their vol_cadena_a
+        # is counted in the divisor of vision_general_por_servicio.
+        for _part in participaciones_inbound:
+            _canal = _part["canal"]
+            if not any(c["canal"] == _canal for c in result["inbound"]):
+                tarifa_b, escal_b, opex_b_fijo_total, opex_b_var_total, capex_b_total = _canal_specific_b("inbound", _canal)
+                tarifa_c_total, opex_c_fijo_total, opex_c_var_total, capex_c_total, escal_c = _canal_specific_c("inbound", _canal)
+                result["inbound"].append({
+                    "canal": _canal,
+                    "participacion": _part,
+                    "fte": 0,
+                    "cts_total": 0.0,
+                    "perfiles": [],
+                    "cadena_b_tarifa_rate": tarifa_b,
+                    "cadena_b_escal_rate": escal_b,
+                    "cadena_b_opex_fijo_total": opex_b_fijo_total,
+                    "cadena_b_opex_var_total": opex_b_var_total,
+                    "cadena_b_capex_total": capex_b_total,
+                    "cadena_c_tarifa_total": tarifa_c_total,
+                    "cadena_c_opex_fijo_total": opex_c_fijo_total,
+                    "cadena_c_opex_var_total": opex_c_var_total,
+                    "cadena_c_capex_total": capex_c_total,
+                    "cadena_c_escal_rate": escal_c,
+                })
+
+        for _part in participaciones_outbound:
+            _canal = _part["canal"]
+            if not any(c["canal"] == _canal for c in result["outbound"]):
+                tarifa_b, escal_b, opex_b_fijo_total, opex_b_var_total, capex_b_total = _canal_specific_b("outbound", _canal)
+                tarifa_c_total, opex_c_fijo_total, opex_c_var_total, capex_c_total, escal_c = _canal_specific_c("outbound", _canal)
+                result["outbound"].append({
+                    "canal": _canal,
+                    "participacion": _part,
+                    "fte": 0,
+                    "cts_total": 0.0,
+                    "perfiles": [],
+                    "cadena_b_tarifa_rate": tarifa_b,
+                    "cadena_b_escal_rate": escal_b,
+                    "cadena_b_opex_fijo_total": opex_b_fijo_total,
+                    "cadena_b_opex_var_total": opex_b_var_total,
+                    "cadena_b_capex_total": capex_b_total,
+                    "cadena_c_tarifa_total": tarifa_c_total,
+                    "cadena_c_opex_fijo_total": opex_c_fijo_total,
+                    "cadena_c_opex_var_total": opex_c_var_total,
+                    "cadena_c_capex_total": capex_c_total,
+                    "cadena_c_escal_rate": escal_c,
+                })
+
         return result
 
     @staticmethod
