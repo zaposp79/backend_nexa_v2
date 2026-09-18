@@ -62,9 +62,13 @@ _AGGREGATED_IDS = {
     "estaciones_trabajo",
     # Sub-componentes de nómina: calculados en NominaCalculator × double_h — no pisar con fórmula
     # Excel V2-8: 'Nomina Loaded'!K108:K127 (salario_fijo) y K198:K217 (comisiones brutas)
+    # Excel CCA!E153: crucero_total = crucero_unit × (FTE_agentes + FTE_cargos_adicionales)
     "nomina_loaded_mensual",
     "salario_fijo_mensual",
     "salario_variable_mensual",
+    "crucero_total_mensual",
+    "capacitacion_rotacion_mensual",
+    "examenes_medicos_mensual",
     "estudios_seguridad_mensual",
     # Capital charge diferido: calculado en el loop (CT[k-1] × meses_cc × tasa × IPC_k) — no pisar con fórmula
     # Excel V2-8: 'Pólizas - Costo Financiacion'!L528:L606 × "Activado" × IPC_factor
