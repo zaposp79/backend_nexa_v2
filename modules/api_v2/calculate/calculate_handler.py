@@ -202,6 +202,13 @@ def handle_calculate_v2(
     _inject_med_seg_costs(request_data, param_store)
     _inject_nomina_base_params(request_data, param_store)
 
+    # Diagnóstico de cargos_adicionales por perfil (DEBUG — ayuda a verificar request del frontend)
+    _perfiles = request_data.get("condiciones_cadena_a", {}).get("perfiles") or []
+    for _idx, _p in enumerate(_perfiles):
+        _ca = _p.get("cargos_adicionales")
+        if _ca:
+            logger.info("[v2] perfil[%d] fte=%s cargos_adicionales=%s", _idx, _p.get("fte"), _ca)
+
     rubros_repo = RubrosRepository(param_store)
     engine = MotorDeReglas(rubros_repo)
 
