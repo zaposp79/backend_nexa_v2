@@ -350,7 +350,7 @@ def _costos_mes(vals: Dict[str, Any], cts: Dict[str, float], costo_variable: flo
             "capacitacion_rotacion": vals.get("capacitacion_rotacion_mensual") or None,
             "examenes_medicos":     vals.get("examenes_medicos_mensual") or None,
             "estudios_seguridad":   vals.get("estudios_seguridad_mensual") or None,
-            "crucero":              _scale(cts["crucero_base"], nomina, cts["payroll_base"]),
+            "crucero":              vals["crucero_total_mensual"] if vals.get("crucero_total_mensual") is not None else _scale(cts["crucero_base"], nomina, cts["payroll_base"]),
             "no_payroll":           nopayroll or None,
             "opex_fijo":            _scale(cts["opex_fijo_base"], nopayroll, cts["no_payroll_base"]),
             "inversiones":          _scale(cts["inversiones_base"], nopayroll, cts["no_payroll_base"]),
@@ -559,7 +559,7 @@ def _build_from_v2_result(
     # como suma directa de los meses (nomina_loaded_mensual); escalarlo con nomina_tot
     # incluiría crucero y capacitación en el numerador → total ~N× incorrecto.
     totales["costos"]["cadena_a"].update({
-        "crucero":       _scale(cts["crucero_base"],       nomina_tot, cts["payroll_base"]),
+        "crucero":       sum((p["costos"]["cadena_a"].get("crucero") or 0.0) for p in periods),
         "opex_fijo":     _scale(cts["opex_fijo_base"],   nopayroll_tot, cts["no_payroll_base"]),
         "inversiones":   _scale(cts["inversiones_base"], nopayroll_tot, cts["no_payroll_base"]),
         "costos_fijos":  _scale(cts["costos_fijos_base"],nopayroll_tot, cts["no_payroll_base"]),
