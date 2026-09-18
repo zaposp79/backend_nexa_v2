@@ -62,8 +62,8 @@ _TASA_PRIMAS = 0.0833
 _TASA_INTERES_CESANTIA = 0.12
 _TASA_VACACIONES = 0.0417
 
-# Valores parametrizados (SMLV 2026, aux transporte y dotaciones mensuales)
-_SMLV_DEFAULT = 1_795_000.0
+# Valores parametrizados (SMLV Excel V2-8 INP!C4, aux transporte y dotaciones mensuales)
+_SMLV_DEFAULT = 1_750_905.0
 _AUX_TRANSPORTE = 249_095.0
 _DOTACIONES_MENSUAL = 15_375.0
 
@@ -204,6 +204,8 @@ class NominaCalculator:
     def __init__(self, request_data: Dict[str, Any]) -> None:
         self._req = request_data
         self._cadena_a = request_data.get("condiciones_cadena_a") or {}
+        _datos_op = request_data.get("datos_operativos") or {}
+        self._smlv = float(_datos_op.get("smlv") or _SMLV_DEFAULT)
 
     def calcular(self) -> float:
         return (
@@ -569,7 +571,7 @@ class NominaCalculator:
             comision = float(perfil.get("comision_mensual", 0))
             fte = float(perfil.get("fte", 0))
             recargo_fte = self._recargo_perfil(perfil)  # base recargo por FTE (Excel AL62)
-            costo_fte = calcular_costo_empresa(salario, comision, recargos=recargo_fte)
+            costo_fte = calcular_costo_empresa(salario, comision, self._smlv, recargos=recargo_fte)
             total += costo_fte * fte
         return total
 
@@ -728,7 +730,7 @@ class NominaCalculator:
                 continue
             salario = float(cargo_data.get("salario", 0))
             comision = float(cargo_data.get("comision", 0))
-            costo = calcular_costo_empresa(salario, comision) * cantidad
+            costo = calcular_costo_empresa(salario, comision, self._smlv) * cantidad
             # Excel NL!C54 = costo_empresa × (FTE/ratio) × (1/Panel!C11) para "(Inicial)".
             if "nicial" in nombre_lower and "(" in nombre:
                 costo /= duracion_meses
@@ -959,7 +961,7 @@ class NominaCalculator:
                 if cargo_data:
                     salario = float(cargo_data.get("salario", 0))
                     comision = float(cargo_data.get("comision", 0))
-                    costo_unit = calcular_costo_empresa(salario, comision)
+                    costo_unit = calcular_costo_empresa(salario, comision, self._smlv)
 
             for pr in fila.get("por_perfil", []):
                 indice = pr.get("indice_perfil", 0)
@@ -1234,7 +1236,7 @@ class NominaCalculator:
                 # Especialista: costo_cargo = (CE × complejidad × 3/dur + com) × factor.
                 # com_frac debe ser com/(CE×comp×3/dur + com) para que
                 # comision_pp = com × factor (sin término cruzado com²/CE × factor).
-                costo_empresa = calcular_costo_empresa(salario, comision)
+                costo_empresa = calcular_costo_empresa(salario, comision, self._smlv)
                 if costo_empresa <= 0:
                     continue
                 _cplx_str = self._cadena_a.get("ratios", {}).get("complejidad") or ""
@@ -1247,7 +1249,7 @@ class NominaCalculator:
                     continue
                 com_frac = comision / _unit_per_factor
             else:
-                costo_empresa = calcular_costo_empresa(salario, comision)
+                costo_empresa = calcular_costo_empresa(salario, comision, self._smlv)
                 if costo_empresa <= 0:
                     continue
                 com_frac = comision / costo_empresa
