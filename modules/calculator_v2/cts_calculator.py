@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
-from .nomina_calculator import calcular_costo_empresa, NominaCalculator
+from .nomina_calculator import calcular_costo_empresa, NominaCalculator, _total_cargos_fte
 
 
 class CTSCalculator:
@@ -97,7 +97,7 @@ class CTSCalculator:
         # Excel V2-8 CTS F138: Payroll = Nomina Loaded + Crucero
         total_crucero = sum(
             (self._crucero_base or float((p.get("capacitacion") or {}).get("crucero_mensual", 0)))
-            * float(p.get("fte", 0))
+            * (float(p.get("fte", 0)) + _total_cargos_fte(p))
             for p in self._perfiles
         )
         nomina_sin_crucero = max(0.0, nomina_base - total_crucero)
@@ -132,7 +132,8 @@ class CTSCalculator:
                 nomina_loaded = salario_cargado + estructura
             else:
                 nomina_loaded = salario_cargado + overhead_per_fte * fte
-            crucero = crucero_unit * fte
+            cargo_add_fte = _total_cargos_fte(perfil)
+            crucero = crucero_unit * (fte + cargo_add_fte)
             payroll = nomina_loaded + crucero
             # salario_variable = comisiones brutas agente + comisiones de estructura por perfil
             # Excel CTS I141: incluye comisiones de todos los cargos del perfil, no solo agentes
