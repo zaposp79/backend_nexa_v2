@@ -921,6 +921,11 @@ class MotorDeReglas:
         resultados_por_mes.extend(_ext_meses)
 
         totales = self._calcular_totales(resultados_por_mes)
+        # Exponer cap_charge por cadena en totales para que vision_tarifas_builder pueda
+        # distribuir PCF a Cadena B y C por escenario (solo cuando financiacion_activa).
+        if financiacion_activa:
+            totales["_cap_charge_b"] = _cap_charge_pricing_b
+            totales["_cap_charge_c"] = _cap_charge_pricing_c
 
         vision = self._construir_vision_pyg(resultados_por_mes, duracion_meses)
 
@@ -931,13 +936,10 @@ class MotorDeReglas:
         gmf_b = componentes_pricing.get("gmf_hm", 0.0)
         com_b = componentes_pricing.get("comision_admin_hm", 0.0)
         pol_b = componentes_pricing.get("polizas_puras_hm", 0.0)
-        # Excel V2-8 CTS fila 158: costo_financiacion = SUM(PCF por perfil) / duracion_meses.
+        # Excel V2-8 'Hoja Maestra Escenarios' Total: PCF Cadena A = _cap_charge_pricing_a (mes 2,
+        # IPC=0). Usar promedio 30 meses de TODAS las cadenas inflaba CTS → ia demasiado alto.
         # Solo cuando financiacion_activa; 0 cuando false → no rompe el caso existente.
-        _fin_mensual_cts = (
-            totales.get("costos_financiacion_mensual", 0.0) / max(duracion_meses, 1)
-            if financiacion_activa
-            else 0.0
-        )
+        _fin_mensual_cts = _cap_charge_pricing_a if financiacion_activa else 0.0
         componente_financiero_base = ica_b + gmf_b + com_b + pol_b + _fin_mensual_cts
 
         componentes_pricing_fin = {

@@ -121,6 +121,10 @@ def _build_escenario(
     var_b_override: Optional[float] = None,
     fijo_c_override: Optional[float] = None,
     var_c_override: Optional[float] = None,
+    pcf_b: float = 0.0,
+    pcf_c: float = 0.0,
+    fin_corr_b: float = 1.0,
+    fin_corr_c: float = 1.0,
 ) -> dict:
     """
     Construye el objeto de un escenario (= un perfil de Cadena A).
@@ -174,8 +178,19 @@ def _build_escenario(
     gmf_b = float(b_vals_ramp1.get("gmf_cadena_b", 0.0)) * _ratio_b
     polizas_b = float(b_vals_ramp1.get("polizas_cadena_b", 0.0)) * _ratio_b
     comision_por_administracion_b = float(b_vals_ramp1.get("comision_admin_cadena_b", 0.0)) * _ratio_b
-    financiero_b = ica_b + gmf_b + polizas_b + comision_por_administracion_b
-    # costo_total_b incluye costos operativos + financieros (ICA+GMF+polizas)
+    # Excel V2-8 'Hoja Maestra Escenarios': ICA/GMF/pol/com se calculan sobre billing HME
+    # (billing_hme = (B_op + cap_hme)/fm), no sobre billing P&G (billing_full = (B_op + cap_b)/fm).
+    # fin_corr_b = billing_hme / billing_full = (B_op + cap_b×(d-1)/d) / (B_op + cap_b).
+    if fin_corr_b != 1.0:
+        ica_b *= fin_corr_b
+        gmf_b *= fin_corr_b
+        polizas_b *= fin_corr_b
+        comision_por_administracion_b *= fin_corr_b
+    # financiero_b incluye PCF para que el bridge _bridge_v2_to_v1 derive correctamente
+    # costos_financiacion_b = financiero_b - (ica+gmf+pol+com) = pcf_b.
+    financiero_b = ica_b + gmf_b + polizas_b + comision_por_administracion_b + pcf_b
+    # costo_total_b = costos operativos + financieros (ICA+GMF+polizas+PCF)
+    # Excel 'Hoja Maestra Escenarios': Costos financiacion B = cap_charge_b × (b_op_esc / b_op_total)
     costo_b = costo_b_mensual + financiero_b
 
     # Costos Cadena C — split fijo/variable por canal cuando se proveen overrides directos
@@ -191,8 +206,16 @@ def _build_escenario(
     gmf_c = float(c_vals_ramp1.get("gmf_cadena_c", 0.0)) * _ratio_c
     polizas_c = float(c_vals_ramp1.get("polizas_cadena_c", 0.0)) * _ratio_c
     comision_por_administracion_c = float(c_vals_ramp1.get("comision_admin_cadena_c", 0.0)) * _ratio_c
-    financiero_c = ica_c + gmf_c + polizas_c + comision_por_administracion_c
-    # costo_total_c incluye costos operativos + financieros (ICA+GMF+polizas)
+    # Misma corrección HME vs P&G billing para Cadena C.
+    if fin_corr_c != 1.0:
+        ica_c *= fin_corr_c
+        gmf_c *= fin_corr_c
+        polizas_c *= fin_corr_c
+        comision_por_administracion_c *= fin_corr_c
+    # financiero_c incluye PCF (igual que B) para que el bridge derive costos_financiacion_c = pcf_c.
+    financiero_c = ica_c + gmf_c + polizas_c + comision_por_administracion_c + pcf_c
+    # costo_total_c = costos operativos + financieros (ICA+GMF+polizas+PCF)
+    # Excel 'Hoja Maestra Escenarios': Costos financiacion C = cap_charge_c × (c_op_esc / c_op_total)
     costo_c = costo_c_mensual + financiero_c
 
     # Ingreso Cadena A: desde CTS (ya resuelve circularidad HM)
@@ -1032,6 +1055,30 @@ def build_vision_tarifas(
     costo_b_mensual = float(vals_ramp1.get("costo_cadena_b", 0.0))
     costo_c_mensual = float(vals_ramp1.get("costo_cadena_c", 0.0))
 
+    # PCF por cadena — solo cuando financiacion activa.
+    # Excel 'Hoja Maestra Escenarios' Total: Costos financiacion B/C = _cap_charge_pricing_b/c
+    # expuesto por engine en totales["_cap_charge_b/c"] (mes 2, IPC=0).
+    _pcf_b_total = float(totales.get("_cap_charge_b", 0.0))
+    _pcf_c_total = float(totales.get("_cap_charge_c", 0.0))
+
+    # Corrección HME vs P&G billing para ICA/GMF/pol/com de B y C.
+    # El motor guarda estos valores usando billing_full = (B_op + cap_b)/fm (base P&G).
+    # La Hoja Maestra Escenarios usa billing_hme = (B_op + cap_b×(d-1)/d)/fm.
+    # Excel V2-8 'Hoja Maestra Escenarios': fin_corr = (costo_op + cap_hme) / (costo_op + cap_total).
+    # Solo aplica cuando financiacion activa (pcf > 0). No afecta P&G (usa ica_hm separado).
+    _fm_b_val = 1.0 - float(vals_ramp1.get("margen_b", 0.30))
+    _fm_c_val = 1.0 - float(vals_ramp1.get("margen_c", 0.1767))
+    if _pcf_b_total > 0 and (costo_b_mensual + _pcf_b_total) > 0:
+        _cap_hme_b = _pcf_b_total * (duracion_meses - 1) / max(duracion_meses, 1)
+        _fin_corr_b = (costo_b_mensual + _cap_hme_b) / (costo_b_mensual + _pcf_b_total)
+    else:
+        _fin_corr_b = 1.0
+    if _pcf_c_total > 0 and (costo_c_mensual + _pcf_c_total) > 0:
+        _cap_hme_c = _pcf_c_total * (duracion_meses - 1) / max(duracion_meses, 1)
+        _fin_corr_c = (costo_c_mensual + _cap_hme_c) / (costo_c_mensual + _pcf_c_total)
+    else:
+        _fin_corr_c = 1.0
+
     cadena_a = request_data.get("condiciones_cadena_a", {}) or {}
     all_perfiles = cadena_a.get("perfiles", []) or []
 
@@ -1340,6 +1387,11 @@ def build_vision_tarifas(
                 "commission_rate": float(cfg.get("commission_rate") or 0),
             }
 
+            # PCF por escenario = cap_charge_total_cadena × (costo_op_esc / costo_op_total)
+            # Excel 'Hoja Maestra Escenarios': Costos financiacion B/C = proporcional al costo operativo
+            _pcf_b_esc = round(_pcf_b_total * (b_for_esc / costo_b_mensual), 2) if costo_b_mensual > 0 else 0.0
+            _pcf_c_esc = round(_pcf_c_total * (c_for_esc / costo_c_mensual), 2) if costo_c_mensual > 0 else 0.0
+
             escenario = _build_escenario(
                 idx=n - 1,
                 perfil_input=p_input,
@@ -1360,6 +1412,10 @@ def build_vision_tarifas(
                 var_b_override=_var_b_esc,
                 fijo_c_override=_fijo_c_esc,
                 var_c_override=_var_c_esc,
+                pcf_b=_pcf_b_esc,
+                pcf_c=_pcf_c_esc,
+                fin_corr_b=_fin_corr_b,
+                fin_corr_c=_fin_corr_c,
             )
             escenarios.append(escenario)
 
@@ -1384,6 +1440,8 @@ def build_vision_tarifas(
             fte_weight = fte_esc / max(fte_total_activos, 1)
             b_for_perfil = round(costo_b_mensual * fte_weight, 2)
             c_for_perfil = round(costo_c_mensual * fte_weight, 2)
+            _pcf_b_perf = round(_pcf_b_total * fte_weight, 2) if _pcf_b_total > 0 else 0.0
+            _pcf_c_perf = round(_pcf_c_total * fte_weight, 2) if _pcf_c_total > 0 else 0.0
             escenario = _build_escenario(
                 idx=i,
                 perfil_input=p_input,
@@ -1400,6 +1458,10 @@ def build_vision_tarifas(
                 request_data=request_data,
                 b_vals_ramp1=vals_ramp1,
                 c_vals_ramp1=vals_ramp1,
+                pcf_b=_pcf_b_perf,
+                pcf_c=_pcf_c_perf,
+                fin_corr_b=_fin_corr_b,
+                fin_corr_c=_fin_corr_c,
             )
             escenarios.append(escenario)
 
@@ -1423,19 +1485,22 @@ def build_vision_tarifas(
             _costo_a_k = float(cts_agg_by_canal.get(_k, {}).get("costo_total") or 0)
             _ing_a = _costo_a_k / _denom_a if _denom_a > 0 else 0
         _total_ingreso_a += _ing_a
-    # Cadena B: full deal cost from motor (ALL canals) + financiero (ICA, GMF, polizas, comision)
-    _ica_b_tot = float(vals_ramp1.get("ica_cadena_b", 0.0))
-    _gmf_b_tot = float(vals_ramp1.get("gmf_cadena_b", 0.0))
-    _polizas_b_tot = float(vals_ramp1.get("polizas_cadena_b", 0.0))
-    _comision_b_tot = float(vals_ramp1.get("comision_admin_cadena_b", 0.0) or 0.0)
-    _costo_b_tot = costo_b_mensual + _ica_b_tot + _gmf_b_tot + _polizas_b_tot + _comision_b_tot
+    # Cadena B: full deal cost from motor (ALL canals) + financiero (ICA, GMF, polizas, comision) + PCF
+    # Excel 'Hoja Maestra Escenarios' Total: Costos financiacion B = _cap_charge_pricing_b
+    # Apply fin_corr_b to ICA/GMF/pol/com (HME billing correction; same as per-escenario correction).
+    _ica_b_tot = float(vals_ramp1.get("ica_cadena_b", 0.0)) * _fin_corr_b
+    _gmf_b_tot = float(vals_ramp1.get("gmf_cadena_b", 0.0)) * _fin_corr_b
+    _polizas_b_tot = float(vals_ramp1.get("polizas_cadena_b", 0.0)) * _fin_corr_b
+    _comision_b_tot = float(vals_ramp1.get("comision_admin_cadena_b", 0.0) or 0.0) * _fin_corr_b
+    _costo_b_tot = costo_b_mensual + _ica_b_tot + _gmf_b_tot + _polizas_b_tot + _comision_b_tot + _pcf_b_total
     _total_ingreso_b = _costo_b_tot / _denom_b if (_denom_b > 0 and _costo_b_tot > 0) else 0.0
-    # Cadena C: full deal cost from motor (ALL canals) + financiero
-    _ica_c_tot = float(vals_ramp1.get("ica_cadena_c", 0.0))
-    _gmf_c_tot = float(vals_ramp1.get("gmf_cadena_c", 0.0))
-    _polizas_c_tot = float(vals_ramp1.get("polizas_cadena_c", 0.0))
-    _comision_c_tot = float(vals_ramp1.get("comision_admin_cadena_c", 0.0) or 0.0)
-    _costo_c_tot = costo_c_mensual + _ica_c_tot + _gmf_c_tot + _polizas_c_tot + _comision_c_tot
+    # Cadena C: full deal cost from motor (ALL canals) + financiero + PCF
+    # Excel 'Hoja Maestra Escenarios' Total: Costos financiacion C = _cap_charge_pricing_c
+    _ica_c_tot = float(vals_ramp1.get("ica_cadena_c", 0.0)) * _fin_corr_c
+    _gmf_c_tot = float(vals_ramp1.get("gmf_cadena_c", 0.0)) * _fin_corr_c
+    _polizas_c_tot = float(vals_ramp1.get("polizas_cadena_c", 0.0)) * _fin_corr_c
+    _comision_c_tot = float(vals_ramp1.get("comision_admin_cadena_c", 0.0) or 0.0) * _fin_corr_c
+    _costo_c_tot = costo_c_mensual + _ica_c_tot + _gmf_c_tot + _polizas_c_tot + _comision_c_tot + _pcf_c_total
     _total_ingreso_c = _costo_c_tot / _denom_c if (_denom_c > 0 and _costo_c_tot > 0) else 0.0
     facturacion_deal_total = _total_ingreso_a + _total_ingreso_b + _total_ingreso_c
 
@@ -1461,7 +1526,8 @@ def build_vision_tarifas(
         "ica": round(_ica_b_tot, 2),
         "gmf": round(_gmf_b_tot, 2),
         "polizas": round(_polizas_b_tot, 2),
-        "comision_administracion": round(float(vals_ramp1.get("comision_admin_cadena_b", 0) or 0), 2),
+        "comision_administracion": round(_comision_b_tot, 2),
+        "costo_financiacion": round(_pcf_b_total, 2),
         "costo_total": round(_costo_b_tot, 2),
         "ingreso": round(_total_ingreso_b, 2),
     }
@@ -1471,7 +1537,8 @@ def build_vision_tarifas(
         "ica": round(_ica_c_tot, 2),
         "gmf": round(_gmf_c_tot, 2),
         "polizas": round(_polizas_c_tot, 2),
-        "comision_administracion": round(float(vals_ramp1.get("comision_admin_cadena_c", 0) or 0), 2),
+        "comision_administracion": round(_comision_c_tot, 2),
+        "costo_financiacion": round(_pcf_c_total, 2),
         "costo_total": round(_costo_c_tot, 2),
         "ingreso": round(_total_ingreso_c, 2),
     }
