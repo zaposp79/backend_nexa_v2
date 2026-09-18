@@ -314,6 +314,9 @@ class NominaCalculator:
         # Headcount por perfil — mismo fix que desglose_por_cargo() para evitar
         # sobreestimación proporcional cuando personalizado no es proporcional al FTE.
         regular_hc_pp: Dict[int, float] = {}
+        # Base del factor Especialista: SOLO Agente Básico 1 + Validador + cargos adicionales
+        # (Excel CCA!F101). NO incluye Supervisor/Formadores/etc.
+        esp_hc_pp: Dict[int, float] = {}
         fila_aprendiz = fila_inclusion = fila_especialista = None
 
         for fila in ratios_filas:
@@ -365,6 +368,29 @@ class NominaCalculator:
                     _q_pr = ((_fte_pr + _cadd_i) / _ratio_pr * _rot_f) if _ratio_pr > 0 else 0.0
                     regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _q_pr
 
+            # Base del factor Especialista: SOLO Agente Básico 1 + Validador (Excel F97:F98).
+            if fila.get("tipo", "").lower() == "agente" or "validador" in nombre_lower:
+                for _pr in fila.get("por_perfil", []):
+                    _idx = _pr.get("indice_perfil", 0)
+                    if _idx >= len(perfiles):
+                        continue
+                    try:
+                        _pval = float(_pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        _pval = 0.0
+                    if _pval > 0:
+                        esp_hc_pp[_idx] = esp_hc_pp.get(_idx, 0.0) + _pval
+                    else:
+                        try:
+                            _ratio_pr = float(str(_pr.get("ratio", "0")).strip() or "0")
+                        except ValueError:
+                            _ratio_pr = 0.0
+                        _fte_pr = float(perfiles[_idx].get("fte", 0))
+                        _cadd_i = _cadd_pp.get(_idx, 0.0)
+                        _rot_f = pct_rotacion if _is_rot else 1.0
+                        _q_pr = ((_fte_pr + _cadd_i) / _ratio_pr * _rot_f) if _ratio_pr > 0 else 0.0
+                        esp_hc_pp[_idx] = esp_hc_pp.get(_idx, 0.0) + _q_pr
+
             # Agente Básico 1 ya contabilizado por FTE arriba — no sumar comisión aquí.
             if fila.get("tipo", "").lower() == "agente":
                 continue
@@ -377,14 +403,19 @@ class NominaCalculator:
                 continue
             total += comision_c * cantidad
 
-        # Especialista: factor mixto personalizado/pct_fte (mismo fix que desglose_por_cargo).
+        # Cargos adicionales (Excel F27/F31/F35) directos al factor Especialista.
+        for _idx_c, _cadd_c in _cadd_pp.items():
+            if _cadd_c:
+                esp_hc_pp[_idx_c] = esp_hc_pp.get(_idx_c, 0.0) + _cadd_c
+
+        # Especialista: factor (Agente+Validador+cargos_add)_Pi / Σ_perfiles (Excel F101).
         if fila_especialista is not None and fila_especialista.get("incluido", False):
             cargo_data = self._resolver_cargo(fila_especialista, detalle_map)
             if cargo_data:
                 comision_esp = float(cargo_data.get("comision", 0))
                 if comision_esp > 0:
                     factor_total = 0.0
-                    _total_rhc_esp = sum(regular_hc_pp.values())
+                    _total_esp = sum(esp_hc_pp.values())
                     for pr in fila_especialista.get("por_perfil", []):
                         _idx_esp = pr.get("indice_perfil", 0)
                         try:
@@ -393,8 +424,8 @@ class NominaCalculator:
                             pval = 0.0
                         if pval > 0:
                             factor_total += pval
-                        elif _total_rhc_esp > 0:
-                            factor_total += regular_hc_pp.get(_idx_esp, 0.0) / _total_rhc_esp
+                        elif _total_esp > 0:
+                            factor_total += esp_hc_pp.get(_idx_esp, 0.0) / _total_esp
                     if factor_total <= 0:
                         factor_total = 1.0
                     total += comision_esp * factor_total
@@ -581,6 +612,12 @@ class NominaCalculator:
         # fórmula. Sin esto, la distribución regular_hc×fte_i/total_fte contamina a los
         # perfiles fórmula con el exceso de personalizado de otros perfiles.
         regular_hc_pp: Dict[int, float] = {}
+        # Headcount por perfil SOLO de Agente Básico 1 + Validador (+ cargos adicionales)
+        # — base del factor del Especialista de Proyectos. Excel CCA!F101 =
+        # SUM(F97:F98,F27,F31,F35)/SUM($E$97:$S$98,$E$27:$S$27,$E$31:$S$31,$E$35:$S$35),
+        # donde F97=Agente, F98=Validador, F27/F31/F35=ratios de cargos adicionales.
+        # NO incluye Supervisor/Formadores/etc. (a diferencia de regular_hc_pp).
+        esp_hc_pp: Dict[int, float] = {}
 
         for fila in ratios_filas:
             nombre = fila.get("position_name") or fila.get("position_id", "")
@@ -643,6 +680,29 @@ class NominaCalculator:
                     _q_pr = ((_fte_pr + _cadd_pr) / _ratio_pr * _rot_factor) if _ratio_pr > 0 else 0.0
                     regular_hc_pp[_idx] = regular_hc_pp.get(_idx, 0.0) + _q_pr
 
+            # Base del factor Especialista: SOLO Agente Básico 1 + Validador (Excel F97:F98).
+            if fila.get("tipo", "").lower() == "agente" or "validador" in nombre_lower:
+                for _pr in fila.get("por_perfil", []):
+                    _idx = _pr.get("indice_perfil", 0)
+                    if _idx >= len(perfiles):
+                        continue
+                    try:
+                        _pval = float(_pr.get("personalizado") or 0)
+                    except (TypeError, ValueError):
+                        _pval = 0.0
+                    if _pval > 0:
+                        esp_hc_pp[_idx] = esp_hc_pp.get(_idx, 0.0) + _pval
+                    else:
+                        try:
+                            _ratio_pr = float(str(_pr.get("ratio", "0")).strip() or "0")
+                        except ValueError:
+                            _ratio_pr = 0.0
+                        _fte_pr = float(perfiles[_idx].get("fte", 0))
+                        _cadd_pr = cargos_add_fte_pp.get(_idx, 0.0)
+                        _rot_factor = pct_rotacion if _is_rot else 1.0
+                        _q_pr = ((_fte_pr + _cadd_pr) / _ratio_pr * _rot_factor) if _ratio_pr > 0 else 0.0
+                        esp_hc_pp[_idx] = esp_hc_pp.get(_idx, 0.0) + _q_pr
+
             # Agente Básico 1 (tipo="Agente") se contabiliza directamente por FTE en CTS —
             # excluir del overhead de estructura para evitar doble conteo.
             if fila.get("tipo", "").lower() == "agente":
@@ -660,6 +720,12 @@ class NominaCalculator:
             if "nicial" in nombre_lower and "(" in nombre:
                 costo /= duracion_meses
             result[nombre] = result.get(nombre, 0.0) + costo
+
+        # Sumar cargos adicionales (Excel F27/F31/F35) como términos directos al factor
+        # Especialista — se agregan una sola vez por perfil (no por cargo).
+        for _idx_c, _cadd_c in cargos_add_fte_pp.items():
+            if _cadd_c:
+                esp_hc_pp[_idx_c] = esp_hc_pp.get(_idx_c, 0.0) + _cadd_c
 
         # ── Aprendiz SENA ─────────────────────────────────────────────────────
         # Excel CCA!E99 = (SUM(E78:E98) + E27+E31+E35) / E126
@@ -793,10 +859,11 @@ class NominaCalculator:
                     # Excel V2-8 · NL!C66 = INP!AM61 × complejidad × 3 × pct / Panel!C11.
                     # INP!AM61 incluye comisión (D61=500k) → CE con comisión completa.
                     costo_esp = self._get_costo_empresa(cargo_data)
-                    # Mixed personalizado: profiles with personalizado use that value;
-                    # profiles without use fte_i/total_fte. Sum = 1.0 when all formula-based.
+                    # Excel CCA!F101: factor_Pi = (Agente+Validador+cargos_add)_Pi / Σ_perfiles.
+                    # Perfil con personalizado usa ese valor; sin personalizado usa proporción
+                    # esp_hc_pp (Agente+Validador), NO todos los cargos de estructura.
                     factor_total = 0.0
-                    _total_rhc_esp = sum(regular_hc_pp.values())
+                    _total_esp = sum(esp_hc_pp.values())
                     for pr in fila_especialista.get("por_perfil", []):
                         _idx_esp = pr.get("indice_perfil", 0)
                         try:
@@ -805,8 +872,8 @@ class NominaCalculator:
                             pval = 0.0
                         if pval > 0:
                             factor_total += pval
-                        elif _total_rhc_esp > 0:
-                            factor_total += regular_hc_pp.get(_idx_esp, 0.0) / _total_rhc_esp
+                        elif _total_esp > 0:
+                            factor_total += esp_hc_pp.get(_idx_esp, 0.0) / _total_esp
                     if factor_total <= 0:
                         factor_total = 1.0
                     # Excel V2-8 · P&G NL = zona1 (CE via NL!C66) + zona2 (raw commission via NL!C178).
@@ -854,6 +921,9 @@ class NominaCalculator:
         fila_aprendiz = fila_inclusion = fila_especialista = None
         # Headcount acumulado por índice de perfil para base de Aprendiz/Inclusión.
         regular_hc_pp: Dict[int, float] = {i: 0.0 for i in range(len(perfiles))}
+        # Base del factor Especialista: SOLO Agente Básico 1 + Validador + cargos adicionales
+        # (Excel CCA!F101). NO incluye Supervisor/Formadores/etc.
+        esp_hc_pp: Dict[int, float] = {i: 0.0 for i in range(len(perfiles))}
 
         for fila in ratios_filas:
             cargo_nombre = fila.get("position_name") or fila.get("position_id", "")
@@ -921,6 +991,9 @@ class NominaCalculator:
                 # Acumular headcount por perfil (incluye Agente Básico 1 ratio=1).
                 if cantidad > 0:
                     regular_hc_pp[indice] = regular_hc_pp.get(indice, 0.0) + cantidad
+                    # Base del factor Especialista: SOLO Agente + Validador (Excel F97:F98).
+                    if fila.get("tipo", "").lower() == "agente" or "validador" in cargo_nombre_lower:
+                        esp_hc_pp[indice] = esp_hc_pp.get(indice, 0.0) + cantidad
 
                 # Agente Básico 1 (tipo="Agente") se contabiliza directamente por FTE en CTS —
                 # excluir del overhead de estructura para evitar doble conteo.
@@ -940,6 +1013,12 @@ class NominaCalculator:
                 result[perfil_nombre][cargo_nombre] = (
                     result[perfil_nombre].get(cargo_nombre, 0.0) + costo
                 )
+
+        # Cargos adicionales (Excel F27/F31/F35) directos al factor Especialista.
+        for _idx_c in range(len(perfiles)):
+            _cadd_c = _total_cargos_fte(perfiles[_idx_c])
+            if _cadd_c:
+                esp_hc_pp[_idx_c] = esp_hc_pp.get(_idx_c, 0.0) + _cadd_c
 
         # ── Aprendiz SENA (por perfil) ────────────────────────────────────────
         # Excel CCA!E99 = (SUM(E78:E98) + E27+E31+E35) / E126 — por cada columna de perfil
@@ -1072,7 +1151,9 @@ class NominaCalculator:
                 except (TypeError, ValueError):
                     personalizado_pp[idx] = 0.0
             hay_personalizado = any(v > 0 for v in personalizado_pp.values())
-            _total_rhc_esp = sum(regular_hc_pp.values())
+            # Excel CCA!F101: base del factor = Agente+Validador+cargos_add (esp_hc_pp),
+            # NO todos los cargos de estructura.
+            _total_esp = sum(esp_hc_pp.values())
 
             for i, perfil in enumerate(perfiles):
                 perfil_nombre = perfil.get("nombre", f"perfil{i+1}")
@@ -1085,8 +1166,8 @@ class NominaCalculator:
                 pval_i = personalizado_pp.get(i, 0.0)
                 if pval_i > 0:
                     factor_i = pval_i
-                elif _total_rhc_esp > 0:
-                    factor_i = regular_hc_pp.get(i, 0.0) / _total_rhc_esp
+                elif _total_esp > 0:
+                    factor_i = esp_hc_pp.get(i, 0.0) / _total_esp
                 else:
                     factor_i = float(perfil.get("fte", 0)) / total_fte if total_fte > 0 else 0.0
                 costo_i = (
